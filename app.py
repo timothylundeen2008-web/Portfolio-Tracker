@@ -880,11 +880,14 @@ Price {'above' if above_50 else 'below'} 50-day MA | {'above' if above_200 else 
         fig_yield.add_trace(go.Scatter(x=tyx.index, y=tyx, name="30-Yr Yield", line=dict(color="#e6a817", width=2)))
         spread = tyx - tnx
         fig_yield.add_trace(go.Scatter(x=spread.index, y=spread, name="30/10 Spread", line=dict(color="#00E676", width=1.5, dash="dot"), yaxis="y2"))
+        yield_layout = {k: v for k, v in CHART_LAYOUT.items() if k not in ("xaxis", "yaxis")}
         fig_yield.update_layout(
             title="10-Year vs 30-Year Treasury Yields",
-            yaxis=dict(title="Yield (%)", gridcolor="#2a2d3e"),
-            yaxis2=dict(title="Spread (%)", overlaying="y", side="right", gridcolor="#2a2d3e"),
-            height=320, **CHART_LAYOUT
+            xaxis=dict(gridcolor="#2a2d3e", showgrid=True, zeroline=False),
+            yaxis=dict(title="Yield (%)", gridcolor="#2a2d3e", showgrid=True),
+            yaxis2=dict(title="Spread (%)", overlaying="y", side="right", gridcolor="#2a2d3e", showgrid=False),
+            height=320,
+            **yield_layout
         )
         st.plotly_chart(fig_yield, use_container_width=True)
 
