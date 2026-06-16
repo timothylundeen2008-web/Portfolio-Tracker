@@ -397,15 +397,15 @@ with tab1:
                 port_return += ret * w
 
         spy_ret = qqq_ret = gld_ret = agg_ret = 0.0
-        for key, tkr in [("spy_ret","SPY"),("qqq_ret","QQQ"),("gld_ret","GLD"),("agg_ret","AGG")]:
+        def _ret(tkr):
             if tkr in prices.columns:
                 s = prices[tkr].dropna()
-                val = (s.iloc[-1]/s.iloc[0]-1)*100 if len(s)>1 else 0
-                locals()[key]  # suppress lint
-                if key=="spy_ret": spy_ret=val
-                elif key=="qqq_ret": qqq_ret=val
-                elif key=="gld_ret": gld_ret=val
-                elif key=="agg_ret": agg_ret=val
+                return (s.iloc[-1] / s.iloc[0] - 1) * 100 if len(s) > 1 else 0.0
+            return 0.0
+        spy_ret = _ret("SPY")
+        qqq_ret = _ret("QQQ")
+        gld_ret = _ret("GLD")
+        agg_ret = _ret("AGG")
 
         # Real return (inflation-adjusted)
         years = {"1mo":1/12,"3mo":3/12,"6mo":6/12,"1y":1,"2y":2,"5y":5}.get(period,1)
