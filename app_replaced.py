@@ -25,45 +25,6 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
 import warnings
-
-# ── Regime classifier (shared two-real-yield engine) ──────────────────────────
-try:
-    from regime_classifier import full_assessment, REGIMES, target_weights, BASE_WEIGHTS
-    _REGIME_OK = True
-except Exception:
-    _REGIME_OK = False
-
-# Educational signal guide (static — always renderable, no live data needed)
-SIGNAL_GUIDE = [
-    ("SHORT real policy rate (EFFR − CPI YoY)",
-     "The true repression gauge — front-end real return to savers.",
-     "Negative & inflation accelerating → tilt to real assets + trend, minimize "
-     "cash. Crosses back positive → repression thesis weakening; trim metals."),
-    ("LONG real yield level + momentum (DFII10)",
-     "Whether long duration is a friend or a foe right now.",
-     "Positive & RISING → hold TLT at 0% (it bleeds). Falling sharply (flight to "
-     "quality) → switch TLT on."),
-    ("Breakeven inflation (T10YIE)",
-     "Splits nominal-yield moves into real vs. inflation-expectation.",
-     "Rising via breakevens → inflationary, add real assets. Rising via REAL "
-     "yields → tightening, pressure on growth/tech."),
-    ("Stock / bond 60-day correlation",
-     "Whether 60/40 diversification is working or broken.",
-     "Flips POSITIVE → the #1 signal to INCREASE KMLM (trend replaces the "
-     "failing bond hedge)."),
-    ("HY credit OAS (BAMLH0A0HYM2)",
-     "Onset of a liquidity / credit crisis — leads equities.",
-     ">500 bps & widening >50 bps/2wk → CRISIS override: trim growth, switch TLT "
-     "on, raise cash. Beats the inflation regime."),
-    ("2s10s spread (DGS10 − DGS2)",
-     "Recession lead — the re-steepening, not the inversion.",
-     "Re-steepening from inversion → have defensives + contingent TLT ready "
-     "before the downturn confirms."),
-    ("VIX term structure",
-     "Panic vs. normal volatility.",
-     "Front-month > 3-month (backwardation) → late crisis signal; de-risk equity "
-     "hard. Tail hedges must already be on."),
-]
 warnings.filterwarnings("ignore")
 
 # ─── PAGE CONFIG ─────────────────────────────────────────────────────────────
@@ -113,8 +74,8 @@ st.markdown("""
 # ETF-based (original all-weather)
 ETF_PORTFOLIO = {
     "VGT":  ("Vanguard Info Tech",       20, "Growth / Tech",     "QQQ",   "Nasdaq-100",  0.09),
-    "SMH":  ("VanEck Semiconductors",     4, "Growth / Tech",     "SOXX",  "SOX Index",   0.35),
-    "QQQ":  ("Invesco Nasdaq-100",        4, "Growth / Tech",     "SPY",   "S&P 500",     0.20),
+    "SMH":  ("VanEck Semiconductors",     8, "Growth / Tech",     "SOXX",  "SOX Index",   0.35),
+    "QQQ":  ("Invesco Nasdaq-100",        7, "Growth / Tech",     "SPY",   "S&P 500",     0.20),
     "GLD":  ("SPDR Gold Shares",         12, "Precious Metals",   "GLD",   "Gold Spot",   0.40),
     "SLV":  ("iShares Silver Trust",      5, "Precious Metals",   "SLV",   "Silver Spot", 0.50),
     "RING": ("iShares Gold Miners",       5, "Precious Metals",   "GDX",   "Gold Miners", 0.39),
@@ -123,11 +84,8 @@ ETF_PORTFOLIO = {
     "SCHD": ("Schwab Dividend Equity",   13, "Defensives",        "DVY",   "Dividend ETF",0.06),
     "XLV":  ("Health Care SPDR",          4, "Defensives",        "SPY",   "S&P 500",     0.09),
     "XLU":  ("Utilities SPDR",            3, "Defensives",        "SPY",   "S&P 500",     0.09),
-    "SGOV": ("iShares 0-3M Treasury",     5, "Short Bonds/Cash",  "BIL",   "T-Bills",     0.09),
-    "USFR": ("WisdomTree Float Rate",     3, "Short Bonds/Cash",  "FLOT",  "Float Rate",  0.15),
-    # ── NEW: duration (contingent) + trend / crisis alpha ──────────────────────
-    "TLT":  ("iShares 20+ Yr Treasury",  10, "Duration (contingent)", "IEF", "7-10Y Tsy", 0.15),
-    "KMLM": ("KFA Mount Lucas Mgd Fut",   4, "Trend / Crisis Alpha",  "DBMF","Mgd Futures",0.90),
+    "SGOV": ("iShares 0-3M Treasury",    10, "Short Bonds/Cash",  "BIL",   "T-Bills",     0.09),
+    "USFR": ("WisdomTree Float Rate",     5, "Short Bonds/Cash",  "FLOT",  "Float Rate",  0.15),
 }
 
 # Hybrid: direct stocks replacing ETFs where individual names add alpha
@@ -160,13 +118,11 @@ HYBRID_PORTFOLIO = {
 }
 
 CATEGORY_COLORS = {
-    "Growth / Tech":         "#4CAF50",
-    "Precious Metals":       "#FFA726",
-    "Commodities/Energy":    "#EF5350",
-    "Defensives":            "#42A5F5",
-    "Short Bonds/Cash":      "#AB47BC",
-    "Duration (contingent)": "#7C3AED",
-    "Trend / Crisis Alpha":  "#EC4899",
+    "Growth / Tech":      "#4CAF50",
+    "Precious Metals":    "#FFA726",
+    "Commodities/Energy": "#EF5350",
+    "Defensives":         "#42A5F5",
+    "Short Bonds/Cash":   "#AB47BC",
 }
 
 BENCHMARKS = {
@@ -177,7 +133,7 @@ BENCHMARKS = {
     "Dow Jones":  "DIA",
 }
 
-NO_PE_SET = {"GLD","SLV","PDBC","SGOV","USFR","BIL","FLOT","DJP","TIP","SCHP","TLT","KMLM","IEF","DBMF"}
+NO_PE_SET = {"GLD","SLV","PDBC","SGOV","USFR","BIL","FLOT","DJP","TIP","SCHP"}
 
 # P/E fallbacks — June 2026 estimates
 PE_FALLBACK = {
@@ -209,7 +165,6 @@ PE_FALLBACK = {
 DIV_YIELDS = {
     "VGT":0.6,"SMH":0.5,"QQQ":0.5,"GLD":0.0,"SLV":0.0,"RING":1.5,
     "XLE":3.7,"PDBC":0.0,"SCHD":3.3,"XLV":1.7,"XLU":3.3,"SGOV":5.1,"USFR":5.0,
-    "TLT":4.3,"KMLM":0.0,
     "NVDA":0.03,"AAPL":0.52,"MSFT":0.82,"GOOGL":0.45,"XOM":3.4,"COP":3.1,
     "KO":3.1,"JNJ":3.1,"UNH":1.92,"NEE":3.1,"V":0.74,"NEM":1.8,"SCHP":2.1,"NEM":1.8,
 }
@@ -222,7 +177,7 @@ CRASH_SCENARIOS = {
         "asset_returns": {
             "SPY":-57,"QQQ":-50,"VGT":-55,"SMH":-55,"GLD":+25,"SLV":-25,
             "RING":-65,"XLE":-55,"PDBC":-50,"SCHD":-45,"XLV":-37,"XLU":-29,
-            "SGOV":+3,"USFR":+3,"AGG":+5,"TLT":+34,"KMLM":+20,
+            "SGOV":+3,"USFR":+3,"AGG":+5,
             "NVDA":-85,"AAPL":-60,"MSFT":-50,"GOOGL":-65,"XOM":-55,"COP":-70,
             "KO":-20,"JNJ":-25,"UNH":-45,"NEE":-35,"V":-60,"NEM":-20,"SCHP":+10,
         },
@@ -233,7 +188,7 @@ CRASH_SCENARIOS = {
         "asset_returns": {
             "SPY":-34,"QQQ":-29,"VGT":-30,"SMH":-28,"GLD":-12,"SLV":-22,
             "RING":-30,"XLE":-57,"PDBC":-45,"SCHD":-33,"XLV":-26,"XLU":-22,
-            "SGOV":+1,"USFR":+1,"AGG":+2,"TLT":+14,"KMLM":+3,
+            "SGOV":+1,"USFR":+1,"AGG":+2,
             "NVDA":-28,"AAPL":-30,"MSFT":-26,"GOOGL":-30,"XOM":-57,"COP":-60,
             "KO":-22,"JNJ":-18,"UNH":-24,"NEE":-20,"V":-25,"NEM":-15,"SCHP":+3,
         },
@@ -244,7 +199,7 @@ CRASH_SCENARIOS = {
         "asset_returns": {
             "SPY":-25,"QQQ":-35,"VGT":-30,"SMH":-34,"GLD":-3,"SLV":-15,
             "RING":-15,"XLE":+65,"PDBC":+20,"SCHD":-16,"XLV":-10,"XLU":-8,
-            "SGOV":+2,"USFR":+3,"AGG":-16,"TLT":-33,"KMLM":+28,
+            "SGOV":+2,"USFR":+3,"AGG":-16,
             "NVDA":-68,"AAPL":-25,"MSFT":-30,"GOOGL":-40,"XOM":+30,"COP":+45,
             "KO":-1,"JNJ":-5,"UNH":+6,"NEE":-12,"V":-8,"NEM":-10,"SCHP":-12,
         },
@@ -255,7 +210,7 @@ CRASH_SCENARIOS = {
         "asset_returns": {
             "SPY":-48,"QQQ":-60,"VGT":-60,"SMH":-60,"GLD":+240,"SLV":+315,
             "RING":+200,"XLE":+40,"PDBC":+50,"SCHD":-25,"XLV":-20,"XLU":-30,
-            "SGOV":+8,"USFR":+8,"AGG":-5,"TLT":-40,"KMLM":+45,
+            "SGOV":+8,"USFR":+8,"AGG":-5,
             "NVDA":None,"AAPL":None,"MSFT":None,"GOOGL":None,"XOM":+40,"COP":+50,
             "KO":-25,"JNJ":-22,"UNH":None,"NEE":-30,"V":None,"NEM":+200,"SCHP":+15,
         },
@@ -408,14 +363,6 @@ with st.sidebar:
     }
     period_label = st.selectbox("Time Period", list(period_map.keys()), index=3)
     period = period_map[period_label]
-
-    st.markdown("---")
-    fred_key_input = st.text_input(
-        "FRED API key (optional)", type="password",
-        help="Enables the LIVE regime banner in the Education tab. Free key at "
-             "fredaccount.stlouisfed.org. Without it, the static signal guide "
-             "and quadrant map still render.",
-    )
 
     st.markdown("---")
     st.markdown("### Allocation Weights")
@@ -1388,79 +1335,6 @@ long after their private valuations have already compounded. Consider buying dir
 # ════════════════════════════════════════════════════════════
 with tab8:
     st.markdown("### Market Signals & Investment Education")
-
-    # ══════════════════════════════════════════════════════════════════════════
-    # REGIME CLASSIFIER — signals to watch & when to change construction
-    # ══════════════════════════════════════════════════════════════════════════
-    st.markdown("#### 🧭 Which signals to watch — and when to change the portfolio")
-    st.caption(
-        "Rebalance on regime *transitions*, not on a calendar. The quadrant is "
-        "the SIGN of the short real rate × the DIRECTION of the long real yield, "
-        "with credit spreads able to override everything."
-    )
-
-    _assessment = None
-    if _REGIME_OK and fred_key_input:
-        try:
-            _assessment = full_assessment(fred_key_input)
-        except Exception as _e:
-            st.warning(f"Live regime unavailable ({_e}). Showing static guide.")
-
-    if _assessment is not None:
-        _r = _assessment["regime"]; _s = _assessment["signals"]
-        _color = {"inflationary_repression":"#c026d3","liquidity_crisis":"#dc2626",
-                  "stagflation":"#d97706","goldilocks":"#16a34a",
-                  "neutral":"#6b7280"}.get(_r["key"], "#6b7280")
-        st.markdown(
-            f"<div style='padding:12px 16px;border-radius:8px;background:{_color}22;"
-            f"border-left:5px solid {_color};'><b style='color:{_color};font-size:1.15rem;'>"
-            f"Current regime: {_r['label']}</b><br><span style='color:#cbd5e1;'>"
-            f"{_r['blurb']}</span></div>", unsafe_allow_html=True)
-        _cA,_cB,_cC,_cD = st.columns(4)
-        _cA.metric("SHORT real rate",
-                   "n/a" if _s.short_real_rate is None else f"{_s.short_real_rate:+.2f}%")
-        _cB.metric("LONG real yield",
-                   "n/a" if _s.long_real_yield is None else f"{_s.long_real_yield:+.2f}%")
-        _cC.metric("HY OAS",
-                   "n/a" if _s.hy_oas is None else f"{_s.hy_oas:.2f}%")
-        _cD.metric("Stock/bond 60d corr",
-                   "n/a" if _s.stock_bond_corr_60d is None else f"{_s.stock_bond_corr_60d:+.2f}")
-        _k = _assessment["kmlm"]
-        st.markdown(f"**Trend / KMLM signal: {_k['stance']}** — {_k['funding']}")
-    elif _REGIME_OK:
-        st.info("💡 Add a FRED API key in the sidebar to see the LIVE regime "
-                "banner. The static guide and quadrant map below always render.")
-
-    st.markdown("##### Signal → what it tells you → when to change construction")
-    st.dataframe(
-        pd.DataFrame(SIGNAL_GUIDE, columns=[
-            "Signal", "What it tells you", "When to change construction"]),
-        hide_index=True, use_container_width=True,
-    )
-
-    if _REGIME_OK:
-        st.markdown("##### The 4-regime map & target tilts")
-        _active = _assessment["regime"]["key"] if _assessment else None
-        _disc = {"inflationary_repression":"short real −  ·  long real ↑",
-                 "liquidity_crisis":"HY blowout  ·  long real ↓",
-                 "stagflation":"short real −  ·  2s10s re-steepening",
-                 "goldilocks":"short real +  ·  credit tight"}
-        _rows=[]
-        for _kk in ["inflationary_repression","liquidity_crisis","stagflation","goldilocks"]:
-            _w = target_weights(_kk)
-            _rows.append({
-                "Regime": REGIMES[_kk]["label"] + (" ⬅ ACTIVE" if _kk==_active else ""),
-                "Trigger": _disc[_kk],
-                "TLT": f"{_w['TLT']}%", "KMLM": f"{_w['KMLM']}%",
-                "Real assets": f"{_w['GLD']+_w['SLV']+_w['RING']+_w['XLE']+_w['PDBC']}%",
-                "Cash": f"{_w['SGOV']+_w['USFR']}%",
-                "Growth": f"{_w['VGT']+_w['SMH']+_w['QQQ']}%",
-            })
-        st.dataframe(pd.DataFrame(_rows), hide_index=True, use_container_width=True)
-        st.caption("TLT is a *contingent* sleeve: 0% in inflationary repression "
-                   "(rising long real yields), armed in a liquidity crisis.")
-
-    st.markdown("---")
 
     topics={
         "📉 Max Drawdown & Why It Matters More Than Volatility": """
