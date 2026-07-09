@@ -1,6 +1,6 @@
 """
-regime_classifier.py  (v2 — July 2026 accuracy patch)
-======================================================
+regime_classifier.py
+====================
 Shared macro-regime engine for the Repression Dashboard and the All-Weather
 Portfolio Dashboard.
 
@@ -11,34 +11,11 @@ Core idea implemented here (per the crux correction):
     2. LONG  real market yield = DFII10 (10y TIPS yield)         -> duration friend/foe
 
   The SIGN of (1) and the DIRECTION (momentum) of (2), combined with HY credit
-  spreads and the 60-day stock/bond correlation, place us in one of FIVE regime
+  spreads and the 60-day stock/bond correlation, place us in one of four regime
   quadrants, each of which maps to a target portfolio tilt.
 
-v2 CHANGELOG (vs v1):
-  FIX 1  Overlays are now sum-zero by construction (asserted at import).
-         v1's inflationary_repression overlay summed to -6, so renormalization
-         silently scaled UNTOUCHED sleeves up ~6.4% — VGT rose 20%->21.3% in
-         the one regime whose defining signal (rising long real yields)
-         compresses growth multiples. Overlays now trim growth explicitly.
-  FIX 2  The GLD tilt in inflationary_repression is MOMENTUM-GATED
-         (Level-4 entry confirmation). Rising long real yields are gold's
-         primary headwind; the regime must not mechanically add to a metal
-         in a confirmed downtrend. Gate fails -> the +3 redirects to SGOV.
-  FIX 3  New HARD_REPRESSION regime. v1 had no rule for (short real negative,
-         long real FALLING, credit tight) — the max-metals, TLT-viable
-         quadrant — so it fell through to 'neutral' with no tilts.
-  FIX 4  USFR is no longer cut with SGOV. Floaters' coupons RISE with hikes;
-         when the front-end risk is a hike (June 2026 SEP: 3.8% end-2026),
-         USFR is a beneficiary, not dead cash.
-  FIX 5  classify_regime surfaces missing DFII10 momentum instead of silently
-         treating None as "not rising". Precedence comments added.
-  NEW    repression_score(): the 0-10 stacking score from the written
-         framework, now in code. The quadrant says WHAT; the score says HOW
-         HARD to tilt.
-
-Public API is unchanged and backward compatible:
-  full_assessment, compute_signals, classify_regime, target_weights,
-  kmlm_signal, fed_reaction_flag, REGIMES, BASE_WEIGHTS, SignalSet
+The module is dependency-injected: pass your existing fetchers in, or let it
+fall back to the inline implementations so it runs standalone.
 
 FRED series used:
   DFF          Effective Federal Funds Rate (daily)
@@ -81,18 +58,16 @@ FRED_SERIES = {
 #  Regime definitions + target tilts
 # --------------------------------------------------------------------------- #
 # Weights are the *base* All-Weather sleeve. Each regime supplies an overlay
-# that shifts weights. Overlays are additive deltas (in %) and MUST sum to
-# zero (asserted below) so that a tilt means exactly what it says — v1's
-# renormalization of non-zero-sum overlays silently distorted untouched
-# sleeves.
+# that shifts weights. Overlays are expressed as additive deltas (in %) and are
+# normalized back to 100% after applying, so they stay internally consistent.
 
 BASE_WEIGHTS = {
-    "VGT": 20, "SMH": 4, "QQQ": 4,           # growth / tech
+    "VGT": 20, "SMH": 4, "QQQ": 4,          # growth / tech
     "GLD": 12, "SLV": 5, "RING": 5,          # precious metals
-    "XLE": 5, "PDBC": 3,                     # commodities / energy
+    "XLE": 5, "PDBC": 3,                      # commodities / energy
     "SCHD": 13, "XLV": 4, "XLU": 3,          # defensive equity
-    "SGOV": 5, "USFR": 3,                    # cash
-    "TLT": 10, "KMLM": 4,                    # duration (contingent) + trend
+    "SGOV": 5, "USFR": 3,                     # cash
+    "TLT": 10, "KMLM": 4,                     # duration (contingent) + trend
 }
 
 REGIMES = {
@@ -101,38 +76,14 @@ REGIMES = {
         "blurb": (
             "Negative SHORT real rate + POSITIVE, RISING long real yield. Debt "
             "eroded via inflation overshoot at the front end; long end NOT "
-            "suppressed. Real assets WITH MOMENTUM and trend win; long "
-            "duration bleeds; rate-sensitive growth compresses."
+            "suppressed. Real assets and trend win; long duration bleeds."
         ),
-        # sum-zero: -24 / +24
         "overlay": {
-            # ── funded from ──
-            "TLT": -10,                        # contingent duration OFF (bleeds)
-            "VGT": -4, "SMH": -2, "QQQ": -1,   # rising real yields hit growth
-            "SLV": -2, "RING": -3,             # high-beta metals: no trend, no add
-            "SGOV": -2,                        # T-bills bleed in real terms
-            # ── deployed to ──
-            "KMLM": +6,                        # trend replaces failing bond hedge
-            "XLE": +3, "PDBC": +2,             # real assets WITH momentum
-            "SCHD": +4, "XLV": +2, "XLU": +1,  # defensive rotation
-            "USFR": +3,                        # floaters win if the Fed hikes
-            "GLD": +3,                         # MOMENTUM-GATED (see target_weights)
-        },
-    },
-    "hard_repression": {
-        "label": "Hard Repression",
-        "blurb": (
-            "Negative short real rate with long real yields suppressed or "
-            "falling while credit stays calm (yield-curve-control signature). "
-            "Peak debasement: metals and miners lead, duration works again, "
-            "cash is the worst asset."
-        ),
-        # sum-zero: -11 / +11
-        "overlay": {
-            "GLD": +4, "RING": +2, "SLV": +1,
-            "TLT": +2, "KMLM": +2,
-            "SGOV": -4, "USFR": -2,
-            "VGT": -3, "QQQ": -1, "SMH": -1,
+            "TLT": -10,          # turn contingent duration OFF
+            "KMLM": +4,          # lean into trend
+            "SGOV": -3, "USFR": -3,   # cash bleeds in real terms
+            "GLD": +3, "PDBC": +2, "XLE": +2,
+            "SMH": -1,           # rate-sensitive growth trimmed
         },
     },
     "liquidity_crisis": {
@@ -142,9 +93,8 @@ REGIMES = {
             "quality). Duration and cash are the shock absorbers; metals may "
             "sell off first before rallying."
         ),
-        # sum-zero: -14 / +14 (unchanged from v1 — already balanced)
         "overlay": {
-            "TLT": +6,            # switch/boost contingent duration
+            "TLT": +6,           # switch/boost contingent duration
             "SGOV": +4, "USFR": +2,
             "KMLM": +2,
             "VGT": -6, "SMH": -2, "QQQ": -2,
@@ -158,10 +108,9 @@ REGIMES = {
             "re-steepening from inversion). Gold, trend, and defensives; cut "
             "cyclical growth and energy demand risk."
         ),
-        # sum-zero: -13 / +13 (v1 summed to -1; XLU +1 -> +2)
         "overlay": {
             "GLD": +4, "KMLM": +3,
-            "SCHD": +2, "XLV": +2, "XLU": +2,
+            "SCHD": +2, "XLV": +2, "XLU": +1,
             "VGT": -5, "SMH": -2, "QQQ": -2, "XLE": -3,
             "TLT": -1,
         },
@@ -172,7 +121,6 @@ REGIMES = {
             "Positive real rates, tight credit, stable inflation. Normalize "
             "toward growth; trim hedges and reduce trend."
         ),
-        # sum-zero: -11 / +11 (unchanged from v1 — already balanced)
         "overlay": {
             "VGT": +4, "QQQ": +3, "SMH": +2,
             "KMLM": -2, "TLT": -4,
@@ -190,63 +138,44 @@ REGIMES = {
     },
 }
 
-# FIX 1 guard: overlays must be sum-zero so tilts mean what they say.
-for _k, _r in REGIMES.items():
-    _s = sum(_r["overlay"].values())
-    assert _s == 0, f"Overlay for '{_k}' sums to {_s:+d}; overlays must be sum-zero"
-
 
 # --------------------------------------------------------------------------- #
 #  Inline fetchers (fallbacks). Pass your own to override.
 # --------------------------------------------------------------------------- #
 def _inline_fetch_fred(series_id: str, api_key: str,
                        start: str = "2015-01-01") -> pd.Series:
-    """Minimal FRED fetch mirroring the dashboard's existing pattern.
-    Returns a float Series indexed by date; empty Series on any failure."""
-    if requests is None or not api_key:
+    """Minimal FRED fetch mirroring the dashboard's existing pattern."""
+    if requests is None:
         return pd.Series(dtype=float)
+    url = "https://api.stlouisfed.org/fred/series/observations"
+    params = {
+        "series_id": series_id, "api_key": api_key, "file_type": "json",
+        "observation_start": start,
+    }
     try:
-        url = "https://api.stlouisfed.org/fred/series/observations"
-        params = {
-            "series_id": series_id,
-            "api_key": api_key,
-            "file_type": "json",
-            "observation_start": start,
-        }
-        resp = requests.get(url, params=params, timeout=15)
-        resp.raise_for_status()
-        obs = resp.json().get("observations", [])
-        if not obs:
-            return pd.Series(dtype=float)
-        idx, vals = [], []
+        r = requests.get(url, params=params, timeout=20)
+        r.raise_for_status()
+        obs = r.json().get("observations", [])
+        idx, val = [], []
         for o in obs:
-            v = o.get("value", ".")
-            if v not in (".", "", None):
-                idx.append(pd.Timestamp(o["date"]))
-                vals.append(float(v))
-        return pd.Series(vals, index=pd.DatetimeIndex(idx), name=series_id)
+            if o["value"] in (".", "", None):
+                continue
+            idx.append(pd.to_datetime(o["date"]))
+            val.append(float(o["value"]))
+        return pd.Series(val, index=idx, name=series_id)
     except Exception:
         return pd.Series(dtype=float)
 
 
 def _inline_fetch_prices(ticker: str, period: str = "1y") -> pd.Series:
-    """
-    Always returns a 1-D Series. Recent yfinance versions can return a
-    single-column DataFrame or MultiIndex columns even for one ticker, so we
-    squeeze/flatten defensively.
-    """
+    """Fallback price fetch via yfinance (used for stock/bond correlation)."""
     try:
         import yfinance as yf
         df = yf.download(ticker, period=period, progress=False,
                          auto_adjust=True)
-        if df is None or len(df) == 0:
+        if df.empty:
             return pd.Series(dtype=float)
-        # Prefer the Close column; handle MultiIndex and single-column frames.
-        obj = df["Close"] if "Close" in df.columns else df
-        if isinstance(obj, pd.DataFrame):
-            # single column -> squeeze to Series; multi -> take first column
-            obj = obj.iloc[:, 0] if obj.shape[1] >= 1 else pd.Series(dtype=float)
-        return pd.Series(obj).astype(float).dropna()
+        return df["Close"].dropna()
     except Exception:
         return pd.Series(dtype=float)
 
@@ -337,23 +266,16 @@ def compute_signals(
     sig.ig_oas = _last(ig)
 
     # --- SIGNAL: stock/bond 60d correlation (the KMLM-sizing signal) ---
-    try:
-        spy = fetch_prices("SPY", "1y")
-        tlt = fetch_prices("TLT", "1y")
-        # Coerce anything (DataFrame/MultiIndex) down to a 1-D float Series.
-        spy = pd.Series(spy.squeeze() if hasattr(spy, "squeeze") else spy).astype(float)
-        tlt = pd.Series(tlt.squeeze() if hasattr(tlt, "squeeze") else tlt).astype(float)
-        if len(spy) > 65 and len(tlt) > 65:
-            rets = pd.concat(
-                [spy.pct_change().rename("spy"),
-                 tlt.pct_change().rename("tlt")],
-                axis=1,
-            ).dropna()
-            if len(rets) > 60:
-                sig.stock_bond_corr_60d = round(
-                    float(rets["spy"].tail(60).corr(rets["tlt"].tail(60))), 2)
-    except Exception as exc:  # never let this optional signal crash the app
-        sig.notes.append(f"stock/bond corr unavailable: {exc}")
+    spy = fetch_prices("SPY", "1y")
+    tlt = fetch_prices("TLT", "1y")
+    if spy is not None and tlt is not None and len(spy) > 65 and len(tlt) > 65:
+        rets = pd.DataFrame({
+            "spy": spy.pct_change(),
+            "tlt": tlt.pct_change(),
+        }).dropna()
+        if len(rets) > 60:
+            sig.stock_bond_corr_60d = round(
+                float(rets["spy"].tail(60).corr(rets["tlt"].tail(60))), 2)
 
     return sig
 
@@ -387,90 +309,10 @@ def fed_reaction_flag(sig: SignalSet) -> dict:
 
 
 # --------------------------------------------------------------------------- #
-#  Repression Proximity Score (0-10) — NEW in v2
-# --------------------------------------------------------------------------- #
-def repression_score(sig: SignalSet,
-                     fed_bs_expanding: Optional[bool] = None,
-                     deficit_gt_5pct_gdp: Optional[bool] = None) -> dict:
-    """
-    The stacking score from the written framework. The quadrant says WHAT
-    regime we're in; this score says HOW HARD to tilt.
-
-      Soft real policy rate negative .......... +2
-      DFII10 below 1% ......................... +2
-      2s10s positive and widening ............. +1
-      Fed balance sheet expanding ............. +1   (pass fed_bs_expanding)
-      HY spreads tight (<350bps) .............. +1
-      10y breakeven above 2.5% ................ +1
-      CPI above Fed target .................... +1
-      Deficit > 5% GDP ........................ +1   (pass deficit_gt_5pct_gdp)
-
-    Bands: 8-10 peak repression | 5-7 moderate | 2-4 tightening | 0-2 anti.
-    Components whose inputs are unavailable score 0 and are listed in
-    'missing' so a degraded score is never mistaken for a low score.
-    """
-    pts, reasons, missing = 0, [], []
-
-    if sig.short_real_rate is None:
-        missing.append("short real rate")
-    elif sig.short_real_rate < 0:
-        pts += 2; reasons.append(f"Short real rate {sig.short_real_rate:+.2f}% (+2)")
-
-    if sig.long_real_yield is None:
-        missing.append("DFII10 level")
-    elif sig.long_real_yield < 1.0:
-        pts += 2; reasons.append(f"DFII10 {sig.long_real_yield:.2f}% < 1% (+2)")
-
-    if sig.spread_2s10s is None or sig.spread_2s10s_mom_3m is None:
-        missing.append("2s10s / momentum")
-    elif sig.spread_2s10s > 0 and sig.spread_2s10s_mom_3m > 0:
-        pts += 1; reasons.append("2s10s positive and widening (+1)")
-
-    if fed_bs_expanding is None:
-        missing.append("Fed balance sheet direction (pass fed_bs_expanding)")
-    elif fed_bs_expanding:
-        pts += 1; reasons.append("Fed balance sheet expanding (+1)")
-
-    if sig.hy_oas is None:
-        missing.append("HY OAS")
-    elif sig.hy_oas < 3.5:
-        pts += 1; reasons.append(f"HY OAS {sig.hy_oas:.2f}% tight (+1)")
-
-    if sig.breakeven_10y is None:
-        missing.append("10y breakeven")
-    elif sig.breakeven_10y > 2.5:
-        pts += 1; reasons.append(f"Breakeven {sig.breakeven_10y:.2f}% > 2.5% (+1)")
-
-    if sig.cpi_yoy is None:
-        missing.append("CPI YoY")
-    elif sig.cpi_yoy > FED_TARGET_INFLATION:
-        pts += 1; reasons.append(f"CPI {sig.cpi_yoy:.1f}% above target (+1)")
-
-    if deficit_gt_5pct_gdp is None:
-        missing.append("deficit vs GDP (pass deficit_gt_5pct_gdp)")
-    elif deficit_gt_5pct_gdp:
-        pts += 1; reasons.append("Deficit > 5% of GDP (+1)")
-
-    band = ("Peak repression" if pts >= 8 else
-            "Moderate repression" if pts >= 5 else
-            "Tightening cycle" if pts >= 2 else "Anti-repression")
-    return {"score": pts, "band": band, "reasons": reasons, "missing": missing}
-
-
-# --------------------------------------------------------------------------- #
-#  The regime classifier (5 quadrants + neutral)
+#  The 4-quadrant classifier
 # --------------------------------------------------------------------------- #
 def classify_regime(sig: SignalSet) -> dict:
-    """Return the regime key, label, blurb, and drivers list.
-
-    Precedence (deliberate):
-      1. Liquidity crisis overrides everything (credit leads equities).
-      2. Inflationary repression beats stagflation when BOTH rising long
-         real yields and curve re-steepening fire — duration risk is the
-         more actionable signal.
-      2b. Hard repression fills the v1 gap (neg short real + falling long
-         real + calm credit previously fell through to 'neutral').
-    """
+    """Return the regime key, label, blurb, and drivers list."""
     drivers = []
 
     hy = sig.hy_oas
@@ -478,11 +320,6 @@ def classify_regime(sig: SignalSet) -> dict:
     long_mom = sig.long_real_mom_3m
     short_real = sig.short_real_rate
     curve_resteep = (sig.spread_2s10s_mom_3m or 0) > 0.15
-
-    # FIX 5: surface a degraded classification instead of silently treating
-    # a missing DFII10 momentum as "not rising".
-    if long_mom is None:
-        drivers.append("⚠ DFII10 momentum unavailable — classification degraded")
 
     # 1) Liquidity crisis OVERRIDES everything else.
     if hy is not None and hy > 5.0 and hy_rising:
@@ -492,20 +329,10 @@ def classify_regime(sig: SignalSet) -> dict:
         return _regime("liquidity_crisis", drivers)
 
     # 2) Inflationary repression: neg short real + rising long real.
-    if (short_real is not None and short_real < 0
-            and long_mom is not None and long_mom > 0):
+    if short_real is not None and short_real < 0 and (long_mom or 0) > 0:
         drivers.append(f"Short real rate {short_real:+.2f}% (negative)")
         drivers.append("Long real yield rising (duration headwind)")
         return _regime("inflationary_repression", drivers)
-
-    # 2b) Hard repression: neg short real + long real FALLING/suppressed,
-    #     credit calm. Yield-curve-control signature. (NEW in v2 — FIX 3)
-    if (short_real is not None and short_real < 0
-            and long_mom is not None and long_mom < 0
-            and hy is not None and hy < 3.5):
-        drivers.append(f"Short real rate {short_real:+.2f}% (negative)")
-        drivers.append("Long real yield falling (duration suppressed/rallying)")
-        return _regime("hard_repression", drivers)
 
     # 3) Stagflation: neg short real + growth rolling over.
     if short_real is not None and short_real < 0 and curve_resteep:
@@ -531,48 +358,12 @@ def _regime(key: str, drivers: list) -> dict:
 
 
 # --------------------------------------------------------------------------- #
-#  Momentum gate (Level-4 entry confirmation) — NEW in v2
-# --------------------------------------------------------------------------- #
-def _gold_trend_ok(fetch_prices: Callable = _inline_fetch_prices) -> bool:
-    """True when GLD closes above a RISING 200-day MA.
-    Fail SAFE: any data problem returns False (no momentum data -> no add)."""
-    try:
-        px = fetch_prices("GLD", "2y")
-        px = pd.Series(px.squeeze() if hasattr(px, "squeeze") else px)
-        px = px.astype(float).dropna()
-        if len(px) < 221:
-            return False
-        ma200 = px.rolling(200).mean()
-        return bool(px.iloc[-1] > ma200.iloc[-1]
-                    and ma200.iloc[-1] > ma200.iloc[-21])
-    except Exception:
-        return False
-
-
-# --------------------------------------------------------------------------- #
 #  Target weights for a regime
 # --------------------------------------------------------------------------- #
-def target_weights(regime_key: str,
-                   fetch_prices: Callable = None) -> dict:
-    """Apply the regime overlay to the base sleeve and renormalize to 100%.
-
-    v2: in inflationary_repression the GLD tilt is momentum-gated (FIX 2).
-    Rising long real yields — the regime's defining signal — are gold's
-    primary headwind, so the metal add requires trend confirmation; when the
-    gate fails, the tilt redirects to SGOV until GLD reclaims a rising
-    200-day MA (the Lagging->Improving hook, in RRG terms).
-
-    Backward compatible: target_weights('goldilocks') etc. work unchanged.
-    """
+def target_weights(regime_key: str) -> dict:
+    """Apply the regime overlay to the base sleeve and renormalize to 100%."""
     w = dict(BASE_WEIGHTS)
-    overlay = dict(REGIMES[regime_key]["overlay"])
-
-    if regime_key == "inflationary_repression" and overlay.get("GLD", 0) > 0:
-        if not _gold_trend_ok(fetch_prices or _inline_fetch_prices):
-            overlay["SGOV"] = overlay.get("SGOV", 0) + overlay["GLD"]
-            overlay["GLD"] = 0
-
-    for t, d in overlay.items():
+    for t, d in REGIMES[regime_key]["overlay"].items():
         w[t] = max(0, w.get(t, 0) + d)
     total = sum(w.values())
     if total <= 0:
@@ -616,9 +407,8 @@ def kmlm_signal(sig: SignalSet) -> dict:
 
     if score >= 3:
         stance = "INCREASE KMLM"
-        funding = ("Fund from CASH first (SGOV — it bleeds negative real "
-                   "return; keep USFR if hike risk is live), then "
-                   "rate-sensitive growth (SMH/QQQ). Do NOT sell "
+        funding = ("Fund from CASH first (SGOV/USFR — they bleed negative real "
+                   "return), then rate-sensitive growth (SMH/QQQ). Do NOT sell "
                    "metals/energy in this regime.")
     elif score <= 0:
         stance = "REDUCE KMLM"
@@ -636,14 +426,12 @@ def kmlm_signal(sig: SignalSet) -> dict:
 #  One-call convenience for either app
 # --------------------------------------------------------------------------- #
 def full_assessment(fred_api_key: str = "", **kw) -> dict:
-    fetch_prices = kw.get("fetch_prices")
     sig = compute_signals(fred_api_key, **kw)
     regime = classify_regime(sig)
     return {
         "signals": sig,
         "regime": regime,
         "fed": fed_reaction_flag(sig),
-        "targets": target_weights(regime["key"], fetch_prices=fetch_prices),
+        "targets": target_weights(regime["key"]),
         "kmlm": kmlm_signal(sig),
-        "repression": repression_score(sig),   # NEW in v2 (score 0-10)
     }

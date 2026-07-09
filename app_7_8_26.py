@@ -133,16 +133,11 @@ ETF_PORTFOLIO = {
 # Hybrid: direct stocks replacing ETFs where individual names add alpha
 # thesis: avoid ETF dilution on highest-conviction names
 HYBRID_PORTFOLIO = {
-    # Growth — direct stocks instead of VGT/SMH/QQQ for no dilution.
-    # v2: NVDA 14->11 and GOOGL 5->4 fund a 4% KMLM sleeve (below). The hybrid
-    # previously carried 35% mega-cap growth with ZERO crisis alpha — in the
-    # 2022 stress scenario it takes NVDA -68 / GOOGL -40 with no offset.
-    "NVDA": ("NVIDIA Corporation",       11, "Growth / Tech",     "SMH",   "SOX Index",   0.00),
+    # Growth — direct stocks instead of VGT/SMH/QQQ for no dilution
+    "NVDA": ("NVIDIA Corporation",       14, "Growth / Tech",     "SMH",   "SOX Index",   0.00),
     "AAPL": ("Apple Inc.",                8, "Growth / Tech",     "QQQ",   "Nasdaq-100",  0.00),
     "MSFT": ("Microsoft Corporation",     8, "Growth / Tech",     "QQQ",   "Nasdaq-100",  0.00),
-    "GOOGL":("Alphabet Inc.",             4, "Growth / Tech",     "QQQ",   "Nasdaq-100",  0.00),
-    # Trend / crisis alpha — the hybrid gets the same sleeve as the ETF book
-    "KMLM": ("KFA Mount Lucas Mgd Fut",   4, "Trend / Crisis Alpha", "DBMF", "Mgd Futures", 0.90),
+    "GOOGL":("Alphabet Inc.",             5, "Growth / Tech",     "QQQ",   "Nasdaq-100",  0.00),
     # Precious metals — ETFs still best here (no single-stock alternative)
     "GLD":  ("SPDR Gold Shares",         10, "Precious Metals",   "GLD",   "Gold Spot",   0.40),
     "SLV":  ("iShares Silver Trust",      4, "Precious Metals",   "SLV",   "Silver Spot", 0.50),
@@ -184,12 +179,7 @@ BENCHMARKS = {
 
 NO_PE_SET = {"GLD","SLV","PDBC","SGOV","USFR","BIL","FLOT","DJP","TIP","SCHP","TLT","KMLM","IEF","DBMF"}
 
-# Risk-free rate for Sharpe/Sortino — track EFFR; update on Fed moves.
-RISK_FREE_RATE = 3.6   # EFFR 3.63% as of Jul 2026 (target range 3.50-3.75%)
-
-# P/E fallbacks — June 2026 estimates. These go stale fast after large sector
-# moves (e.g., the H1-2026 semi run); PE_FALLBACK_ASOF drives a UI warning.
-PE_FALLBACK_ASOF = "2026-06-15"
+# P/E fallbacks — June 2026 estimates
 PE_FALLBACK = {
     "VGT":  {"trailingPE":34.2,"forwardPE":28.1,"priceToBook":11.8},
     "SMH":  {"trailingPE":29.6,"forwardPE":22.4,"priceToBook":7.4},
@@ -215,16 +205,13 @@ PE_FALLBACK = {
     "SPY":  {"trailingPE":27.3,"forwardPE":22.9,"priceToBook":5.0},
 }
 
-# Dividend yields (%) — July 2026 estimates (EFFR 3.63%; SGOV/USFR track the
-# front end and were overstated at 5.1/5.0 in the June table — the ~1.3pt gap
-# materially misstates real cash carry vs 4.2% CPI). Verify quarterly.
-DIV_YIELDS_ASOF = "2026-07-09"
+# Dividend yields (%) — June 2026 estimates
 DIV_YIELDS = {
     "VGT":0.6,"SMH":0.5,"QQQ":0.5,"GLD":0.0,"SLV":0.0,"RING":1.5,
-    "XLE":3.7,"PDBC":0.0,"SCHD":3.3,"XLV":1.7,"XLU":3.3,"SGOV":3.7,"USFR":3.8,
-    "TLT":4.6,"KMLM":0.0,
+    "XLE":3.7,"PDBC":0.0,"SCHD":3.3,"XLV":1.7,"XLU":3.3,"SGOV":5.1,"USFR":5.0,
+    "TLT":4.3,"KMLM":0.0,
     "NVDA":0.03,"AAPL":0.52,"MSFT":0.82,"GOOGL":0.45,"XOM":3.4,"COP":3.1,
-    "KO":3.1,"JNJ":3.1,"UNH":1.92,"NEE":3.1,"V":0.74,"NEM":1.8,"SCHP":2.1,
+    "KO":3.1,"JNJ":3.1,"UNH":1.92,"NEE":3.1,"V":0.74,"NEM":1.8,"SCHP":2.1,"NEM":1.8,
 }
 
 # ─── CRASH SCENARIO DATA ─────────────────────────────────────────────────────
@@ -311,14 +298,8 @@ def fetch_live_pe(ticker: str) -> dict:
 def get_pe(ticker: str) -> dict:
     live = fetch_live_pe(ticker)
     if live.get("trailingPE") is not None:
-        return {**live, "source": "live"}
-    # Fallback path: tag provenance + staleness (Level-3 valuation verdicts
-    # must never ride silently on a stale hardcoded multiple).
-    stale_days = (datetime.now().date()
-                  - datetime.strptime(PE_FALLBACK_ASOF, "%Y-%m-%d").date()).days
-    return {**live, **PE_FALLBACK.get(ticker, {}),
-            "source": "fallback", "stale_days": stale_days,
-            "stale": stale_days > 45}
+        return live
+    return {**live, **PE_FALLBACK.get(ticker, {})}
 
 def pe_badge(pe) -> str:
     if pe is None: return "—"
@@ -333,13 +314,12 @@ def calc_stats(price_series: pd.Series) -> dict:
         return {"total_return":0,"ann_vol":0,"sharpe":0,"sortino":0,"max_drawdown":0,"calmar":0}
     total_ret  = (price_series.iloc[-1] / price_series.iloc[0] - 1) * 100
     ann_vol    = daily.std() * np.sqrt(252) * 100
-    # Sharpe — risk-free tracks EFFR (3.63% as of Jul 2026). The old hardcoded
-    # 5.0% overstated the hurdle ~1.4pts and deflated every Sharpe/Sortino.
+    # Sharpe (using 5% risk-free rate)
     ann_ret    = ((price_series.iloc[-1] / price_series.iloc[0]) ** (252/len(daily)) - 1) * 100
-    sharpe     = (ann_ret - RISK_FREE_RATE) / ann_vol if ann_vol > 0 else 0
+    sharpe     = (ann_ret - 5.0) / ann_vol if ann_vol > 0 else 0
     # Sortino (downside deviation only)
     downside   = daily[daily < 0].std() * np.sqrt(252) * 100
-    sortino    = (ann_ret - RISK_FREE_RATE) / downside if downside > 0 else 0
+    sortino    = (ann_ret - 5.0) / downside if downside > 0 else 0
     # Max drawdown
     cum        = (1 + daily).cumprod()
     peak       = cum.cummax()
