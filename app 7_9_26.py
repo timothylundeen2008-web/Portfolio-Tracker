@@ -1463,8 +1463,7 @@ with tab8:
 
     if _assessment is not None:
         _r = _assessment["regime"]; _s = _assessment["signals"]
-        _color = {"inflationary_repression":"#c026d3","hard_repression":"#9333ea",
-                  "liquidity_crisis":"#dc2626",
+        _color = {"inflationary_repression":"#c026d3","liquidity_crisis":"#dc2626",
                   "stagflation":"#d97706","goldilocks":"#16a34a",
                   "neutral":"#6b7280"}.get(_r["key"], "#6b7280")
         st.markdown(
@@ -1495,15 +1494,14 @@ with tab8:
     )
 
     if _REGIME_OK:
-        st.markdown("##### The 5-regime map & target tilts")
+        st.markdown("##### The 4-regime map & target tilts")
         _active = _assessment["regime"]["key"] if _assessment else None
         _disc = {"inflationary_repression":"short real −  ·  long real ↑",
-                 "hard_repression":"short real −  ·  long real ↓  ·  credit calm",
                  "liquidity_crisis":"HY blowout  ·  long real ↓",
                  "stagflation":"short real −  ·  2s10s re-steepening",
                  "goldilocks":"short real +  ·  credit tight"}
         _rows=[]
-        for _kk in ["inflationary_repression","hard_repression","liquidity_crisis","stagflation","goldilocks"]:
+        for _kk in ["inflationary_repression","liquidity_crisis","stagflation","goldilocks"]:
             _w = target_weights(_kk)
             _rows.append({
                 "Regime": REGIMES[_kk]["label"] + (" ⬅ ACTIVE" if _kk==_active else ""),
@@ -1515,8 +1513,7 @@ with tab8:
             })
         st.dataframe(pd.DataFrame(_rows), hide_index=True, use_container_width=True)
         st.caption("TLT is a *contingent* sleeve: 0% in inflationary repression "
-                   "(rising long real yields), partially armed in hard repression "
-                   "(long real yields falling), fully armed in a liquidity crisis.")
+                   "(rising long real yields), armed in a liquidity crisis.")
 
     st.markdown("---")
 
