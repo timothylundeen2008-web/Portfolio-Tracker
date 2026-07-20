@@ -13,14 +13,6 @@ INTEGRATION (3 lines in your existing app.py):
 If you pass your own `fetch_fred` (your app's `_fetch_fred_inline`) and
 `fetch_prices`, the section uses them; otherwise it falls back to the inline
 fetchers in regime_classifier.py.
-
-v2 PATCH (July 2026 cross-dashboard audit):
-  - _REGIME_COLOR gained the hard_repression entry (was rendering gray).
-  - _quadrant_table now lists all FIVE classifier regimes including
-    hard_repression, so the ACTIVE marker can appear for it; expander
-    retitled from "4-regime" to "5-regime".
-  Drop this file into BOTH the All-Weather and Repression repos — the
-  two copies previously shipped were byte-identical and both stale.
 """
 
 from __future__ import annotations
@@ -39,7 +31,6 @@ except Exception:
 
 _REGIME_COLOR = {
     "inflationary_repression": "#c026d3",
-    "hard_repression": "#9333ea",          # v2 FIX: was missing -> banner rendered gray
     "liquidity_crisis": "#dc2626",
     "stagflation": "#d97706",
     "goldilocks": "#16a34a",
@@ -129,7 +120,7 @@ def render_regime_section(fred_api_key: str = "",
     _real_yield_chart(fred_api_key, kw)
 
     # ---- Quadrant map ----
-    with st.expander("📐 The 5-regime quadrant map & target tilts"):
+    with st.expander("📐 The 4-regime quadrant map & target tilts"):
         _quadrant_table(regime["key"])
 
     # ---- KMLM signal ----
@@ -180,11 +171,10 @@ def _real_yield_chart(fred_api_key, kw):
 
 def _quadrant_table(active_key):
     rows = []
-    order = ["inflationary_repression", "hard_repression",
-             "liquidity_crisis", "stagflation", "goldilocks"]
+    order = ["inflationary_repression", "liquidity_crisis",
+             "stagflation", "goldilocks"]
     disc = {
         "inflationary_repression": "short real −  ·  long real ↑",
-        "hard_repression": "short real −  ·  long real ↓  ·  credit calm",
         "liquidity_crisis": "HY blowout  ·  long real ↓",
         "stagflation": "short real −  ·  2s10s re-steepening",
         "goldilocks": "short real +  ·  credit tight",

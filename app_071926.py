@@ -14,13 +14,6 @@ Improvements over v1:
   - Download button for full portfolio CSV
   - Weighted expense ratio updated automatically with allocation sliders
   - P/E fallbacks updated to June 2026 estimates
-  JULY 2026 CROSS-DASHBOARD AUDIT PATCH:
-  - CRASH_SCENARIOS gains "2000 Dot-Com" (Mar 2000 - Oct 2002 estimates) so
-    the Track A minimum scenario set exists in the tool instead of only in
-    the review prompt
-  - Stress tab renders a 60/40 (SPY/AGG) benchmark alongside raw S&P 500
-  - Stress tab now discloses holdings excluded from a scenario (None
-    returns) instead of silently understating the weighted drawdown
 """
 
 import streamlit as st
@@ -267,23 +260,6 @@ CRASH_SCENARIOS = {
             "SGOV":+2,"USFR":+3,"AGG":-16,"TLT":-33,"KMLM":+28,
             "NVDA":-68,"AAPL":-25,"MSFT":-30,"GOOGL":-40,"XOM":+30,"COP":+45,
             "KO":-1,"JNJ":-5,"UNH":+6,"NEE":-12,"V":-8,"NEM":-10,"SCHP":-12,
-        },
-    },
-    "2000 Dot-Com": {
-        # Estimates, Mar 2000 – Oct 2002 (S&P peak-to-trough). Multiple-
-        # compression bust: growth/tech destroyed, value/dividend equity and
-        # duration worked, gold miners bottomed and rallied hard off 2000 lows,
-        # utilities were NOT a safe haven (Enron-era merchant-power collapse).
-        # GOOGL (IPO 2004) and V (IPO 2008) did not exist -> None (excluded
-        # from the weighted calc; see coverage caption in the stress tab).
-        "period": "Mar 2000 – Oct 2002",
-        "spy_drop": -49.0,
-        "asset_returns": {
-            "SPY":-49,"QQQ":-78,"VGT":-70,"SMH":-80,"GLD":+12,"SLV":-5,
-            "RING":+55,"XLE":-15,"PDBC":+5,"SCHD":-15,"XLV":-35,"XLU":-40,
-            "SGOV":+10,"USFR":+10,"AGG":+25,"TLT":+35,"KMLM":+30,
-            "NVDA":-90,"AAPL":-75,"MSFT":-60,"GOOGL":None,"XOM":-10,"COP":-25,
-            "KO":-35,"JNJ":+15,"UNH":+100,"NEE":-20,"V":None,"NEM":+75,"SCHP":+30,
         },
     },
     "1973 Stagflation": {
@@ -1285,29 +1261,11 @@ with tab6:
     spy_crash = scenario["spy_drop"]
     improvement = spy_crash - port_crash_ret
 
-    # 60/40 benchmark (60% SPY / 40% AGG) computed from the same scenario
-    # constants — the classic-allocation comparison the checklist's Track A
-    # review asks for alongside raw S&P 500.
-    _spy_r = scenario["asset_returns"].get("SPY")
-    _agg_r = scenario["asset_returns"].get("AGG")
-    bench_6040 = (0.6*_spy_r + 0.4*_agg_r) if (_spy_r is not None and _agg_r is not None) else None
-
-    c1,c2,c3,c4 = st.columns(4)
+    c1,c2,c3 = st.columns(3)
     c1.metric("Est. Portfolio Drawdown",  fmt(port_crash_ret))
     c2.metric("S&P 500 Actual Drop",      fmt(spy_crash))
-    c3.metric("60/40 Est. Drawdown",      fmt(bench_6040) if bench_6040 is not None else "—",
-              help="60% SPY / 40% AGG using the same scenario estimates")
-    c4.metric("Portfolio Protection",     fmt(improvement),
+    c3.metric("Portfolio Protection",     fmt(improvement),
               help="Positive = portfolio fell less than S&P 500")
-
-    # Coverage: holdings without a scenario estimate (None) are EXCLUDED from
-    # the weighted drawdown, which can understate risk — say so.
-    _excluded = [t for t,(n,a,c,*_) in PORTFOLIO.items()
-                 if scenario["asset_returns"].get(t) is None]
-    if _excluded:
-        st.caption(f"⚠️ No estimate for {', '.join(_excluded)} in this scenario "
-                   f"(asset/instrument did not exist) — excluded from the weighted "
-                   f"drawdown, which understates it by their combined weight.")
 
     st.caption(f"Scenario: {sel_crash} ({scenario['period']}). Estimates based on historical asset class behavior. Not actual returns.")
 
