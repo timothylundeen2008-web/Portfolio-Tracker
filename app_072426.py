@@ -481,28 +481,12 @@ with st.sidebar:
     period = period_map[period_label]
 
     st.markdown("---")
-    # Resolve from secrets/env first so the key does not have to be re-typed
-    # every session. The input below is an OVERRIDE, not a requirement.
-    try:
-        from fred_client import get_api_key as _fred_key_from_secrets
-        _stored_fred = _fred_key_from_secrets()
-    except Exception:
-        _stored_fred = ""
-
-    if _stored_fred:
-        st.caption("🔑 FRED key loaded from secrets")
-        fred_key_input = st.text_input(
-            "FRED API key (override)", type="password", value="",
-            help="A key is already set in Streamlit secrets. Leave blank to use it.",
-        ) or _stored_fred
-    else:
-        fred_key_input = st.text_input(
-            "FRED API key (optional)", type="password",
-            help="Optional — fred_client falls back to FRED's keyless CSV endpoint, "
-                 "so signals work without one. Set FRED_API_KEY in Streamlit secrets "
-                 "to avoid re-typing (never hardcode it in a committed file). "
-                 "Free key at fredaccount.stlouisfed.org.",
-        )
+    fred_key_input = st.text_input(
+        "FRED API key (optional)", type="password",
+        help="Enables the LIVE regime banner in the Education tab. Free key at "
+             "fredaccount.stlouisfed.org. Without it, the static signal guide "
+             "and quadrant map still render.",
+    )
 
     st.markdown("---")
     st.markdown("### Allocation Weights")

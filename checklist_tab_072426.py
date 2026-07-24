@@ -149,44 +149,12 @@ def _cfg_bls_key() -> str:
     return os.environ.get("BLS_API_KEY", "")
 
 
-def _resolve_fred_key(passed: str = "") -> str:
-    """
-    Sidebar input → Streamlit secrets → environment.
-
-    The sidebar text_input has to be re-typed every session; secrets persist.
-    Set FRED_API_KEY in secrets once and the sidebar becomes an optional
-    override rather than a requirement.
-    """
-    if passed:
-        return passed
-    try:
-        from fred_client import get_api_key
-        return get_api_key()
-    except Exception:
-        return ""
-
-
 def _safe_assessment(fred_key: str) -> dict:
-    """
-    full_assessment() with every failure mode caught.
-
-    Injects fred_client.fetch_fred, which falls back to FRED's KEYLESS CSV
-    endpoint when no API key is present. Without this injection the
-    classifier's built-in fetcher returns an empty Series the moment the key
-    is blank — taking the ENTIRE Level-1 layer offline (HY OAS, DFII10,
-    2s10s, short real rate, CPI, regime, Fed flag, repression score, KMLM)
-    and rendering all of it as "unavailable", which reads like a bug but is
-    just an unset key.
-    """
-    key = _resolve_fred_key(fred_key)
+    """full_assessment() with every failure mode caught — a dead FRED key must
+    degrade the tab to manual entry, never crash the whole app tab."""
     try:
         from regime_classifier import full_assessment
-        try:
-            from fred_client import fetch_fred as _ff
-            return full_assessment(fred_api_key=key, fetch_fred=_ff) or {}
-        except ImportError:
-            # fred_client absent — original behaviour (needs a key)
-            return full_assessment(fred_api_key=key) or {}
+        return full_assessment(fred_api_key=fred_key) or {}
     except Exception as e:
         print(f"[checklist] full_assessment failed: {e}")
         return {}
@@ -988,23 +956,6 @@ def _render_gaps_tab():
         "decision itself, which is the opposite of what this framework is for — "
         "the machine assembles evidence, you decide."
     )
-
-    st.markdown("#### FRED connection")
-    try:
-        from fred_client import status as _fred_status
-        fs = _fred_status()
-        if fs["working"] and fs["key_present"]:
-            st.success(fs["message"], icon="🔑")
-        elif fs["working"]:
-            st.info(fs["message"] + "  \n\nEvery Level-1 signal is live without a "
-                    "key. To set one permanently, add `FRED_API_KEY` to Streamlit "
-                    "secrets — do NOT hardcode it in a committed file.", icon="🔓")
-        else:
-            st.error(fs["message"], icon="🚨")
-    except Exception as e:
-        st.caption(f"fred_client not available ({e}) — the classifier then requires "
-                   f"a key typed in the sidebar, and every Level-1 item shows "
-                   f"'unavailable' without one.")
 
     st.markdown("#### One-time setup checks")
     b1, b2 = st.columns(2)
