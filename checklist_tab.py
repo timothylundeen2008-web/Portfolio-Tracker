@@ -116,6 +116,28 @@ def _fetch_market_extras() -> dict:
     return out
 
 
+def _get(obj, name: str, default=None):
+    """
+    Read a field from a dict, a dataclass, or None — uniformly.
+
+    WHY THIS EXISTS: full_assessment() returns a MIXED structure. Its "signals"
+    value is a SignalSet DATACLASS while "regime", "fed", "kmlm" and
+    "repression" are plain dicts. Calling .get() on the dataclass raised
+    AttributeError and took the whole tab down.
+
+    That was the same failure mode as the flow_score outage — assuming a schema
+    instead of reading it. This accessor removes the assumption entirely: any
+    shape works, and an unknown field returns the default rather than raising,
+    so a future upstream change degrades ONE item to "unavailable" instead of
+    blanking the tab.
+    """
+    if obj is None:
+        return default
+    if isinstance(obj, dict):
+        return obj.get(name, default)
+    return getattr(obj, name, default)
+
+
 def _cfg_bls_key() -> str:
     """BLS v1 works with no key (3y history, enough for the cross-check);
     a free v2 key raises the limits."""
@@ -140,37 +162,113 @@ def _safe_assessment(fred_key: str) -> dict:
 
 def autofetch(fred_key: str, live_weights: dict | None = None) -> dict:
     """
+    Safe wrapper: autofetch must NEVER raise.
+
+    A schema change upstream previously took the whole tab down with
+    AttributeError. Individual sections are already guarded; this catches
+    anything that slips past so the worst case is a tab full of "unavailable"
+    badges plus a visible error — never a blank tab. Degraded and broken should
+    look different, and both should still let you complete the checklist
+    manually.
+    """
+    try:
+        return _autofetch(fred_key, live_weights)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"_autofetch_error": f"{type(e).__name__}: {e}"}
+
+
+def _autofetch(fred_key: str, live_weights: dict | None = None) -> dict:
+    """
     Collect every auto-fillable field. Missing values are None, never guessed —
     a None renders as an explicit 'unavailable' badge so a gap is visible
     rather than silently absent.
     """
     a = _safe_assessment(fred_key)
-    sig = a.get("signals", {}) or {}
-    regime = a.get("regime", {}) or {}
-    score = a.get("repression", {}) or a.get("score", {}) or {}
-    kmlm = a.get("kmlm", {}) or {}
+
+    # full_assessment() actual shape (verified against regime_classifier.py):
+    #   signals    -> SignalSet DATACLASS  (not a dict!)
+    #   regime     -> dict: key, label, blurb, drivers
+    #   fed        -> dict: state, detail        (NOT "fed_flag")
+    #   kmlm       -> dict: stance, score, reasons
+    #   repression -> dict: score, band, reasons, missing
+    #   targets    -> dict of sleeve weights
+    # There is NO "gold_gate" key — the gate is _gold_trend_ok(), called below.
+    sig    = _get(a, "signals")
+    regime = _get(a, "regime", {}) or {}
+    fed    = _get(a, "fed", {}) or {}
+    score  = _get(a, "repression", {}) or {}
+    kmlm   = _get(a, "kmlm", {}) or {}
     extras = _fetch_market_extras()
 
     vals: dict = {
-        "hy_oas":           sig.get("hy_oas"),
-        "hy_oas_mom_2w":    sig.get("hy_oas_mom_2w"),
-        "long_real_yield":  sig.get("long_real_yield"),
-        "long_real_mom_3m": sig.get("long_real_mom_3m"),
-        "spread_2s10s":     sig.get("spread_2s10s"),
-        "short_real_rate":  sig.get("short_real_rate"),
-        "cpi_yoy":          sig.get("cpi_yoy"),
-        "eff_funds":        sig.get("eff_funds"),
-        "regime_key":       regime.get("key"),
-        "regime_drivers":   "; ".join(regime.get("drivers", []) or []),
-        "fed_flag":         (a.get("fed_flag") or {}).get("state"),
-        "repression_score": score.get("score"),
-        "repression_band":  score.get("band"),
-        "repression_missing": ", ".join(score.get("missing", []) or []) or "none",
-        "kmlm_stance":      kmlm.get("stance"),
-        "kmlm_score":       kmlm.get("score"),
-        "gold_gate":        a.get("gold_gate"),
+        "hy_oas":           _get(sig, "hy_oas"),
+        "hy_oas_mom_2w":    _get(sig, "hy_oas_mom_2w"),
+        "long_real_yield":  _get(sig, "long_real_yield"),
+        "long_real_mom_3m": _get(sig, "long_real_mom_3m"),
+        "spread_2s10s":     _get(sig, "spread_2s10s"),
+        "short_real_rate":  _get(sig, "short_real_rate"),
+        "cpi_yoy":          _get(sig, "cpi_yoy"),
+        "eff_funds":        _get(sig, "eff_funds"),
+        "regime_key":       _get(regime, "key"),
+        "regime_label":     _get(regime, "label"),
+        "regime_drivers":   "; ".join(_get(regime, "drivers", []) or []),
+        "fed_flag":         _get(fed, "state"),
+        "fed_detail":       _get(fed, "detail"),
+        "repression_score": _get(score, "score"),
+        "repression_band":  _get(score, "band"),
+        "repression_missing": ", ".join(_get(score, "missing", []) or []) or "none",
+        "kmlm_stance":      _get(kmlm, "stance"),
+        "kmlm_score":       _get(kmlm, "score"),
+        "targets":          _get(a, "targets", {}) or {},
     }
     vals.update(extras)
+
+    # Gold gate — NOT part of full_assessment()'s return. Call it directly.
+    # _gold_trend_ok() fails SAFE (any data problem returns False = no add), so
+    # distinguish "gate FAIL" from "could not evaluate" rather than reporting a
+    # data outage as a bearish signal.
+    try:
+        from regime_classifier import _gold_trend_ok, _inline_fetch_prices
+        # Confirm data actually arrived BEFORE trusting the gate. _gold_trend_ok
+        # returns False on ANY data problem — correct for sizing (no data, no
+        # add) but it means a vendor outage is indistinguishable from a genuine
+        # downtrend unless checked. Reporting an outage as a bearish signal is
+        # the same silent-wrong-answer class as the CPI bug, so we separate them.
+        px = _inline_fetch_prices("GLD", "2y")
+        if px is None or len(px.dropna()) < 200:
+            vals["gold_gate"] = None
+            vals["gold_gate_detail"] = (
+                "Could not evaluate — fewer than 200 GLD closes returned. This is a "
+                "DATA problem, not a gate FAIL. Check the chart manually before "
+                "acting on the metals sleeve.")
+        else:
+            gate = _gold_trend_ok()
+            vals["gold_gate"] = ("PASS — GLD above a rising 200d MA"
+                                 if gate else
+                                 "FAIL — GLD not above a rising 200d MA")
+            vals["gold_gate_detail"] = (
+                "Gate PASS arms the +3 tactical add (GLD 12→15, funded from SGOV). "
+                "That flip IS the Lagging-to-Improving hook, mechanically detected."
+                if gate else
+                "The +3 tactical add stays in SGOV. Rising long real yields are "
+                "gold's primary headwind, so the tilt must never fire into a "
+                "confirmed downtrend.")
+    except Exception as e:
+        print(f"[checklist] gold gate failed: {e}")
+        vals["gold_gate"] = None
+        vals["gold_gate_detail"] = f"Could not evaluate ({type(e).__name__}) — "\
+                                   f"treat as unknown, not as FAIL."
+
+    # repression_score() is called inside full_assessment WITHOUT the two manual
+    # flags, so they always appear in missing[]. Weekly Step 1 depends on the
+    # difference between an incomplete 5 and a true 5 — say which this is.
+    if vals.get("repression_score") is not None:
+        miss = vals.get("repression_missing", "none")
+        vals["repression_score"] = (
+            f"{vals['repression_score']}/10 ({vals.get('repression_band')})"
+            + (f" — INCOMPLETE, missing: {miss}" if miss != "none" else " — complete"))
 
     # Degraded-input flag (Weekly Step 1)
     drivers = regime.get("drivers", []) or []
@@ -189,8 +287,8 @@ def autofetch(fred_key: str, live_weights: dict | None = None) -> dict:
 
     # KMLM overlay-vs-signal conflict (Weekly Step 4)
     try:
-        from regime_classifier import target_weights
-        tgt = target_weights(vals.get("regime_key") or "neutral").get("KMLM")
+        # targets already computed by full_assessment — don't refetch prices
+        tgt = (vals.get("targets") or {}).get("KMLM")
         stance = (vals.get("kmlm_stance") or "").upper()
         if tgt is not None and stance:
             overlay_cuts = tgt <= 4
@@ -216,10 +314,14 @@ def autofetch(fred_key: str, live_weights: dict | None = None) -> dict:
                     continue
                 if abs(live - t) / t > 0.20:
                     breaches.append(f"{tk} {live:.0f}% vs {t:.0f}%")
-            vals["drift_summary"] = ("BREACH: " + "; ".join(breaches)) if breaches \
-                else "All sleeves within ±20% relative band"
+            if "drift_source" not in vals:      # ledger version wins if present
+                vals["drift_summary"] = (
+                    ("BREACH: " + "; ".join(breaches)) if breaches
+                    else "All sleeves within ±20% band") + " [slider weights — "\
+                    "intended allocation, not actual holdings]"
+                vals["drift_source"] = "sidebar sliders (weaker: drift is zero by construction)"
         except Exception:
-            vals["drift_summary"] = None
+            vals.setdefault("drift_summary", None)
 
     # ── G1 position ledger: stops, heat, options, real drift ──
     if _ledger:
@@ -240,15 +342,17 @@ def autofetch(fred_key: str, live_weights: dict | None = None) -> dict:
             acts = opt.get("actions", [])
             vals["options_status"] = (f"⚠ {len(acts)} rule trigger(s)" if acts
                                       else opt.get("message", "no options"))
-            if live_weights is None:
-                try:
-                    from regime_classifier import target_weights
-                    dr = _ledger.drift_vs_targets(
-                        target_weights(vals.get("regime_key") or "neutral"))
+            # Real drift from the ledger beats slider drift, which is zero by
+            # construction. Only fall back to sliders when the ledger is empty.
+            try:
+                tw = vals.get("targets") or {}
+                if tw:
+                    dr = _ledger.drift_vs_targets(tw)
                     if dr.get("available"):
                         vals["drift_summary"] = dr["message"]
-                except Exception:
-                    pass
+                        vals["drift_source"] = "position ledger (actual holdings)"
+            except Exception as e:
+                print(f"[checklist] drift failed: {e}")
         except Exception as e:
             print(f"[checklist] ledger failed: {e}")
 
@@ -578,6 +682,12 @@ def render_checklist_tab(fred_key: str = "", live_weights: dict | None = None):
 
     with st.spinner("Fetching live data…"):
         vals = autofetch(fred_key, live_weights)
+
+    if vals.get("_autofetch_error"):
+        st.error(
+            f"Live data fetch failed: {vals['_autofetch_error']}. Every item below "
+            f"shows as unavailable — you can still complete the checklist manually, "
+            f"and the log will record what you enter.", icon="⚠️")
 
     tab_d, tab_w, tab_pos, tab_log, tab_gaps = st.tabs(
         ["📅 Daily (~10 min)", "🗓️ Weekly (45–60 min)", "💼 Positions",
