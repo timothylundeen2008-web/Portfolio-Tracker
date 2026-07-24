@@ -535,7 +535,7 @@ st.markdown(f"<small style='color:#666'>Updated: {datetime.now().strftime('%B %d
 st.markdown("---")
 
 # ─── TABS ─────────────────────────────────────────────────────────────────────
-tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8,tab9 = st.tabs([
+tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8 = st.tabs([
     "🏠 Overview",
     "📈 Holding vs Benchmark",
     "🗂️ Category Performance",
@@ -544,7 +544,6 @@ tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8,tab9 = st.tabs([
     "💥 Stress Test",
     "⚖️ ETF vs Stocks",
     "📚 Education",
-    "✅ Checklist",
 ])
 
 # ════════════════════════════════════════════════════════════
@@ -1678,28 +1677,3 @@ For crash protection, prioritize Calmar. For smooth compounding, prioritize Sort
 
     st.markdown("---")
     st.caption("📌 Not financial advice. Consult a fee-only fiduciary financial advisor before making investment decisions. Data via Yahoo Finance.")
-
-
-# ════════════════════════════════════════════════════════════
-# TAB 9 — OPERATING CHECKLIST (v5)
-# ════════════════════════════════════════════════════════════
-with tab9:
-    try:
-        from checklist_tab import render_checklist_tab
-        # custom_allocs holds the sidebar slider weights. NOTE: these are the
-        # MODEL weights, not live brokerage holdings — drift bands computed
-        # from them answer "does my intended allocation match the regime
-        # target", NOT "does my actual account match it". See GAPS.md G1.
-        render_checklist_tab(
-            fred_key=fred_key_input,
-            live_weights=custom_allocs if "custom_allocs" in dir() else None,
-        )
-    except ImportError as e:
-        st.error(
-            f"Checklist module not found ({e}). Drop `checklist_tab.py` and "
-            f"`checklist_data.py` into the same directory as app.py.",
-            icon="📋")
-    except Exception as e:
-        st.error(f"Checklist tab failed to render: {type(e).__name__}: {e}", icon="⚠️")
-        st.caption("The rest of the dashboard is unaffected — this tab fails "
-                   "in isolation by design.")
