@@ -435,42 +435,26 @@ CHART_BG = dict(
 # ─── LIVE CPI HELPER ──────────────────────────────────────────────────────────
 @st.cache_data(ttl=6 * 3600)
 def get_live_cpi_yoy(fred_key: str = "") -> float | None:
-    """
-    Latest CPI YoY (%). Returns None if genuinely unavailable.
-
-    Two fixes vs the original:
-      1. Works WITHOUT a key — prefers bls_client (BLS's own published headline,
-         no key needed), then falls back to fred_client's keyless CSV.
-      2. No longer uses a POSITIONAL obs[-13] lookback, which had the SAME
-         calendar-alignment bug that took the scorecard offline for eight
-         months (the cancelled Oct-2025 CPI release shifts every positional
-         12-month comparison by a month). BLS's own YoY, or a calendar-safe
-         resample, is used instead.
-    """
-    # Preferred: BLS's own published 12-month change — no key, no recomputation,
-    # cannot reproduce the calendar bug it would otherwise be exposed to.
+    """Latest CPI YoY (%) from FRED CPIAUCSL. Returns None if unavailable
+    (e.g. no API key or network issue), so the caller can fall back."""
+    if not fred_key:
+        return None
     try:
-        from bls_client import latest_headline
-        h = latest_headline()
-        if h.get("available") and h.get("yoy_bls") is not None:
-            return round(float(h["yoy_bls"]), 1)
-    except Exception:
-        pass
-
-    # Fallback: compute from the FRED index, but calendar-SAFELY (resample to a
-    # complete month-end index before the 12-period change, so a missing month
-    # cannot shift the comparison).
-    try:
-        from fred_client import fetch_fred
-        import pandas as pd
-        s = fetch_fred("CPIAUCSL", fred_key, start="2022-01-01")
-        if s is None or s.empty:
+        import requests
+        r = requests.get(
+            "https://api.stlouisfed.org/fred/series/observations",
+            params={"series_id": "CPIAUCSL", "api_key": fred_key,
+                    "file_type": "json", "observation_start": "2022-01-01"},
+            timeout=15,
+        )
+        r.raise_for_status()
+        obs = [o for o in r.json().get("observations", [])
+               if o["value"] not in (".", "", None)]
+        if len(obs) < 13:
             return None
-        m = s.resample("ME").last().dropna()
-        if len(m) < 13:
-            return None
-        yoy = (m.pct_change(12) * 100).dropna()
-        return round(float(yoy.iloc[-1]), 1) if len(yoy) else None
+        latest = float(obs[-1]["value"])
+        year_ago = float(obs[-13]["value"])
+        return round((latest / year_ago - 1) * 100, 1)
     except Exception:
         return None
 
@@ -505,41 +489,19 @@ with st.sidebar:
     except Exception:
         _stored_fred = ""
 
-    # Live connectivity probe so the sidebar states the TRUTH about whether a
-    # key is needed, rather than implying one is required. fred_client falls
-    # back to FRED's keyless CSV endpoint; this checks it actually reaches your
-    # deployment (some hosts block one endpoint but not the other).
-    _fred_ok = False
-    try:
-        from fred_client import status as _fred_probe
-        _fs = _fred_probe(_stored_fred)
-        _fred_ok = _fs.get("working", False)
-    except Exception:
-        _fs = None
-
     if _stored_fred:
-        st.caption("🔑 FRED key loaded from secrets — no need to type one")
+        st.caption("🔑 FRED key loaded from secrets")
         fred_key_input = st.text_input(
             "FRED API key (override)", type="password", value="",
-            help="A key is already in Streamlit secrets. Leave blank to use it.",
+            help="A key is already set in Streamlit secrets. Leave blank to use it.",
         ) or _stored_fred
-    elif _fred_ok:
-        st.success("✅ FRED reachable without a key — no key needed", icon="🔓")
-        with st.expander("Add a key anyway? (optional)"):
-            st.caption("Signals are live via FRED's public CSV endpoint. A free key "
-                       "only raises rate limits. Set FRED_API_KEY in Streamlit "
-                       "secrets to persist it — never hardcode it in a committed file.")
-            fred_key_input = st.text_input("FRED API key", type="password",
-                                           label_visibility="collapsed")
     else:
-        # Keyless path is NOT reaching this deployment — a key is the fallback.
-        st.warning("FRED's keyless endpoint isn't reachable from this host. "
-                   "Enter a free API key (fredaccount.stlouisfed.org) or add "
-                   "FRED_API_KEY to Streamlit secrets.", icon="🔑")
         fred_key_input = st.text_input(
-            "FRED API key", type="password",
-            help="Free at fredaccount.stlouisfed.org. Add to Streamlit secrets to "
-                 "avoid re-typing each session.",
+            "FRED API key (optional)", type="password",
+            help="Optional — fred_client falls back to FRED's keyless CSV endpoint, "
+                 "so signals work without one. Set FRED_API_KEY in Streamlit secrets "
+                 "to avoid re-typing (never hardcode it in a committed file). "
+                 "Free key at fredaccount.stlouisfed.org.",
         )
 
     st.markdown("---")
@@ -1552,17 +1514,9 @@ with tab8:
     )
 
     _assessment = None
-    if _REGIME_OK:
+    if _REGIME_OK and fred_key_input:
         try:
-            # Route through fred_client so this works WITHOUT a key (keyless CSV
-            # fallback). Previously required fred_key_input to be truthy, which
-            # is why the sidebar felt mandatory even though the data is public.
-            try:
-                from fred_client import fetch_fred as _ff
-                _assessment = full_assessment(fred_key_input, fetch_fred=_ff)
-            except ImportError:
-                if fred_key_input:
-                    _assessment = full_assessment(fred_key_input)
+            _assessment = full_assessment(fred_key_input)
         except Exception as _e:
             st.warning(f"Live regime unavailable ({_e}). Showing static guide.")
 

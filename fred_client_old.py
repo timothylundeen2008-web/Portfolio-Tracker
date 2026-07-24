@@ -128,8 +128,9 @@ def _via_csv(series_id: str, start: str) -> pd.Series:
         return pd.Series(dtype=float)
 
 
-def _fetch_fred_uncached(series_id: str, api_key: str = "",
-                         start: str = "2015-01-01") -> pd.Series:
+@_cache
+def fetch_fred(series_id: str, api_key: str = "",
+               start: str = "2015-01-01") -> pd.Series:
     """
     Drop-in replacement for regime_classifier._inline_fetch_fred.
 
@@ -151,36 +152,6 @@ def _fetch_fred_uncached(series_id: str, api_key: str = "",
         print(f"[fred] API returned nothing for {series_id}; trying keyless CSV")
 
     return _via_csv(series_id, start)
-
-
-# Cache only SUCCESSFUL fetches. A transient failure returns empty but is not
-# cached, so the next rerun retries instead of serving a poisoned empty Series
-# for the whole TTL — which would look exactly like "unavailable that won't fix
-# itself even though the network recovered".
-_fred_mem: dict = {}
-
-
-@_cache
-def _fetch_fred_cached(series_id: str, api_key: str, start: str) -> pd.Series:
-    return _fetch_fred_uncached(series_id, api_key, start)
-
-
-def fetch_fred(series_id: str, api_key: str = "",
-               start: str = "2015-01-01") -> pd.Series:
-    """
-    Drop-in replacement for regime_classifier._inline_fetch_fred, with a
-    non-poisoning cache: successful pulls are cached for the TTL, failures are
-    not, so recovery is automatic on the next rerun.
-    """
-    key_present = bool(api_key)
-    try:
-        s = _fetch_fred_cached(series_id, api_key, start)
-        if s is not None and not s.empty:
-            return s
-    except Exception as e:
-        print(f"[fred] cached path error for {series_id}: {e}")
-    # Cache returned/raised empty — retry uncached so a recovered network works
-    return _fetch_fred_uncached(series_id, api_key, start)
 
 
 def status(api_key: str = "") -> dict:
