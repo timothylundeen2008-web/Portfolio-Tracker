@@ -164,33 +164,7 @@ def auction_demand(term: str = "10-Year", lookback: int = 4) -> dict:
 #  G3 — BULL vs BEAR STEEPENING
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _fred_series(series_id: str, start: str = "2023-01-01",
-                 api_key: str = "") -> pd.Series:
-    """
-    Fetch one FRED series.
-
-    ⚠ HISTORICAL BUG, FIXED HERE: this function previously called ONLY the
-    keyless CSV endpoint, with no api_key parameter and no fallback to the
-    authenticated API. That meant curve_signal() (bull/bear steepening,
-    Daily Step 5) could NEVER benefit from a FRED_API_KEY no matter how it was
-    set — it simply never read one. If the keyless CSV endpoint is blocked or
-    throttled on a given host, this item was unavailable with no way to fix it
-    short of editing code. It now tries fred_client (API-first when a key is
-    present, keyless CSV fallback) and only falls back to the original
-    direct-CSV call if fred_client itself is unavailable.
-    """
-    try:
-        from fred_client import fetch_fred as _ff
-        s = _ff(series_id, api_key, start)
-        if s is not None and not s.empty:
-            return s
-    except ImportError:
-        pass
-    except Exception as e:
-        print(f"[treasury] fred_client path failed for {series_id}: {e}")
-
-    # Fallback: original direct keyless CSV call, in case fred_client.py isn't
-    # deployed yet. Kept so this module still degrades gracefully on its own.
+def _fred_series(series_id: str, start: str = "2023-01-01") -> pd.Series:
     try:
         r = requests.get(FRED_CSV, params={"id": series_id, "cosd": start},
                          headers=_HEADERS, timeout=30)
@@ -202,12 +176,12 @@ def _fred_series(series_id: str, start: str = "2023-01-01",
         s = pd.Series(df[vcol].values, index=pd.to_datetime(df[dcol])).dropna()
         return s
     except Exception as e:
-        print(f"[treasury] direct CSV also failed for {series_id}: {e}")
+        print(f"[treasury] FRED {series_id} failed: {e}")
         return pd.Series(dtype=float)
 
 
 @_cache
-def curve_signal(lookback_days: int = 10, api_key: str = "") -> dict:
+def curve_signal(lookback_days: int = 10) -> dict:
     """
     Classify the curve move — the distinction Daily Step 5 actually asks for.
 
@@ -219,8 +193,7 @@ def curve_signal(lookback_days: int = 10, api_key: str = "") -> dict:
       BULL FLATTENING   10y falling faster → growth scare, duration bid.
       BEAR FLATTENING   2y rising faster → Fed hiking expectations.
     """
-    two, ten = (_fred_series("DGS2", api_key=api_key),
-               _fred_series("DGS10", api_key=api_key))
+    two, ten = _fred_series("DGS2"), _fred_series("DGS10")
     if two.empty or ten.empty:
         return {"available": False,
                 "message": "FRED unavailable — classify the curve move manually."}

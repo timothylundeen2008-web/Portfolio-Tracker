@@ -412,11 +412,7 @@ def _autofetch(fred_key: str, live_weights: dict | None = None) -> dict:
         except Exception as e:
             print(f"[checklist] auctions failed: {e}")
         try:
-            # Pass the resolved key (sidebar override -> secrets -> keyless)
-            # through explicitly. Previously curve_signal() had no way to
-            # receive a key at all, so it was stuck on the keyless CSV
-            # endpoint regardless of what was configured elsewhere.
-            c = _tsy.curve_signal(api_key=_resolve_fred_key(fred_key))
+            c = _tsy.curve_signal()
             if c.get("available"):
                 vals["curve_regime"] = (f"{c['regime']}"
                                         + (" 🚨" if c["urgency"] == "HIGH" else ""))
