@@ -360,22 +360,16 @@ def _autofetch(fred_key: str, live_weights: dict | None = None) -> dict:
         try:
             ev = _ledger.evaluate_positions()
             pos = ev.get("positions")
-            # BUG FIX: heat_pct was only being captured INSIDE the non-empty
-            # branch below. evaluate_positions() correctly returns heat_pct=0.0
-            # for an empty ledger (zero risk, because there are zero positions)
-            # — but that valid 0.0 was never reaching `vals`, so the item
-            # rendered "unavailable" instead of "0.0%". Set it unconditionally.
-            vals["heat_pct"] = ev.get("heat_pct")
-            vals["ledger_alerts"] = ev.get("alerts", [])
             if pos is not None and not pos.empty:
                 hit = (pos["status"] == "STOP HIT").sum()
                 near = (pos["status"] == "WITHIN 1 ATR").sum()
                 vals["stop_status"] = ("🚨 " + f"{hit} STOP HIT — exit now" if hit else
                                        f"⚠ {near} within 1 ATR" if near else
                                        f"OK — {len(pos)} positions, none near stop")
+                vals["heat_pct"] = ev.get("heat_pct")
+                vals["ledger_alerts"] = ev.get("alerts", [])
             else:
-                vals["stop_status"] = "0 positions — heat is 0% until the ledger " \
-                                      "has entries (Positions tab)"
+                vals["stop_status"] = "Ledger empty — add positions to enable"
             opt = _ledger.check_options_rules()
             acts = opt.get("actions", [])
             vals["options_status"] = (f"⚠ {len(acts)} rule trigger(s)" if acts
@@ -446,17 +440,6 @@ def _autofetch(fred_key: str, live_weights: dict | None = None) -> dict:
     if _rot:
         try:
             rs = _rot.read_summary()
-            # Same fix pattern as heat_pct above: every rot_* field was only
-            # being set inside the success branch, so an unpublished or stale
-            # summary (the default state until Rotation-repo Step 5 is done —
-            # see DEPLOYMENT.md) left these fields completely unset, rendering
-            # a bare "unavailable" with no indication of WHY. Set an
-            # explanatory fallback unconditionally, then overwrite with real
-            # data when it's actually there.
-            _reason = rs.get("message", "Rotation summary not available.")
-            for k in ("rot_top_accum", "rot_stealth", "rot_quadrants",
-                     "rot_flow_div", "rot_cot", "rot_breadth", "rot_gold_rrg"):
-                vals[k] = _reason
             if rs.get("available") and not rs.get("very_stale"):
                 secs = rs.get("sectors", [])
                 if secs:
