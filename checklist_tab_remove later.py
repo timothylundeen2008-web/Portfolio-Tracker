@@ -824,19 +824,8 @@ def _render_positions_tab():
                 st.error("Ticker, shares, and entry price are required.")
             else:
                 r = _ledger.add_position(tk, sh, ep, sp, inv, sleeve=sl)
-                if r["ok"]:
-                    # BUG FIX: `ev` (and the heat/positions metrics drawn from
-                    # it) was computed at the TOP of this function, before this
-                    # button's handler runs — so without an explicit rerun, the
-                    # just-added position wouldn't show in the metrics until
-                    # some LATER, unrelated interaction triggered a fresh pass.
-                    # st.rerun() restarts the script immediately, so evaluate_
-                    # positions() re-runs with the new data before anything
-                    # renders.
-                    st.success(f"Added {tk}.")
-                    st.rerun()
-                else:
-                    st.error(r["error"])
+                (st.success if r["ok"] else st.error)(
+                    f"Added {tk}." if r["ok"] else r["error"])
 
     with cb:
         st.markdown("#### Trail a stop")
@@ -846,20 +835,14 @@ def _render_positions_tab():
             ns = st.number_input("New stop", key="pl_ns", value=0.0, step=0.01, format="%.2f")
             if st.button("Update stop", key="pl_us"):
                 r = _ledger.update_stop(t2, ns)
-                if r["ok"]:
-                    st.success(f"{t2}: {r['old_stop']} → {r['new_stop']}")
-                    st.rerun()
-                else:
-                    st.error(r["error"])
+                (st.success if r["ok"] else st.error)(
+                    f"{t2}: {r['old_stop']} → {r['new_stop']}" if r["ok"] else r["error"])
             st.markdown("#### Close")
             t3 = st.selectbox("Close position", df["ticker"].tolist(), key="pl_t3")
             if st.button("Close", key="pl_close"):
                 r = _ledger.close_position(t3)
-                if r["ok"]:
-                    st.success(f"Closed {t3}.")
-                    st.rerun()
-                else:
-                    st.error(r["error"])
+                (st.success if r["ok"] else st.error)(
+                    f"Closed {t3}." if r["ok"] else r["error"])
         else:
             st.caption("Add a position first.")
 
@@ -888,7 +871,6 @@ def _render_positions_tab():
             if otk and oexp:
                 _ledger.add_option(otk, ostr, oexp, ostk, octr, ocr)
                 st.success(f"Added {otk} {ostk} {oexp}.")
-                st.rerun()
             else:
                 st.error("Ticker and expiry are required.")
 
