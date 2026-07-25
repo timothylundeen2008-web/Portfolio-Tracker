@@ -1,0 +1,2 @@
+ticker,shares,entry_price,entry_date,stop,stop_basis,thesis,invalidation,sleeve,last_updated
+QQQ,6.0,684.0,2026-07-25,675.0,structure,,when the price drops below 670,,2026-07-25T11:39:31
