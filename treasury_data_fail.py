@@ -268,18 +268,8 @@ def curve_signal(lookback_days: int = 10, api_key: str = "") -> dict:
                        f"spread {dspread:+.2f}pp over {lookback_days} sessions."}
 
 
-def selftest(api_key: str = "") -> dict:
-    """
-    Verify both endpoints. Run once after deployment.
-
-    ⚠ BUG FIX: this previously called curve_signal() with NO key, so it only
-    ever tested the keyless CSV path — even on a deployment with a working
-    FRED_API_KEY in secrets. That produced a FALSE NEGATIVE: the button could
-    say "FRED unavailable" while the actual Daily Step 5 checklist item (which
-    DOES receive the resolved key via checklist_tab.autofetch) was working
-    fine. api_key now threads through exactly like the real check does, so
-    this test reports the true state instead of a stricter, misleading one.
-    """
+def selftest() -> dict:
+    """Verify both endpoints. Run once after deployment."""
     out = {}
     a = fetch_auctions("Note", days=200)
     out["auctions"] = {
@@ -291,11 +281,6 @@ def selftest(api_key: str = "") -> dict:
                     "— if the shape has changed, correct TD_BASE/params here. The "
                     "Fiscal Data API (fiscaldata.treasury.gov, dataset "
                     "'treasury-securities-auctions-data') is an alternative source.")}
-    c = curve_signal(api_key=api_key)
-    out["curve"] = {"ok": c.get("available", False), "message": c.get("message"),
-                    "key_used": bool(api_key)}
-    if not c.get("available") and not api_key:
-        out["curve"]["message"] += (" (tested WITHOUT a key — if you have "
-                                    "FRED_API_KEY set, this button wasn't using "
-                                    "it; re-run after the fix.)")
+    c = curve_signal()
+    out["curve"] = {"ok": c.get("available", False), "message": c.get("message")}
     return out

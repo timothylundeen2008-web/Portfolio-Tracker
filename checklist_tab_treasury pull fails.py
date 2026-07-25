@@ -762,7 +762,7 @@ def render_checklist_tab(fred_key: str = "", live_weights: dict | None = None):
         _render_log_tab()
 
     with tab_gaps:
-        _render_gaps_tab(fred_key)
+        _render_gaps_tab()
 
 
 def _render_positions_tab():
@@ -960,7 +960,7 @@ def _render_log_tab():
                 st.error(f"Could not read that file: {e}")
 
 
-def _render_gaps_tab(fred_key: str = ""):
+def _render_gaps_tab():
     st.markdown("### Data sources & coverage")
     st.caption("Computed from the checklist itself, not maintained separately — "
                "so it cannot drift out of sync with the actual items.")
@@ -1037,6 +1037,6 @@ def _render_gaps_tab(fred_key: str = ""):
     with b2:
         if _tsy and st.button("Test Treasury endpoints", key="t_tsy"):
             with st.spinner("Contacting TreasuryDirect + FRED…"):
-                r = _tsy.selftest(api_key=_resolve_fred_key(fred_key))
+                r = _tsy.selftest()
             for k, v in r.items():
                 (st.success if v.get("ok") else st.warning)(f"**{k}** — {v.get('message')}")
