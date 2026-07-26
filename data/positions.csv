@@ -10,3 +10,4 @@ XLV,24.777,161.44,2026-07-26,155.91,ATR-placeholder (2.0x14-day),Seeded from tar
 XLU,64.9491,46.19,2026-07-26,44.78,ATR-placeholder (2.0x14-day),Seeded from target_weights('neutral'),DFII10 momentum flips positive on two closes (removes the rate-relief case) or defensives roll to Weakening,XLU,2026-07-26T00:17:14
 USFR,59.4413,50.47,2026-07-26,50.44,ATR-placeholder (2.0x14-day),Seeded from target_weights('neutral'),FOMC language kills the near-term hike/cut tail this position is priced for,USFR,2026-07-26T00:17:17
 TLT,120.2357,83.17,2026-07-26,82.18,ATR-placeholder (2.0x14-day),Seeded from target_weights('neutral'),"DFII10 closes back above 2.50%, reversing the re-arm case",TLT,2026-07-26T00:17:18
+KMLM,133.9585,29.86,2026-07-26,29.31,ATR-placeholder (2.0x14-day),Seeded from target_weights('neutral'),"60-day stock/bond correlation confirms below -0.30 (overlay and live signal converge), or the live kmlm_signal() stance itself rolls",KMLM,2026-07-26T00:17:19
