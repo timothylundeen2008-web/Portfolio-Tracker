@@ -72,10 +72,6 @@ try:
     import rotation_bridge as _rot; _SRC["rotation"] = True
 except Exception as e:
     _rot = None; _SRC["rotation"] = f"unavailable: {e}"
-try:
-    import seed_from_portfolio as _seed; _SRC["seed"] = True
-except Exception as e:
-    _seed = None; _SRC["seed"] = f"unavailable: {e}"
 
 LOG_PATH = os.environ.get("CHECKLIST_LOG", "data/checklist_log.csv")
 
@@ -784,62 +780,6 @@ def _render_positions_tab():
         "Heat, stop proximity in ATR units, and real drift bands all compute from "
         "this. An empty ledger is why those checks read 'unavailable'."
     )
-
-    with st.expander("🌱 Seed from portfolio construction", expanded=False):
-        st.caption(
-            "Back-solves share counts from the classifier's own target_weights() "
-            "using a total-equity figure you provide, at current market prices. "
-            "Stops are an ATR-based PLACEHOLDER (entry − 2×ATR14, or an 8% "
-            "fallback if ATR can't be computed) — replace with a real structural "
-            "stop before trusting Daily Step 6's stop checks for anything that "
-            "matters. This simulates the MECHANICAL overlay only; it has no "
-            "concept of a staged/deferred posture from a past review — if "
-            "you're intentionally holding some legs back, edit those positions "
-            "down after seeding."
-        )
-        eq = st.number_input("Total account equity ($)", key="seed_eq",
-                             value=0.0, step=1000.0, format="%.0f")
-        c1, c2 = st.columns(2)
-        if c1.button("Preview", key="seed_preview"):
-            if eq <= 0:
-                st.error("Enter your total account equity first.")
-            elif not _seed:
-                st.error("seed_from_portfolio.py not found.")
-            else:
-                try:
-                    existing = _ledger.load_positions()
-                    existing_tks = existing["ticker"].tolist() if not existing.empty else []
-                    with st.spinner("Fetching prices and computing sizes…"):
-                        pv = _seed.preview(eq, existing_tickers=existing_tks)
-                    st.session_state["seed_preview_result"] = pv
-                except Exception as e:
-                    st.error(f"Preview failed: {e}")
-
-        pv = st.session_state.get("seed_preview_result")
-        if pv:
-            if not pv.get("ok"):
-                st.error(pv.get("error", "Preview failed."))
-            else:
-                st.caption(f"Regime: **{pv['regime_key']}** · priced "
-                          f"{pv['n_priced']}/{pv['n_total']}"
-                          + (f" · ⚠ {pv['n_conflicts']} already in ledger "
-                             f"(will be skipped unless overwrite is checked)"
-                             if pv['n_conflicts'] else ""))
-                st.dataframe(pv["table"], use_container_width=True, height=280)
-                ow = st.checkbox("Overwrite existing positions with the same ticker",
-                                 key="seed_overwrite", value=False)
-                if c2.button("✅ Confirm & seed positions", key="seed_confirm",
-                            type="primary"):
-                    try:
-                        r = _seed.seed(eq, regime_key=pv["regime_key"],
-                                       overwrite_existing=ow)
-                        st.success(r["message"])
-                        del st.session_state["seed_preview_result"]
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Seeding failed: {e}")
-
-    st.markdown("---")
 
     try:
         ev = _ledger.evaluate_positions()
