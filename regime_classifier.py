@@ -458,14 +458,30 @@ def repression_score(sig: SignalSet,
     # state from a 5 that includes them, and the band label alone hides it.
     top_earned, top_total = 0, 4
 
+    # v3.1 fix: use the BAND, not a raw sign test, for this component too.
+    # classify_regime() already treats |short_real| < 0.25% as its own
+    # AMBIGUOUS state and holds the regime label stable through it. This
+    # scoring component did not -- a live tick from +0.10% to -0.10% (noise
+    # well inside the band, nothing real changed) flipped the score from
+    # 4/10 "hollow" to 6/10 "Moderate repression" while the regime banner
+    # stayed at transition_ambiguous the whole time. A score meant to answer
+    # "how hard to tilt" should not swing on sub-basis-point noise while the
+    # regime call it is supposed to be consistent with does not move.
+    _srr_band = _rb.short_real_band(sig.short_real_rate)
     if sig.short_real_rate is None:
         missing.append("short real rate")
-    elif sig.short_real_rate < 0:
+    elif _srr_band["state"] == _rb.BAND_NEGATIVE:
         pts += 2; top_earned += 2
-        reasons.append(f"Short real rate {sig.short_real_rate:+.2f}% (+2)")
+        reasons.append(f"Short real rate {sig.short_real_rate:+.2f}% "
+                       f"(decisively negative, beyond \u00b1{_srr_band['band']:.2f}%) (+2)")
+    elif _srr_band["state"] == _rb.BAND_AMBIGUOUS:
+        reasons.append(f"Short real rate {sig.short_real_rate:+.2f}% is INSIDE "
+                       f"the \u00b1{_srr_band['band']:.2f}% transition band (+0) "
+                       f"\u2014 no point either way; this is noise, not a signal")
     else:
-        reasons.append(f"Short real rate {sig.short_real_rate:+.2f}% NOT negative "
-                       f"(+0) \u2014 primary repression gauge is OFF")
+        reasons.append(f"Short real rate {sig.short_real_rate:+.2f}% "
+                       f"(decisively positive) NOT negative (+0) \u2014 primary "
+                       f"repression gauge is OFF")
 
     if sig.long_real_yield is None:
         missing.append("DFII10 level")

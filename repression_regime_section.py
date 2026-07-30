@@ -51,6 +51,49 @@ _REGIME_COLOR = {
 }
 
 
+def _render_repression_score(sc: dict):
+    """
+    Render repression_score()'s output: the 0-10 stacking score that answers
+    HOW HARD to tilt, given the regime the banner above already answered WHAT
+    regime. Distinct from the Indicator Scorecard tab's 0-10 (11 weighted
+    indicators, different scale) — that is a DIFFERENT score with the same
+    casual name; do not conflate the two numbers on this page or elsewhere.
+    """
+    if not sc:
+        st.warning("Repression score unavailable this run.")
+        return
+
+    score = sc.get("score")
+    band = sc.get("band", "—")
+    hollow = sc.get("hollow")
+    top_w = sc.get("top_weight_display", "")
+    missing = sc.get("missing") or []
+    caveat = sc.get("caveat", "")
+
+    badge_color = "#dc2626" if hollow else ("#d97706" if missing else "#16a34a")
+    st.markdown(
+        f"<div style='display:flex;align-items:baseline;gap:14px;margin:8px 0;'>"
+        f"<span style='font-size:1.6rem;font-weight:800;'>{score}/10</span>"
+        f"<span style='color:{badge_color};font-weight:700;'>{band}</span>"
+        + (f"<span style='color:#9ca3af;font-size:0.9rem;'>top-weight "
+           f"{top_w}</span>" if top_w else "")
+        + "</div>",
+        unsafe_allow_html=True,
+    )
+
+    if caveat:
+        (st.error if hollow else st.warning)(caveat)
+
+    if missing:
+        st.caption(f"⚠ Missing inputs (scored 0, not penalized): "
+                  f"{', '.join(missing)} — this is an INCOMPLETE score, not "
+                  f"necessarily a low one.")
+
+    with st.expander("Score breakdown"):
+        for r in sc.get("reasons", []):
+            st.markdown(f"- {r}")
+
+
 def _arrow(x):
     if x is None:
         return "—"
@@ -121,6 +164,13 @@ def render_regime_section(fred_api_key: str = "",
     )
     if regime["drivers"]:
         st.markdown("**Why:** " + " · ".join(regime["drivers"]))
+
+    # ---- Repression Proximity Score ----
+    # v3 fix: this was COMPUTED (out["repression"]) but never RENDERED anywhere
+    # on this panel. The score/band/hollow-caveat existed only in the return
+    # value, which nothing on this page consumed. Caught when a user asked
+    # "where's the 4/10?" and it genuinely wasn't on screen.
+    _render_repression_score(out.get("repression", {}))
 
     # ---- The two real yields, side by side ----
     st.markdown("#### The two real yields (never conflate these)")
