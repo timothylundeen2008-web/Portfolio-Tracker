@@ -1,6 +1,36 @@
 """
-regime_classifier.py  (v2 — July 2026 accuracy patch)
-======================================================
+regime_classifier.py  (v3 — July 2026 band/guard patch)
+=======================================================
+
+v3 CHANGELOG (vs v2):
+  FIX 6  BAND, not sign. Every non-crisis branch was gated on
+         `short_real_rate < 0`. On 2026-07-29 the short real policy rate read
+         +0.10% (EFFR ~3.58% - CPI 3.50%), which made inflationary_repression,
+         hard_repression AND stagflation unreachable simultaneously and dumped
+         the classifier into goldilocks -- whose overlay is VGT +4, QQQ +3,
+         SMH +2. It instructed ADDING to semis on the fourth consecutive down
+         session of a 12% SMH drawdown. |short_real| < 0.25% is now its own
+         regime: transition_ambiguous. See regime_bands.py.
+  FIX 7  LEADERSHIP GUARD on goldilocks. Positive real rates plus tight credit
+         are NECESSARY for goldilocks, not SUFFICIENT. The branch is now
+         blocked while the growth complex is >10% below its own 60-day high.
+         Fails CLOSED, matching _gold_trend_ok()'s precedent.
+  FIX 8  The gold momentum gate now covers EVERY regime that adds GLD.
+         v2 gated inflationary_repression (+3) only, leaving hard_repression
+         (+4) and stagflation (+4) ungated -- so two of the three regimes that
+         buy gold could still buy it into a confirmed downtrend. As of
+         2026-07-29 GLD sits ~10% below a FALLING 200d with an active death
+         cross, so this is live, not theoretical.
+  FIX 9  repression_score() reports top-weight points, the hollow flag, and the
+         RAW 2s10s momentum. A 5 built entirely from fiscal/plumbing components
+         is not the same state as a 5 that includes the two real-yield gauges,
+         and the band label alone hides the difference.
+  FIX 10 full_assessment() now FORWARDS fed_bs_expanding and
+         deficit_gt_5pct_gdp to repression_score(), and fetch_prices to
+         classify_regime(). Previously both flags were silently dropped, so the
+         live score was structurally capped at 8/10 and permanently degraded.
+
+v2 CHANGELOG (vs v1):
 Shared macro-regime engine for the Repression Dashboard and the All-Weather
 Portfolio Dashboard.
 
@@ -65,6 +95,10 @@ except Exception:  # pragma: no cover
     requests = None
 
 FED_TARGET_INFLATION = 2.0
+
+# v3 FIX 6/7: band logic + leadership guard live in their own module so the
+# tilt and the test that triggers it cannot drift apart.
+import regime_bands as _rb
 
 FRED_SERIES = {
     "eff_funds": "DFF",
@@ -179,6 +213,14 @@ REGIMES = {
             "GLD": -3, "SLV": -2,
             "SGOV": +2,
         },
+    },
+    # v3 FIX 6. Fires when |short real rate| < regime_bands.TRANSITION_BAND.
+    # The gauge is inside its own measurement noise, so express NEITHER the
+    # repression trade nor the reflation trade and take carry while waiting.
+    "transition_ambiguous": {
+        "label": _rb.TRANSITION_LABEL,
+        "blurb": _rb.TRANSITION_BLURB,
+        "overlay": dict(_rb.TRANSITION_OVERLAY),
     },
     "neutral": {
         "label": "Neutral / Transition",
@@ -411,20 +453,44 @@ def repression_score(sig: SignalSet,
     """
     pts, reasons, missing = 0, [], []
 
+    # v3 FIX 9: TOP-WEIGHT tracking. These two components carry 4 of the 10
+    # points. A score of 5 with 0/4 top-weight points is a materially different
+    # state from a 5 that includes them, and the band label alone hides it.
+    top_earned, top_total = 0, 4
+
     if sig.short_real_rate is None:
         missing.append("short real rate")
     elif sig.short_real_rate < 0:
-        pts += 2; reasons.append(f"Short real rate {sig.short_real_rate:+.2f}% (+2)")
+        pts += 2; top_earned += 2
+        reasons.append(f"Short real rate {sig.short_real_rate:+.2f}% (+2)")
+    else:
+        reasons.append(f"Short real rate {sig.short_real_rate:+.2f}% NOT negative "
+                       f"(+0) \u2014 primary repression gauge is OFF")
 
     if sig.long_real_yield is None:
         missing.append("DFII10 level")
     elif sig.long_real_yield < 1.0:
-        pts += 2; reasons.append(f"DFII10 {sig.long_real_yield:.2f}% < 1% (+2)")
+        pts += 2; top_earned += 2
+        reasons.append(f"DFII10 {sig.long_real_yield:.2f}% < 1% (+2)")
+    else:
+        reasons.append(f"DFII10 {sig.long_real_yield:.2f}% is ABOVE 1% (+0) "
+                       f"\u2014 the long end is not suppressed")
 
+    # v3 FIX 9: report the RAW momentum value either way. This component alone
+    # decides whether the band prints 4 ("Tightening cycle") or 5 ("Moderate
+    # repression"), and on 2026-07-29 it sat inside noise -- the curve had
+    # shifted up ~35-40bp roughly in parallel, leaving 2s10s near +43bp against
+    # ~+48bp three months earlier. A band flip driven by 5bp must be visible.
     if sig.spread_2s10s is None or sig.spread_2s10s_mom_3m is None:
         missing.append("2s10s / momentum")
     elif sig.spread_2s10s > 0 and sig.spread_2s10s_mom_3m > 0:
-        pts += 1; reasons.append("2s10s positive and widening (+1)")
+        pts += 1
+        reasons.append(f"2s10s {sig.spread_2s10s:+.2f}% positive and widening "
+                       f"(3m mom {sig.spread_2s10s_mom_3m:+.3f}) (+1)")
+    else:
+        reasons.append(f"2s10s {sig.spread_2s10s:+.2f}%, 3m momentum "
+                       f"{sig.spread_2s10s_mom_3m:+.3f} \u2014 not both positive "
+                       f"and widening (+0)")
 
     if fed_bs_expanding is None:
         missing.append("Fed balance sheet direction (pass fed_bs_expanding)")
@@ -454,13 +520,32 @@ def repression_score(sig: SignalSet,
     band = ("Peak repression" if pts >= 8 else
             "Moderate repression" if pts >= 5 else
             "Tightening cycle" if pts >= 2 else "Anti-repression")
-    return {"score": pts, "band": band, "reasons": reasons, "missing": missing}
+
+    hollow = (top_earned == 0)
+    caveat = ""
+    if hollow:
+        caveat = (f"HOLLOW {band}: 0 of {top_total} top-weight points earned. "
+                  f"Every point comes from second-tier components (fiscal, "
+                  f"liquidity, credit, CPI level) while BOTH primary gauges "
+                  f"\u2014 the sign of the short real policy rate and DFII10 "
+                  f"below 1% \u2014 are off. Treat the band as an upper bound "
+                  f"on the strength of the repression read.")
+    elif top_earned < top_total:
+        caveat = (f"PARTIAL {band}: {top_earned} of {top_total} top-weight "
+                  f"points earned. Directionally supported, not confirmed.")
+
+    # Backward compatible: score/band/reasons/missing keep their meaning; the
+    # rest are additive so existing consumers are untouched.
+    return {"score": pts, "band": band, "reasons": reasons, "missing": missing,
+            "top_weight_earned": top_earned, "top_weight_total": top_total,
+            "top_weight_display": f"{top_earned}/{top_total}",
+            "hollow": hollow, "caveat": caveat}
 
 
 # --------------------------------------------------------------------------- #
 #  The regime classifier (5 quadrants + neutral)
 # --------------------------------------------------------------------------- #
-def classify_regime(sig: SignalSet) -> dict:
+def classify_regime(sig: SignalSet, fetch_prices: Callable = None) -> dict:
     """Return the regime key, label, blurb, and drivers list.
 
     Precedence (deliberate):
@@ -470,6 +555,11 @@ def classify_regime(sig: SignalSet) -> dict:
          more actionable signal.
       2b. Hard repression fills the v1 gap (neg short real + falling long
          real + calm credit previously fell through to 'neutral').
+      3b. v3: the short real rate is tested as a BAND, not a sign. Inside the
+         band no sign-dependent regime can be confirmed, so we return
+         transition_ambiguous rather than falling through to goldilocks.
+      4b. v3: goldilocks additionally requires that equity leadership is not
+         in a correction. Pass fetch_prices to arm that guard.
     """
     drivers = []
 
@@ -478,6 +568,13 @@ def classify_regime(sig: SignalSet) -> dict:
     long_mom = sig.long_real_mom_3m
     short_real = sig.short_real_rate
     curve_resteep = (sig.spread_2s10s_mom_3m or 0) > 0.15
+
+    # v3 FIX 6: BAND, not sign.
+    band = _rb.short_real_band(short_real)
+    short_neg = band["state"] == _rb.BAND_NEGATIVE
+    short_pos = band["state"] == _rb.BAND_POSITIVE
+    if band["state"] == _rb.BAND_AMBIGUOUS:
+        drivers.append(band["detail"])
 
     # FIX 5: surface a degraded classification instead of silently treating
     # a missing DFII10 momentum as "not rising".
@@ -492,33 +589,53 @@ def classify_regime(sig: SignalSet) -> dict:
         return _regime("liquidity_crisis", drivers)
 
     # 2) Inflationary repression: neg short real + rising long real.
-    if (short_real is not None and short_real < 0
-            and long_mom is not None and long_mom > 0):
-        drivers.append(f"Short real rate {short_real:+.2f}% (negative)")
+    if short_neg and long_mom is not None and long_mom > 0:
+        drivers.append(f"Short real rate {short_real:+.2f}% "
+                       f"(decisively negative, beyond ±{band['band']:.2f}%)")
         drivers.append("Long real yield rising (duration headwind)")
         return _regime("inflationary_repression", drivers)
 
     # 2b) Hard repression: neg short real + long real FALLING/suppressed,
     #     credit calm. Yield-curve-control signature. (NEW in v2 — FIX 3)
-    if (short_real is not None and short_real < 0
-            and long_mom is not None and long_mom < 0
+    if (short_neg and long_mom is not None and long_mom < 0
             and hy is not None and hy < 3.5):
-        drivers.append(f"Short real rate {short_real:+.2f}% (negative)")
+        drivers.append(f"Short real rate {short_real:+.2f}% "
+                       f"(decisively negative, beyond ±{band['band']:.2f}%)")
         drivers.append("Long real yield falling (duration suppressed/rallying)")
         return _regime("hard_repression", drivers)
 
     # 3) Stagflation: neg short real + growth rolling over.
-    if short_real is not None and short_real < 0 and curve_resteep:
-        drivers.append(f"Short real rate {short_real:+.2f}% (negative)")
+    if short_neg and curve_resteep:
+        drivers.append(f"Short real rate {short_real:+.2f}% "
+                       f"(decisively negative, beyond ±{band['band']:.2f}%)")
         drivers.append("2s10s re-steepening from inversion (growth risk)")
         return _regime("stagflation", drivers)
 
-    # 4) Goldilocks: positive real, tight credit.
-    if (short_real is not None and short_real >= 0
-            and hy is not None and hy < 3.5):
-        drivers.append(f"Short real rate {short_real:+.2f}% (positive)")
+    # 4) Goldilocks: DECISIVELY positive real + tight credit + leadership
+    #    intact. v3 FIX 7 adds the third condition. Without it this branch fired
+    #    on 2026-07-29 and its overlay (VGT +4, QQQ +3, SMH +2) instructed
+    #    adding to the exact complex that was unwinding.
+    if short_pos and hy is not None and hy < 3.5:
+        if fetch_prices is not None:
+            lead_ok, lead_why = _rb.leadership_ok(fetch_prices)
+            if not lead_ok:
+                drivers.append(f"Short real rate {short_real:+.2f}% (positive)")
+                drivers.append(f"HY OAS {hy:.2f}% (tight credit)")
+                drivers.append(lead_why)
+                return _regime("transition_ambiguous", drivers)
+            drivers.append(lead_why)
+        else:
+            drivers.append("⚠ Leadership guard not wired (fetch_prices=None) "
+                           "— goldilocks confirmed on rates and credit only.")
+        drivers.append(f"Short real rate {short_real:+.2f}% "
+                       f"(decisively positive, beyond ±{band['band']:.2f}%)")
         drivers.append(f"HY OAS {hy:.2f}% (tight credit)")
         return _regime("goldilocks", drivers)
+
+    # 5) v3 FIX 6: the gauge is inside its own noise. Distinct from 'neutral',
+    #    which means the signals disagree; this means the main signal is silent.
+    if band["state"] == _rb.BAND_AMBIGUOUS:
+        return _regime("transition_ambiguous", drivers)
 
     drivers.append("Signals mixed / transitioning")
     return _regime("neutral", drivers)
@@ -567,7 +684,16 @@ def target_weights(regime_key: str,
     w = dict(BASE_WEIGHTS)
     overlay = dict(REGIMES[regime_key]["overlay"])
 
-    if regime_key == "inflationary_repression" and overlay.get("GLD", 0) > 0:
+    # v3 FIX 8: the gate now covers EVERY regime that ADDS gold, not just
+    # inflationary_repression. v2 gated that one (+3) and left hard_repression
+    # (+4) and stagflation (+4) ungated -- two of the three regimes that buy
+    # gold could still buy it into a confirmed downtrend. As of 2026-07-29 GLD
+    # sits ~10% below a FALLING 200d with an active death cross, so the
+    # difference is live rather than theoretical.
+    #
+    # Note the asymmetry: a NEGATIVE GLD tilt (goldilocks, -3) is never gated.
+    # Trend confirmation is required to ADD to a metal, not to trim one.
+    if overlay.get("GLD", 0) > 0:
         if not _gold_trend_ok(fetch_prices or _inline_fetch_prices):
             overlay["SGOV"] = overlay.get("SGOV", 0) + overlay["GLD"]
             overlay["GLD"] = 0
@@ -603,11 +729,22 @@ def kmlm_signal(sig: SignalSet) -> dict:
             reasons.append(f"Stock/bond corr {corr:+.2f} strongly negative — "
                            "diversification working, less need for trend")
 
+    # v3 FIX 6 consumer: this was a FOURTH site using the bare sign test. It
+    # now uses the same band, so KMLM sizing and the regime label can no longer
+    # disagree about whether the short real rate is negative.
     if sig.cpi_yoy is not None and sig.short_real_rate is not None:
-        if sig.cpi_yoy > FED_TARGET_INFLATION and sig.short_real_rate < 0:
+        if (sig.cpi_yoy > FED_TARGET_INFLATION
+                and _rb.is_negative(sig.short_real_rate)):
             score += 1
-            reasons.append("Inflation above target with negative short real "
-                           "rate — inflationary trend backdrop (INCREASE)")
+            reasons.append("Inflation above target with decisively negative "
+                           "short real rate \u2014 inflationary trend backdrop "
+                           "(INCREASE)")
+        elif (sig.cpi_yoy > FED_TARGET_INFLATION
+                and _rb.is_ambiguous(sig.short_real_rate)):
+            reasons.append(f"Inflation above target but the short real rate "
+                           f"({sig.short_real_rate:+.2f}%) is inside the "
+                           f"\u00b1{_rb.TRANSITION_BAND:.2f}% band \u2014 no "
+                           f"inflationary-backdrop point awarded")
 
     if (sig.long_real_mom_3m or 0) > 0:
         score += 1
@@ -635,15 +772,37 @@ def kmlm_signal(sig: SignalSet) -> dict:
 # --------------------------------------------------------------------------- #
 #  One-call convenience for either app
 # --------------------------------------------------------------------------- #
-def full_assessment(fred_api_key: str = "", **kw) -> dict:
+def full_assessment(fred_api_key: str = "",
+                    fed_bs_expanding: Optional[bool] = None,
+                    deficit_gt_5pct_gdp: Optional[bool] = None,
+                    **kw) -> dict:
+    """
+    v3 FIX 10. Two changes, both of which were silently degrading the output:
+
+    1. fed_bs_expanding and deficit_gt_5pct_gdp are now FORWARDED to
+       repression_score(). Previously they were never passed, so both always
+       landed in missing[] -- the live score was structurally capped at 8/10
+       and permanently reported as incomplete. Both are manual/derived flags
+       the caller has to supply; as of July 2026 the Fed balance sheet is
+       expanding (~+$150bn since January via reserve-management bill purchases)
+       and the FY2026 deficit is 5.8% of GDP, so the correct call is
+       full_assessment(key, fed_bs_expanding=True, deficit_gt_5pct_gdp=True).
+
+    2. fetch_prices is forwarded to classify_regime() so the v3 leadership
+       guard is armed. Without it the guard stays dormant and emits a visible
+       "not wired" driver rather than silently passing.
+    """
     fetch_prices = kw.get("fetch_prices")
     sig = compute_signals(fred_api_key, **kw)
-    regime = classify_regime(sig)
+    regime = classify_regime(sig, fetch_prices=fetch_prices)
     return {
         "signals": sig,
         "regime": regime,
         "fed": fed_reaction_flag(sig),
         "targets": target_weights(regime["key"], fetch_prices=fetch_prices),
         "kmlm": kmlm_signal(sig),
-        "repression": repression_score(sig),   # NEW in v2 (score 0-10)
+        "repression": repression_score(
+            sig,
+            fed_bs_expanding=fed_bs_expanding,
+            deficit_gt_5pct_gdp=deficit_gt_5pct_gdp),
     }

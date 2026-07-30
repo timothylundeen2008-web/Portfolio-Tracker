@@ -38,6 +38,10 @@ except Exception:
     _HIST_OK = False
 
 _REGIME_COLOR = {
+    # v3: transition_ambiguous — deliberately grey. The point of this state
+    # is that no directional call is being made, so it must not be coloured
+    # like a conviction regime.
+    "transition_ambiguous": "#6b7280",
     "inflationary_repression": "#c026d3",
     "hard_repression": "#9333ea",          # v2 FIX: was missing -> banner rendered gray
     "liquidity_crisis": "#dc2626",
@@ -63,7 +67,17 @@ def _fmt(x, suffix="%"):
 
 def render_regime_section(fred_api_key: str = "",
                           fetch_fred=None, fetch_prices=None,
-                          start: str = "2015-01-01"):
+                          start: str = "2015-01-01",
+                          fed_bs_expanding: bool | None = None,
+                          deficit_gt_5pct_gdp: bool | None = None):
+    """
+    v3: `fed_bs_expanding` and `deficit_gt_5pct_gdp` are manual/derived flags
+    that repression_score() needs and could not previously receive. As of July
+    2026 the correct values are both True — the Fed balance sheet has expanded
+    roughly $150bn since January via reserve-management bill purchases, and the
+    FY2026 deficit is 5.8% of GDP. Pass them explicitly rather than hardcoding
+    here, so the caller owns the assumption.
+    """
     st.subheader("🌡️ Regime Classifier — the two real yields")
     st.caption(
         "Repression is a *front-end* phenomenon. This panel separates the two "
@@ -75,9 +89,23 @@ def render_regime_section(fred_api_key: str = "",
         kw["fetch_fred"] = fetch_fred
     if fetch_prices is not None:
         kw["fetch_prices"] = fetch_prices
+    else:
+        # v3: fetch_prices ALSO arms the leadership guard inside
+        # classify_regime(). Without it goldilocks can be confirmed on rates and
+        # credit alone, which is how a growth-additive overlay fired on
+        # 2026-07-29. Default to the classifier's own fetcher rather than
+        # leaving the guard dormant.
+        kw["fetch_prices"] = rc._inline_fetch_prices
 
     with st.spinner("Computing regime signals…"):
-        out = rc.full_assessment(fred_api_key, **kw)
+        # v3 FIX 10: forward the two manual flags. They were never passed, so
+        # both permanently appeared in the score's missing[] list and the live
+        # score was structurally capped at 8/10.
+        out = rc.full_assessment(
+            fred_api_key,
+            fed_bs_expanding=fed_bs_expanding,
+            deficit_gt_5pct_gdp=deficit_gt_5pct_gdp,
+            **kw)
 
     sig, regime, fed = out["signals"], out["regime"], out["fed"]
 
@@ -143,7 +171,9 @@ def render_regime_section(fred_api_key: str = "",
     # ---- Historical episode context ----
     if _HIST_OK:
         st.markdown("---")
-        render_historical_panel(st)
+        # v3: the 'today' row is now derived from these live signals
+        # instead of a hardcoded literal that had gone stale.
+        render_historical_panel(st, sig=sig, regime=regime)
 
     st.caption(
         "Data hygiene: if a CPI release is missing (e.g. a government-services "

@@ -74,6 +74,31 @@ SIGNAL_GUIDE = [
 warnings.filterwarnings("ignore")
 
 # ─── PAGE CONFIG ─────────────────────────────────────────────────────────────
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  MANUAL MACRO FLAGS  (v3 FIX 10)
+# ─────────────────────────────────────────────────────────────────────────────
+# repression_score() needs two flags that no API supplies. Before v3 they were
+# never passed, so both permanently landed in missing[] and the live score was
+# structurally capped at 8/10 while always reporting itself as incomplete.
+#
+# Review these when the underlying facts change — they are assumptions, and
+# they are stated here so they are visible rather than buried in a call.
+#
+#   FED_BS_EXPANDING     True as of July 2026. The Fed balance sheet has grown
+#                        roughly $150bn since January via reserve-management
+#                        T-bill purchases (~$250bn in bills), with reserves
+#                        around $3.1tn. Reserve-management growth still counts
+#                        as expansion for this signal's purpose: it adds
+#                        duration-free liquidity and absorbs bill supply.
+#   DEFICIT_GT_5PCT_GDP  True. FY2026 deficit $1.9tn = 5.8% of GDP, with net
+#                        interest crossing $1.0tn (3.3% of GDP).
+#
+# Last reviewed: 2026-07-30.
+FED_BS_EXPANDING = True
+DEFICIT_GT_5PCT_GDP = True
+MACRO_FLAGS_REVIEWED = "2026-07-30"
+
 st.set_page_config(
     page_title="All-Weather Portfolio Dashboard",
     page_icon="📊",
@@ -1559,10 +1584,16 @@ with tab8:
             # is why the sidebar felt mandatory even though the data is public.
             try:
                 from fred_client import fetch_fred as _ff
-                _assessment = full_assessment(fred_key_input, fetch_fred=_ff)
+                _assessment = full_assessment(
+                    fred_key_input, fetch_fred=_ff,
+                    fed_bs_expanding=FED_BS_EXPANDING,
+                    deficit_gt_5pct_gdp=DEFICIT_GT_5PCT_GDP)
             except ImportError:
                 if fred_key_input:
-                    _assessment = full_assessment(fred_key_input)
+                    _assessment = full_assessment(
+                        fred_key_input,
+                        fed_bs_expanding=FED_BS_EXPANDING,
+                        deficit_gt_5pct_gdp=DEFICIT_GT_5PCT_GDP)
         except Exception as _e:
             st.warning(f"Live regime unavailable ({_e}). Showing static guide.")
 

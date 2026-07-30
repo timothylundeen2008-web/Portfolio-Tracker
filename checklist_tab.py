@@ -142,6 +142,31 @@ def _get(obj, name: str, default=None):
     return getattr(obj, name, default)
 
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  MANUAL MACRO FLAGS  (v3 FIX 10)
+# ─────────────────────────────────────────────────────────────────────────────
+# repression_score() needs two flags that no API supplies. Before v3 they were
+# never passed, so both permanently landed in missing[] and the live score was
+# structurally capped at 8/10 while always reporting itself as incomplete.
+#
+# Review these when the underlying facts change — they are assumptions, and
+# they are stated here so they are visible rather than buried in a call.
+#
+#   FED_BS_EXPANDING     True as of July 2026. The Fed balance sheet has grown
+#                        roughly $150bn since January via reserve-management
+#                        T-bill purchases (~$250bn in bills), with reserves
+#                        around $3.1tn. Reserve-management growth still counts
+#                        as expansion for this signal's purpose: it adds
+#                        duration-free liquidity and absorbs bill supply.
+#   DEFICIT_GT_5PCT_GDP  True. FY2026 deficit $1.9tn = 5.8% of GDP, with net
+#                        interest crossing $1.0tn (3.3% of GDP).
+#
+# Last reviewed: 2026-07-30.
+FED_BS_EXPANDING = True
+DEFICIT_GT_5PCT_GDP = True
+MACRO_FLAGS_REVIEWED = "2026-07-30"
+
 def _cfg_bls_key() -> str:
     """BLS v1 works with no key (3y history, enough for the cross-check);
     a free v2 key raises the limits."""
@@ -187,10 +212,14 @@ def _safe_assessment(fred_key: str) -> dict:
         from regime_classifier import full_assessment
         try:
             from fred_client import fetch_fred as _ff
-            return full_assessment(fred_api_key=key, fetch_fred=_ff) or {}
+            return full_assessment(fred_api_key=key, fetch_fred=_ff,
+                                   fed_bs_expanding=FED_BS_EXPANDING,
+                                   deficit_gt_5pct_gdp=DEFICIT_GT_5PCT_GDP) or {}
         except ImportError:
             # fred_client absent — original behaviour (needs a key)
-            return full_assessment(fred_api_key=key) or {}
+            return full_assessment(fred_api_key=key,
+                                   fed_bs_expanding=FED_BS_EXPANDING,
+                                   deficit_gt_5pct_gdp=DEFICIT_GT_5PCT_GDP) or {}
     except Exception as e:
         print(f"[checklist] full_assessment failed: {e}")
         return {}
@@ -302,9 +331,19 @@ def _autofetch(fred_key: str, live_weights: dict | None = None) -> dict:
     # difference between an incomplete 5 and a true 5 — say which this is.
     if vals.get("repression_score") is not None:
         miss = vals.get("repression_missing", "none")
+        # v3: the manual flags are now forwarded, so "incomplete" should be rare.
+        # What replaces it as the thing to watch is HOLLOWNESS — a score built
+        # entirely from fiscal/plumbing components while both top-weight
+        # real-yield gauges are off. Weekly Step 1 depends on telling a hollow 5
+        # from a true 5, and the band label alone cannot.
+        tw = _get(score, "top_weight_display", "")
+        hollow = _get(score, "hollow", None)
         vals["repression_score"] = (
             f"{vals['repression_score']}/10 ({vals.get('repression_band')})"
+            + (f" · top-weight {tw}" if tw else "")
+            + (" · HOLLOW" if hollow else "")
             + (f" — INCOMPLETE, missing: {miss}" if miss != "none" else " — complete"))
+        vals["repression_caveat"] = _get(score, "caveat", "") or "—"
 
     # Degraded-input flag (Weekly Step 1)
     drivers = regime.get("drivers", []) or []
