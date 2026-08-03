@@ -1,106 +1,106 @@
 {
-  "published_at": "2026-08-03T01:23:30+00:00",
-  "notes": "published by publish_to_checklist.py; etf_flow coverage: 0d history, ready=False",
+  "published_at": "2026-08-03T22:38:54+00:00",
+  "notes": "published by publish_to_checklist.py; etf_flow coverage: 1d history, ready=False",
   "cot_schema_ok": true,
   "sectors": [
     {
-      "ticker": "XLF",
-      "sector": "Financial",
-      "accumulation_score": 40.47,
-      "event_score": 0.0,
-      "stealth_label": "Weak / Mixed",
-      "cmf": 0.1528,
-      "vol_ratio": 1.06
-    },
-    {
       "ticker": "XLK",
       "sector": "Technology",
-      "accumulation_score": 28.05,
+      "accumulation_score": 43.47,
       "event_score": 0.0,
-      "stealth_label": "Stealth",
-      "cmf": 0.025,
-      "vol_ratio": 1.23
+      "stealth_label": "Strong Stealth",
+      "cmf": 0.1008,
+      "vol_ratio": 1.28
     },
     {
-      "ticker": "XLV",
-      "sector": "Healthcare",
-      "accumulation_score": 18.04,
+      "ticker": "XLF",
+      "sector": "Financial",
+      "accumulation_score": 35.83,
       "event_score": 0.0,
-      "stealth_label": "Weak / Mixed",
-      "cmf": -0.0239,
+      "stealth_label": "Stealth",
+      "cmf": 0.1112,
       "vol_ratio": 1.06
     },
     {
       "ticker": "XLE",
       "sector": "Energy",
-      "accumulation_score": 15.5,
+      "accumulation_score": 20.01,
       "event_score": 0.0,
       "stealth_label": "None",
-      "cmf": 0.0242,
-      "vol_ratio": 0.95
+      "cmf": 0.0349,
+      "vol_ratio": 0.87
     },
     {
-      "ticker": "XLB",
-      "sector": "Basic Materials",
-      "accumulation_score": -9.01,
+      "ticker": "XLV",
+      "sector": "Healthcare",
+      "accumulation_score": -0.08,
       "event_score": 0.0,
-      "stealth_label": "None",
-      "cmf": -0.036,
+      "stealth_label": "Weak / Mixed",
+      "cmf": -0.1164,
       "vol_ratio": 1.16
     },
     {
       "ticker": "XLI",
       "sector": "Industrials",
-      "accumulation_score": -11.49,
+      "accumulation_score": -0.27,
       "event_score": 0.0,
       "stealth_label": "Weak / Mixed",
-      "cmf": -0.0231,
-      "vol_ratio": 1.08
+      "cmf": 0.0263,
+      "vol_ratio": 1.18
+    },
+    {
+      "ticker": "XLB",
+      "sector": "Basic Materials",
+      "accumulation_score": -10.27,
+      "event_score": 0.0,
+      "stealth_label": "None",
+      "cmf": -0.0405,
+      "vol_ratio": 1.21
     },
     {
       "ticker": "XLC",
       "sector": "Communication Services",
-      "accumulation_score": -24.9,
+      "accumulation_score": -25.9,
       "event_score": 0.0,
       "stealth_label": "None",
-      "cmf": -0.0717,
-      "vol_ratio": 0.98
+      "cmf": -0.0765,
+      "vol_ratio": 1.03
     },
     {
       "ticker": "XLY",
       "sector": "Consumer Cyclical",
-      "accumulation_score": -29.98,
+      "accumulation_score": -26.95,
       "event_score": 0.0,
       "stealth_label": "None",
-      "cmf": -0.1043,
-      "vol_ratio": 0.96
-    },
-    {
-      "ticker": "XLP",
-      "sector": "Consumer Defensive",
-      "accumulation_score": -35.33,
-      "event_score": 0.0,
-      "stealth_label": "None",
-      "cmf": -0.1193,
-      "vol_ratio": 1.45
+      "cmf": -0.0819,
+      "vol_ratio": 1.04
     },
     {
       "ticker": "XLRE",
       "sector": "Real Estate",
-      "accumulation_score": -40.69,
+      "accumulation_score": -46.8,
       "event_score": 0.0,
       "stealth_label": "None",
-      "cmf": -0.1365,
-      "vol_ratio": 1.21
+      "cmf": -0.1722,
+      "vol_ratio": 1.35
+    },
+    {
+      "ticker": "XLP",
+      "sector": "Consumer Defensive",
+      "accumulation_score": -49.24,
+      "event_score": 0.0,
+      "stealth_label": "None",
+      "cmf": -0.2123,
+      "vol_ratio": 1.43
     },
     {
       "ticker": "XLU",
       "sector": "Utilities",
-      "accumulation_score": -49.84,
+      "accumulation_score": -49.43,
       "event_score": 0.0,
       "stealth_label": "None",
-      "cmf": -0.2614,
-      "vol_ratio": 1.11
+      "cmf": -0.3081,
+      "vol_ratio": 1.2
     }
   ],
   "flow_divergences": [],
@@ -253,80 +253,80 @@
   "breadth": [
     {
       "etf": "XLK",
-      "signal_quality": "NARROW",
-      "pct_positive_cmf": 0.5,
-      "top3_return_share": 0.481,
-      "dispersion": 0.1388
+      "signal_quality": "CONCENTRATED",
+      "pct_positive_cmf": 0.6,
+      "top3_return_share": 0.586,
+      "dispersion": 0.1209
     },
     {
       "etf": "XLF",
       "signal_quality": "BROAD",
       "pct_positive_cmf": 0.9,
-      "top3_return_share": 0.537,
-      "dispersion": 0.0376
+      "top3_return_share": 0.446,
+      "dispersion": 0.0363
     },
     {
       "etf": "XLE",
       "signal_quality": "CONCENTRATED",
-      "pct_positive_cmf": 0.6,
-      "top3_return_share": 0.73,
-      "dispersion": 0.0758
+      "pct_positive_cmf": 0.7,
+      "top3_return_share": 0.741,
+      "dispersion": 0.0731
     },
     {
       "etf": "XLV",
       "signal_quality": "CONCENTRATED",
-      "pct_positive_cmf": 0.3,
-      "top3_return_share": 0.277,
-      "dispersion": 0.0761
+      "pct_positive_cmf": 0.2,
+      "top3_return_share": 0.431,
+      "dispersion": 0.0731
     },
     {
       "etf": "XLI",
       "signal_quality": "CONCENTRATED",
-      "pct_positive_cmf": 0.3,
-      "top3_return_share": 0.59,
-      "dispersion": 0.0885
+      "pct_positive_cmf": 0.2,
+      "top3_return_share": 0.522,
+      "dispersion": 0.0695
     },
     {
       "etf": "XLY",
       "signal_quality": "CONCENTRATED",
-      "pct_positive_cmf": 0.5,
-      "top3_return_share": 0.89,
-      "dispersion": 0.1012
+      "pct_positive_cmf": 0.4,
+      "top3_return_share": 0.877,
+      "dispersion": 0.088
     },
     {
       "etf": "XLU",
       "signal_quality": "CONCENTRATED",
-      "pct_positive_cmf": 0.0,
-      "top3_return_share": 0.096,
-      "dispersion": 0.0436
+      "pct_positive_cmf": 0.1,
+      "top3_return_share": 0.329,
+      "dispersion": 0.0601
     },
     {
       "etf": "XLRE",
       "signal_quality": "CONCENTRATED",
-      "pct_positive_cmf": 0.2,
-      "top3_return_share": 0.554,
-      "dispersion": 0.0245
+      "pct_positive_cmf": 0.3,
+      "top3_return_share": 0.565,
+      "dispersion": 0.0334
     },
     {
       "etf": "XLB",
-      "signal_quality": "NARROW",
+      "signal_quality": "CONCENTRATED",
       "pct_positive_cmf": 0.4,
-      "top3_return_share": 0.55,
-      "dispersion": 0.0876
+      "top3_return_share": 0.597,
+      "dispersion": 0.0859
     },
     {
       "etf": "XLC",
-      "signal_quality": "CONCENTRATED",
+      "signal_quality": "BROAD",
       "pct_positive_cmf": 0.6,
-      "top3_return_share": 0.627,
-      "dispersion": 0.0691
+      "top3_return_share": 0.438,
+      "dispersion": 0.0617
     },
     {
       "etf": "XLP",
-      "signal_quality": "BROAD",
-      "pct_positive_cmf": 0.6,
-      "top3_return_share": 0.323,
-      "dispersion": 0.0465
+      "signal_quality": "CONCENTRATED",
+      "pct_positive_cmf": 0.1,
+      "top3_return_share": 0.31,
+      "dispersion": 0.0567
     }
   ]
 }
