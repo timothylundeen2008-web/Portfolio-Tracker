@@ -1,6 +1,6 @@
 {
-  "published_at": "2026-08-04T22:43:05+00:00",
-  "notes": "published by publish_to_checklist.py; etf_flow coverage: 1d history, ready=False",
+  "published_at": "2026-08-05T01:03:08+00:00",
+  "notes": "published by publish_to_checklist.py; etf_flow coverage: 0d history, ready=False",
   "cot_schema_ok": true,
   "sectors": [
     {
