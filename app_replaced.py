@@ -701,54 +701,26 @@ with tab1:
             unsafe_allow_html=True,
         )
 
-        # Streamlit colors a string delta red/down ONLY when the string itself
-        # starts with "-"; otherwise it defaults to green/up regardless of the
-        # sign of any number embedded further in. Prefixing text like
-        # "vs S&P " or "inflation drag: " before the number broke that
-        # detection — a portfolio trailing the S&P by 3.7 points was
-        # rendering as a green up-arrow. Fix: pass the RAW signed number as
-        # delta (drives correct color/arrow) and move the descriptive label
-        # into the help tooltip instead of into the delta string.
         c1,c2,c3,c4,c5,c6 = st.columns(6)
-
-        vs_spy = port_return_total - spy_total
         c1.metric(
             "Total Return (price+yield)",
             fmt(port_return_total),
-            fmt(vs_spy),
-            help=f"Price return + dividend/income yield contribution over the "
-                 f"period. {fmt(vs_spy)} vs S&P 500 total return.",
+            f"vs S&P {fmt(port_return_total - spy_total)}",
+            help="Price return + dividend/income yield contribution over the period",
         )
         c2.metric(
             "Price Return only",
             fmt(port_return_price),
-            fmt(income_contrib),
-            help=f"Pure price appreciation — excludes dividends and "
-                 f"distributions. Income adds {fmt(income_contrib)} on top "
-                 f"of this.",
+            f"Income adds {fmt(income_contrib)}",
+            help="Pure price appreciation — excludes dividends and distributions",
         )
-        drag_delta = -inflation_drag
         c3.metric(
             "Real Return (CPI-adj)",
             fmt(real_return),
-            fmt(drag_delta),
-            help=f"CPI-adjusted return, removing purchasing-power loss. "
-                 f"Inflation drag: {fmt(drag_delta)}.",
+            f"inflation drag: {fmt(-inflation_drag)}",
         )
         c4.metric("S&P 500 Total Return", fmt(spy_total))
-
-        # This delta was already computing the right thing (portfolio vs
-        # Nasdaq total return) and already coloring correctly, since it had
-        # no text prefix — but with nothing labeling it, "-9.8%" looked like
-        # an unexplained number rather than the comparison it actually is.
-        vs_qqq = port_return_total - qqq_total
-        c5.metric(
-            "Nasdaq-100 Total Return",
-            fmt(qqq_total),
-            fmt(vs_qqq),
-            help=f"{fmt(vs_qqq)} — portfolio total return vs Nasdaq-100 "
-                 f"total return.",
-        )
+        c5.metric("Nasdaq-100 Total Return", fmt(qqq_total), fmt(port_return_total-qqq_total))
         c6.metric("Bonds (AGG)", fmt(agg_ret))
 
         st.markdown("---")
