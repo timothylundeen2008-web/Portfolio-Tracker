@@ -701,50 +701,60 @@ with tab1:
             unsafe_allow_html=True,
         )
 
-        # Streamlit colors a string delta red/down ONLY when the string itself
-        # starts with "-"; otherwise it defaults to green/up regardless of the
-        # sign of any number embedded further in. Prefixing text like
-        # "vs S&P " or "inflation drag: " before the number broke that
-        # detection — a portfolio trailing the S&P by 3.7 points was
-        # rendering as a green up-arrow. Fix: pass the RAW signed number as
-        # delta (drives correct color/arrow) and move the descriptive label
-        # into the help tooltip instead of into the delta string.
+        # Round the headline numbers FIRST, then derive every delta from
+        # those ALREADY-ROUNDED figures. Previously each delta was computed
+        # from raw, unrounded floats and independently rounded on its own —
+        # e.g. income_contrib = port_return_total - port_return_price, using
+        # the RAW values, then fmt() rounded total, price, and income_contrib
+        # each separately. That's correct arithmetic on the underlying
+        # numbers, but the three figures a reader can actually see (Price
+        # Return +1.8%, Income delta +0.1%, Total Return +2.0%) didn't sum to
+        # each other on screen, because each was rounded from a slightly
+        # different precision point. Deriving deltas from the ROUNDED
+        # headline values guarantees what's displayed always foots — at the
+        # cost of the delta being off from the true unrounded difference by
+        # at most 0.05pp, invisible at 1 decimal place. Scoped to local `_r`
+        # variables so nothing downstream (holdings table, alpha calc, charts)
+        # that needs the true unrounded figures is affected.
         c1,c2,c3,c4,c5,c6 = st.columns(6)
 
-        vs_spy = port_return_total - spy_total
+        total_r = round(port_return_total, 1)
+        price_r = round(port_return_price, 1)
+        real_r  = round(real_return, 1)
+        spy_r   = round(spy_total, 1)
+        qqq_r   = round(qqq_total, 1)
+
+        vs_spy = total_r - spy_r
         c1.metric(
             "Total Return (price+yield)",
-            fmt(port_return_total),
+            fmt(total_r),
             fmt(vs_spy),
             help=f"Price return + dividend/income yield contribution over the "
                  f"period. {fmt(vs_spy)} vs S&P 500 total return.",
         )
+        income_delta = total_r - price_r
         c2.metric(
             "Price Return only",
-            fmt(port_return_price),
-            fmt(income_contrib),
+            fmt(price_r),
+            fmt(income_delta),
             help=f"Pure price appreciation — excludes dividends and "
-                 f"distributions. Income adds {fmt(income_contrib)} on top "
+                 f"distributions. Income adds {fmt(income_delta)} on top "
                  f"of this.",
         )
-        drag_delta = -inflation_drag
+        drag_delta = real_r - total_r
         c3.metric(
             "Real Return (CPI-adj)",
-            fmt(real_return),
+            fmt(real_r),
             fmt(drag_delta),
             help=f"CPI-adjusted return, removing purchasing-power loss. "
                  f"Inflation drag: {fmt(drag_delta)}.",
         )
-        c4.metric("S&P 500 Total Return", fmt(spy_total))
+        c4.metric("S&P 500 Total Return", fmt(spy_r))
 
-        # This delta was already computing the right thing (portfolio vs
-        # Nasdaq total return) and already coloring correctly, since it had
-        # no text prefix — but with nothing labeling it, "-9.8%" looked like
-        # an unexplained number rather than the comparison it actually is.
-        vs_qqq = port_return_total - qqq_total
+        vs_qqq = total_r - qqq_r
         c5.metric(
             "Nasdaq-100 Total Return",
-            fmt(qqq_total),
+            fmt(qqq_r),
             fmt(vs_qqq),
             help=f"{fmt(vs_qqq)} — portfolio total return vs Nasdaq-100 "
                  f"total return.",
