@@ -1,0 +1,138 @@
+name: Scheduled Checklist Logs
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  DST-AWARE SCHEDULING
+# ─────────────────────────────────────────────────────────────────────────────
+#  GitHub Actions cron is UTC-only and has no timezone support, so a single
+#  fixed cron drifts by an hour twice a year. The fix is to fire at BOTH the
+#  EDT and EST equivalents and let the job itself check the real Eastern time,
+#  exiting early when it is the wrong one. Two triggers, one effective run.
+#
+#  DAILY — 6:30 PM ET  (not 5:00 PM; see auto_log.py for the full rationale)
+#     One hour after the close is too early for the inputs this log depends on.
+#     Treasury H.15 posts ~4:15pm ET and takes time to reach FRED; ETF issuer
+#     shares files land 6-9pm ET. A 5:00pm run would routinely capture the
+#     PREVIOUS day's Treasury values while stamping them with today's date —
+#     a silent off-by-one that corrupts every momentum calculation built on
+#     the history. 6:30pm clears all sources with margin, same evening.
+#       22:30 UTC = 6:30 PM EDT (Mar-Nov)
+#       23:30 UTC = 6:30 PM EST (Nov-Mar)
+#
+#  WEEKLY — Sunday 6:00 AM ET  (as requested; well chosen and unchanged)
+#     Falls after the COT release (Friday 3:30pm ET) and before the week
+#     begins, which is exactly what Checklist v4 Weekly Step 5 requires.
+#       10:00 UTC = 6:00 AM EDT
+#       11:00 UTC = 6:00 AM EST
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  schedule:
+    - cron: '30 22 * * 1-5'   # daily, EDT
+    - cron: '30 23 * * 1-5'   # daily, EST
+    - cron: '0 10 * * 0'      # weekly, EDT
+    - cron: '0 11 * * 0'      # weekly, EST
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Which log to run'
+        required: true
+        default: 'daily'
+        type: choice
+        options: [daily, weekly]
+
+concurrency:
+  group: scheduled-logs
+  cancel-in-progress: false
+
+jobs:
+  log:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # The DST gate. Both crons fire; only the one matching the real Eastern
+      # hour proceeds. Manual dispatch always proceeds.
+      - name: Decide whether this run should proceed
+        id: gate
+        run: |
+          python - <<'PY'
+          import os, sys
+          sys.path.insert(0, '.')
+          import market_time as mt
+
+          dispatch = "${{ github.event_name }}" == "workflow_dispatch"
+          mode_in  = "${{ github.event.inputs.mode }}" or "daily"
+          now = mt.now_et()
+          hour, dow = now.hour, now.weekday()   # Mon=0 .. Sun=6
+
+          if dispatch:
+              proceed, mode, why = True, mode_in, f"manual dispatch ({mode_in})"
+          elif dow == 6 and hour == 6:
+              proceed, mode, why = True, "weekly", "Sunday 6 AM ET"
+          elif dow < 5 and hour == 18:
+              if mt.is_trading_day(now.date()):
+                  proceed, mode, why = True, "daily", "weekday 6 PM ET"
+              else:
+                  proceed, mode, why = False, "daily", f"{now.date()} is a market holiday"
+          else:
+              proceed, mode, why = False, "daily", (
+                  f"wrong ET hour ({now:%a %H:%M %Z}) — this is the "
+                  f"off-DST twin of the intended cron")
+
+          print(f"::notice::{'RUN' if proceed else 'SKIP'} — {why}")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"proceed={'true' if proceed else 'false'}\n")
+              f.write(f"mode={mode}\n")
+              f.write(f"et={now:%Y-%m-%d %H:%M %Z}\n")
+          PY
+
+      - name: Run the checklist log
+        if: steps.gate.outputs.proceed == 'true'
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: |
+          echo "Eastern time: ${{ steps.gate.outputs.et }}"
+          python auto_log.py ${{ steps.gate.outputs.mode }}
+
+      - name: Commit logs
+        if: steps.gate.outputs.proceed == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # `git add` FIRST, then check the staged index. `git diff` alone only
+          # sees TRACKED files, so on the first run the brand-new logs/ files
+          # are invisible to it and the commit is skipped — permanently, since
+          # they never become tracked. Same deadlock that blocked the ETF
+          # poller for months.
+          git add -A logs/
+          if git diff --cached --quiet -- logs/; then
+            echo "No new log data — nothing staged."
+          else
+            git commit -m "logs: ${{ steps.gate.outputs.mode }} checklist ${{ steps.gate.outputs.et }}"
+            git pull --rebase --autostash origin ${{ github.ref_name }} || true
+            git push
+            echo "Committed:"
+            git show --stat --oneline HEAD | tail -n +2
+          fi
+
+      - name: Publish summary to the run page
+        if: steps.gate.outputs.proceed == 'true'
+        run: |
+          LATEST=$(ls -t logs/summaries/*.md 2>/dev/null | head -1)
+          if [ -n "$LATEST" ]; then
+            cat "$LATEST" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No summary file produced." >> "$GITHUB_STEP_SUMMARY"
+          fi
