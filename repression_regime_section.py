@@ -51,49 +51,6 @@ _REGIME_COLOR = {
 }
 
 
-def _render_repression_score(sc: dict):
-    """
-    Render repression_score()'s output: the 0-10 stacking score that answers
-    HOW HARD to tilt, given the regime the banner above already answered WHAT
-    regime. Distinct from the Indicator Scorecard tab's 0-10 (11 weighted
-    indicators, different scale) — that is a DIFFERENT score with the same
-    casual name; do not conflate the two numbers on this page or elsewhere.
-    """
-    if not sc:
-        st.warning("Repression score unavailable this run.")
-        return
-
-    score = sc.get("score")
-    band = sc.get("band", "—")
-    hollow = sc.get("hollow")
-    top_w = sc.get("top_weight_display", "")
-    missing = sc.get("missing") or []
-    caveat = sc.get("caveat", "")
-
-    badge_color = "#dc2626" if hollow else ("#d97706" if missing else "#16a34a")
-    st.markdown(
-        f"<div style='display:flex;align-items:baseline;gap:14px;margin:8px 0;'>"
-        f"<span style='font-size:1.6rem;font-weight:800;'>{score}/10</span>"
-        f"<span style='color:{badge_color};font-weight:700;'>{band}</span>"
-        + (f"<span style='color:#9ca3af;font-size:0.9rem;'>top-weight "
-           f"{top_w}</span>" if top_w else "")
-        + "</div>",
-        unsafe_allow_html=True,
-    )
-
-    if caveat:
-        (st.error if hollow else st.warning)(caveat)
-
-    if missing:
-        st.caption(f"⚠ Missing inputs (scored 0, not penalized): "
-                  f"{', '.join(missing)} — this is an INCOMPLETE score, not "
-                  f"necessarily a low one.")
-
-    with st.expander("Score breakdown"):
-        for r in sc.get("reasons", []):
-            st.markdown(f"- {r}")
-
-
 def _arrow(x):
     if x is None:
         return "—"
@@ -164,13 +121,6 @@ def render_regime_section(fred_api_key: str = "",
     )
     if regime["drivers"]:
         st.markdown("**Why:** " + " · ".join(regime["drivers"]))
-
-    # ---- Repression Proximity Score ----
-    # v3 fix: this was COMPUTED (out["repression"]) but never RENDERED anywhere
-    # on this panel. The score/band/hollow-caveat existed only in the return
-    # value, which nothing on this page consumed. Caught when a user asked
-    # "where's the 4/10?" and it genuinely wasn't on screen.
-    _render_repression_score(out.get("repression", {}))
 
     # ---- The two real yields, side by side ----
     st.markdown("#### The two real yields (never conflate these)")
@@ -259,17 +209,49 @@ def _real_yield_chart(fred_api_key, kw):
 
 
 def _quadrant_table(active_key):
+    """
+    Render every regime the classifier can return, not a stale subset.
+
+    v3.3 fix. This table was hardcoded to 5 keys from when REGIMES had 5
+    entries. Two regimes were added later — transition_ambiguous and neutral
+    — and neither was added here. The consequence was not cosmetic: with the
+    live regime AT transition_ambiguous, the ACTIVE marker had no row to
+    attach to, so a user saw five regimes, none marked active, with nothing
+    indicating the real state simply wasn't among the five shown. A table
+    that silently omits the live regime is worse than a wrong label — it
+    looks complete and isn't.
+
+    `order` is now DERIVED from rc.REGIMES itself, ordered by growth exposure
+    (most growth-additive first), so a THIRD regime added later can never
+    repeat this failure by omission — it will appear automatically.
+    """
     rows = []
-    order = ["inflationary_repression", "hard_repression",
-             "liquidity_crisis", "stagflation", "goldilocks"]
+    # Rank by growth exposure so the table reads high-conviction-growth to
+    # high-conviction-defensive, top to bottom, deterministically.
+    order = sorted(
+        rc.REGIMES.keys(),
+        key=lambda k: -(rc.REGIMES[k]["overlay"].get("VGT", 0)
+                        + rc.REGIMES[k]["overlay"].get("QQQ", 0)
+                        + rc.REGIMES[k]["overlay"].get("SMH", 0)),
+    )
     disc = {
         "inflationary_repression": "short real −  ·  long real ↑",
         "hard_repression": "short real −  ·  long real ↓  ·  credit calm",
         "liquidity_crisis": "HY blowout  ·  long real ↓",
         "stagflation": "short real −  ·  2s10s re-steepening",
-        "goldilocks": "short real +  ·  credit tight",
+        "goldilocks": "short real +  ·  credit tight  ·  leadership intact  ·  "
+                     "valuation/concentration in range",
+        "transition_ambiguous": "short real WITHIN ±0.25% band — gauge silent",
+        "neutral": "signals mixed / no dominant driver",
     }
+    if active_key not in order:
+        st.error(f"⚠ Active regime '{active_key}' is not in rc.REGIMES — "
+                 f"classifier and UI have drifted. This should be impossible "
+                 f"since `order` is derived from rc.REGIMES; check for a "
+                 f"stale import.")
     for k in order:
+        if k not in disc:
+            disc[k] = "(discriminator text not yet written for this regime)"
         w = rc.target_weights(k)
         star = " ⬅ **ACTIVE**" if k == active_key else ""
         rows.append({
