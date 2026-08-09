@@ -561,9 +561,7 @@ def repression_score(sig: SignalSet,
 # --------------------------------------------------------------------------- #
 #  The regime classifier (5 quadrants + neutral)
 # --------------------------------------------------------------------------- #
-def classify_regime(sig: SignalSet, fetch_prices: Callable = None,
-                    cape: float = None,
-                    top20_concentration_pct: float = None) -> dict:
+def classify_regime(sig: SignalSet, fetch_prices: Callable = None) -> dict:
     """Return the regime key, label, blurb, and drivers list.
 
     Precedence (deliberate):
@@ -634,22 +632,6 @@ def classify_regime(sig: SignalSet, fetch_prices: Callable = None,
     #    on 2026-07-29 and its overlay (VGT +4, QQQ +3, SMH +2) instructed
     #    adding to the exact complex that was unwinding.
     if short_pos and hy is not None and hy < 3.5:
-        # v3.2 FIX 11: valuation/concentration circuit breaker. The leadership
-        # guard below catches a crash IN PROGRESS; it cannot catch
-        # expensive-and-euphoric. On 2026-08-07 QQQ was at record highs (guard
-        # passes) with CAPE 42.19 and the top 20 names at 50.8% of index
-        # weight. A cool CPI print pushing the short real rate above +0.25%
-        # would have fired goldilocks and instructed ADDING growth
-        # (VGT +4, QQQ +3, SMH +2) at the second-highest valuation in ~150
-        # years. Fails OPEN on missing inputs — see regime_bands.valuation_ok.
-        val_ok, val_why = _rb.valuation_ok(cape, top20_concentration_pct)
-        if not val_ok:
-            drivers.append(f"Short real rate {short_real:+.2f}% (positive)")
-            drivers.append(f"HY OAS {hy:.2f}% (tight credit)")
-            drivers.append(val_why)
-            return _regime("transition_ambiguous", drivers)
-        drivers.append(val_why)
-
         if fetch_prices is not None:
             lead_ok, lead_why = _rb.leadership_ok(fetch_prices)
             if not lead_ok:
@@ -809,8 +791,6 @@ def kmlm_signal(sig: SignalSet) -> dict:
 def full_assessment(fred_api_key: str = "",
                     fed_bs_expanding: Optional[bool] = None,
                     deficit_gt_5pct_gdp: Optional[bool] = None,
-                    cape: Optional[float] = None,
-                    top20_concentration_pct: Optional[float] = None,
                     **kw) -> dict:
     """
     v3 FIX 10. Two changes, both of which were silently degrading the output:
@@ -830,8 +810,7 @@ def full_assessment(fred_api_key: str = "",
     """
     fetch_prices = kw.get("fetch_prices")
     sig = compute_signals(fred_api_key, **kw)
-    regime = classify_regime(sig, fetch_prices=fetch_prices, cape=cape,
-                             top20_concentration_pct=top20_concentration_pct)
+    regime = classify_regime(sig, fetch_prices=fetch_prices)
     return {
         "signals": sig,
         "regime": regime,

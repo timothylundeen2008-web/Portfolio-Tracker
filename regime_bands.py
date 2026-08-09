@@ -75,6 +75,29 @@ LEADERSHIP_TICKER = "QQQ"
 LEADERSHIP_LOOKBACK_DAYS = 60
 LEADERSHIP_MAX_DRAWDOWN = -10.0     # percent
 
+# ── Valuation / concentration guard (v2, August 2026) ────────────────────────
+# The leadership guard catches a crash IN PROGRESS. It does NOT catch
+# expensive-and-euphoric, which is the live risk: on 2026-08-07 QQQ sat at
+# record highs (guard passes cleanly) with Shiller CAPE at 42.19 — the
+# highest since August 2000, against an all-time peak of 44.19 in November
+# 1999 — and the top 20 S&P names at 50.8% of index weight, a level unseen
+# in over half a century.
+#
+# The specific hazard: July CPI could push the short real policy rate above
+# +0.25%, clearing the band into DECISIVELY POSITIVE. With HY OAS ~284bp the
+# goldilocks branch would then fire and its overlay (VGT +4, QQQ +3, SMH +2)
+# would instruct ADDING growth at the second-highest valuation in ~150 years
+# — while the ETF flow layer is blind. Positive real rates plus tight credit
+# plus intact leadership are still not sufficient for goldilocks when the
+# index is this expensive and this concentrated.
+#
+# Thresholds are deliberately extreme-only. This is a circuit breaker for
+# historic outliers, not a valuation timing model — CAPE predicts the next
+# decade, not the next twelve months, so it must never be used to call a top.
+CAPE_BLOCK_LEVEL = 40.0          # dot-com-peak territory
+CONCENTRATION_BLOCK_PCT = 45.0   # top-20 share of index weight
+
+
 # Band labels, exposed so the UI can render them without re-deriving.
 BAND_NEGATIVE = "NEGATIVE"
 BAND_AMBIGUOUS = "AMBIGUOUS"
@@ -191,6 +214,55 @@ def leadership_drawdown(fetch_prices: Callable,
     except Exception as e:                                   # never raise
         out["detail"] = f"Leadership guard failed for {ticker}: {e}"
         return out
+
+
+def valuation_ok(cape: Optional[float] = None,
+                 top20_concentration_pct: Optional[float] = None,
+                 cape_block: float = CAPE_BLOCK_LEVEL,
+                 conc_block: float = CONCENTRATION_BLOCK_PCT) -> tuple[bool, str]:
+    """
+    Block a growth-ADDITIVE regime when the index is at a historic valuation
+    or concentration extreme.
+
+    FAILS OPEN, deliberately — the opposite of leadership_ok(). Rationale:
+    these inputs are manual/periodic (CAPE is monthly, concentration is
+    quarterly), not live feeds. Failing closed on a missing monthly input
+    would suppress goldilocks permanently for reasons unrelated to markets,
+    which is its own silent-wrong-output failure. Missing data therefore
+    passes WITH a visible warning, rather than blocking invisibly.
+
+    Both thresholds are extreme-only. CAPE at 30 does not block; CAPE at 42
+    does.
+    """
+    notes = []
+    blocked = False
+
+    if cape is None:
+        notes.append("⚠ CAPE not supplied — valuation guard not evaluated.")
+    elif cape >= cape_block:
+        blocked = True
+        notes.append(f"Shiller CAPE {cape:.1f} ≥ {cape_block:.0f} — "
+                     f"dot-com-peak territory.")
+    else:
+        notes.append(f"CAPE {cape:.1f} below the {cape_block:.0f} block level.")
+
+    if top20_concentration_pct is None:
+        notes.append("⚠ Concentration not supplied — not evaluated.")
+    elif top20_concentration_pct >= conc_block:
+        blocked = True
+        notes.append(f"Top-20 concentration {top20_concentration_pct:.1f}% ≥ "
+                     f"{conc_block:.0f}% — index-level single-theme risk.")
+    else:
+        notes.append(f"Top-20 concentration {top20_concentration_pct:.1f}% "
+                     f"below the {conc_block:.0f}% block level.")
+
+    if blocked:
+        return False, ("Valuation guard BLOCKS a growth-additive regime: "
+                       + " ".join(notes) +
+                       " Adding to growth at a historic valuation extreme is "
+                       "not what a confirmed benign regime should instruct. "
+                       "Routing to the transition overlay instead.")
+    return True, "Valuation guard clear: " + " ".join(notes)
 
 
 def leadership_ok(fetch_prices: Callable,
