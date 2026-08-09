@@ -95,15 +95,6 @@ warnings.filterwarnings("ignore")
 #                        interest crossing $1.0tn (3.3% of GDP).
 #
 # Last reviewed: 2026-07-30.
-# Eastern-time display. Every timestamp here previously used a naive
-# datetime.now(), which returns the SERVER's local time — UTC on Streamlit
-# Community Cloud. A dashboard refreshed at 4:05pm ET displayed "20:05", so a
-# user reading it as Eastern believed the data was hours staler than it was.
-try:
-    import market_time as _mt
-except Exception:
-    _mt = None
-
 FED_BS_EXPANDING = True
 DEFICIT_GT_5PCT_GDP = True
 MACRO_FLAGS_REVIEWED = "2026-07-30"
@@ -372,9 +363,7 @@ def get_pe(ticker: str) -> dict:
         return {**live, "source": "live"}
     # Fallback path: tag provenance + staleness (Level-3 valuation verdicts
     # must never ride silently on a stale hardcoded multiple).
-    # ET date, not server-local: a UTC-dated 'today' overstates staleness
-    # by a day for anything captured after 8pm ET.
-    stale_days = ((_mt.et_date() if _mt else datetime.now().date())
+    stale_days = (datetime.now().date()
                   - datetime.strptime(PE_FALLBACK_ASOF, "%Y-%m-%d").date()).days
     return {**live, **PE_FALLBACK.get(ticker, {}),
             "source": "fallback", "stale_days": stale_days,
@@ -620,9 +609,7 @@ with st.sidebar:
 mode_badge = "🧩 Hybrid Mode" if portfolio_mode == "Hybrid (Stocks + ETFs)" else "📦 ETF Mode"
 st.markdown(f"# 📊 All-Weather Portfolio Dashboard  <small style='font-size:0.5em;color:#888'>{mode_badge}</small>",
             unsafe_allow_html=True)
-_ts = (_mt.fmt_et() if _mt else datetime.now().strftime('%B %d, %Y %H:%M'))
-_mkt = (f" · {_mt.market_status()['status']}" if _mt else "")
-st.markdown(f"<small style='color:#666'>Updated: {_ts}{_mkt} · Period: {period_label} · CPI: {cpi_rate}%</small>",
+st.markdown(f"<small style='color:#666'>Updated: {datetime.now().strftime('%B %d, %Y %H:%M')} · Period: {period_label} · CPI: {cpi_rate}%</small>",
             unsafe_allow_html=True)
 st.markdown("---")
 
@@ -995,7 +982,7 @@ with tab1:
             st.download_button(
                 "⬇ Download Holdings CSV",
                 csv_df.to_csv(index=False),
-                f"portfolio_{(_mt.et_date().strftime('%Y%m%d') if _mt else datetime.now().strftime('%Y%m%d'))}.csv",
+                f"portfolio_{datetime.now().strftime('%Y%m%d')}.csv",
                 "text/csv",
             )
 
