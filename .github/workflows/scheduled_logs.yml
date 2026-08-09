@@ -102,6 +102,14 @@ jobs:
         if: steps.gate.outputs.proceed == 'true'
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          # A manual workflow_dispatch already told the gate step above to
+          # proceed regardless of day — but that permission has to reach
+          # auto_log.py itself too, or a Sunday test run silently no-ops
+          # (writes zero files) and the commit step below then fails trying
+          # to `git add` a logs/ directory that was never created. A
+          # scheduled cron run never sets this, so production behavior on
+          # real weekends/holidays is unchanged.
+          LOG_FORCE: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
         run: |
           echo "Eastern time: ${{ steps.gate.outputs.et }}"
           python auto_log.py ${{ steps.gate.outputs.mode }}
@@ -111,6 +119,22 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # GUARD: logs/ may legitimately not exist — a non-forced daily run
+          # on a real holiday the calendar caught, or ANY crash in the
+          # previous step before a single file was written, both leave
+          # nothing on disk. `git add -A logs/` on a nonexistent path is a
+          # FATAL pathspec error that red-X's the whole job even though
+          # "nothing to commit" is not actually a failure. Check existence
+          # first and exit cleanly rather than let git decide that for us.
+          if [ ! -d logs ]; then
+            echo "No logs/ directory was produced this run — see the 'Run "
+            echo "the checklist log' step above for why (commonly: today is "
+            echo "not a trading day and this was not a forced run). Nothing "
+            echo "to commit; this is not a failure."
+            exit 0
+          fi
+
           # `git add` FIRST, then check the staged index. `git diff` alone only
           # sees TRACKED files, so on the first run the brand-new logs/ files
           # are invisible to it and the commit is skipped — permanently, since
