@@ -627,7 +627,7 @@ st.markdown(f"<small style='color:#666'>Updated: {_ts}{_mkt} · Period: {period_
 st.markdown("---")
 
 # ─── TABS ─────────────────────────────────────────────────────────────────────
-tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8,tab9,tab10 = st.tabs([
+tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8,tab9 = st.tabs([
     "🏠 Overview",
     "📈 Holding vs Benchmark",
     "🗂️ Category Performance",
@@ -637,7 +637,6 @@ tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8,tab9,tab10 = st.tabs([
     "⚖️ ETF vs Stocks",
     "📚 Education",
     "✅ Checklist",
-    "📋 Daily & Weekly Logs",
 ])
 
 # ════════════════════════════════════════════════════════════
@@ -1848,28 +1847,3 @@ with tab9:
         st.error(f"Checklist tab failed to render: {type(e).__name__}: {e}", icon="⚠️")
         st.caption("The rest of the dashboard is unaffected — this tab fails "
                    "in isolation by design.")
-
-
-# ════════════════════════════════════════════════════════════
-#  TAB 10 — Daily & Weekly Logs
-# ════════════════════════════════════════════════════════════
-# The REVIEW surface for auto_log.py. Until this existed, the scheduled runs
-# wrote reports to logs/summaries/ in the repo and to the Actions run page —
-# archival, but not somewhere anyone would actually read them daily. Reading
-# happens here, alongside every other signal.
-#
-# log_viewer reads from the GitHub Contents API FIRST and the local checkout
-# second, because Streamlit Cloud serves a deploy-time snapshot: Actions
-# commits new logs AFTER that snapshot, so a running app can be days behind
-# and would otherwise render a stale report as though it were today's.
-with tab10:
-    try:
-        import log_viewer
-        log_viewer.render(st)
-    except Exception as e:
-        st.error(f"Log viewer unavailable: {e}")
-        st.caption(
-            "Reports are still being written to `logs/summaries/` in the repo "
-            "regardless of this tab — check there, or the Actions run page, "
-            "if this fails."
-        )
