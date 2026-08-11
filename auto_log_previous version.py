@@ -165,40 +165,10 @@ def run_daily(fred_key: str = "", force: bool = False) -> dict:
         return {"gold_gate": "PASS" if ok else "FAIL"}
     row.update(_try(_gold, "Step 3 gold gate", errors) or {})
 
-    # Broad market context — what the framework's own signals are silent
-    # about. Kept separate from the regime block so a price-fetch failure
-    # cannot lose the macro capture.
-    def _context():
-        import market_context as mc
-        ctx = mc.snapshot()
-        spy = ctx.get("indices", {}).get("SPY", {})
-        qqq = ctx.get("indices", {}).get("QQQ", {})
-        return {"_ctx": ctx,
-                "spy_1d": spy.get("d1"), "spy_1w": spy.get("d5"),
-                "qqq_1d": qqq.get("d1"), "qqq_1w": qqq.get("d5"),
-                "sector_dispersion_1w": ctx.get("sector_dispersion_1w"),
-                "breadth_divergence_1w": ctx.get("breadth_divergence_1w")}
-    row.update(_try(_context, "Market context", errors) or {})
-
-    # Exception alerts. An EMPTY list is the normal, expected outcome — the
-    # daily job is not meant to produce narrative, only to surface a
-    # pre-committed threshold crossing. See market_context.alerts().
-    def _alerts():
-        import market_context as mc
-        fired = mc.alerts(row.get("_ctx") or {}, row)
-        return {"alerts_fired": len(fired),
-                "alert_max_level": (fired[0]["level"] if fired else "NONE"),
-                "alert_rules": ";".join(a["rule"] for a in fired),
-                "_alerts": fired}
-    row.update(_try(_alerts, "Alerts", errors) or {})
-
     row["errors"] = " || ".join(errors) if errors else ""
     row["error_count"] = len(errors)
 
-    # Private keys (leading underscore) are for the summary writer only and
-    # must not bloat the CSV history.
-    _csv_row = {k: v for k, v in row.items() if not k.startswith("_")}
-    _append_csv(DAILY_CSV, _csv_row, key="et_date")
+    _append_csv(DAILY_CSV, row, key="et_date")
     _write_summary(row, kind="daily")
     return row
 
@@ -341,23 +311,6 @@ def build_summary(row: dict, kind: str = "daily") -> str:
     L.append(f"| KMLM stance | {row.get('kmlm_stance','n/a')} |")
     L.append("")
 
-    # Daily = EXCEPTION report. Weekly = full narrative. This split is
-    # deliberate: Checklist v4 makes daily observation and weekly decision,
-    # and a daily essay manufactures significance on days that contain none.
-    if kind == "daily":
-        try:
-            import market_context as mc
-            L.append(mc.alert_block(row.get("_alerts") or []))
-        except Exception:
-            pass
-    else:
-        try:
-            import market_context as mc
-            if row.get("_ctx"):
-                L.append(mc.context_block(row["_ctx"]))
-        except Exception:
-            pass
-
     # Rule-based interpretation
     L.append("## Interpretation")
     notes = []
@@ -462,7 +415,24 @@ if __name__ == "__main__":
     import sys
     key = os.environ.get("FRED_API_KEY", "")
     mode = sys.argv[1] if len(sys.argv) > 1 else "daily"
-    result = run_weekly(key) if mode == "weekly" else run_daily(key)
+
+    # run_weekly() already forces past the trading-day check internally
+    # (it calls run_daily(fred_key, force=True)), so weekly mode was never
+    # affected by this bug. Only a direct `python auto_log.py daily` on a
+    # non-trading day was — it returned {"skipped": True} without writing
+    # ANY file, which then made the workflow's "Commit logs" step try to
+    # `git add` a logs/ directory that was never created:
+    #
+    #     fatal: pathspec 'logs/' did not match any files
+    #
+    # LOG_FORCE lets a manual workflow_dispatch (which the YAML gate already
+    # decided SHOULD run regardless of day) actually reach this script and
+    # override the internal trading-day check too. A scheduled cron run
+    # never sets this, so production behavior — silently skipping weekends
+    # and holidays — is unchanged.
+    force = os.environ.get("LOG_FORCE", "").strip().lower() in ("1", "true", "yes")
+
+    result = run_weekly(key) if mode == "weekly" else run_daily(key, force=force)
     print(json.dumps({k: v for k, v in result.items()
                       if k not in ("targets_json", "drivers")},
                      indent=2, default=str))
