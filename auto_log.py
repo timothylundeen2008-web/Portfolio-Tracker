@@ -112,7 +112,20 @@ def run_daily(fred_key: str = "", force: bool = False) -> dict:
 
     # Step 0 — coverage gate. Runs FIRST: every flow reading depends on it.
     def _coverage():
-        import flow_integrity as fi
+        # flow_integrity.py audits the ETF creations/redemptions store, which
+        # only exists in the Money_Flow repo. Running this logger from
+        # Portfolio-Tracker or the Repression repo, the module is correctly
+        # absent — that used to surface as a raw ModuleNotFoundError in the
+        # errors field, which read like a bug rather than an expected,
+        # repo-specific gap. Distinguish the two explicitly so a future log
+        # review doesn't chase a non-issue.
+        try:
+            import flow_integrity as fi
+        except ImportError:
+            return {"flow_status": "N/A",
+                    "flow_detail": "flow_integrity not applicable in this "
+                                   "repo (ETF flow data lives in Money_Flow "
+                                   "only)."}
         rep = fi.full_report()
         return {"flow_status": rep["status"],
                 "flow_detail": rep["shares_movement"]["detail"],
