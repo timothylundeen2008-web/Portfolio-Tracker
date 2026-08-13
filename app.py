@@ -658,10 +658,26 @@ with tab1:
         port_return_price = 0.0
         port_return_total = 0.0
 
+        _skipped_tickers = []   # data-gap tickers, surfaced after the loop
         for ticker, (_, alloc, *_) in PORTFOLIO.items():
             w = custom_allocs.get(ticker, alloc) / 100
             if ticker in prices.columns:
                 s = prices[ticker].dropna()
+                # GUARD: an empty or single-point series after dropna() means
+                # this ticker's fetch returned no usable data this run (a
+                # transient source hiccup, rate limit, or — for a newly added
+                # holding — genuinely no history yet for the selected period).
+                # s.iloc[-1]/s.iloc[0] on an empty series raises IndexError and
+                # previously took down the ENTIRE Overview tab for one bad
+                # ticker. The benchmark helper _ret() below already guards
+                # with `if len(s) > 1` — this applies the same guard here, and
+                # additionally SKIPS the ticker's weight from the aggregate
+                # rather than silently defaulting its contribution to 0%,
+                # which would understate the true portfolio return without
+                # telling anyone. The skip is surfaced as a warning instead.
+                if len(s) <= 1:
+                    _skipped_tickers.append(ticker)
+                    continue
                 # Price return series
                 price_daily = s.pct_change().fillna(0)
                 port_series_price = (
@@ -680,6 +696,16 @@ with tab1:
                 )
                 tot_ret = total_return_with_yield(price_ret, ticker, period)
                 port_return_total += tot_ret * w
+
+        if _skipped_tickers:
+            st.warning(
+                f"⚠ No usable price data this run for: "
+                f"{', '.join(_skipped_tickers)}. Their weight was EXCLUDED "
+                f"from the return figures below rather than counted as 0% — "
+                f"so these numbers reflect the remaining holdings only. Try "
+                f"refreshing; if it persists, verify the ticker is still "
+                f"valid and actively traded."
+            )
 
         def _ret(tkr):
             if tkr in prices.columns:
