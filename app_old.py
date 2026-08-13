@@ -499,16 +499,67 @@ def get_live_cpi_yoy(fred_key: str = "") -> float | None:
     try:
         from fred_client import fetch_fred
         import pandas as pd
-        s = fetch_fred("CPIAUCSL", fred_key, start="2022-01-01")
+        # v3.4 fix: CPIAUCSL is seasonally adjusted; BLS's headline 12-month
+        # figure is always NSA. See regime_classifier.py's cpi_index comment
+        # for the full reasoning -- same fix, same file-pair pattern as v3.3.
+        s = fetch_fred("CPIAUCNS", fred_key, start="2022-01-01")
         if s is None or s.empty:
             return None
-        m = s.resample("ME").last().dropna()
+        # v3.3 fix. The comment above this block claims this is already
+        # "calendar-SAFE" -- it wasn't. resample("ME") DOES correctly create
+        # NaN placeholder rows for Oct/Nov 2025 (the confirmed missing BLS
+        # months), but the .dropna() that immediately followed REMOVED those
+        # placeholders, compressing the index. pct_change(12) is
+        # position-based, so with the gap physically deleted, "12 rows back"
+        # no longer means "12 calendar months back" -- it lands ~2 months
+        # too early, overstating YoY (reproduced with synthetic data at
+        # +0.47pp for a July 2026 calculation -- matching this dashboard's
+        # live 3.54% vs BLS's actual 3.4% July print). The exact same bug
+        # duplicated from regime_classifier.py's compute_signals(), written
+        # independently in this file -- same fix, same reasoning: dropna()
+        # AFTER pct_change(12), never before, so the position-based math
+        # stays calendar-aligned.
+        m = s.resample("ME").last()                    # keep gap-month NaNs
         if len(m) < 13:
             return None
-        yoy = (m.pct_change(12) * 100).dropna()
+        yoy = (m.pct_change(12) * 100).dropna()         # drop only now
         return round(float(yoy.iloc[-1]), 1) if len(yoy) else None
     except Exception:
         return None
+
+
+def get_live_cpi_context(fred_key: str = "") -> dict:
+    """
+    All three CPI reads, one call. Reuses get_live_cpi_yoy() for the YoY
+    figure rather than re-deriving it a third time in this file — that
+    function is already the fixed, calendar-safe, NSA-correct version.
+    SAAR and MoM are new: both SA, both from one shared fetch.
+
+    Each of the three is independently None-safe. One series or one
+    calculation failing never blocks the other two — a dashboard showing
+    two of three numbers is more useful than one that shows none because a
+    single fetch had a bad day.
+    """
+    out = {"yoy": get_live_cpi_yoy(fred_key), "saar": None, "mom": None}
+    try:
+        from fred_client import fetch_fred
+        s = fetch_fred("CPIAUCSL", fred_key, start="2022-01-01")
+        if s is None or s.empty:
+            return out
+        m = s.resample("ME").last()          # keep gap-month NaNs — same
+                                              # calendar-alignment discipline
+                                              # as the NSA fix
+        if len(m) <= 3:
+            return out
+        mom = (m.pct_change(1) * 100).dropna()
+        if len(mom):
+            out["mom"] = round(float(mom.iloc[-1]), 2)
+        saar = (((m.pct_change(3) + 1) ** 4 - 1) * 100).dropna()
+        if len(saar):
+            out["saar"] = round(float(saar.iloc[-1]), 2)
+    except Exception:
+        pass
+    return out
 
 
 # ─── SIDEBAR ─────────────────────────────────────────────────────────────────
@@ -600,17 +651,52 @@ with st.sidebar:
     st.markdown("---")
     alert_thresh = st.slider("Lag alert threshold (%)", 2, 20, 5, 1)
 
-    # Inflation rate for real-return calc — defaults to LIVE CPI YoY from FRED
-    _live_cpi = get_live_cpi_yoy(fred_key_input)
+    # Inflation rate for real-return calc — defaults to LIVE CPI YoY (NSA).
+    # All three CPI reads are fetched together and always shown side by
+    # side so the reader can never mistake one for another — the slider
+    # itself is driven by YoY specifically, but SAAR and MoM are displayed
+    # alongside as context for interpreting whether that YoY figure is
+    # about to rise or fall.
+    _cpi_ctx = get_live_cpi_context(fred_key_input)
+    _live_cpi = _cpi_ctx["yoy"]
     _cpi_default = _live_cpi if _live_cpi is not None else 4.2
     cpi_rate = st.slider("CPI inflation rate (%)", 1.0, 8.0, _cpi_default, 0.1,
-                         help="Defaults to live CPI YoY from FRED when a key is "
-                              "set (sidebar); otherwise a recent fallback. Drag "
-                              "to model scenarios.")
+                         help="Defaults to live CPI YoY (NSA) from FRED when a "
+                              "key is set (sidebar); otherwise a recent "
+                              "fallback. Drag to model scenarios.")
+
+    try:
+        from regime_classifier import (CPI_YOY_LABEL, CPI_SAAR_LABEL,
+                                       CPI_MOM_LABEL, CPI_YOY_HELP,
+                                       CPI_SAAR_HELP, CPI_MOM_HELP)
+    except Exception:
+        CPI_YOY_LABEL, CPI_SAAR_LABEL, CPI_MOM_LABEL = (
+            "CPI YoY (NSA)", "CPI 3M SAAR", "CPI MoM (SA)")
+        CPI_YOY_HELP = CPI_SAAR_HELP = CPI_MOM_HELP = ""
+
+    def _cpi_line(label, val, suffix, help_text):
+        v = f"{val:+.2f}%" if val is not None else "n/a"
+        st.caption(f"↑ {label}: {v}", help=help_text or None)
+
     if _live_cpi is not None:
-        st.caption(f"↑ Live CPI YoY (FRED): {_live_cpi}%")
+        _cpi_line(CPI_YOY_LABEL, _live_cpi, "", CPI_YOY_HELP)
     else:
         st.caption("↑ Fallback CPI — add a FRED key above for the live value")
+    _cpi_line(CPI_SAAR_LABEL, _cpi_ctx["saar"], "", CPI_SAAR_HELP)
+    _cpi_line(CPI_MOM_LABEL, _cpi_ctx["mom"], "", CPI_MOM_HELP)
+
+    if (_cpi_ctx["saar"] is not None and _live_cpi is not None
+            and _cpi_ctx["saar"] - _live_cpi >= 1.5):
+        st.warning(f"⚠ {CPI_SAAR_LABEL} is running "
+                  f"{_cpi_ctx['saar']-_live_cpi:+.1f}pp hotter than "
+                  f"{CPI_YOY_LABEL} — inflation may be re-accelerating "
+                  f"before the trailing figure shows it.")
+    elif (_cpi_ctx["saar"] is not None and _live_cpi is not None
+          and _live_cpi - _cpi_ctx["saar"] >= 1.5):
+        st.info(f"↓ {CPI_SAAR_LABEL} is running "
+               f"{_cpi_ctx['saar']-_live_cpi:+.1f}pp cooler than "
+               f"{CPI_YOY_LABEL} — recent months are decelerating faster "
+               f"than the trailing figure reflects yet.")
 
     st.markdown("---")
     st.markdown("<small style='color:#555'>Data via Yahoo Finance · Refreshes hourly<br>⚠️ Not financial advice</small>",
@@ -622,12 +708,18 @@ st.markdown(f"# 📊 All-Weather Portfolio Dashboard  <small style='font-size:0.
             unsafe_allow_html=True)
 _ts = (_mt.fmt_et() if _mt else datetime.now().strftime('%B %d, %Y %H:%M'))
 _mkt = (f" · {_mt.market_status()['status']}" if _mt else "")
-st.markdown(f"<small style='color:#666'>Updated: {_ts}{_mkt} · Period: {period_label} · CPI: {cpi_rate}%</small>",
-            unsafe_allow_html=True)
+_saar_str = f"{_cpi_ctx['saar']:+.1f}%" if _cpi_ctx.get('saar') is not None else "n/a"
+_mom_str = f"{_cpi_ctx['mom']:+.2f}%" if _cpi_ctx.get('mom') is not None else "n/a"
+st.markdown(
+    f"<small style='color:#666'>Updated: {_ts}{_mkt} · Period: {period_label} · "
+    f"{CPI_YOY_LABEL}: {cpi_rate}% &nbsp;|&nbsp; "
+    f"{CPI_SAAR_LABEL}: {_saar_str} &nbsp;|&nbsp; "
+    f"{CPI_MOM_LABEL}: {_mom_str}</small>",
+    unsafe_allow_html=True)
 st.markdown("---")
 
 # ─── TABS ─────────────────────────────────────────────────────────────────────
-tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8,tab9 = st.tabs([
+tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8,tab9,tab10 = st.tabs([
     "🏠 Overview",
     "📈 Holding vs Benchmark",
     "🗂️ Category Performance",
@@ -637,6 +729,7 @@ tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8,tab9 = st.tabs([
     "⚖️ ETF vs Stocks",
     "📚 Education",
     "✅ Checklist",
+    "📋 Daily & Weekly Logs",
 ])
 
 # ════════════════════════════════════════════════════════════
@@ -657,10 +750,26 @@ with tab1:
         port_return_price = 0.0
         port_return_total = 0.0
 
+        _skipped_tickers = []   # data-gap tickers, surfaced after the loop
         for ticker, (_, alloc, *_) in PORTFOLIO.items():
             w = custom_allocs.get(ticker, alloc) / 100
             if ticker in prices.columns:
                 s = prices[ticker].dropna()
+                # GUARD: an empty or single-point series after dropna() means
+                # this ticker's fetch returned no usable data this run (a
+                # transient source hiccup, rate limit, or — for a newly added
+                # holding — genuinely no history yet for the selected period).
+                # s.iloc[-1]/s.iloc[0] on an empty series raises IndexError and
+                # previously took down the ENTIRE Overview tab for one bad
+                # ticker. The benchmark helper _ret() below already guards
+                # with `if len(s) > 1` — this applies the same guard here, and
+                # additionally SKIPS the ticker's weight from the aggregate
+                # rather than silently defaulting its contribution to 0%,
+                # which would understate the true portfolio return without
+                # telling anyone. The skip is surfaced as a warning instead.
+                if len(s) <= 1:
+                    _skipped_tickers.append(ticker)
+                    continue
                 # Price return series
                 price_daily = s.pct_change().fillna(0)
                 port_series_price = (
@@ -679,6 +788,16 @@ with tab1:
                 )
                 tot_ret = total_return_with_yield(price_ret, ticker, period)
                 port_return_total += tot_ret * w
+
+        if _skipped_tickers:
+            st.warning(
+                f"⚠ No usable price data this run for: "
+                f"{', '.join(_skipped_tickers)}. Their weight was EXCLUDED "
+                f"from the return figures below rather than counted as 0% — "
+                f"so these numbers reflect the remaining holdings only. Try "
+                f"refreshing; if it persists, verify the ticker is still "
+                f"valid and actively traded."
+            )
 
         def _ret(tkr):
             if tkr in prices.columns:
@@ -1847,3 +1966,28 @@ with tab9:
         st.error(f"Checklist tab failed to render: {type(e).__name__}: {e}", icon="⚠️")
         st.caption("The rest of the dashboard is unaffected — this tab fails "
                    "in isolation by design.")
+
+
+# ════════════════════════════════════════════════════════════
+#  TAB 10 — Daily & Weekly Logs
+# ════════════════════════════════════════════════════════════
+# The REVIEW surface for auto_log.py. Until this existed, the scheduled runs
+# wrote reports to logs/summaries/ in the repo and to the Actions run page —
+# archival, but not somewhere anyone would actually read them daily. Reading
+# happens here, alongside every other signal.
+#
+# log_viewer reads from the GitHub Contents API FIRST and the local checkout
+# second, because Streamlit Cloud serves a deploy-time snapshot: Actions
+# commits new logs AFTER that snapshot, so a running app can be days behind
+# and would otherwise render a stale report as though it were today's.
+with tab10:
+    try:
+        import log_viewer
+        log_viewer.render(st)
+    except Exception as e:
+        st.error(f"Log viewer unavailable: {e}")
+        st.caption(
+            "Reports are still being written to `logs/summaries/` in the repo "
+            "regardless of this tab — check there, or the Actions run page, "
+            "if this fails."
+        )

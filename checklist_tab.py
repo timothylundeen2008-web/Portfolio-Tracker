@@ -161,11 +161,20 @@ def _get(obj, name: str, default=None):
 #                        duration-free liquidity and absorbs bill supply.
 #   DEFICIT_GT_5PCT_GDP  True. FY2026 deficit $1.9tn = 5.8% of GDP, with net
 #                        interest crossing $1.0tn (3.3% of GDP).
+#   CAPE_CURRENT          42.0 (multpl.com, 2026-08-10). Arms the goldilocks
+#                        valuation guard (regime_bands.valuation_ok). Without
+#                        it the guard fails OPEN and reports "not supplied" —
+#                        not a safe default, since CAPE has been above the
+#                        guard's own 40.0 block level since mid-2026.
+#   TOP20_CONCENTRATION_PCT  50.8 (JPMorgan, cited in the 2026-08-07 review).
+#                        Arms the same guard's second leg.
 #
-# Last reviewed: 2026-07-30.
+# Last reviewed: 2026-08-13.
 FED_BS_EXPANDING = True
 DEFICIT_GT_5PCT_GDP = True
-MACRO_FLAGS_REVIEWED = "2026-07-30"
+CAPE_CURRENT = 42.0
+TOP20_CONCENTRATION_PCT = 50.8
+MACRO_FLAGS_REVIEWED = "2026-08-13"
 
 def _cfg_bls_key() -> str:
     """BLS v1 works with no key (3y history, enough for the cross-check);
@@ -214,12 +223,16 @@ def _safe_assessment(fred_key: str) -> dict:
             from fred_client import fetch_fred as _ff
             return full_assessment(fred_api_key=key, fetch_fred=_ff,
                                    fed_bs_expanding=FED_BS_EXPANDING,
-                                   deficit_gt_5pct_gdp=DEFICIT_GT_5PCT_GDP) or {}
+                                   deficit_gt_5pct_gdp=DEFICIT_GT_5PCT_GDP,
+                                   cape=CAPE_CURRENT,
+                                   top20_concentration_pct=TOP20_CONCENTRATION_PCT) or {}
         except ImportError:
             # fred_client absent — original behaviour (needs a key)
             return full_assessment(fred_api_key=key,
                                    fed_bs_expanding=FED_BS_EXPANDING,
-                                   deficit_gt_5pct_gdp=DEFICIT_GT_5PCT_GDP) or {}
+                                   deficit_gt_5pct_gdp=DEFICIT_GT_5PCT_GDP,
+                                   cape=CAPE_CURRENT,
+                                   top20_concentration_pct=TOP20_CONCENTRATION_PCT) or {}
     except Exception as e:
         print(f"[checklist] full_assessment failed: {e}")
         return {}

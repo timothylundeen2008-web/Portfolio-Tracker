@@ -62,6 +62,18 @@ from datetime import datetime
 
 import market_time as mt
 
+# Manual macro/valuation flags — same set, same "why", as checklist_tab.py
+# and app.py. Kept in sync by hand; review dates whenever the underlying
+# facts change. CAPE and concentration specifically arm the goldilocks
+# valuation guard — without them it fails open silently, which is exactly
+# how a scheduled run could log a goldilocks regime through a stretch where
+# CAPE was already above the guard's own 40.0 block level.
+FED_BS_EXPANDING = True
+DEFICIT_GT_5PCT_GDP = True
+CAPE_CURRENT = 42.0                  # multpl.com, 2026-08-10
+TOP20_CONCENTRATION_PCT = 50.8       # JPMorgan, cited 2026-08-07 review
+MACRO_FLAGS_REVIEWED = "2026-08-13"
+
 DAILY_CSV = "logs/daily_log.csv"
 WEEKLY_CSV = "logs/weekly_log.csv"
 SUMMARY_DIR = "logs/summaries"
@@ -138,8 +150,10 @@ def run_daily(fred_key: str = "", force: bool = False) -> dict:
         import regime_classifier as rc
         from fred_client import fetch_fred
         out = rc.full_assessment(fred_key, fetch_fred=fetch_fred,
-                                 fed_bs_expanding=True,
-                                 deficit_gt_5pct_gdp=True)
+                                 fed_bs_expanding=FED_BS_EXPANDING,
+                                 deficit_gt_5pct_gdp=DEFICIT_GT_5PCT_GDP,
+                                 cape=CAPE_CURRENT,
+                                 top20_concentration_pct=TOP20_CONCENTRATION_PCT)
         sig, reg = out["signals"], out["regime"]
         sc, km = out["repression"], out["kmlm"]
         return {

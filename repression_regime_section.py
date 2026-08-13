@@ -69,7 +69,9 @@ def render_regime_section(fred_api_key: str = "",
                           fetch_fred=None, fetch_prices=None,
                           start: str = "2015-01-01",
                           fed_bs_expanding: bool | None = None,
-                          deficit_gt_5pct_gdp: bool | None = None):
+                          deficit_gt_5pct_gdp: bool | None = None,
+                          cape: float | None = None,
+                          top20_concentration_pct: float | None = None):
     """
     v3: `fed_bs_expanding` and `deficit_gt_5pct_gdp` are manual/derived flags
     that repression_score() needs and could not previously receive. As of July
@@ -77,6 +79,19 @@ def render_regime_section(fred_api_key: str = "",
     roughly $150bn since January via reserve-management bill purchases, and the
     FY2026 deficit is 5.8% of GDP. Pass them explicitly rather than hardcoding
     here, so the caller owns the assumption.
+
+    v3.5: `cape` and `top20_concentration_pct` arm the goldilocks
+    valuation/concentration guard in classify_regime(). Without them the
+    guard fails OPEN (by design — see regime_bands.valuation_ok) and every
+    goldilocks read shows "⚠ CAPE not supplied — valuation guard not
+    evaluated." That is not a bug; it is the guard correctly reporting it
+    was never armed. It matters because it was never a hypothetical gap:
+    CAPE crossed 40 (the guard's own block level) in mid-2026 and sat at 42
+    as of 2026-08-10 — precisely the condition FIX 11 was built to catch —
+    while every call site kept calling full_assessment() without these two
+    arguments, so the guard sat dormant through the exact scenario it exists
+    for. Pass them explicitly; the caller owns the assumption, same as the
+    two flags above.
     """
     st.subheader("🌡️ Regime Classifier — the two real yields")
     st.caption(
@@ -101,10 +116,14 @@ def render_regime_section(fred_api_key: str = "",
         # v3 FIX 10: forward the two manual flags. They were never passed, so
         # both permanently appeared in the score's missing[] list and the live
         # score was structurally capped at 8/10.
+        # v3.5: forward cape / top20_concentration_pct so the valuation guard
+        # can actually evaluate rather than silently no-op.
         out = rc.full_assessment(
             fred_api_key,
             fed_bs_expanding=fed_bs_expanding,
             deficit_gt_5pct_gdp=deficit_gt_5pct_gdp,
+            cape=cape,
+            top20_concentration_pct=top20_concentration_pct,
             **kw)
 
     sig, regime, fed = out["signals"], out["regime"], out["fed"]

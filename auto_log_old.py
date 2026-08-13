@@ -152,7 +152,9 @@ def run_daily(fred_key: str = "", force: bool = False) -> dict:
             "hy_oas": _get(sig, "hy_oas"),
             "hy_oas_mom_2w": _get(sig, "hy_oas_mom_2w"),
             "breakeven_10y": _get(sig, "breakeven_10y"),
-            "cpi_yoy": _get(sig, "cpi_yoy"),
+            "cpi_yoy": _get(sig, "cpi_yoy"),           # NSA, 12mo — feeds short_real_rate
+            "cpi_3m_saar": _get(sig, "cpi_3m_saar"),    # SA, 3mo annualized — leading
+            "cpi_mom_sa": _get(sig, "cpi_mom_sa"),      # SA, latest month
             "stock_bond_corr_60d": _get(sig, "stock_bond_corr_60d"),
             "repression_score": _get(sc, "score"),
             "repression_band": _get(sc, "band"),
@@ -348,7 +350,9 @@ def build_summary(row: dict, kind: str = "daily") -> str:
     L.append(f"| 2s10s | {_fmt(row.get('spread_2s10s'))} |")
     L.append(f"| HY OAS | {_fmt(row.get('hy_oas'))} |")
     L.append(f"| VIX | {row.get('vix','n/a')} |")
-    L.append(f"| CPI YoY | {_fmt(row.get('cpi_yoy'))} |")
+    L.append(f"| CPI YoY (NSA) | {_fmt(row.get('cpi_yoy'))} |")
+    L.append(f"| CPI 3M SAAR | {_fmt(row.get('cpi_3m_saar'))} |")
+    L.append(f"| CPI MoM (SA) | {_fmt(row.get('cpi_mom_sa'), dp=2)} |")
     L.append(f"| Stock/bond 60d corr | {_fmt(row.get('stock_bond_corr_60d'),'',2)} |")
     L.append(f"| Gold gate | {row.get('gold_gate','n/a')} |")
     L.append(f"| KMLM stance | {row.get('kmlm_stance','n/a')} |")

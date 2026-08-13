@@ -106,7 +106,9 @@ except Exception:
 
 FED_BS_EXPANDING = True
 DEFICIT_GT_5PCT_GDP = True
-MACRO_FLAGS_REVIEWED = "2026-07-30"
+CAPE_CURRENT = 42.0                  # multpl.com, 2026-08-10
+TOP20_CONCENTRATION_PCT = 50.8       # JPMorgan, cited 2026-08-07 review
+MACRO_FLAGS_REVIEWED = "2026-08-13"
 
 st.set_page_config(
     page_title="All-Weather Portfolio Dashboard",
@@ -1757,13 +1759,17 @@ with tab8:
                 _assessment = full_assessment(
                     fred_key_input, fetch_fred=_ff,
                     fed_bs_expanding=FED_BS_EXPANDING,
-                    deficit_gt_5pct_gdp=DEFICIT_GT_5PCT_GDP)
+                    deficit_gt_5pct_gdp=DEFICIT_GT_5PCT_GDP,
+                    cape=CAPE_CURRENT,
+                    top20_concentration_pct=TOP20_CONCENTRATION_PCT)
             except ImportError:
                 if fred_key_input:
                     _assessment = full_assessment(
                         fred_key_input,
                         fed_bs_expanding=FED_BS_EXPANDING,
-                        deficit_gt_5pct_gdp=DEFICIT_GT_5PCT_GDP)
+                        deficit_gt_5pct_gdp=DEFICIT_GT_5PCT_GDP,
+                        cape=CAPE_CURRENT,
+                        top20_concentration_pct=TOP20_CONCENTRATION_PCT)
         except Exception as _e:
             st.warning(f"Live regime unavailable ({_e}). Showing static guide.")
 
