@@ -348,38 +348,12 @@ def compute_signals(
     hy = fetch_fred(FRED_SERIES["hy_oas"], fred_api_key, start)
     ig = fetch_fred(FRED_SERIES["ig_oas"], fred_api_key, start)
 
-    # --- CPI YoY from the index (resample to month-end; calendar-safe) ---
-    #
-    # v3.3 fix. Previously: resample("ME").last().dropna() BEFORE pct_change(12).
-    # Oct and Nov 2025 CPI were never published (BLS shutdown-related
-    # cancellation) -- CPIAUCSL has no observations for those two months, full
-    # stop, permanently. resample("ME") correctly creates NaN placeholder rows
-    # for them, spanning the true calendar gap -- but the immediate .dropna()
-    # REMOVED those placeholder rows, compressing the index. pct_change(12) is
-    # POSITION-based, not date-based: with the gap months physically removed,
-    # "12 rows back" from any month after the gap no longer equals "12 calendar
-    # months back" -- it lands roughly 2 months EARLIER than it should (e.g.
-    # comparing July 2026 to May 2025 instead of July 2025).
-    #
-    # Reproduced exactly with synthetic data spanning the real gap: this
-    # ordering overstated July 2026 YoY by +0.47pp against a same-inputs fixed
-    # calculation -- the same direction and rough magnitude as the live
-    # 3.54% (code) vs 3.4% (actual BLS July 2026 print, confirmed via news
-    # search) discrepancy this fix was written to close.
-    #
-    # Fix: dropna() AFTER pct_change(12), not before. Keeping the NaN
-    # placeholders through the position-based calculation preserves true
-    # calendar spacing -- pct_change(12) then correctly produces NaN only for
-    # the specific months whose OWN 12-months-back comparison touches a gap
-    # month, while every other month's comparison (like today's, once the
-    # window has moved past Oct/Nov 2025) stays calendar-accurate. Only strip
-    # NaN from the OUTPUT, once alignment is no longer at risk.
+    # --- CPI YoY from the index (resample to month-end so YoY is robust to
+    #     whatever frequency the fetcher returns) ---
     if cpi is not None and not cpi.empty:
-        cpi_m = cpi.resample("ME").last()          # keep gap-month NaNs
+        cpi_m = cpi.resample("ME").last().dropna()
         if len(cpi_m) > 12:
-            yoy = (cpi_m.pct_change(12) * 100).dropna()   # drop only now
-            if len(yoy):
-                sig.cpi_yoy = _last(yoy)
+            sig.cpi_yoy = _last(cpi_m.pct_change(12) * 100)
 
     sig.eff_funds = _last(eff)
 
