@@ -62,8 +62,22 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # The DST gate. Both crons fire; only the one matching the real Eastern
-      # hour proceeds. Manual dispatch always proceeds.
+      # v2 gate — window-based, not exact-hour. GitHub documents that
+      # scheduled workflows can be delayed, sometimes significantly, during
+      # platform load. The original gate required hour == 18 EXACTLY for
+      # daily; on 2026-08-12 GitHub delayed the 22:30 UTC trigger to ~7:30pm
+      # ET and the 23:30 UTC twin to ~8:04pm ET — both landed outside their
+      # single-hour windows, and the ENTIRE DAY silently produced no log,
+      # with both runs showing a misleading green "Success" (the workflow
+      # correctly did nothing, which looks identical to correctly doing
+      # something from the run list alone).
+      #
+      # Fix: accept ANY firing from the window's start onward (18:00+ ET
+      # weekdays, 06:00+ ET Sunday), gated on whether today's/this week's
+      # report has already been written. This self-heals against arbitrary
+      # delay — whichever trigger fires first after the window opens does the
+      # real work; a later trigger that day finds the report already exists
+      # and stands down rather than running (and committing) a second time.
       - name: Decide whether this run should proceed
         id: gate
         run: |
@@ -77,19 +91,46 @@ jobs:
           now = mt.now_et()
           hour, dow = now.hour, now.weekday()   # Mon=0 .. Sun=6
 
+          daily_report = f"logs/summaries/{now.date().isoformat()}_daily.md"
+
           if dispatch:
               proceed, mode, why = True, mode_in, f"manual dispatch ({mode_in})"
-          elif dow == 6 and hour == 6:
-              proceed, mode, why = True, "weekly", "Sunday 6 AM ET"
-          elif dow < 5 and hour == 18:
-              if mt.is_trading_day(now.date()):
-                  proceed, mode, why = True, "daily", "weekday 6 PM ET"
+          elif dow == 6:  # Sunday — weekly window
+              if hour < 6:
+                  proceed, mode, why = False, "weekly", (
+                      f"before the weekly window (06:00 ET), now "
+                      f"{now:%H:%M} ET")
               else:
-                  proceed, mode, why = False, "daily", f"{now.date()} is a market holiday"
+                  # Any weekly summary written TODAY counts as "already ran" —
+                  # simpler and sufficient since the weekly window is a single
+                  # Sunday, unlike daily which must key across weekday dates.
+                  already = os.path.exists(
+                      f"logs/summaries/{now.date().isoformat()}_weekly.md")
+                  if already:
+                      proceed, mode, why = False, "weekly", (
+                          "this week's report already exists — an earlier "
+                          "trigger already ran")
+                  else:
+                      proceed, mode, why = True, "weekly", (
+                          f"first trigger in the weekly window "
+                          f"({now:%H:%M} ET)")
+          elif dow < 5:  # weekday — daily window
+              if hour < 18:
+                  proceed, mode, why = False, "daily", (
+                      f"before the daily window (18:00 ET), now "
+                      f"{now:%H:%M} ET")
+              elif not mt.is_trading_day(now.date()):
+                  proceed, mode, why = False, "daily", (
+                      f"{now.date()} is a market holiday")
+              elif os.path.exists(daily_report):
+                  proceed, mode, why = False, "daily", (
+                      "today's report already exists — an earlier trigger "
+                      "already ran")
+              else:
+                  proceed, mode, why = True, "daily", (
+                      f"first trigger in the daily window ({now:%H:%M} ET)")
           else:
-              proceed, mode, why = False, "daily", (
-                  f"wrong ET hour ({now:%a %H:%M %Z}) — this is the "
-                  f"off-DST twin of the intended cron")
+              proceed, mode, why = False, "daily", "weekend, non-trading"
 
           print(f"::notice::{'RUN' if proceed else 'SKIP'} — {why}")
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
