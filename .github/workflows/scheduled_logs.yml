@@ -152,6 +152,7 @@ jobs:
           # real weekends/holidays is unchanged.
           LOG_FORCE: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
         run: |
+          python -c "import os; k=os.environ.get('FRED_API_KEY',''); print(f'FRED_API_KEY: {\"SET, \" + str(len(k)) + \" chars\" if k else \"EMPTY — not reaching this environment\"}')"
           echo "Eastern time: ${{ steps.gate.outputs.et }}"
           python auto_log.py ${{ steps.gate.outputs.mode }}
 
