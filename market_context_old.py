@@ -72,12 +72,6 @@ ALERT_RULES = {
     "dfii10_level": 2.50,
     # Daily Step 4 — the band boundary itself.
     "short_real_band": 0.25,
-    # New: CPI 3M SAAR (leading) vs CPI YoY NSA (lagging) divergence. Not a
-    # daily-actionable trigger -- this is an EARLY-WARNING context flag,
-    # same severity tier as the band-crossing INFO alert below. 1.5pp is
-    # deliberately wide: MoM/SAAR noise is real, and the point is to catch
-    # a genuine multi-month inflection, not chase a single hot or cool print.
-    "cpi_saar_divergence": 1.5,
     # An index move large enough that "nothing happened" is false.
     "index_move_1d": 2.0,
     # Sector dispersion: rotation vs uniform move.
@@ -231,26 +225,6 @@ def alerts(ctx: dict, signals: Optional[dict] = None) -> list[dict]:
                 "regime-transition protocol, require TWO consecutive daily "
                 "closes before executing, then cuts first, hedges second, "
                 "adds last.")
-
-    # ── CPI 3M SAAR vs YoY divergence — inflation inflection early-warning ──
-    # SAAR is the leading (SA, 3mo annualized) read; YoY (NSA) is the
-    # lagging one that actually feeds short_real_rate. A wide gap between
-    # them means recent months are running meaningfully hotter or cooler
-    # than the trailing 12-month figure reflects -- exactly the situation
-    # where the slower number is about to start moving.
-    saar, yoy = s.get("cpi_3m_saar"), s.get("cpi_yoy")
-    if saar is not None and yoy is not None:
-        saar, yoy = float(saar), float(yoy)
-        gap = saar - yoy
-        thresh = R["cpi_saar_divergence"]
-        if abs(gap) >= thresh:
-            direction = "hotter" if gap > 0 else "cooler"
-            add("INFO", "cpi_saar_divergence",
-                f"CPI 3M SAAR ({saar:+.2f}%) is running {abs(gap):.1f}pp "
-                f"{direction} than CPI YoY NSA ({yoy:+.2f}%).",
-                f"The trailing YoY figure hasn't caught up to the recent "
-                f"pace yet. {'Watch for the short real rate to move toward decisively negative as this feeds through.' if gap > 0 else 'Watch for the short real rate to move toward decisively positive as this feeds through.'} "
-                f"Not same-day actionable — flag for the weekly review.")
 
     # ── Tape: only when the move is large enough that "nothing happened"
     #    would be false ────────────────────────────────────────────────────

@@ -499,10 +499,7 @@ def get_live_cpi_yoy(fred_key: str = "") -> float | None:
     try:
         from fred_client import fetch_fred
         import pandas as pd
-        # v3.4 fix: CPIAUCSL is seasonally adjusted; BLS's headline 12-month
-        # figure is always NSA. See regime_classifier.py's cpi_index comment
-        # for the full reasoning -- same fix, same file-pair pattern as v3.3.
-        s = fetch_fred("CPIAUCNS", fred_key, start="2022-01-01")
+        s = fetch_fred("CPIAUCSL", fred_key, start="2022-01-01")
         if s is None or s.empty:
             return None
         # v3.3 fix. The comment above this block claims this is already
@@ -526,40 +523,6 @@ def get_live_cpi_yoy(fred_key: str = "") -> float | None:
         return round(float(yoy.iloc[-1]), 1) if len(yoy) else None
     except Exception:
         return None
-
-
-def get_live_cpi_context(fred_key: str = "") -> dict:
-    """
-    All three CPI reads, one call. Reuses get_live_cpi_yoy() for the YoY
-    figure rather than re-deriving it a third time in this file — that
-    function is already the fixed, calendar-safe, NSA-correct version.
-    SAAR and MoM are new: both SA, both from one shared fetch.
-
-    Each of the three is independently None-safe. One series or one
-    calculation failing never blocks the other two — a dashboard showing
-    two of three numbers is more useful than one that shows none because a
-    single fetch had a bad day.
-    """
-    out = {"yoy": get_live_cpi_yoy(fred_key), "saar": None, "mom": None}
-    try:
-        from fred_client import fetch_fred
-        s = fetch_fred("CPIAUCSL", fred_key, start="2022-01-01")
-        if s is None or s.empty:
-            return out
-        m = s.resample("ME").last()          # keep gap-month NaNs — same
-                                              # calendar-alignment discipline
-                                              # as the NSA fix
-        if len(m) <= 3:
-            return out
-        mom = (m.pct_change(1) * 100).dropna()
-        if len(mom):
-            out["mom"] = round(float(mom.iloc[-1]), 2)
-        saar = (((m.pct_change(3) + 1) ** 4 - 1) * 100).dropna()
-        if len(saar):
-            out["saar"] = round(float(saar.iloc[-1]), 2)
-    except Exception:
-        pass
-    return out
 
 
 # ─── SIDEBAR ─────────────────────────────────────────────────────────────────
@@ -651,52 +614,17 @@ with st.sidebar:
     st.markdown("---")
     alert_thresh = st.slider("Lag alert threshold (%)", 2, 20, 5, 1)
 
-    # Inflation rate for real-return calc — defaults to LIVE CPI YoY (NSA).
-    # All three CPI reads are fetched together and always shown side by
-    # side so the reader can never mistake one for another — the slider
-    # itself is driven by YoY specifically, but SAAR and MoM are displayed
-    # alongside as context for interpreting whether that YoY figure is
-    # about to rise or fall.
-    _cpi_ctx = get_live_cpi_context(fred_key_input)
-    _live_cpi = _cpi_ctx["yoy"]
+    # Inflation rate for real-return calc — defaults to LIVE CPI YoY from FRED
+    _live_cpi = get_live_cpi_yoy(fred_key_input)
     _cpi_default = _live_cpi if _live_cpi is not None else 4.2
     cpi_rate = st.slider("CPI inflation rate (%)", 1.0, 8.0, _cpi_default, 0.1,
-                         help="Defaults to live CPI YoY (NSA) from FRED when a "
-                              "key is set (sidebar); otherwise a recent "
-                              "fallback. Drag to model scenarios.")
-
-    try:
-        from regime_classifier import (CPI_YOY_LABEL, CPI_SAAR_LABEL,
-                                       CPI_MOM_LABEL, CPI_YOY_HELP,
-                                       CPI_SAAR_HELP, CPI_MOM_HELP)
-    except Exception:
-        CPI_YOY_LABEL, CPI_SAAR_LABEL, CPI_MOM_LABEL = (
-            "CPI YoY (NSA)", "CPI 3M SAAR", "CPI MoM (SA)")
-        CPI_YOY_HELP = CPI_SAAR_HELP = CPI_MOM_HELP = ""
-
-    def _cpi_line(label, val, suffix, help_text):
-        v = f"{val:+.2f}%" if val is not None else "n/a"
-        st.caption(f"↑ {label}: {v}", help=help_text or None)
-
+                         help="Defaults to live CPI YoY from FRED when a key is "
+                              "set (sidebar); otherwise a recent fallback. Drag "
+                              "to model scenarios.")
     if _live_cpi is not None:
-        _cpi_line(CPI_YOY_LABEL, _live_cpi, "", CPI_YOY_HELP)
+        st.caption(f"↑ Live CPI YoY (FRED): {_live_cpi}%")
     else:
         st.caption("↑ Fallback CPI — add a FRED key above for the live value")
-    _cpi_line(CPI_SAAR_LABEL, _cpi_ctx["saar"], "", CPI_SAAR_HELP)
-    _cpi_line(CPI_MOM_LABEL, _cpi_ctx["mom"], "", CPI_MOM_HELP)
-
-    if (_cpi_ctx["saar"] is not None and _live_cpi is not None
-            and _cpi_ctx["saar"] - _live_cpi >= 1.5):
-        st.warning(f"⚠ {CPI_SAAR_LABEL} is running "
-                  f"{_cpi_ctx['saar']-_live_cpi:+.1f}pp hotter than "
-                  f"{CPI_YOY_LABEL} — inflation may be re-accelerating "
-                  f"before the trailing figure shows it.")
-    elif (_cpi_ctx["saar"] is not None and _live_cpi is not None
-          and _live_cpi - _cpi_ctx["saar"] >= 1.5):
-        st.info(f"↓ {CPI_SAAR_LABEL} is running "
-               f"{_cpi_ctx['saar']-_live_cpi:+.1f}pp cooler than "
-               f"{CPI_YOY_LABEL} — recent months are decelerating faster "
-               f"than the trailing figure reflects yet.")
 
     st.markdown("---")
     st.markdown("<small style='color:#555'>Data via Yahoo Finance · Refreshes hourly<br>⚠️ Not financial advice</small>",
@@ -708,14 +636,8 @@ st.markdown(f"# 📊 All-Weather Portfolio Dashboard  <small style='font-size:0.
             unsafe_allow_html=True)
 _ts = (_mt.fmt_et() if _mt else datetime.now().strftime('%B %d, %Y %H:%M'))
 _mkt = (f" · {_mt.market_status()['status']}" if _mt else "")
-_saar_str = f"{_cpi_ctx['saar']:+.1f}%" if _cpi_ctx.get('saar') is not None else "n/a"
-_mom_str = f"{_cpi_ctx['mom']:+.2f}%" if _cpi_ctx.get('mom') is not None else "n/a"
-st.markdown(
-    f"<small style='color:#666'>Updated: {_ts}{_mkt} · Period: {period_label} · "
-    f"{CPI_YOY_LABEL}: {cpi_rate}% &nbsp;|&nbsp; "
-    f"{CPI_SAAR_LABEL}: {_saar_str} &nbsp;|&nbsp; "
-    f"{CPI_MOM_LABEL}: {_mom_str}</small>",
-    unsafe_allow_html=True)
+st.markdown(f"<small style='color:#666'>Updated: {_ts}{_mkt} · Period: {period_label} · CPI: {cpi_rate}%</small>",
+            unsafe_allow_html=True)
 st.markdown("---")
 
 # ─── TABS ─────────────────────────────────────────────────────────────────────
