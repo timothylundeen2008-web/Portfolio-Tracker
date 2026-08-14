@@ -311,13 +311,35 @@ def _fmt(v, suffix="%", dp=2):
 
 
 def _write_summary(row: dict, kind: str):
-    """Write the human-readable analysis alongside the CSV row."""
+    """
+    Write the human-readable analysis alongside the CSV row, plus a small
+    JSON sidecar recording WHEN this run actually happened.
+
+    Why the sidecar exists: the scheduled workflow's gate step decides
+    whether to run again by checking "does today's report already exist" —
+    but a bare file-existence check can't tell a proper 6:30pm end-of-day
+    capture apart from an ad-hoc manual test run at, say, 12:35pm testing an
+    unrelated code fix. On 2026-08-13 exactly that happened: a mid-day
+    manual verification run wrote a report, the gate saw it and concluded
+    "already done today," and the REAL 6:30pm scheduled run silently stood
+    down for the rest of the day -- with no crash, no error, just nothing.
+    The sidecar's et_hour lets the gate distinguish "a report exists" from
+    "a report exists from within the proper window," so an early manual test
+    can no longer suppress the evening capture.
+    """
     os.makedirs(SUMMARY_DIR, exist_ok=True)
     d = row.get("et_date", mt.et_date().isoformat())
     path = os.path.join(SUMMARY_DIR, f"{d}_{kind}.md")
     with open(path, "w", encoding="utf-8") as f:
         f.write(build_summary(row, kind))
     print(f"[auto_log] wrote {path}")
+
+    meta_path = os.path.join(SUMMARY_DIR, f"{d}_{kind}.meta.json")
+    now = mt.now_et()
+    with open(meta_path, "w", encoding="utf-8") as f:
+        json.dump({"et_date": d, "et_hour": now.hour,
+                  "run_et": mt.fmt_et(now)}, f)
+    print(f"[auto_log] wrote {meta_path}")
 
 
 def build_summary(row: dict, kind: str = "daily") -> str:
