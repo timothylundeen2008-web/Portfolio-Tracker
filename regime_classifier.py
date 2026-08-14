@@ -734,7 +734,8 @@ def classify_regime(sig: SignalSet, fetch_prices: Callable = None,
             drivers.append(f"Short real rate {short_real:+.2f}% (positive)")
             drivers.append(f"HY OAS {hy:.2f}% (tight credit)")
             drivers.append(val_why)
-            return _regime("transition_ambiguous", drivers)
+            return _regime("transition_ambiguous", drivers,
+                           reason="valuation_guard")
         drivers.append(val_why)
 
         if fetch_prices is not None:
@@ -743,7 +744,8 @@ def classify_regime(sig: SignalSet, fetch_prices: Callable = None,
                 drivers.append(f"Short real rate {short_real:+.2f}% (positive)")
                 drivers.append(f"HY OAS {hy:.2f}% (tight credit)")
                 drivers.append(lead_why)
-                return _regime("transition_ambiguous", drivers)
+                return _regime("transition_ambiguous", drivers,
+                               reason="leadership_guard")
             drivers.append(lead_why)
         else:
             drivers.append("⚠ Leadership guard not wired (fetch_prices=None) "
@@ -756,16 +758,72 @@ def classify_regime(sig: SignalSet, fetch_prices: Callable = None,
     # 5) v3 FIX 6: the gauge is inside its own noise. Distinct from 'neutral',
     #    which means the signals disagree; this means the main signal is silent.
     if band["state"] == _rb.BAND_AMBIGUOUS:
-        return _regime("transition_ambiguous", drivers)
+        return _regime("transition_ambiguous", drivers,
+                       reason="band_ambiguous")
 
     drivers.append("Signals mixed / transitioning")
     return _regime("neutral", drivers)
 
 
-def _regime(key: str, drivers: list) -> dict:
+# v3.6 fix. transition_ambiguous has THREE distinct entry paths -- band
+# ambiguity, the valuation guard, and the leadership guard -- but until now
+# all three shared one fixed label/blurb ("...short real rate at zero..."),
+# because REGIMES[key]["label"/"blurb"] is static per key. That text is
+# actively WRONG when the guard routed here: on 2026-08-13 the short real
+# rate was a decisively positive +0.27%, not "at zero" -- the valuation
+# guard (CAPE 42, concentration 50.8%) is what redirected here, and the
+# banner told a different story than the "Why" line right below it.
+#
+# Fix keeps the single "transition_ambiguous" KEY -- and therefore every
+# downstream consumer (target_weights, the quadrant table, the repression
+# score, checklist_tab) is untouched -- and only makes the DISPLAYED
+# label/blurb depend on WHY this call landed here. band_ambiguous keeps the
+# exact original text as the default.
+_TRANSITION_VARIANTS = {
+    "band_ambiguous": {
+        "label": "Transition — Ambiguous (short real rate at zero)",
+        "blurb": ("The short real policy rate is inside the ±0.25% "
+                 "transition band, so the framework's primary gauge is not "
+                 "giving a directional reading. No regime that depends on "
+                 "its sign can be confirmed. Hold near base weights, take "
+                 "carry at the front end with no duration risk, keep trend "
+                 "on (it is agnostic to which way this resolves), and "
+                 "express NEITHER the repression trade nor the reflation "
+                 "trade until the gauge clears the band."),
+    },
+    "valuation_guard": {
+        "label": "Transition — Valuation Guard Active",
+        "blurb": ("Rates and credit alone say Goldilocks: the short real "
+                 "policy rate is decisively positive and HY spreads are "
+                 "tight. But CAPE and/or index concentration are sitting at "
+                 "a historic extreme, and adding growth on top of that is "
+                 "not what a confirmed benign regime should instruct. Hold "
+                 "near base weights and reassess once valuation or "
+                 "concentration normalizes — this is a DIFFERENT reason "
+                 "than a silent short-rate gauge, see the driver list."),
+    },
+    "leadership_guard": {
+        "label": "Transition — Leadership Guard Active",
+        "blurb": ("Rates and credit alone say Goldilocks: the short real "
+                 "policy rate is decisively positive and HY spreads are "
+                 "tight. But the growth/momentum complex is in a meaningful "
+                 "drawdown from its own recent highs — confirming a regime "
+                 "whose overlay ADDS to that same complex would be adding "
+                 "into an active correction. Hold near base weights until "
+                 "leadership stabilizes."),
+    },
+}
+
+
+def _regime(key: str, drivers: list, reason: str | None = None) -> dict:
     r = REGIMES[key]
-    return {"key": key, "label": r["label"], "blurb": r["blurb"],
-            "drivers": drivers}
+    label, blurb = r["label"], r["blurb"]
+    if key == "transition_ambiguous":
+        variant = _TRANSITION_VARIANTS.get(reason or "band_ambiguous",
+                                           _TRANSITION_VARIANTS["band_ambiguous"])
+        label, blurb = variant["label"], variant["blurb"]
+    return {"key": key, "label": label, "blurb": blurb,
+            "drivers": drivers, "transition_reason": reason}
 
 
 # --------------------------------------------------------------------------- #
