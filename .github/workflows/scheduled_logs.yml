@@ -86,12 +86,47 @@ jobs:
           sys.path.insert(0, '.')
           import market_time as mt
 
+          import json as _json
+
           dispatch = "${{ github.event_name }}" == "workflow_dispatch"
           mode_in  = "${{ github.event.inputs.mode }}" or "daily"
           now = mt.now_et()
           hour, dow = now.hour, now.weekday()   # Mon=0 .. Sun=6
 
           daily_report = f"logs/summaries/{now.date().isoformat()}_daily.md"
+
+          def window_capture_done(date_str, kind, window_start_hour):
+              """
+              True only when a report exists AND it was generated at or
+              after the window's start hour.
+
+              WHY NOT BARE FILE EXISTENCE: on 2026-08-13 a manual test run at
+              12:35pm ET (verifying an unrelated code fix) wrote
+              2026-08-13_daily.md. The OLD check -- os.path.exists(report) --
+              saw that file at 6:30pm and concluded "already done today,"
+              silently skipping the real end-of-day capture for the rest of
+              the day. A pre-close manual test and a proper post-close
+              capture are not the same event and must not be treated as
+              interchangeable.
+
+              Reads the .meta.json sidecar auto_log.py writes alongside every
+              report, which records the ET HOUR the run actually happened.
+              No meta file (an older report from before this fix, or one
+              written some other way) means we cannot PROVE it was a proper
+              window capture -- default to False or unavailable in that
+              case, so a report of unknown provenance never blocks a real
+              run. Missing safely in this direction; the failure mode this
+              replaces was silence, and silence must never be the default.
+              """
+              meta_path = f"logs/summaries/{date_str}_{kind}.meta.json"
+              if not os.path.exists(meta_path):
+                  return False
+              try:
+                  with open(meta_path) as f:
+                      meta = _json.load(f)
+                  return int(meta.get("et_hour", -1)) >= window_start_hour
+              except Exception:
+                  return False
 
           if dispatch:
               proceed, mode, why = True, mode_in, f"manual dispatch ({mode_in})"
@@ -101,11 +136,10 @@ jobs:
                       f"before the weekly window (06:00 ET), now "
                       f"{now:%H:%M} ET")
               else:
-                  # Any weekly summary written TODAY counts as "already ran" —
-                  # simpler and sufficient since the weekly window is a single
-                  # Sunday, unlike daily which must key across weekday dates.
-                  already = os.path.exists(
-                      f"logs/summaries/{now.date().isoformat()}_weekly.md")
+                  # Only a report GENERATED at or after 06:00 ET counts as
+                  # "already ran" — see window_capture_done() above.
+                  already = window_capture_done(
+                      now.date().isoformat(), "weekly", 6)
                   if already:
                       proceed, mode, why = False, "weekly", (
                           "this week's report already exists — an earlier "
@@ -122,9 +156,10 @@ jobs:
               elif not mt.is_trading_day(now.date()):
                   proceed, mode, why = False, "daily", (
                       f"{now.date()} is a market holiday")
-              elif os.path.exists(daily_report):
+              elif window_capture_done(now.date().isoformat(), "daily", 18):
                   proceed, mode, why = False, "daily", (
-                      "today's report already exists — an earlier trigger "
+                      "today's report already exists FROM WITHIN THE "
+                      "WINDOW (18:00+ ET) — an earlier in-window trigger "
                       "already ran")
               else:
                   proceed, mode, why = True, "daily", (
