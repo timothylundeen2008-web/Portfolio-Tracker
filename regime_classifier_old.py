@@ -227,48 +227,6 @@ REGIMES = {
             "SGOV": +2,
         },
     },
-    # v4: GROWTH SCARE. The first branch in this framework that does NOT key
-    # off the short real rate's sign. Fires when the growth composite is
-    # CONTRACTING (>= 3 of 4 series live and agreeing), regardless of where
-    # real rates sit.
-    #
-    # WHY IT HAS TO EXIST: on 2026-08-14 payrolls were -23,000, retail sales
-    # had fallen the most in over a year, and consumer sentiment was 51.0 --
-    # an unambiguous growth scare that this classifier could not name,
-    # because `stagflation` requires a decisively NEGATIVE short real rate
-    # and the rate was +0.27%. A framework that cannot label a contracting
-    # economy is not a macro framework.
-    #
-    # OVERLAY REASONING, sleeve by sleeve:
-    #   Growth/cyclicals cut (-11): VGT, QQQ, SMH, XLE, PDBC. Earnings
-    #       estimates fall in a contraction and high-multiple names de-rate
-    #       hardest; energy and broad commodities are demand-sensitive.
-    #   Defensives/carry up (+11): SCHD, XLV, XLU (cash-flow and inelastic
-    #       demand), SGOV/USFR (paid to wait), KMLM (trend is the one sleeve
-    #       agnostic to WHICH way this resolves).
-    #   TLT deliberately UNCHANGED at 0. A growth scare argues for duration;
-    #       a term-premium/fiscal scare argues violently against it, and the
-    #       two look identical at the start. The HY>5% liquidity_crisis
-    #       override already re-arms TLT for the genuinely deflationary case,
-    #       which is the branch where duration reliably works. Adding
-    #       duration here would be taking a side the data has not yet picked.
-    "growth_scare": {
-        "label": "Growth Scare — contraction signal",
-        "blurb": (
-            "The growth composite is CONTRACTING: labour and consumer data "
-            "are deteriorating together, independent of where real rates "
-            "sit. Cut cyclicals and high-multiple growth, rotate to "
-            "cash-flow defensives and front-end carry, and keep trend on. "
-            "Duration is deliberately NOT added here — a growth scare and a "
-            "fiscal/term-premium scare look identical early, and only the "
-            "credit override can tell them apart."
-        ),
-        "overlay": {
-            "VGT": -4, "QQQ": -2, "SMH": -2, "XLE": -2, "PDBC": -1,
-            "SCHD": +3, "XLV": +3, "XLU": +1, "SGOV": +2, "USFR": +1,
-            "KMLM": +1,
-        },
-    },
     # v3 FIX 6. Fires when |short real rate| < regime_bands.TRANSITION_BAND.
     # The gauge is inside its own measurement noise, so express NEITHER the
     # repression trade nor the reflation trade and take carry while waiting.
@@ -692,8 +650,7 @@ def repression_score(sig: SignalSet,
 # --------------------------------------------------------------------------- #
 def classify_regime(sig: SignalSet, fetch_prices: Callable = None,
                     cape: float = None,
-                    top20_concentration_pct: float = None,
-                    growth: dict = None) -> dict:
+                    top20_concentration_pct: float = None) -> dict:
     """Return the regime key, label, blurb, and drivers list.
 
     Precedence (deliberate):
@@ -736,23 +693,6 @@ def classify_regime(sig: SignalSet, fetch_prices: Callable = None,
             drivers.append("Long real yield falling (flight to quality)")
         return _regime("liquidity_crisis", drivers)
 
-    # 1b) GROWTH SCARE — v4. Placed SECOND, immediately after the liquidity
-    #     override and BEFORE every real-rate branch, because a confirmed
-    #     contraction dominates the repression question: it does not matter
-    #     whether the front end is repressing savers if the economy is
-    #     shrinking. Requires `confirmed` (>= 3 of 4 growth series live) so a
-    #     single surviving noisy series can never move the regime on its own.
-    g_state = (growth or {}).get("state")
-    g_confirmed = bool((growth or {}).get("confirmed"))
-    if growth and g_confirmed and g_state == "CONTRACTING":
-        drivers.append(f"Growth composite CONTRACTING "
-                       f"({(growth or {}).get('score', 0):+d}) — "
-                       f"{(growth or {}).get('detail', '')[:160]}")
-        return _regime("growth_scare", drivers)
-    if growth and not g_confirmed and g_state == "CONTRACTING":
-        drivers.append("⚠ Growth reads CONTRACTING but is UNCONFIRMED "
-                       "(<3 of 4 series live) — not acting on it.")
-
     # 2) Inflationary repression: neg short real + rising long real.
     if short_neg and long_mom is not None and long_mom > 0:
         drivers.append(f"Short real rate {short_real:+.2f}% "
@@ -789,23 +729,6 @@ def classify_regime(sig: SignalSet, fetch_prices: Callable = None,
         # would have fired goldilocks and instructed ADDING growth
         # (VGT +4, QQQ +3, SMH +2) at the second-highest valuation in ~150
         # years. Fails OPEN on missing inputs — see regime_bands.valuation_ok.
-        # v4: growth is a THIRD goldilocks guard, alongside valuation and
-        # leadership. "Positive real rates + tight credit" cannot be a
-        # CONFIRMED benign regime while labour and consumer data are
-        # deteriorating together — that combination is late-cycle, not
-        # goldilocks. DETERIORATING blocks here; CONTRACTING never reaches
-        # this branch (it returns growth_scare above).
-        if growth and g_confirmed and g_state == "DETERIORATING":
-            drivers.append(f"Short real rate {short_real:+.2f}% (positive)")
-            drivers.append(f"HY OAS {hy:.2f}% (tight credit)")
-            drivers.append(f"Growth guard BLOCKS: composite DETERIORATING "
-                           f"({(growth or {}).get('score', 0):+d}). Rates and "
-                           f"credit alone say goldilocks, but labour/consumer "
-                           f"data are weakening together — that is late-cycle, "
-                           f"not benign.")
-            return _regime("transition_ambiguous", drivers,
-                           reason="growth_guard")
-
         val_ok, val_why = _rb.valuation_ok(cape, top20_concentration_pct)
         if not val_ok:
             drivers.append(f"Short real rate {short_real:+.2f}% (positive)")
@@ -867,17 +790,6 @@ _TRANSITION_VARIANTS = {
                  "on (it is agnostic to which way this resolves), and "
                  "express NEITHER the repression trade nor the reflation "
                  "trade until the gauge clears the band."),
-    },
-    "growth_guard": {
-        "label": "Transition — Growth Guard Active",
-        "blurb": ("Rates and credit alone say Goldilocks: the short real "
-                 "policy rate is decisively positive and HY spreads are "
-                 "tight. But the growth composite is DETERIORATING — labour "
-                 "and consumer data weakening together. That combination is "
-                 "late-cycle, not benign, and confirming a growth-additive "
-                 "regime into it would be adding risk exactly as the "
-                 "economy slows. Hold near base weights; if growth "
-                 "deteriorates further this becomes a Growth Scare."),
     },
     "valuation_guard": {
         "label": "Transition — Valuation Guard Active",
@@ -1044,7 +956,6 @@ def full_assessment(fred_api_key: str = "",
                     deficit_gt_5pct_gdp: Optional[bool] = None,
                     cape: Optional[float] = None,
                     top20_concentration_pct: Optional[float] = None,
-                    growth: Optional[dict] = None,
                     **kw) -> dict:
     """
     v3 FIX 10. Two changes, both of which were silently degrading the output:
@@ -1065,8 +976,7 @@ def full_assessment(fred_api_key: str = "",
     fetch_prices = kw.get("fetch_prices")
     sig = compute_signals(fred_api_key, **kw)
     regime = classify_regime(sig, fetch_prices=fetch_prices, cape=cape,
-                             top20_concentration_pct=top20_concentration_pct,
-                             growth=growth)
+                             top20_concentration_pct=top20_concentration_pct)
     return {
         "signals": sig,
         "regime": regime,

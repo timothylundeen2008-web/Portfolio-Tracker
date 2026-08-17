@@ -71,9 +71,7 @@ def render_regime_section(fred_api_key: str = "",
                           fed_bs_expanding: bool | None = None,
                           deficit_gt_5pct_gdp: bool | None = None,
                           cape: float | None = None,
-                          top20_concentration_pct: float | None = None,
-                          vix: float | None = None,
-                          vix_pct_rank: float | None = None):
+                          top20_concentration_pct: float | None = None):
     """
     v3: `fed_bs_expanding` and `deficit_gt_5pct_gdp` are manual/derived flags
     that repression_score() needs and could not previously receive. As of July
@@ -120,26 +118,13 @@ def render_regime_section(fred_api_key: str = "",
         # score was structurally capped at 8/10.
         # v3.5: forward cape / top20_concentration_pct so the valuation guard
         # can actually evaluate rather than silently no-op.
-        # v4: growth is now a first-class classifier input. Fetched here and
-        # forwarded so classify_regime() can reach the growth_scare branch and
-        # the goldilocks growth guard.
-        growth = None
-        try:
-            import growth_signals as gs
-            _ff = kw.get("fetch_fred") or rc._inline_fetch_fred
-            growth = gs.assess(_ff, fred_api_key)
-        except Exception as e:
-            st.caption(f"⚠ Growth axis unavailable: {e}")
-
         out = rc.full_assessment(
             fred_api_key,
             fed_bs_expanding=fed_bs_expanding,
             deficit_gt_5pct_gdp=deficit_gt_5pct_gdp,
             cape=cape,
             top20_concentration_pct=top20_concentration_pct,
-            growth=growth,
             **kw)
-        out["growth"] = growth
 
     sig, regime, fed = out["signals"], out["regime"], out["fed"]
 
@@ -155,50 +140,6 @@ def render_regime_section(fred_api_key: str = "",
     )
     if regime["drivers"]:
         st.markdown("**Why:** " + " · ".join(regime["drivers"]))
-
-    # ── Growth axis summary — the fourth axis, shown with the regime ────────
-    if growth:
-        _gcol = {"CONTRACTING": "#dc2626", "DETERIORATING": "#d97706",
-                 "NEUTRAL": "#6b7280", "EXPANDING": "#16a34a"}.get(
-                     growth.get("state"), "#6b7280")
-        st.markdown(
-            f"<div style='margin:6px 0;'><b>Growth axis:</b> "
-            f"<span style='color:{_gcol};font-weight:700;'>"
-            f"{growth.get('state')}</span> "
-            f"<span style='color:#9ca3af;'>({growth.get('score', 0):+d} "
-            f"from {len(growth.get('votes', []))} of 4 series)</span></div>",
-            unsafe_allow_html=True)
-        with st.expander("Growth breakdown — how each series voted"):
-            for v in growth.get("votes", []):
-                icon = "🔴" if v["vote"] < 0 else "🟢" if v["vote"] > 0 else "⚪"
-                st.markdown(f"{icon} **{v['name']}** — {v['reading']} "
-                            f"(vote {v['vote']:+d})")
-                st.caption(v["detail"])
-            if growth.get("missing"):
-                st.caption(f"⚠ Missing: {', '.join(growth['missing'])} — "
-                          f"these cast NO vote rather than being scored zero.")
-
-    # ── Tripwire panel — pinned directly under the banner, always visible ───
-    try:
-        import tripwires as tw
-        _curve = None
-        try:
-            import curve_analysis as _ca
-            _curve = _ca.assess(kw.get("fetch_fred") or rc._inline_fetch_fred,
-                                fred_api_key)
-        except Exception:
-            pass
-        rows = tw.build(sig=sig, growth=growth, cape=cape, curve=_curve,
-                        top20_concentration_pct=top20_concentration_pct,
-                        vix=vix, vix_pct_rank=vix_pct_rank,
-                        gold_price=out.get("gold_price"),
-                        gold_200d=out.get("gold_200d"),
-                        gold_200d_rising=out.get("gold_200d_rising"))
-        st.markdown("---")
-        tw.render(st, rows)
-        st.markdown("---")
-    except Exception as e:
-        st.caption(f"⚠ Tripwire panel unavailable: {e}")
 
     # ---- The two real yields, side by side ----
     st.markdown("#### The two real yields (never conflate these)")
