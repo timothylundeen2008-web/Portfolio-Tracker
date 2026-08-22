@@ -721,15 +721,7 @@ st.markdown(
 st.markdown("---")
 
 # ─── TABS ─────────────────────────────────────────────────────────────────────
-# Cross-dashboard nav — same module in all three repos.
-try:
-    import dashboard_links as _dl
-    _dl.render_nav(st, "all_weather")
-except Exception:
-    pass
-
-tab_sug,tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8,tab9,tab10 = st.tabs([
-    "💡 Suggested Changes",
+tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8,tab9,tab10 = st.tabs([
     "🏠 Overview",
     "📈 Holding vs Benchmark",
     "🗂️ Category Performance",
@@ -2005,61 +1997,3 @@ with tab10:
             "regardless of this tab — check there, or the Actions run page, "
             "if this fails."
         )
-
-
-# ════════════════════════════════════════════════════════════
-#  TAB: SUGGESTED CHANGES — the synthesis of all three dashboards
-# ════════════════════════════════════════════════════════════
-# Reads BOTH bridges and joins them:
-#   rotation_bridge  <- Money Flow  (evidence: where capital is moving)
-#   markets_bridge   <- Markets     (interpretation: regime + detail)
-# and produces ranked suggestions with capital preservation checked FIRST.
-#
-# Deliberately the leftmost tab: this is the question the other two
-# dashboards exist to answer, so it should be what you land on.
-with tab_sug:
-    try:
-        import suggestions as _sg
-        import markets_bridge as _mb
-        try:
-            import rotation_bridge as _rb
-            _flow = _rb.read_summary()
-        except Exception as _e:
-            _flow = {"available": False, "very_stale": True,
-                     "message": f"rotation_bridge unavailable: {_e}"}
-
-        _mkts = _mb.read()
-
-        _base = None
-        try:
-            from regime_classifier import BASE_WEIGHTS as _BW
-            _base = _BW
-        except Exception:
-            pass
-
-        _res = _sg.build(_mkts, _flow, current_weights=_base,
-                         base_weights=_base)
-        _sg.render(st, _res)
-
-        with st.expander("How this is built"):
-            st.markdown(
-                "**Evidence order — flow is evidence, markets is "
-                "interpretation, portfolio is action.**\n\n"
-                "1. **Preservation first.** CRITICAL tripwires, hostile "
-                "regimes and hollow scores are evaluated BEFORE anything "
-                "additive. In `liquidity_crisis` or `growth_scare` the engine "
-                "will not suggest adding to any risk sleeve regardless of "
-                "relative strength — but reductions remain available.\n"
-                "2. **Flow gates size, it does not generate ideas.** A regime "
-                "thesis unconfirmed by flow is a hypothesis, not a position. "
-                "Macro proposes; flow confirms, contradicts, or is silent. "
-                "Silent or contradicting halves or suppresses the "
-                "suggestion.\n"
-                "3. **Tier A outranks Tier B.** ETF creations/redemptions are "
-                "capital; volume pressure is not. With the Tier A layer dark, "
-                "no confirmation exists and every addition is capped at half "
-                "size.\n"
-                "4. **Zero suggestions is a valid outcome.** An engine that "
-                "always finds something to buy is a sales tool.")
-    except Exception as e:
-        st.error(f"Suggestions unavailable: {e}")

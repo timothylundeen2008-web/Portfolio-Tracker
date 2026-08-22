@@ -515,18 +515,7 @@ if __name__ == "__main__":
     import sys
     key = os.environ.get("FRED_API_KEY", "")
     mode = sys.argv[1] if len(sys.argv) > 1 else "daily"
-
-    # LOG_FORCE lets a manual workflow_dispatch (which the YAML gate already
-    # decided SHOULD run regardless of day) reach this script and override the
-    # internal trading-day check too. Without it, `python auto_log.py daily` on
-    # a weekend returns {"skipped": True} having written NOTHING — which then
-    # makes the workflow's commit step fail on a logs/ directory that was never
-    # created. run_weekly() already forces internally, so only daily was
-    # affected. A scheduled cron never sets this, so weekend/holiday skipping
-    # is unchanged in production.
-    force = os.environ.get("LOG_FORCE", "").strip().lower() in ("1", "true", "yes")
-
-    result = run_weekly(key) if mode == "weekly" else run_daily(key, force=force)
+    result = run_weekly(key) if mode == "weekly" else run_daily(key)
     print(json.dumps({k: v for k, v in result.items()
                       if k not in ("targets_json", "drivers")},
                      indent=2, default=str))
