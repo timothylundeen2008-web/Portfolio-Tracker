@@ -1,5 +1,5 @@
 {
-  "published_at": "2026-08-27T03:26:59+00:00",
+  "published_at": "2026-08-27T19:25:33+00:00",
   "notes": "auto-published on Markets Dashboard render",
   "regime": {
     "key": "transition_ambiguous",
@@ -7,7 +7,7 @@
     "transition_reason": "growth_guard",
     "drivers": [
       "Short real rate +0.27% (positive)",
-      "HY OAS 2.70% (tight credit)",
+      "HY OAS 2.67% (tight credit)",
       "Growth guard BLOCKS: composite DETERIORATING (-2). Rates and credit alone say goldilocks, but labour/consumer data are weakening together \u2014 that is late-cycle, not benign."
     ]
   },
