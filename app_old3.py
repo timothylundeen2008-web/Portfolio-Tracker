@@ -220,27 +220,13 @@ TIER_THRESHOLDS = {1: 1.25, 2: 1.50, 3: 2.00, 4: 3.00}  # ported verbatim
 # Regime-conditional rotation targets for capital freed by a satellite exit
 # when no qualifying bench name exists (or the exit was a broad Danger
 # Composite trigger, not an idiosyncratic stop). Keys match regime_classifier's
-# CURRENT 8 regime keys (verified against the live source, Aug 2026 — this
-# module has moved well past the original 4-quadrant table: it now includes
-# hard_repression, growth_scare, and a banded transition_ambiguous state)
-# plus a "neutral" fallback for when no live key is set.
+# four regime keys plus a "neutral" fallback for when no live key is set.
 SATELLITE_ROTATION_TARGETS = {
-    "inflationary_repression": ("GLD (momentum-gated) / KMLM / XLE+PDBC",
-                                 "Neg short real + rising long real. Real assets WITH momentum + trend win; TLT stays at 0%, rate-sensitive growth compresses."),
-    "hard_repression":         ("GLD / RING / SLV / TLT / KMLM",
-                                 "Neg short real + long real FALLING/suppressed, credit calm — yield-curve-control signature. Peak debasement: metals+miners lead, duration works again, cash is worst asset."),
-    "liquidity_crisis":        ("TLT / GLD / SGOV",
-                                 "HY spreads blowing out, long real yields falling (flight to quality). Duration and cash are shock absorbers; metals may sell off first."),
-    "stagflation":              ("KMLM / GLD / SGOV",
-                                  "Neg short real + growth rolling over (2s10s re-steepening). Gold, trend, and defensives; cut cyclical growth and energy demand risk."),
-    "goldilocks":               ("Core VGT/QQQ/SMH (regime is growth-additive) / SGOV",
-                                  "Decisively positive real rates + tight credit + leadership intact. This regime ADDS growth — don't park freed capital defensively here, the base sleeve itself is the target."),
-    "growth_scare":             ("SCHD / XLV / XLU / SGOV+USFR / KMLM",
-                                  "Growth composite CONTRACTING (labour+consumer data deteriorating together), independent of real-rate sign. Cash-flow defensives + front-end carry + trend; duration deliberately NOT added — a growth scare and a fiscal/term-premium scare look identical early."),
-    "transition_ambiguous":     ("Hold near base weights / SGOV",
-                                  "Primary short-real-rate gauge is inside its own ±0.25% noise band (or a valuation/leadership guard blocked goldilocks) — express NEITHER the repression nor the reflation trade until it clears. Approximate: exact overlay lives in regime_bands.py, which I haven't verified line-by-line."),
-    "neutral":                  ("SGOV / USFR",
-                                  "No live regime read available — default to cash, no directional bet."),
+    "inflationary_repression": ("GLD / KMLM",       "Real assets + managed futures. TLT stays at 0% here — DFII10 rising."),
+    "liquidity_crisis":        ("TLT / GLD / SGOV", "Deflationary bust risk — duration + cash, reduce equity exposure."),
+    "stagflation":              ("KMLM / SGOV",     "Rate shock — KMLM dominant, minimal equity, short duration only."),
+    "goldilocks":               ("SCHD / SGOV",     "No repression signal firing — park in cash or quality dividend equity, don't force a real-asset add."),
+    "neutral":                  ("SGOV / USFR",     "No live regime read available — default to cash, no directional bet."),
 }
 
 NO_PE_SET = {"GLD","SLV","PDBC","SGOV","USFR","BIL","FLOT","DJP","TIP","SCHP","TLT","KMLM","IEF","DBMF"}
@@ -556,159 +542,44 @@ def compute_universe_rrg(perf_df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 def _vol_ratio(volume: pd.Series) -> float:
-    """5-day recent avg vs prior 20-day baseline — ported from the CURRENT
-    (v4) Institutional Rotation Dashboard top_movers.py. Verified against
-    live source: this is explicitly UNCHANGED from v3 per that file's own
-    changelog, despite an earlier app.py docstring implying a today-vs-20-day
-    version — that docstring was describing a different badge computation,
-    not this function. Confirmed directly against the current file."""
+    """Today's session volume vs the prior 20-day average — ported from the
+    Institutional Rotation Dashboard's top_movers.py (v4: today vs 20-day
+    avg, not a 5-day average, which the dashboard's own changelog notes
+    dilutes real spikes by ~80%)."""
     v = volume.dropna()
-    if len(v) < 25:
+    if len(v) < 21:
         return 1.0
-    recent = v.iloc[-5:].mean()
-    baseline = v.iloc[-25:-5].mean()
-    return round(float(recent / baseline), 2) if baseline != 0 else 1.0
+    avg20 = v.iloc[-21:-1].mean()
+    return float(v.iloc[-1] / avg20) if avg20 > 0 else 1.0
 
-# ─── DIRECTIONAL FLOW (CMF-based) — ported from flow_metrics.py ──────────────
-# The Institutional Rotation Dashboard's v3 _flow_score() (momentum/accel/
-# vol-conviction/consistency weighted sum) is GONE as of top_movers.py v4.
-# Its own changelog: "The old composite awarded a FLAT +8 for crossing the
-# volume-spike threshold while its entire momentum term spanned roughly ±2,
-# so a single loud session outweighed any realistic momentum difference ~4x
-# ... the exact INVERSION of this framework's stated thesis that loud volume
-# is retail and institutions accumulate quietly." It's been replaced by two
-# scores computed from actual High/Low/Close/Volume (not Close alone) via
-# the Chaikin Money Flow multiplier, reported side by side and NEVER summed:
-#   accumulation_score — quiet, sustained, directional buying (Tier B)
-#   event_score        — loud activity + which side it closed on
-_TREND_CAP = 5.0
-DIVERGENCE_SCALE = 2.0
-MIN_BARS_FLOW = 63   # matches flow_metrics.py's MIN_BARS_STEALTH
+def calc_flow_score(perf_1w: float, perf_1m: float, perf_3m: float,
+                     vol_ratio: float, vol_spike: bool) -> dict:
+    """Institutional Flow Score — ported verbatim (weights and formula) from
+    the Institutional Rotation Dashboard's top_movers.py _flow_score(). This
+    is a raw weighted score for cross-sectional RANKING, not a 0-100 scale —
+    don't read the number as a percentage."""
+    if any(pd.isna(x) for x in (perf_1w, perf_1m, perf_3m)):
+        return {"score": None, "spread": None}
+    momentum    = float(np.mean([perf_1w, perf_1m, perf_3m]))
+    accel       = float(perf_1m - (perf_3m / 3))
+    vol_conf    = min(float(vol_ratio), 3.0)
+    consistency = sum(1 for p in (perf_1w, perf_1m, perf_3m) if p > 0) / 3
+    score = (0.40*momentum + 0.30*accel*2 + 0.20*vol_conf*10 + 0.10*consistency*20)
+    if vol_spike:
+        score += 8.0   # single-window vol-spike bonus, ported verbatim
+    return {"score": round(score, 2), "spread": round(accel, 2)}
 
-def money_flow_multiplier(high: pd.Series, low: pd.Series, close: pd.Series) -> pd.Series:
-    """Per-session directional weight in [-1, +1]. High==Low sessions (limit
-    moves, halts) get 0.0 rather than NaN/inf, per the source's own rule."""
-    rng = (high - low)
-    mfm = ((close - low) - (high - close)) / rng.replace(0, np.nan)
-    return mfm.fillna(0.0)
-
-def money_flow_volume(high: pd.Series, low: pd.Series, close: pd.Series, volume: pd.Series) -> pd.Series:
-    return money_flow_multiplier(high, low, close) * volume
-
-def ad_line(high: pd.Series, low: pd.Series, close: pd.Series, volume: pd.Series) -> pd.Series:
-    """Cumulative signed volume — the real A/D line, replacing the old
-    price-only "spread" that had no volume term at all."""
-    return money_flow_volume(high, low, close, volume).cumsum()
-
-def chaikin_money_flow(high: pd.Series, low: pd.Series, close: pd.Series,
-                        volume: pd.Series, period: int = 21) -> pd.Series:
-    """CMF = sum(money-flow volume, period) / sum(volume, period) ∈ [-1, +1].
-    >+0.10 strong buying · >+0.05 buying · -0.05..+0.05 neutral ·
-    <-0.05 selling · <-0.10 strong selling."""
-    if len(close.dropna()) < period:
-        return pd.Series(np.nan, index=close.index)
-    mfv = money_flow_volume(high, low, close, volume)
-    vol_sum = volume.rolling(period).sum()
-    return mfv.rolling(period).sum() / vol_sum.replace(0, np.nan)
-
-def _trend_strength(s: pd.Series, window: int) -> float:
-    """Least-squares slope over `window` bars, normalized by the series' own
-    daily-change volatility — dimensionless, comparable across the A/D
-    line (signed shares) and price (dollars)."""
-    s = s.dropna()
-    if len(s) < window:
-        return float("nan")
-    y = s.iloc[-window:].to_numpy(dtype=float)
-    x = np.arange(window, dtype=float)
-    slope = float(np.polyfit(x, y, 1)[0])
-    noise = float(np.std(np.diff(y)))
-    if noise == 0.0:
-        tol = 1e-9 * max(1.0, float(np.abs(y).mean()))
-        return 0.0 if abs(slope) <= tol else float(np.sign(slope) * _TREND_CAP)
-    return float(np.clip(slope / noise, -_TREND_CAP, _TREND_CAP))
-
-def cmf_persistence(cmf: pd.Series, window: int = 21) -> float:
-    """Fraction of the last `window` sessions with positive CMF, in [0,1]."""
-    c = cmf.dropna()
-    if len(c) < window:
-        return float("nan")
-    return float((c.iloc[-window:] > 0).mean())
-
-def ad_price_divergence(high, low, close, volume, window: int = 21) -> float:
-    """(normalized A/D slope) - (normalized price slope). >0 = A/D trending
-    up harder than price = absorption/accumulation. A sector making new
-    highs on a FALLING A/D line is distribution-into-strength — invisible
-    to any price-only or undirected-volume signal."""
-    ad = ad_line(high, low, close, volume)
-    return _trend_strength(ad, window) - _trend_strength(close, window)
-
-def accumulation_score(high, low, close, volume, vol_ratio: float,
-                        tier_threshold: float, window: int = 21) -> float:
-    """QUIET accumulation, roughly -100..+100. CMF level (±35) + persistence
-    (±25) + A/D-vs-price divergence (±25) + quietness (±15, PENALIZES loud
-    names rather than just failing to reward them). Ported from
-    flow_metrics.py's accumulation_score()."""
-    if len(close.dropna()) < MIN_BARS_FLOW:
-        return float("nan")
-    cmf = chaikin_money_flow(high, low, close, volume, period=window)
-    if not cmf.notna().any():
-        return float("nan")
-    cmf_now = float(cmf.dropna().iloc[-1])
-    persist = cmf_persistence(cmf, window)
-    diverg = ad_price_divergence(high, low, close, volume, window)
-    if any(pd.isna(v) for v in (persist, diverg)):
-        return float("nan")
-    cmf_pts = float(np.clip(cmf_now / 0.20, -1, 1) * 35)
-    persist_pts = float(np.clip((persist - 0.5) / 0.5, -1, 1) * 25)
-    diverg_pts = float(np.clip(diverg / DIVERGENCE_SCALE, -1, 1) * 25)
-    if vol_ratio < tier_threshold:
-        quiet_pts = 15.0
-    else:
-        excess = (vol_ratio - tier_threshold) / max(tier_threshold, 1e-9)
-        quiet_pts = float(-15.0 * np.clip(excess, 0, 1))
-    return round(cmf_pts + persist_pts + diverg_pts + quiet_pts, 2)
-
-def event_score(high, low, close, volume, vol_ratio: float, tier_threshold: float) -> dict:
-    """LOUD activity, 0-100 — "something happened, go find out what." NOT an
-    accumulation signal; reported alongside accumulation_score, never summed
-    with it. Direction comes from the money-flow multiplier, not trailing
-    price sign — a spike closing on the low is a selling event even in a
-    green month."""
-    out = {"event_score": 0.0, "event_direction": "None", "spike": False}
-    if len(close.dropna()) < 2 or vol_ratio is None or pd.isna(vol_ratio):
-        return out
-    spike = bool(vol_ratio >= tier_threshold)
-    out["spike"] = spike
-    mfm = money_flow_multiplier(high, low, close)
-    mfm_now = float(mfm.iloc[-1]) if len(mfm) else float("nan")
-    magnitude = float(np.clip((vol_ratio / tier_threshold - 1) / 1.0, 0, 1) * 60)
-    base = 40.0 if spike else 0.0
-    out["event_score"] = round(base + magnitude, 2)
-    if not spike:
-        out["event_direction"] = "None"
-    elif mfm_now > 0.3:
-        out["event_direction"] = "Buying event"
-    elif mfm_now < -0.3:
-        out["event_direction"] = "Selling event"
-    else:
-        out["event_direction"] = "Two-sided / unresolved"
-    return out
-
-def signal_label(cmf: float, vol_spike: bool) -> str:
-    """Signal label driven by CMF direction — ported from the current
-    top_movers.py _signal_label(). Quiet + strong CMF = Accumulation tier;
-    loud + strong CMF = Event tier (same pressure, different loudness)."""
-    quiet = not vol_spike
-    if cmf is None or pd.isna(cmf):
-        return "Neutral (px only)"
-    if cmf >= 0.10:
-        return "Strong Accumulation" if quiet else "Buying Event"
-    if cmf >= 0.05:
-        return "Accumulation" if quiet else "Inflow"
-    if cmf <= -0.10:
-        return "Strong Distribution" if quiet else "Selling Event"
-    if cmf <= -0.05:
-        return "Distribution" if quiet else "Outflow"
+def signal_label(perf_1m: float, spread: float, vol_ratio: float, vol_spike: bool) -> str:
+    """Signal label — ported verbatim from the Institutional Rotation
+    Dashboard's top_movers.py _signal_label()."""
+    if vol_spike and spread > 1.5 and perf_1m > 0: return "Strong Accumulation"
+    if vol_spike and spread > 0   and perf_1m > 0: return "Accumulation"
+    if vol_spike and perf_1m < 0  and spread < -1: return "Strong Distribution"
+    if vol_spike and perf_1m < 0:                  return "Distribution"
+    if spread > 1.5 and vol_ratio > 1.1:           return "Accumulation"
+    if perf_1m > 0  and spread > 0:                return "Inflow"
+    if spread < -1.5 and vol_ratio < 0.9:          return "Distribution"
+    if perf_1m < 0  and spread < -0.5:             return "Outflow"
     return "Neutral"
 
 def calc_danger_composite(close: pd.Series, volume: pd.Series, basket_closes: dict,
@@ -1825,13 +1696,8 @@ with tab8:
 
     if _assessment is not None:
         _r = _assessment["regime"]; _s = _assessment["signals"]
-        # Verified against the live regime_classifier.py (Aug 2026): 8 keys,
-        # not the original 4 — this dict previously fell back to gray for
-        # hard_repression / growth_scare / transition_ambiguous.
-        _color = {"inflationary_repression":"#c026d3","hard_repression":"#9333ea",
-                  "liquidity_crisis":"#dc2626","stagflation":"#d97706",
-                  "goldilocks":"#16a34a","growth_scare":"#ea580c",
-                  "transition_ambiguous":"#0891b2",
+        _color = {"inflationary_repression":"#c026d3","liquidity_crisis":"#dc2626",
+                  "stagflation":"#d97706","goldilocks":"#16a34a",
                   "neutral":"#6b7280"}.get(_r["key"], "#6b7280")
         st.markdown(
             f"<div style='padding:12px 16px;border-radius:8px;background:{_color}22;"
@@ -1861,22 +1727,14 @@ with tab8:
     )
 
     if _REGIME_OK:
-        st.markdown("##### The regime map & target tilts")
-        st.caption("8 regimes as of the current classifier — grown from the original "
-                   "4-quadrant table (added hard_repression, growth_scare, and a "
-                   "banded transition_ambiguous state for when the short-real-rate "
-                   "gauge is inside its own noise).")
+        st.markdown("##### The 4-regime map & target tilts")
         _active = _assessment["regime"]["key"] if _assessment else None
         _disc = {"inflationary_repression":"short real −  ·  long real ↑",
-                 "hard_repression":"short real −  ·  long real ↓  ·  credit calm",
                  "liquidity_crisis":"HY blowout  ·  long real ↓",
                  "stagflation":"short real −  ·  2s10s re-steepening",
-                 "goldilocks":"short real +  ·  credit tight  ·  leadership intact",
-                 "growth_scare":"growth composite CONTRACTING (≥3 of 4 series)",
-                 "transition_ambiguous":"short real inside ±0.25% band, or valuation/leadership guard"}
+                 "goldilocks":"short real +  ·  credit tight"}
         _rows=[]
-        for _kk in ["inflationary_repression","hard_repression","liquidity_crisis",
-                    "stagflation","goldilocks","growth_scare","transition_ambiguous"]:
+        for _kk in ["inflationary_repression","liquidity_crisis","stagflation","goldilocks"]:
             _w = target_weights(_kk)
             _rows.append({
                 "Regime": REGIMES[_kk]["label"] + (" ⬅ ACTIVE" if _kk==_active else ""),
@@ -1888,11 +1746,7 @@ with tab8:
             })
         st.dataframe(pd.DataFrame(_rows), hide_index=True, use_container_width=True)
         st.caption("TLT is a *contingent* sleeve: 0% in inflationary repression "
-                   "(rising long real yields), armed in a liquidity crisis. "
-                   "GLD tilts shown here are pre-momentum-gate — the live "
-                   "app can redirect a GLD add to SGOV if GLD isn't above a "
-                   "rising 200-day MA; this table shows the regime's raw "
-                   "intent, not the gated outcome.")
+                   "(rising long real yields), armed in a liquidity crisis.")
 
     st.markdown("---")
 
@@ -2051,27 +1905,17 @@ with tab9:
 
             perf_1w, perf_1m, perf_3m = _pct(close, 5), _pct(close, 21), _pct(close, 63)
             perf_6m, perf_1y          = _pct(close, 126), _pct(close, 252)
-            spread = round(perf_1m - (perf_3m / 3), 2)  # momentum_accel — context only, not a scoring input
+            spread = round(perf_1m - (perf_3m / 3), 2)
 
-            high, low = df.get("High"), df.get("Low")
-            if high is not None and low is not None and volume is not None and len(close.dropna()) >= MIN_BARS_FLOW:
-                cmf_series = chaikin_money_flow(high, low, close, volume)
-                cmf_now = float(cmf_series.dropna().iloc[-1]) if cmf_series.notna().any() else None
-                acc_score = accumulation_score(high, low, close, volume, vol_r, threshold)
-                ev = event_score(high, low, close, volume, vol_r, threshold)
-            else:
-                cmf_now, acc_score = None, np.nan
-                ev = {"event_score": 0.0, "event_direction": "None", "spike": vol_spike}
-            sig = signal_label(cmf_now, vol_spike)
+            flow = calc_flow_score(perf_1w, perf_1m, perf_3m, vol_r, vol_spike)
+            sig  = signal_label(perf_1m, spread, vol_r, vol_spike)
 
             sat_perf_rows.append({
                 "Ticker": tkr, "Name": name,
                 "perf_1w": perf_1w, "perf_1m": perf_1m, "perf_3m": perf_3m,
                 "perf_6m": perf_6m, "perf_1y": perf_1y, "Spread": spread,
                 "Tier": tier, "Vol Ratio": round(vol_r, 2), "Vol Spike": vol_spike,
-                "CMF": cmf_now, "Accumulation Score": acc_score,
-                "Event Score": ev["event_score"], "Event Direction": ev["event_direction"],
-                "Signal": sig,
+                "Flow Score": flow["score"], "Signal": sig,
             })
 
         if not sat_perf_rows:
@@ -2116,13 +1960,10 @@ with tab9:
                 sat_gated["RRG Pts"] = sat_gated["quadrant"].map(lambda q: _rrg_pts_map.get(q, 0))
                 _adx_max = sat_gated["ADX"].max() if sat_gated["ADX"].notna().any() else 1
                 sat_gated["Trend Pts"] = (sat_gated["ADX"].fillna(0) / (_adx_max or 1)) * 100
-                # Accumulation Score (quiet, CMF-based — see accumulation_score())
-                # is a raw ranking score (roughly -100..+100), not 0-100, so it
-                # enters the composite the same way Blended Ret does: cross-
-                # sectional percentile rank within the gated set. Names with
-                # insufficient history (NaN) get a neutral 50, not a penalty —
-                # missing data isn't the same as a bad signal.
-                sat_gated["Flow Pts"] = sat_gated["Accumulation Score"].rank(pct=True).fillna(0.5) * 100
+                # Flow Score is a raw ranking score (not 0-100), so it enters
+                # the composite the same way Blended Ret does: cross-sectional
+                # percentile rank within the gated set.
+                sat_gated["Flow Pts"] = sat_gated["Flow Score"].rank(pct=True) * 100
                 sat_gated["Composite"] = (
                     0.35*sat_gated["Ret %ile"] + 0.25*sat_gated["RRG Pts"] +
                     0.25*sat_gated["Trend Pts"] + 0.15*sat_gated["Flow Pts"]
@@ -2134,23 +1975,12 @@ with tab9:
                 sat_bench = sat_ranked.iloc[SATELLITE_TOP_N:SATELLITE_TOP_N + SATELLITE_BENCH_N]
 
                 st.markdown("#### Growth Satellite Score — Ranked")
-                st.caption(
-                    "Signal/Accum/Event columns use the CURRENT Institutional Rotation "
-                    "Dashboard methodology (CMF-based, from High/Low/Close/Volume) — not "
-                    "the older momentum+volume weighted score, which that dashboard's own "
-                    "changelog flagged as inverted (loud volume outranking quiet, sustained "
-                    "accumulation) and replaced. Accumulation Score and Event Score measure "
-                    "opposite things (quiet absorption vs. loud activity) and are never summed."
-                )
-                sat_disp = sat_ranked[["Ticker","Name","Composite","quadrant","perf_1m","perf_3m","perf_6m",
-                                        "ADX","Accumulation Score","Signal","Event Direction","Vol Spike"]].copy()
-                sat_disp.columns = ["Ticker","Name","Composite","Quadrant","1M","3M","6M",
-                                     "ADX","Accum Score","Signal","Event","🔊"]
+                sat_disp = sat_ranked[["Ticker","Name","Composite","quadrant","perf_1m","perf_3m","perf_6m","ADX","Signal","Vol Spike"]].copy()
+                sat_disp.columns = ["Ticker","Name","Composite","Quadrant","1M","3M","6M","ADX","Signal","Vol Spike"]
                 for c in ["1M","3M","6M"]:
                     sat_disp[c] = sat_disp[c].apply(lambda v: fmt(v) if pd.notna(v) else "—")
                 sat_disp["ADX"] = sat_disp["ADX"].apply(lambda v: f"{v:.1f}" if pd.notna(v) else "—")
-                sat_disp["Accum Score"] = sat_disp["Accum Score"].apply(lambda v: f"{v:+.0f}" if pd.notna(v) else "—")
-                sat_disp["🔊"] = sat_disp["🔊"].map({True:"🔊", False:""})
+                sat_disp["Vol Spike"] = sat_disp["Vol Spike"].map({True:"🔊", False:""})
                 st.dataframe(sat_disp, use_container_width=True,
                     column_config={"Composite": st.column_config.ProgressColumn(
                         "Composite", min_value=0, max_value=100, format="%.1f")})
