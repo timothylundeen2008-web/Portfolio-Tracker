@@ -43,6 +43,15 @@ try:
 except Exception:
     _BRIDGE_OK = False
 
+# ── Cross-dashboard nav (identical dashboard_links.py copied into all three
+# repos — Money Flow, Markets, All-Weather). Renders the "you are here" strip
+# with links to the sibling apps. This app's key in DASHBOARDS is "all_weather".
+try:
+    from dashboard_links import render_nav
+    _NAV_OK = True
+except Exception:
+    _NAV_OK = False
+
 # Educational signal guide (static — always renderable, no live data needed)
 SIGNAL_GUIDE = [
     ("SHORT real policy rate (EFFR − CPI YoY)",
@@ -117,6 +126,19 @@ st.markdown("""
   [data-testid="stExpander"] { background:#1c1f2e; border:1px solid #2a2d3e; border-radius:10px; }
 </style>
 """, unsafe_allow_html=True)
+
+# ─── CROSS-DASHBOARD NAV ──────────────────────────────────────────────────────
+# Rendered first, above everything else on the page — the "you are here"
+# strip linking to the other two apps (Money Flow, Markets). Uses this
+# dashboard's key ("all_weather") in dashboard_links.py's DASHBOARDS dict.
+if _NAV_OK:
+    render_nav(st, "all_weather")
+else:
+    st.markdown(
+        '<div class="signal-box warning">🧭 Cross-dashboard nav not available — '
+        '<code>dashboard_links.py</code> isn\'t deployed alongside this file. '
+        'Copy it from the Money_Flow repo (identical file, all three repos).</div>',
+        unsafe_allow_html=True)
 
 # ─── PORTFOLIO DEFINITIONS ────────────────────────────────────────────────────
 

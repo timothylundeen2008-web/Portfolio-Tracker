@@ -7,19 +7,19 @@ THE THREE-DASHBOARD ARCHITECTURE
 ────────────────────────────────
 Each answers a different question, in a deliberate order:
 
-  1. MONEY FLOW    "Where is capital actually going?"
-                    Evidence. COT positioning, ETF creations/redemptions,
-                    sector rotation, breadth. Tier A (capital) separated
-                    from Tier B (pressure), because volume is not flow.
+    1. MONEY FLOW      "Where is capital actually going?"
+                       Evidence. COT positioning, ETF creations/redemptions,
+                       sector rotation, breadth. Tier A (capital) separated
+                       from Tier B (pressure), because volume is not flow.
 
-  2. MARKETS       "What environment is this, and what does the detail
-                    say?" Regime classification across four axes — rates,
-                    credit, growth, valuation — plus relative strength,
-                    trend state, curve shape, factor exposure.
+    2. MARKETS         "What environment is this, and what does the detail
+                       say?" Regime classification across four axes — rates,
+                       credit, growth, valuation — plus relative strength,
+                       trend state, curve shape, factor exposure.
 
-  3. ALL-WEATHER    "Given both of the above, what should I hold?"
-                    Current state and suggested changes, with capital
-                    preservation as the anchor rather than an afterthought.
+    3. ALL-WEATHER     "Given both of the above, what should I hold?"
+                       Current state and suggested changes, with capital
+                       preservation as the anchor rather than an afterthought.
 
 The reading ORDER matters and is not arbitrary: flow is evidence, markets is
 interpretation, portfolio is action. Reading them backwards — deciding an
