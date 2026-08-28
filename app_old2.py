@@ -14,6 +14,13 @@ Improvements over v1:
   - Download button for full portfolio CSV
   - Weighted expense ratio updated automatically with allocation sliders
   - P/E fallbacks updated to June 2026 estimates
+  JULY 2026 CROSS-DASHBOARD AUDIT PATCH:
+  - CRASH_SCENARIOS gains "2000 Dot-Com" (Mar 2000 - Oct 2002 estimates) so
+    the Track A minimum scenario set exists in the tool instead of only in
+    the review prompt
+  - Stress tab renders a 60/40 (SPY/AGG) benchmark alongside raw S&P 500
+  - Stress tab now discloses holdings excluded from a scenario (None
+    returns) instead of silently understating the weighted drawdown
 """
 
 import streamlit as st
@@ -67,6 +74,42 @@ SIGNAL_GUIDE = [
 warnings.filterwarnings("ignore")
 
 # ─── PAGE CONFIG ─────────────────────────────────────────────────────────────
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  MANUAL MACRO FLAGS  (v3 FIX 10)
+# ─────────────────────────────────────────────────────────────────────────────
+# repression_score() needs two flags that no API supplies. Before v3 they were
+# never passed, so both permanently landed in missing[] and the live score was
+# structurally capped at 8/10 while always reporting itself as incomplete.
+#
+# Review these when the underlying facts change — they are assumptions, and
+# they are stated here so they are visible rather than buried in a call.
+#
+#   FED_BS_EXPANDING     True as of July 2026. The Fed balance sheet has grown
+#                        roughly $150bn since January via reserve-management
+#                        T-bill purchases (~$250bn in bills), with reserves
+#                        around $3.1tn. Reserve-management growth still counts
+#                        as expansion for this signal's purpose: it adds
+#                        duration-free liquidity and absorbs bill supply.
+#   DEFICIT_GT_5PCT_GDP  True. FY2026 deficit $1.9tn = 5.8% of GDP, with net
+#                        interest crossing $1.0tn (3.3% of GDP).
+#
+# Last reviewed: 2026-07-30.
+# Eastern-time display. Every timestamp here previously used a naive
+# datetime.now(), which returns the SERVER's local time — UTC on Streamlit
+# Community Cloud. A dashboard refreshed at 4:05pm ET displayed "20:05", so a
+# user reading it as Eastern believed the data was hours staler than it was.
+try:
+    import market_time as _mt
+except Exception:
+    _mt = None
+
+FED_BS_EXPANDING = True
+DEFICIT_GT_5PCT_GDP = True
+CAPE_CURRENT = 42.0                  # multpl.com, 2026-08-10
+TOP20_CONCENTRATION_PCT = 50.8       # JPMorgan, cited 2026-08-07 review
+MACRO_FLAGS_REVIEWED = "2026-08-13"
+
 st.set_page_config(
     page_title="All-Weather Portfolio Dashboard",
     page_icon="📊",
@@ -133,11 +176,16 @@ ETF_PORTFOLIO = {
 # Hybrid: direct stocks replacing ETFs where individual names add alpha
 # thesis: avoid ETF dilution on highest-conviction names
 HYBRID_PORTFOLIO = {
-    # Growth — direct stocks instead of VGT/SMH/QQQ for no dilution
-    "NVDA": ("NVIDIA Corporation",       14, "Growth / Tech",     "SMH",   "SOX Index",   0.00),
+    # Growth — direct stocks instead of VGT/SMH/QQQ for no dilution.
+    # v2: NVDA 14->11 and GOOGL 5->4 fund a 4% KMLM sleeve (below). The hybrid
+    # previously carried 35% mega-cap growth with ZERO crisis alpha — in the
+    # 2022 stress scenario it takes NVDA -68 / GOOGL -40 with no offset.
+    "NVDA": ("NVIDIA Corporation",       11, "Growth / Tech",     "SMH",   "SOX Index",   0.00),
     "AAPL": ("Apple Inc.",                8, "Growth / Tech",     "QQQ",   "Nasdaq-100",  0.00),
     "MSFT": ("Microsoft Corporation",     8, "Growth / Tech",     "QQQ",   "Nasdaq-100",  0.00),
-    "GOOGL":("Alphabet Inc.",             5, "Growth / Tech",     "QQQ",   "Nasdaq-100",  0.00),
+    "GOOGL":("Alphabet Inc.",             4, "Growth / Tech",     "QQQ",   "Nasdaq-100",  0.00),
+    # Trend / crisis alpha — the hybrid gets the same sleeve as the ETF book
+    "KMLM": ("KFA Mount Lucas Mgd Fut",   4, "Trend / Crisis Alpha", "DBMF", "Mgd Futures", 0.90),
     # Precious metals — ETFs still best here (no single-stock alternative)
     "GLD":  ("SPDR Gold Shares",         10, "Precious Metals",   "GLD",   "Gold Spot",   0.40),
     "SLV":  ("iShares Silver Trust",      4, "Precious Metals",   "SLV",   "Silver Spot", 0.50),
@@ -177,61 +225,14 @@ BENCHMARKS = {
     "Dow Jones":  "DIA",
 }
 
-# ─── GROWTH SATELLITE UNIVERSE (Level 5.5) ────────────────────────────────────
-# Sector/thematic rotation pool for the systematically-selected satellite
-# sleeve layered on top of the core All-Weather allocation. Deliberately
-# excludes GLD/SLV/RING/XLE/PDBC/SCHD/XLV/XLU/SGOV/USFR/TLT/KMLM — those are
-# already governed by the regime classifier (Level 1) and would be double-
-# scored under a cross-sectional momentum screen.
-SATELLITE_UNIVERSE = {
-    "XLK":  "Technology SPDR",
-    "XLF":  "Financials SPDR",
-    "XLI":  "Industrials SPDR",
-    "XLY":  "Consumer Discretionary SPDR",
-    "XLC":  "Communication Services SPDR",
-    "XLB":  "Materials SPDR",
-    "XLRE": "Real Estate SPDR",
-    "QQQ":  "Nasdaq-100",
-    "VGT":  "Vanguard Info Tech",
-    "SMH":  "VanEck Semiconductors",
-    "SOXX": "iShares Semiconductor",
-    "IWM":  "Russell 2000",
-    "IGV":  "iShares Expanded Tech-Software",
-    "ARKK": "ARK Innovation",
-}
-SATELLITE_TOP_N   = 5   # live satellite holdings
-SATELLITE_BENCH_N = 5   # ranks 6-10 tracked as promotion bench
-
-# ─── ADDV LIQUIDITY TIERS — ported verbatim from the Institutional Rotation
-# Dashboard's top_movers.py (same tier→threshold mapping, so a "vol spike" here
-# means the same thing it means on that dashboard). VGT and ARKK aren't in that
-# dashboard's own ETF_UNIVERSE, so their tiers are inferred, not copied —
-# flagged below in case actual ADDV puts them in a different tier.
-SATELLITE_TIER = {
-    "XLK": 1, "XLF": 1, "QQQ": 1,                      # >$2B ADDV
-    "XLI": 2, "XLY": 2, "XLC": 2, "XLB": 2, "XLRE": 2,  # $200M-$2B
-    "IWM": 2,
-    "VGT": 2,    # inferred — VGT not in source dashboard's universe
-    "SMH": 3, "SOXX": 3, "IGV": 3,                      # $50M-$200M
-    "ARKK": 3,   # inferred — ARKK not in source dashboard's universe
-}
-TIER_THRESHOLDS = {1: 1.25, 2: 1.50, 3: 2.00, 4: 3.00}  # ported verbatim
-
-# Regime-conditional rotation targets for capital freed by a satellite exit
-# when no qualifying bench name exists (or the exit was a broad Danger
-# Composite trigger, not an idiosyncratic stop). Keys match regime_classifier's
-# four regime keys plus a "neutral" fallback for when no live key is set.
-SATELLITE_ROTATION_TARGETS = {
-    "inflationary_repression": ("GLD / KMLM",       "Real assets + managed futures. TLT stays at 0% here — DFII10 rising."),
-    "liquidity_crisis":        ("TLT / GLD / SGOV", "Deflationary bust risk — duration + cash, reduce equity exposure."),
-    "stagflation":              ("KMLM / SGOV",     "Rate shock — KMLM dominant, minimal equity, short duration only."),
-    "goldilocks":               ("SCHD / SGOV",     "No repression signal firing — park in cash or quality dividend equity, don't force a real-asset add."),
-    "neutral":                  ("SGOV / USFR",     "No live regime read available — default to cash, no directional bet."),
-}
-
 NO_PE_SET = {"GLD","SLV","PDBC","SGOV","USFR","BIL","FLOT","DJP","TIP","SCHP","TLT","KMLM","IEF","DBMF"}
 
-# P/E fallbacks — June 2026 estimates
+# Risk-free rate for Sharpe/Sortino — track EFFR; update on Fed moves.
+RISK_FREE_RATE = 3.6   # EFFR 3.63% as of Jul 2026 (target range 3.50-3.75%)
+
+# P/E fallbacks — June 2026 estimates. These go stale fast after large sector
+# moves (e.g., the H1-2026 semi run); PE_FALLBACK_ASOF drives a UI warning.
+PE_FALLBACK_ASOF = "2026-06-15"
 PE_FALLBACK = {
     "VGT":  {"trailingPE":34.2,"forwardPE":28.1,"priceToBook":11.8},
     "SMH":  {"trailingPE":29.6,"forwardPE":22.4,"priceToBook":7.4},
@@ -257,13 +258,16 @@ PE_FALLBACK = {
     "SPY":  {"trailingPE":27.3,"forwardPE":22.9,"priceToBook":5.0},
 }
 
-# Dividend yields (%) — June 2026 estimates
+# Dividend yields (%) — July 2026 estimates (EFFR 3.63%; SGOV/USFR track the
+# front end and were overstated at 5.1/5.0 in the June table — the ~1.3pt gap
+# materially misstates real cash carry vs 4.2% CPI). Verify quarterly.
+DIV_YIELDS_ASOF = "2026-07-09"
 DIV_YIELDS = {
     "VGT":0.6,"SMH":0.5,"QQQ":0.5,"GLD":0.0,"SLV":0.0,"RING":1.5,
-    "XLE":3.7,"PDBC":0.0,"SCHD":3.3,"XLV":1.7,"XLU":3.3,"SGOV":5.1,"USFR":5.0,
-    "TLT":4.3,"KMLM":0.0,
+    "XLE":3.7,"PDBC":0.0,"SCHD":3.3,"XLV":1.7,"XLU":3.3,"SGOV":3.7,"USFR":3.8,
+    "TLT":4.6,"KMLM":0.0,
     "NVDA":0.03,"AAPL":0.52,"MSFT":0.82,"GOOGL":0.45,"XOM":3.4,"COP":3.1,
-    "KO":3.1,"JNJ":3.1,"UNH":1.92,"NEE":3.1,"V":0.74,"NEM":1.8,"SCHP":2.1,"NEM":1.8,
+    "KO":3.1,"JNJ":3.1,"UNH":1.92,"NEE":3.1,"V":0.74,"NEM":1.8,"SCHP":2.1,
 }
 
 # ─── CRASH SCENARIO DATA ─────────────────────────────────────────────────────
@@ -299,6 +303,23 @@ CRASH_SCENARIOS = {
             "SGOV":+2,"USFR":+3,"AGG":-16,"TLT":-33,"KMLM":+28,
             "NVDA":-68,"AAPL":-25,"MSFT":-30,"GOOGL":-40,"XOM":+30,"COP":+45,
             "KO":-1,"JNJ":-5,"UNH":+6,"NEE":-12,"V":-8,"NEM":-10,"SCHP":-12,
+        },
+    },
+    "2000 Dot-Com": {
+        # Estimates, Mar 2000 – Oct 2002 (S&P peak-to-trough). Multiple-
+        # compression bust: growth/tech destroyed, value/dividend equity and
+        # duration worked, gold miners bottomed and rallied hard off 2000 lows,
+        # utilities were NOT a safe haven (Enron-era merchant-power collapse).
+        # GOOGL (IPO 2004) and V (IPO 2008) did not exist -> None (excluded
+        # from the weighted calc; see coverage caption in the stress tab).
+        "period": "Mar 2000 – Oct 2002",
+        "spy_drop": -49.0,
+        "asset_returns": {
+            "SPY":-49,"QQQ":-78,"VGT":-70,"SMH":-80,"GLD":+12,"SLV":-5,
+            "RING":+55,"XLE":-15,"PDBC":+5,"SCHD":-15,"XLV":-35,"XLU":-40,
+            "SGOV":+10,"USFR":+10,"AGG":+25,"TLT":+35,"KMLM":+30,
+            "NVDA":-90,"AAPL":-75,"MSFT":-60,"GOOGL":None,"XOM":-10,"COP":-25,
+            "KO":-35,"JNJ":+15,"UNH":+100,"NEE":-20,"V":None,"NEM":+75,"SCHP":+30,
         },
     },
     "1973 Stagflation": {
@@ -350,8 +371,16 @@ def fetch_live_pe(ticker: str) -> dict:
 def get_pe(ticker: str) -> dict:
     live = fetch_live_pe(ticker)
     if live.get("trailingPE") is not None:
-        return live
-    return {**live, **PE_FALLBACK.get(ticker, {})}
+        return {**live, "source": "live"}
+    # Fallback path: tag provenance + staleness (Level-3 valuation verdicts
+    # must never ride silently on a stale hardcoded multiple).
+    # ET date, not server-local: a UTC-dated 'today' overstates staleness
+    # by a day for anything captured after 8pm ET.
+    stale_days = ((_mt.et_date() if _mt else datetime.now().date())
+                  - datetime.strptime(PE_FALLBACK_ASOF, "%Y-%m-%d").date()).days
+    return {**live, **PE_FALLBACK.get(ticker, {}),
+            "source": "fallback", "stale_days": stale_days,
+            "stale": stale_days > 45}
 
 def pe_badge(pe) -> str:
     if pe is None: return "—"
@@ -366,12 +395,13 @@ def calc_stats(price_series: pd.Series) -> dict:
         return {"total_return":0,"ann_vol":0,"sharpe":0,"sortino":0,"max_drawdown":0,"calmar":0}
     total_ret  = (price_series.iloc[-1] / price_series.iloc[0] - 1) * 100
     ann_vol    = daily.std() * np.sqrt(252) * 100
-    # Sharpe (using 5% risk-free rate)
+    # Sharpe — risk-free tracks EFFR (3.63% as of Jul 2026). The old hardcoded
+    # 5.0% overstated the hurdle ~1.4pts and deflated every Sharpe/Sortino.
     ann_ret    = ((price_series.iloc[-1] / price_series.iloc[0]) ** (252/len(daily)) - 1) * 100
-    sharpe     = (ann_ret - 5.0) / ann_vol if ann_vol > 0 else 0
+    sharpe     = (ann_ret - RISK_FREE_RATE) / ann_vol if ann_vol > 0 else 0
     # Sortino (downside deviation only)
     downside   = daily[daily < 0].std() * np.sqrt(252) * 100
-    sortino    = (ann_ret - 5.0) / downside if downside > 0 else 0
+    sortino    = (ann_ret - RISK_FREE_RATE) / downside if downside > 0 else 0
     # Max drawdown
     cum        = (1 + daily).cumprod()
     peak       = cum.cummax()
@@ -430,195 +460,6 @@ def build_total_return_series(price_series: pd.Series, ticker: str, period: str)
     total = norm * yield_multiplier
     return total
 
-# ─── GROWTH SATELLITE HELPERS (Level 5.5 / Level 6.5) ─────────────────────────
-@st.cache_data(ttl=3600)
-def fetch_ohlcv(tickers: list, period: str = "2y") -> dict:
-    """Full OHLCV per ticker — fetch_prices() only keeps Close, but ADX/ATR/
-    volume-conviction/Danger-Composite all need High/Low/Volume too."""
-    out = {}
-    try:
-        raw = yf.download(tickers, period=period, auto_adjust=True,
-                           progress=False, group_by="ticker")
-        for t in tickers:
-            try:
-                df = raw[t] if isinstance(raw.columns, pd.MultiIndex) else raw
-                df = df.dropna(how="all")
-                if not df.empty:
-                    out[t] = df
-            except Exception:
-                continue
-    except Exception as e:
-        st.warning(f"OHLCV fetch error: {e}")
-    return out
-
-def ma_slope_gate(close: pd.Series, ma_len: int = 200, slope_lookback: int = 20) -> dict:
-    """Trend-health gate (same convention as the Strategas-style 200MA slope
-    overlay): price above the MA AND the MA itself rising over slope_lookback
-    bars. Both conditions must pass for a name to be selection-eligible."""
-    if len(close) < ma_len + slope_lookback:
-        return {"pass": False, "price_above_ma": None, "slope_rising": None, "ma": None}
-    ma = close.rolling(ma_len).mean()
-    price_above  = bool(close.iloc[-1] > ma.iloc[-1])
-    slope_rising = bool(ma.iloc[-1] > ma.iloc[-1 - slope_lookback])
-    return {
-        "pass": price_above and slope_rising,
-        "price_above_ma": price_above,
-        "slope_rising": slope_rising,
-        "ma": float(ma.iloc[-1]),
-        "pct_above_ma": float((close.iloc[-1] / ma.iloc[-1] - 1) * 100),
-    }
-
-def calc_adx(df: pd.DataFrame, period: int = 14) -> float | None:
-    """Standard Wilder ADX — the trend-strength component of the composite
-    score, and the same ADX>25 test used in the KMLM sizing signal."""
-    if df is None or len(df) < period * 2 or not {"High","Low","Close"}.issubset(df.columns):
-        return None
-    high, low, close = df["High"], df["Low"], df["Close"]
-    up_move, down_move = high.diff(), -low.diff()
-    plus_dm  = np.where((up_move > down_move) & (up_move > 0), up_move, 0.0)
-    minus_dm = np.where((down_move > up_move) & (down_move > 0), down_move, 0.0)
-    tr = pd.concat([(high - low), (high - close.shift()).abs(),
-                     (low - close.shift()).abs()], axis=1).max(axis=1)
-    atr = tr.ewm(alpha=1/period, min_periods=period).mean()
-    plus_di  = 100 * pd.Series(plus_dm, index=df.index).ewm(alpha=1/period, min_periods=period).mean() / atr
-    minus_di = 100 * pd.Series(minus_dm, index=df.index).ewm(alpha=1/period, min_periods=period).mean() / atr
-    dx  = 100 * (plus_di - minus_di).abs() / (plus_di + minus_di).replace(0, np.nan)
-    adx = dx.ewm(alpha=1/period, min_periods=period).mean().dropna()
-    return float(adx.iloc[-1]) if len(adx) else None
-
-def calc_atr(df: pd.DataFrame, period: int = 14) -> float | None:
-    """Wilder ATR — feeds both the Level 6 stop and the R-multiple unit used
-    in the Level 6.5 trim schedule below."""
-    if df is None or len(df) < period + 1 or not {"High","Low","Close"}.issubset(df.columns):
-        return None
-    high, low, close = df["High"], df["Low"], df["Close"]
-    tr = pd.concat([(high - low), (high - close.shift()).abs(),
-                     (low - close.shift()).abs()], axis=1).max(axis=1)
-    atr = tr.ewm(alpha=1/period, min_periods=period).mean().dropna()
-    return float(atr.iloc[-1]) if len(atr) else None
-
-def _pct(series: pd.Series, days_back: int) -> float:
-    """% change from days_back trading days ago to latest close — ported from
-    the Institutional Rotation Dashboard's data_fetcher.py (_pct_change)."""
-    recent = series.dropna()
-    if len(recent) < 2:
-        return 0.0
-    start_idx = max(0, len(recent) - days_back - 1)
-    start_price = recent.iloc[start_idx]
-    if start_price == 0:
-        return 0.0
-    return float((recent.iloc[-1] / start_price - 1) * 100)
-
-def _to_rs(perf_pct: float, benchmark_pct: float) -> float:
-    """Relative Strength ratio normalized to 100 — ported verbatim from the
-    Institutional Rotation Dashboard's rotation_math.py."""
-    s = 1 + perf_pct / 100
-    b = 1 + benchmark_pct / 100
-    return (s / b) * 100 if b != 0 else 100.0
-
-def compute_universe_rrg(perf_df: pd.DataFrame) -> pd.DataFrame:
-    """RRG quadrant classification — ported from the Institutional Rotation
-    Dashboard's rotation_math.py, same default (3M-toggle) timeframe pair:
-    RS-Ratio = RS at 1Y, RS-Momentum = RS at 6M / RS at 1Y. Benchmark is the
-    EQUAL-WEIGHTED MEAN of the universe being scored (not SPY) — this is the
-    one thing a naive "vs S&P 500" RRG gets wrong, and matches exactly how
-    the money-flow dashboard computes it. perf_df needs columns perf_1w,
-    perf_1m, perf_3m, perf_6m, perf_1y."""
-    df = perf_df.copy()
-    for tf in ["1w", "1m", "3m", "6m", "1y"]:
-        col = f"perf_{tf}"
-        bm = df[col].mean()
-        df[f"rs_{tf}"] = df[col].apply(lambda v: _to_rs(v, bm))
-    df["rs_ratio"]    = df["rs_1y"]
-    df["rs_momentum"] = 100 * df["rs_6m"] / df["rs_1y"]
-
-    def _quad(row):
-        r, m = row["rs_ratio"], row["rs_momentum"]
-        if r >= 100 and m >= 100: return "Leading"
-        if r >= 100 and m <  100: return "Weakening"
-        if r <  100 and m <  100: return "Lagging"
-        return "Improving"
-    df["quadrant"] = df.apply(_quad, axis=1)
-    return df
-
-def _vol_ratio(volume: pd.Series) -> float:
-    """Today's session volume vs the prior 20-day average — ported from the
-    Institutional Rotation Dashboard's top_movers.py (v4: today vs 20-day
-    avg, not a 5-day average, which the dashboard's own changelog notes
-    dilutes real spikes by ~80%)."""
-    v = volume.dropna()
-    if len(v) < 21:
-        return 1.0
-    avg20 = v.iloc[-21:-1].mean()
-    return float(v.iloc[-1] / avg20) if avg20 > 0 else 1.0
-
-def calc_flow_score(perf_1w: float, perf_1m: float, perf_3m: float,
-                     vol_ratio: float, vol_spike: bool) -> dict:
-    """Institutional Flow Score — ported verbatim (weights and formula) from
-    the Institutional Rotation Dashboard's top_movers.py _flow_score(). This
-    is a raw weighted score for cross-sectional RANKING, not a 0-100 scale —
-    don't read the number as a percentage."""
-    if any(pd.isna(x) for x in (perf_1w, perf_1m, perf_3m)):
-        return {"score": None, "spread": None}
-    momentum    = float(np.mean([perf_1w, perf_1m, perf_3m]))
-    accel       = float(perf_1m - (perf_3m / 3))
-    vol_conf    = min(float(vol_ratio), 3.0)
-    consistency = sum(1 for p in (perf_1w, perf_1m, perf_3m) if p > 0) / 3
-    score = (0.40*momentum + 0.30*accel*2 + 0.20*vol_conf*10 + 0.10*consistency*20)
-    if vol_spike:
-        score += 8.0   # single-window vol-spike bonus, ported verbatim
-    return {"score": round(score, 2), "spread": round(accel, 2)}
-
-def signal_label(perf_1m: float, spread: float, vol_ratio: float, vol_spike: bool) -> str:
-    """Signal label — ported verbatim from the Institutional Rotation
-    Dashboard's top_movers.py _signal_label()."""
-    if vol_spike and spread > 1.5 and perf_1m > 0: return "Strong Accumulation"
-    if vol_spike and spread > 0   and perf_1m > 0: return "Accumulation"
-    if vol_spike and perf_1m < 0  and spread < -1: return "Strong Distribution"
-    if vol_spike and perf_1m < 0:                  return "Distribution"
-    if spread > 1.5 and vol_ratio > 1.1:           return "Accumulation"
-    if perf_1m > 0  and spread > 0:                return "Inflow"
-    if spread < -1.5 and vol_ratio < 0.9:          return "Distribution"
-    if perf_1m < 0  and spread < -0.5:             return "Outflow"
-    return "Neutral"
-
-def calc_danger_composite(close: pd.Series, volume: pd.Series, basket_closes: dict,
-                           ma_len: int = 200, basket_lookback: int = 10) -> dict:
-    """Level 6.5 Danger Signal Composite (0-10). basket_closes = the OTHER
-    current satellite holdings' close series, used for the correlated-basket
-    simultaneous-peak component (two or more thesis-linked names topping in
-    the same short window = sector-wide euphoria, not single-name strength)."""
-    pts, detail = 0, {}
-    roc21 = (close.iloc[-1]/close.iloc[-22]-1)*100 if len(close) > 22 else 0
-    roc63 = (close.iloc[-1]/close.iloc[-64]-1)*100 if len(close) > 64 else 0
-    p1 = 3 if roc21 > 100 else 0
-    p2 = 2 if roc63 > 150 else 0
-    pts += p1 + p2; detail["Parabolic ROC"] = p1 + p2
-    if len(close) >= ma_len + 252:
-        ma  = close.rolling(ma_len).mean()
-        ext = (close/ma - 1) * 100
-        pct = ext.tail(252).rank(pct=True).iloc[-1] * 100
-        p3  = 2 if pct >= 90 else 0
-    else:
-        p3 = 0
-    pts += p3; detail["MA Extension %ile"] = p3
-    if volume is not None and len(volume) >= 20:
-        vavg, vstd = volume.tail(20).mean(), volume.tail(20).std()
-        vz = (volume.iloc[-1]-vavg)/vstd if vstd else 0
-        p4 = 1 if vz >= 2 else 0
-    else:
-        p4 = 0
-    pts += p4; detail["Volume Climax"] = p4
-    self_high = close.iloc[-1] >= close.tail(basket_lookback).max()
-    peak_ct = int(self_high)
-    for bc in basket_closes.values():
-        if len(bc) >= basket_lookback and bc.iloc[-1] >= bc.tail(basket_lookback).max():
-            peak_ct += 1
-    p5 = 2 if peak_ct >= 2 else 0
-    pts += p5; detail["Basket Confirm"] = p5
-    zone = "Euphoria" if pts >= 6 else ("Elevated" if pts >= 3 else "Normal")
-    return {"score": pts, "zone": zone, "detail": detail}
-
 CHART_BG = dict(
     paper_bgcolor="#0f1117", plot_bgcolor="#13151f",
     font=dict(color="#c0c4d6",size=12),
@@ -632,39 +473,95 @@ CHART_BG = dict(
 # ─── LIVE CPI HELPER ──────────────────────────────────────────────────────────
 @st.cache_data(ttl=6 * 3600)
 def get_live_cpi_yoy(fred_key: str = "") -> float | None:
-    """Latest CPI YoY (%) from FRED CPIAUCNS — NOT seasonally adjusted.
+    """
+    Latest CPI YoY (%). Returns None if genuinely unavailable.
 
-    CPI series discipline (non-negotiable, per framework): always compute CPI
-    YoY from CPIAUCNS, never CPIAUCSL. CPIAUCNS is what BLS's officially-quoted
-    headline inflation figure is actually calculated from. CPIAUCSL's seasonal
-    factors are re-revised every February, reshuffling trailing SA values in a
-    way that can diverge from the quoted headline by several tenths of a
-    point — enough to flip a real-rate sign call (short real rate = EFFR minus
-    this CPI YoY). If you need to show SA alongside, fine — but never feed it
-    into the short-real-rate math.
-
-    Returns None if unavailable (e.g. no API key or network issue), so the
-    caller can fall back."""
-    if not fred_key:
-        return None
+    Two fixes vs the original:
+      1. Works WITHOUT a key — prefers bls_client (BLS's own published headline,
+         no key needed), then falls back to fred_client's keyless CSV.
+      2. No longer uses a POSITIONAL obs[-13] lookback, which had the SAME
+         calendar-alignment bug that took the scorecard offline for eight
+         months (the cancelled Oct-2025 CPI release shifts every positional
+         12-month comparison by a month). BLS's own YoY, or a calendar-safe
+         resample, is used instead.
+    """
+    # Preferred: BLS's own published 12-month change — no key, no recomputation,
+    # cannot reproduce the calendar bug it would otherwise be exposed to.
     try:
-        import requests
-        r = requests.get(
-            "https://api.stlouisfed.org/fred/series/observations",
-            params={"series_id": "CPIAUCNS", "api_key": fred_key,
-                    "file_type": "json", "observation_start": "2022-01-01"},
-            timeout=15,
-        )
-        r.raise_for_status()
-        obs = [o for o in r.json().get("observations", [])
-               if o["value"] not in (".", "", None)]
-        if len(obs) < 13:
+        from bls_client import latest_headline
+        h = latest_headline()
+        if h.get("available") and h.get("yoy_bls") is not None:
+            return round(float(h["yoy_bls"]), 1)
+    except Exception:
+        pass
+
+    # Fallback: compute from the FRED index, but calendar-SAFELY (resample to a
+    # complete month-end index before the 12-period change, so a missing month
+    # cannot shift the comparison).
+    try:
+        from fred_client import fetch_fred
+        import pandas as pd
+        # v3.4 fix: CPIAUCSL is seasonally adjusted; BLS's headline 12-month
+        # figure is always NSA. See regime_classifier.py's cpi_index comment
+        # for the full reasoning -- same fix, same file-pair pattern as v3.3.
+        s = fetch_fred("CPIAUCNS", fred_key, start="2022-01-01")
+        if s is None or s.empty:
             return None
-        latest = float(obs[-1]["value"])
-        year_ago = float(obs[-13]["value"])
-        return round((latest / year_ago - 1) * 100, 1)
+        # v3.3 fix. The comment above this block claims this is already
+        # "calendar-SAFE" -- it wasn't. resample("ME") DOES correctly create
+        # NaN placeholder rows for Oct/Nov 2025 (the confirmed missing BLS
+        # months), but the .dropna() that immediately followed REMOVED those
+        # placeholders, compressing the index. pct_change(12) is
+        # position-based, so with the gap physically deleted, "12 rows back"
+        # no longer means "12 calendar months back" -- it lands ~2 months
+        # too early, overstating YoY (reproduced with synthetic data at
+        # +0.47pp for a July 2026 calculation -- matching this dashboard's
+        # live 3.54% vs BLS's actual 3.4% July print). The exact same bug
+        # duplicated from regime_classifier.py's compute_signals(), written
+        # independently in this file -- same fix, same reasoning: dropna()
+        # AFTER pct_change(12), never before, so the position-based math
+        # stays calendar-aligned.
+        m = s.resample("ME").last()                    # keep gap-month NaNs
+        if len(m) < 13:
+            return None
+        yoy = (m.pct_change(12) * 100).dropna()         # drop only now
+        return round(float(yoy.iloc[-1]), 1) if len(yoy) else None
     except Exception:
         return None
+
+
+def get_live_cpi_context(fred_key: str = "") -> dict:
+    """
+    All three CPI reads, one call. Reuses get_live_cpi_yoy() for the YoY
+    figure rather than re-deriving it a third time in this file — that
+    function is already the fixed, calendar-safe, NSA-correct version.
+    SAAR and MoM are new: both SA, both from one shared fetch.
+
+    Each of the three is independently None-safe. One series or one
+    calculation failing never blocks the other two — a dashboard showing
+    two of three numbers is more useful than one that shows none because a
+    single fetch had a bad day.
+    """
+    out = {"yoy": get_live_cpi_yoy(fred_key), "saar": None, "mom": None}
+    try:
+        from fred_client import fetch_fred
+        s = fetch_fred("CPIAUCSL", fred_key, start="2022-01-01")
+        if s is None or s.empty:
+            return out
+        m = s.resample("ME").last()          # keep gap-month NaNs — same
+                                              # calendar-alignment discipline
+                                              # as the NSA fix
+        if len(m) <= 3:
+            return out
+        mom = (m.pct_change(1) * 100).dropna()
+        if len(mom):
+            out["mom"] = round(float(mom.iloc[-1]), 2)
+        saar = (((m.pct_change(3) + 1) ** 4 - 1) * 100).dropna()
+        if len(saar):
+            out["saar"] = round(float(saar.iloc[-1]), 2)
+    except Exception:
+        pass
+    return out
 
 
 # ─── SIDEBAR ─────────────────────────────────────────────────────────────────
@@ -689,12 +586,50 @@ with st.sidebar:
     period = period_map[period_label]
 
     st.markdown("---")
-    fred_key_input = st.text_input(
-        "FRED API key (optional)", type="password",
-        help="Enables the LIVE regime banner in the Education tab. Free key at "
-             "fredaccount.stlouisfed.org. Without it, the static signal guide "
-             "and quadrant map still render.",
-    )
+    # Resolve from secrets/env first so the key does not have to be re-typed
+    # every session. The input below is an OVERRIDE, not a requirement.
+    try:
+        from fred_client import get_api_key as _fred_key_from_secrets
+        _stored_fred = _fred_key_from_secrets()
+    except Exception:
+        _stored_fred = ""
+
+    # Live connectivity probe so the sidebar states the TRUTH about whether a
+    # key is needed, rather than implying one is required. fred_client falls
+    # back to FRED's keyless CSV endpoint; this checks it actually reaches your
+    # deployment (some hosts block one endpoint but not the other).
+    _fred_ok = False
+    try:
+        from fred_client import status as _fred_probe
+        _fs = _fred_probe(_stored_fred)
+        _fred_ok = _fs.get("working", False)
+    except Exception:
+        _fs = None
+
+    if _stored_fred:
+        st.caption("🔑 FRED key loaded from secrets — no need to type one")
+        fred_key_input = st.text_input(
+            "FRED API key (override)", type="password", value="",
+            help="A key is already in Streamlit secrets. Leave blank to use it.",
+        ) or _stored_fred
+    elif _fred_ok:
+        st.success("✅ FRED reachable without a key — no key needed", icon="🔓")
+        with st.expander("Add a key anyway? (optional)"):
+            st.caption("Signals are live via FRED's public CSV endpoint. A free key "
+                       "only raises rate limits. Set FRED_API_KEY in Streamlit "
+                       "secrets to persist it — never hardcode it in a committed file.")
+            fred_key_input = st.text_input("FRED API key", type="password",
+                                           label_visibility="collapsed")
+    else:
+        # Keyless path is NOT reaching this deployment — a key is the fallback.
+        st.warning("FRED's keyless endpoint isn't reachable from this host. "
+                   "Enter a free API key (fredaccount.stlouisfed.org) or add "
+                   "FRED_API_KEY to Streamlit secrets.", icon="🔑")
+        fred_key_input = st.text_input(
+            "FRED API key", type="password",
+            help="Free at fredaccount.stlouisfed.org. Add to Streamlit secrets to "
+                 "avoid re-typing each session.",
+        )
 
     st.markdown("---")
     st.markdown("### Allocation Weights")
@@ -718,17 +653,52 @@ with st.sidebar:
     st.markdown("---")
     alert_thresh = st.slider("Lag alert threshold (%)", 2, 20, 5, 1)
 
-    # Inflation rate for real-return calc — defaults to LIVE CPI YoY from FRED
-    _live_cpi = get_live_cpi_yoy(fred_key_input)
+    # Inflation rate for real-return calc — defaults to LIVE CPI YoY (NSA).
+    # All three CPI reads are fetched together and always shown side by
+    # side so the reader can never mistake one for another — the slider
+    # itself is driven by YoY specifically, but SAAR and MoM are displayed
+    # alongside as context for interpreting whether that YoY figure is
+    # about to rise or fall.
+    _cpi_ctx = get_live_cpi_context(fred_key_input)
+    _live_cpi = _cpi_ctx["yoy"]
     _cpi_default = _live_cpi if _live_cpi is not None else 4.2
     cpi_rate = st.slider("CPI inflation rate (%)", 1.0, 8.0, _cpi_default, 0.1,
-                         help="Defaults to live CPI YoY from FRED when a key is "
-                              "set (sidebar); otherwise a recent fallback. Drag "
-                              "to model scenarios.")
+                         help="Defaults to live CPI YoY (NSA) from FRED when a "
+                              "key is set (sidebar); otherwise a recent "
+                              "fallback. Drag to model scenarios.")
+
+    try:
+        from regime_classifier import (CPI_YOY_LABEL, CPI_SAAR_LABEL,
+                                       CPI_MOM_LABEL, CPI_YOY_HELP,
+                                       CPI_SAAR_HELP, CPI_MOM_HELP)
+    except Exception:
+        CPI_YOY_LABEL, CPI_SAAR_LABEL, CPI_MOM_LABEL = (
+            "CPI YoY (NSA)", "CPI 3M SAAR", "CPI MoM (SA)")
+        CPI_YOY_HELP = CPI_SAAR_HELP = CPI_MOM_HELP = ""
+
+    def _cpi_line(label, val, suffix, help_text):
+        v = f"{val:+.2f}%" if val is not None else "n/a"
+        st.caption(f"↑ {label}: {v}", help=help_text or None)
+
     if _live_cpi is not None:
-        st.caption(f"↑ Live CPI YoY (FRED): {_live_cpi}%")
+        _cpi_line(CPI_YOY_LABEL, _live_cpi, "", CPI_YOY_HELP)
     else:
         st.caption("↑ Fallback CPI — add a FRED key above for the live value")
+    _cpi_line(CPI_SAAR_LABEL, _cpi_ctx["saar"], "", CPI_SAAR_HELP)
+    _cpi_line(CPI_MOM_LABEL, _cpi_ctx["mom"], "", CPI_MOM_HELP)
+
+    if (_cpi_ctx["saar"] is not None and _live_cpi is not None
+            and _cpi_ctx["saar"] - _live_cpi >= 1.5):
+        st.warning(f"⚠ {CPI_SAAR_LABEL} is running "
+                  f"{_cpi_ctx['saar']-_live_cpi:+.1f}pp hotter than "
+                  f"{CPI_YOY_LABEL} — inflation may be re-accelerating "
+                  f"before the trailing figure shows it.")
+    elif (_cpi_ctx["saar"] is not None and _live_cpi is not None
+          and _live_cpi - _cpi_ctx["saar"] >= 1.5):
+        st.info(f"↓ {CPI_SAAR_LABEL} is running "
+               f"{_cpi_ctx['saar']-_live_cpi:+.1f}pp cooler than "
+               f"{CPI_YOY_LABEL} — recent months are decelerating faster "
+               f"than the trailing figure reflects yet.")
 
     st.markdown("---")
     st.markdown("<small style='color:#555'>Data via Yahoo Finance · Refreshes hourly<br>⚠️ Not financial advice</small>",
@@ -738,12 +708,28 @@ with st.sidebar:
 mode_badge = "🧩 Hybrid Mode" if portfolio_mode == "Hybrid (Stocks + ETFs)" else "📦 ETF Mode"
 st.markdown(f"# 📊 All-Weather Portfolio Dashboard  <small style='font-size:0.5em;color:#888'>{mode_badge}</small>",
             unsafe_allow_html=True)
-st.markdown(f"<small style='color:#666'>Updated: {datetime.now().strftime('%B %d, %Y %H:%M')} · Period: {period_label} · CPI: {cpi_rate}%</small>",
-            unsafe_allow_html=True)
+_ts = (_mt.fmt_et() if _mt else datetime.now().strftime('%B %d, %Y %H:%M'))
+_mkt = (f" · {_mt.market_status()['status']}" if _mt else "")
+_saar_str = f"{_cpi_ctx['saar']:+.1f}%" if _cpi_ctx.get('saar') is not None else "n/a"
+_mom_str = f"{_cpi_ctx['mom']:+.2f}%" if _cpi_ctx.get('mom') is not None else "n/a"
+st.markdown(
+    f"<small style='color:#666'>Updated: {_ts}{_mkt} · Period: {period_label} · "
+    f"{CPI_YOY_LABEL}: {cpi_rate}% &nbsp;|&nbsp; "
+    f"{CPI_SAAR_LABEL}: {_saar_str} &nbsp;|&nbsp; "
+    f"{CPI_MOM_LABEL}: {_mom_str}</small>",
+    unsafe_allow_html=True)
 st.markdown("---")
 
 # ─── TABS ─────────────────────────────────────────────────────────────────────
-tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8,tab9 = st.tabs([
+# Cross-dashboard nav — same module in all three repos.
+try:
+    import dashboard_links as _dl
+    _dl.render_nav(st, "all_weather")
+except Exception:
+    pass
+
+tab_sug,tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8,tab9,tab10 = st.tabs([
+    "💡 Suggested Changes",
     "🏠 Overview",
     "📈 Holding vs Benchmark",
     "🗂️ Category Performance",
@@ -752,7 +738,8 @@ tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8,tab9 = st.tabs([
     "💥 Stress Test",
     "⚖️ ETF vs Stocks",
     "📚 Education",
-    "🛰️ Growth Satellite",
+    "✅ Checklist",
+    "📋 Daily & Weekly Logs",
 ])
 
 # ════════════════════════════════════════════════════════════
@@ -773,10 +760,26 @@ with tab1:
         port_return_price = 0.0
         port_return_total = 0.0
 
+        _skipped_tickers = []   # data-gap tickers, surfaced after the loop
         for ticker, (_, alloc, *_) in PORTFOLIO.items():
             w = custom_allocs.get(ticker, alloc) / 100
             if ticker in prices.columns:
                 s = prices[ticker].dropna()
+                # GUARD: an empty or single-point series after dropna() means
+                # this ticker's fetch returned no usable data this run (a
+                # transient source hiccup, rate limit, or — for a newly added
+                # holding — genuinely no history yet for the selected period).
+                # s.iloc[-1]/s.iloc[0] on an empty series raises IndexError and
+                # previously took down the ENTIRE Overview tab for one bad
+                # ticker. The benchmark helper _ret() below already guards
+                # with `if len(s) > 1` — this applies the same guard here, and
+                # additionally SKIPS the ticker's weight from the aggregate
+                # rather than silently defaulting its contribution to 0%,
+                # which would understate the true portfolio return without
+                # telling anyone. The skip is surfaced as a warning instead.
+                if len(s) <= 1:
+                    _skipped_tickers.append(ticker)
+                    continue
                 # Price return series
                 price_daily = s.pct_change().fillna(0)
                 port_series_price = (
@@ -795,6 +798,16 @@ with tab1:
                 )
                 tot_ret = total_return_with_yield(price_ret, ticker, period)
                 port_return_total += tot_ret * w
+
+        if _skipped_tickers:
+            st.warning(
+                f"⚠ No usable price data this run for: "
+                f"{', '.join(_skipped_tickers)}. Their weight was EXCLUDED "
+                f"from the return figures below rather than counted as 0% — "
+                f"so these numbers reflect the remaining holdings only. Try "
+                f"refreshing; if it persists, verify the ticker is still "
+                f"valid and actively traded."
+            )
 
         def _ret(tkr):
             if tkr in prices.columns:
@@ -830,26 +843,64 @@ with tab1:
             unsafe_allow_html=True,
         )
 
+        # Round the headline numbers FIRST, then derive every delta from
+        # those ALREADY-ROUNDED figures. Previously each delta was computed
+        # from raw, unrounded floats and independently rounded on its own —
+        # e.g. income_contrib = port_return_total - port_return_price, using
+        # the RAW values, then fmt() rounded total, price, and income_contrib
+        # each separately. That's correct arithmetic on the underlying
+        # numbers, but the three figures a reader can actually see (Price
+        # Return +1.8%, Income delta +0.1%, Total Return +2.0%) didn't sum to
+        # each other on screen, because each was rounded from a slightly
+        # different precision point. Deriving deltas from the ROUNDED
+        # headline values guarantees what's displayed always foots — at the
+        # cost of the delta being off from the true unrounded difference by
+        # at most 0.05pp, invisible at 1 decimal place. Scoped to local `_r`
+        # variables so nothing downstream (holdings table, alpha calc, charts)
+        # that needs the true unrounded figures is affected.
         c1,c2,c3,c4,c5,c6 = st.columns(6)
+
+        total_r = round(port_return_total, 1)
+        price_r = round(port_return_price, 1)
+        real_r  = round(real_return, 1)
+        spy_r   = round(spy_total, 1)
+        qqq_r   = round(qqq_total, 1)
+
+        vs_spy = total_r - spy_r
         c1.metric(
             "Total Return (price+yield)",
-            fmt(port_return_total),
-            f"vs S&P {fmt(port_return_total - spy_total)}",
-            help="Price return + dividend/income yield contribution over the period",
+            fmt(total_r),
+            fmt(vs_spy),
+            help=f"Price return + dividend/income yield contribution over the "
+                 f"period. {fmt(vs_spy)} vs S&P 500 total return.",
         )
+        income_delta = total_r - price_r
         c2.metric(
             "Price Return only",
-            fmt(port_return_price),
-            f"Income adds {fmt(income_contrib)}",
-            help="Pure price appreciation — excludes dividends and distributions",
+            fmt(price_r),
+            fmt(income_delta),
+            help=f"Pure price appreciation — excludes dividends and "
+                 f"distributions. Income adds {fmt(income_delta)} on top "
+                 f"of this.",
         )
+        drag_delta = real_r - total_r
         c3.metric(
             "Real Return (CPI-adj)",
-            fmt(real_return),
-            f"inflation drag: {fmt(-inflation_drag)}",
+            fmt(real_r),
+            fmt(drag_delta),
+            help=f"CPI-adjusted return, removing purchasing-power loss. "
+                 f"Inflation drag: {fmt(drag_delta)}.",
         )
-        c4.metric("S&P 500 Total Return", fmt(spy_total))
-        c5.metric("Nasdaq-100 Total Return", fmt(qqq_total), fmt(port_return_total-qqq_total))
+        c4.metric("S&P 500 Total Return", fmt(spy_r))
+
+        vs_qqq = total_r - qqq_r
+        c5.metric(
+            "Nasdaq-100 Total Return",
+            fmt(qqq_r),
+            fmt(vs_qqq),
+            help=f"{fmt(vs_qqq)} — portfolio total return vs Nasdaq-100 "
+                 f"total return.",
+        )
         c6.metric("Bonds (AGG)", fmt(agg_ret))
 
         st.markdown("---")
@@ -1073,7 +1124,7 @@ with tab1:
             st.download_button(
                 "⬇ Download Holdings CSV",
                 csv_df.to_csv(index=False),
-                f"portfolio_{datetime.now().strftime('%Y%m%d')}.csv",
+                f"portfolio_{(_mt.et_date().strftime('%Y%m%d') if _mt else datetime.now().strftime('%Y%m%d'))}.csv",
                 "text/csv",
             )
 
@@ -1494,11 +1545,29 @@ with tab6:
     spy_crash = scenario["spy_drop"]
     improvement = spy_crash - port_crash_ret
 
-    c1,c2,c3 = st.columns(3)
+    # 60/40 benchmark (60% SPY / 40% AGG) computed from the same scenario
+    # constants — the classic-allocation comparison the checklist's Track A
+    # review asks for alongside raw S&P 500.
+    _spy_r = scenario["asset_returns"].get("SPY")
+    _agg_r = scenario["asset_returns"].get("AGG")
+    bench_6040 = (0.6*_spy_r + 0.4*_agg_r) if (_spy_r is not None and _agg_r is not None) else None
+
+    c1,c2,c3,c4 = st.columns(4)
     c1.metric("Est. Portfolio Drawdown",  fmt(port_crash_ret))
     c2.metric("S&P 500 Actual Drop",      fmt(spy_crash))
-    c3.metric("Portfolio Protection",     fmt(improvement),
+    c3.metric("60/40 Est. Drawdown",      fmt(bench_6040) if bench_6040 is not None else "—",
+              help="60% SPY / 40% AGG using the same scenario estimates")
+    c4.metric("Portfolio Protection",     fmt(improvement),
               help="Positive = portfolio fell less than S&P 500")
+
+    # Coverage: holdings without a scenario estimate (None) are EXCLUDED from
+    # the weighted drawdown, which can understate risk — say so.
+    _excluded = [t for t,(n,a,c,*_) in PORTFOLIO.items()
+                 if scenario["asset_returns"].get(t) is None]
+    if _excluded:
+        st.caption(f"⚠️ No estimate for {', '.join(_excluded)} in this scenario "
+                   f"(asset/instrument did not exist) — excluded from the weighted "
+                   f"drawdown, which understates it by their combined weight.")
 
     st.caption(f"Scenario: {sel_crash} ({scenario['period']}). Estimates based on historical asset class behavior. Not actual returns.")
 
@@ -1688,15 +1757,34 @@ with tab8:
     )
 
     _assessment = None
-    if _REGIME_OK and fred_key_input:
+    if _REGIME_OK:
         try:
-            _assessment = full_assessment(fred_key_input)
+            # Route through fred_client so this works WITHOUT a key (keyless CSV
+            # fallback). Previously required fred_key_input to be truthy, which
+            # is why the sidebar felt mandatory even though the data is public.
+            try:
+                from fred_client import fetch_fred as _ff
+                _assessment = full_assessment(
+                    fred_key_input, fetch_fred=_ff,
+                    fed_bs_expanding=FED_BS_EXPANDING,
+                    deficit_gt_5pct_gdp=DEFICIT_GT_5PCT_GDP,
+                    cape=CAPE_CURRENT,
+                    top20_concentration_pct=TOP20_CONCENTRATION_PCT)
+            except ImportError:
+                if fred_key_input:
+                    _assessment = full_assessment(
+                        fred_key_input,
+                        fed_bs_expanding=FED_BS_EXPANDING,
+                        deficit_gt_5pct_gdp=DEFICIT_GT_5PCT_GDP,
+                        cape=CAPE_CURRENT,
+                        top20_concentration_pct=TOP20_CONCENTRATION_PCT)
         except Exception as _e:
             st.warning(f"Live regime unavailable ({_e}). Showing static guide.")
 
     if _assessment is not None:
         _r = _assessment["regime"]; _s = _assessment["signals"]
-        _color = {"inflationary_repression":"#c026d3","liquidity_crisis":"#dc2626",
+        _color = {"inflationary_repression":"#c026d3","hard_repression":"#9333ea",
+                  "liquidity_crisis":"#dc2626",
                   "stagflation":"#d97706","goldilocks":"#16a34a",
                   "neutral":"#6b7280"}.get(_r["key"], "#6b7280")
         st.markdown(
@@ -1727,14 +1815,15 @@ with tab8:
     )
 
     if _REGIME_OK:
-        st.markdown("##### The 4-regime map & target tilts")
+        st.markdown("##### The 5-regime map & target tilts")
         _active = _assessment["regime"]["key"] if _assessment else None
         _disc = {"inflationary_repression":"short real −  ·  long real ↑",
+                 "hard_repression":"short real −  ·  long real ↓  ·  credit calm",
                  "liquidity_crisis":"HY blowout  ·  long real ↓",
                  "stagflation":"short real −  ·  2s10s re-steepening",
                  "goldilocks":"short real +  ·  credit tight"}
         _rows=[]
-        for _kk in ["inflationary_repression","liquidity_crisis","stagflation","goldilocks"]:
+        for _kk in ["inflationary_repression","hard_repression","liquidity_crisis","stagflation","goldilocks"]:
             _w = target_weights(_kk)
             _rows.append({
                 "Regime": REGIMES[_kk]["label"] + (" ⬅ ACTIVE" if _kk==_active else ""),
@@ -1746,7 +1835,8 @@ with tab8:
             })
         st.dataframe(pd.DataFrame(_rows), hide_index=True, use_container_width=True)
         st.caption("TLT is a *contingent* sleeve: 0% in inflationary repression "
-                   "(rising long real yields), armed in a liquidity crisis.")
+                   "(rising long real yields), partially armed in hard repression "
+                   "(long real yields falling), fully armed in a liquidity crisis.")
 
     st.markdown("---")
 
@@ -1866,223 +1956,110 @@ For crash protection, prioritize Calmar. For smooth compounding, prioritize Sort
     st.markdown("---")
     st.caption("📌 Not financial advice. Consult a fee-only fiduciary financial advisor before making investment decisions. Data via Yahoo Finance.")
 
+
 # ════════════════════════════════════════════════════════════
-# TAB 9 — GROWTH SATELLITE  (Level 5.5, layered on the core All-Weather sleeve)
+# TAB 9 — OPERATING CHECKLIST (v5)
 # ════════════════════════════════════════════════════════════
 with tab9:
-    st.markdown("### 🛰️ Growth Satellite — Selection, Exits & Rotation")
-    st.caption(
-        "A systematically-selected top-5 sleeve layered on top of the core "
-        "All-Weather allocation. Screens the rotation universe below "
-        "(deliberately excludes GLD/SLV/RING/XLE/PDBC/SCHD/XLV/XLU/SGOV/USFR/"
-        "TLT/KMLM — those are already governed by the regime classifier at "
-        "Level 1) for gate-passing names, ranks them, and tracks Level 6.5 "
-        "exit discipline on whichever 5 names are currently held. This is "
-        "tactical conviction capital, not the strategic core — see the "
-        "Education tab's regime map for how the core sleeves rebalance."
-    )
+    try:
+        from checklist_tab import render_checklist_tab
+        # custom_allocs holds the sidebar slider weights. NOTE: these are the
+        # MODEL weights, not live brokerage holdings — drift bands computed
+        # from them answer "does my intended allocation match the regime
+        # target", NOT "does my actual account match it". See GAPS.md G1.
+        render_checklist_tab(
+            fred_key=fred_key_input,
+            live_weights=custom_allocs if "custom_allocs" in dir() else None,
+        )
+    except ImportError as e:
+        st.error(
+            f"Checklist module not found ({e}). Drop `checklist_tab.py` and "
+            f"`checklist_data.py` into the same directory as app.py.",
+            icon="📋")
+    except Exception as e:
+        st.error(f"Checklist tab failed to render: {type(e).__name__}: {e}", icon="⚠️")
+        st.caption("The rest of the dashboard is unaffected — this tab fails "
+                   "in isolation by design.")
 
-    sat_tickers = list(SATELLITE_UNIVERSE.keys())
-    sat_ohlcv   = fetch_ohlcv(sat_tickers, "2y")
 
-    if not sat_ohlcv:
-        st.error("Universe data unavailable — try refreshing.")
-    else:
-        sat_perf_rows, sat_close_cache = [], {}
-        for tkr, name in SATELLITE_UNIVERSE.items():
-            if tkr not in sat_ohlcv:
-                continue
-            df = sat_ohlcv[tkr]
-            close, volume = df["Close"], df.get("Volume")
-            if len(close.dropna()) < 260:   # need ~1y for perf_1y + gate history
-                continue
-            sat_close_cache[tkr] = close
+# ════════════════════════════════════════════════════════════
+#  TAB 10 — Daily & Weekly Logs
+# ════════════════════════════════════════════════════════════
+# The REVIEW surface for auto_log.py. Until this existed, the scheduled runs
+# wrote reports to logs/summaries/ in the repo and to the Actions run page —
+# archival, but not somewhere anyone would actually read them daily. Reading
+# happens here, alongside every other signal.
+#
+# log_viewer reads from the GitHub Contents API FIRST and the local checkout
+# second, because Streamlit Cloud serves a deploy-time snapshot: Actions
+# commits new logs AFTER that snapshot, so a running app can be days behind
+# and would otherwise render a stale report as though it were today's.
+with tab10:
+    try:
+        import log_viewer
+        log_viewer.render(st)
+    except Exception as e:
+        st.error(f"Log viewer unavailable: {e}")
+        st.caption(
+            "Reports are still being written to `logs/summaries/` in the repo "
+            "regardless of this tab — check there, or the Actions run page, "
+            "if this fails."
+        )
 
-            tier      = SATELLITE_TIER.get(tkr, 2)
-            threshold = TIER_THRESHOLDS[tier]
-            vol_r     = _vol_ratio(volume) if volume is not None else 1.0
-            vol_spike = vol_r >= threshold
 
-            perf_1w, perf_1m, perf_3m = _pct(close, 5), _pct(close, 21), _pct(close, 63)
-            perf_6m, perf_1y          = _pct(close, 126), _pct(close, 252)
-            spread = round(perf_1m - (perf_3m / 3), 2)
+# ════════════════════════════════════════════════════════════
+#  TAB: SUGGESTED CHANGES — the synthesis of all three dashboards
+# ════════════════════════════════════════════════════════════
+# Reads BOTH bridges and joins them:
+#   rotation_bridge  <- Money Flow  (evidence: where capital is moving)
+#   markets_bridge   <- Markets     (interpretation: regime + detail)
+# and produces ranked suggestions with capital preservation checked FIRST.
+#
+# Deliberately the leftmost tab: this is the question the other two
+# dashboards exist to answer, so it should be what you land on.
+with tab_sug:
+    try:
+        import suggestions as _sg
+        import markets_bridge as _mb
+        try:
+            import rotation_bridge as _rb
+            _flow = _rb.read_summary()
+        except Exception as _e:
+            _flow = {"available": False, "very_stale": True,
+                     "message": f"rotation_bridge unavailable: {_e}"}
 
-            flow = calc_flow_score(perf_1w, perf_1m, perf_3m, vol_r, vol_spike)
-            sig  = signal_label(perf_1m, spread, vol_r, vol_spike)
+        _mkts = _mb.read()
 
-            sat_perf_rows.append({
-                "Ticker": tkr, "Name": name,
-                "perf_1w": perf_1w, "perf_1m": perf_1m, "perf_3m": perf_3m,
-                "perf_6m": perf_6m, "perf_1y": perf_1y, "Spread": spread,
-                "Tier": tier, "Vol Ratio": round(vol_r, 2), "Vol Spike": vol_spike,
-                "Flow Score": flow["score"], "Signal": sig,
-            })
+        _base = None
+        try:
+            from regime_classifier import BASE_WEIGHTS as _BW
+            _base = _BW
+        except Exception:
+            pass
 
-        if not sat_perf_rows:
-            st.warning("No universe data returned — try refreshing.")
-        else:
-            sat_perf_df = pd.DataFrame(sat_perf_rows).set_index("Ticker")
-            # RRG on the FULL universe, unconditional — benchmark is the
-            # equal-weighted mean of this universe, matching the money-flow
-            # dashboard's actual methodology (never SPY).
-            sat_perf_df = compute_universe_rrg(sat_perf_df)
+        _res = _sg.build(_mkts, _flow, current_weights=_base,
+                         base_weights=_base)
+        _sg.render(st, _res)
 
-            # Gate + ADX/ATR (this dashboard's own Level 5.5 addition — the
-            # source dashboard has no trend gate, this layers one on top)
-            sat_gate_rows = []
-            for tkr in sat_perf_df.index:
-                close = sat_close_cache[tkr]
-                df = sat_ohlcv[tkr]
-                gate = ma_slope_gate(close)
-                sat_gate_rows.append({
-                    "Ticker": tkr, "Gate": gate["pass"],
-                    "ADX": calc_adx(df), "ATR": calc_atr(df),
-                    "Close": float(close.iloc[-1]),
-                    "Blended Ret": np.nanmean([sat_perf_df.loc[tkr,"perf_1m"],
-                                                sat_perf_df.loc[tkr,"perf_3m"],
-                                                sat_perf_df.loc[tkr,"perf_6m"]]),
-                })
-            sat_gate_df = pd.DataFrame(sat_gate_rows).set_index("Ticker")
-            sat_df = sat_perf_df.join(sat_gate_df).reset_index()
-
-            sat_gated = sat_df[sat_df["Gate"] == True].copy()
-
-            if sat_gated.empty:
-                st.markdown(
-                    '<div class="signal-box danger"><b>No names clear the 200MA/slope gate.</b><br>'
-                    "Zero eligible names is itself a breadth-deterioration signal, not just an "
-                    "empty bench — see the Rotation Targets panel below for where uncommitted "
-                    "capital should sit under the current regime rather than forcing a pick.</div>",
-                    unsafe_allow_html=True)
-            else:
-                sat_gated["Ret %ile"] = sat_gated["Blended Ret"].rank(pct=True) * 100
-                _rrg_pts_map = {"Leading":100, "Improving":70, "Weakening":35, "Lagging":0}
-                sat_gated["RRG Pts"] = sat_gated["quadrant"].map(lambda q: _rrg_pts_map.get(q, 0))
-                _adx_max = sat_gated["ADX"].max() if sat_gated["ADX"].notna().any() else 1
-                sat_gated["Trend Pts"] = (sat_gated["ADX"].fillna(0) / (_adx_max or 1)) * 100
-                # Flow Score is a raw ranking score (not 0-100), so it enters
-                # the composite the same way Blended Ret does: cross-sectional
-                # percentile rank within the gated set.
-                sat_gated["Flow Pts"] = sat_gated["Flow Score"].rank(pct=True) * 100
-                sat_gated["Composite"] = (
-                    0.35*sat_gated["Ret %ile"] + 0.25*sat_gated["RRG Pts"] +
-                    0.25*sat_gated["Trend Pts"] + 0.15*sat_gated["Flow Pts"]
-                ).round(1)
-
-                sat_ranked = sat_gated.sort_values("Composite", ascending=False).reset_index(drop=True)
-                sat_ranked.index = sat_ranked.index + 1
-                sat_top5  = sat_ranked.head(SATELLITE_TOP_N)
-                sat_bench = sat_ranked.iloc[SATELLITE_TOP_N:SATELLITE_TOP_N + SATELLITE_BENCH_N]
-
-                st.markdown("#### Growth Satellite Score — Ranked")
-                sat_disp = sat_ranked[["Ticker","Name","Composite","quadrant","perf_1m","perf_3m","perf_6m","ADX","Signal","Vol Spike"]].copy()
-                sat_disp.columns = ["Ticker","Name","Composite","Quadrant","1M","3M","6M","ADX","Signal","Vol Spike"]
-                for c in ["1M","3M","6M"]:
-                    sat_disp[c] = sat_disp[c].apply(lambda v: fmt(v) if pd.notna(v) else "—")
-                sat_disp["ADX"] = sat_disp["ADX"].apply(lambda v: f"{v:.1f}" if pd.notna(v) else "—")
-                sat_disp["Vol Spike"] = sat_disp["Vol Spike"].map({True:"🔊", False:""})
-                st.dataframe(sat_disp, use_container_width=True,
-                    column_config={"Composite": st.column_config.ProgressColumn(
-                        "Composite", min_value=0, max_value=100, format="%.1f")})
-                st.caption(f"Rank 1–{SATELLITE_TOP_N}: live satellite holdings (index = rank). "
-                           f"Rank {SATELLITE_TOP_N+1}–{SATELLITE_TOP_N+SATELLITE_BENCH_N}: bench, "
-                           "promoted on a vacancy per the rotation rules below. Signal and 🔊 use "
-                           "the same tiered volume-spike thresholds (1.25×/1.50×/2.00×/3.00× by "
-                           "ADDV tier) as the Institutional Rotation Dashboard.")
-
-                st.markdown("---")
-                st.markdown("#### Exit Discipline — Level 6.5, per current holding")
-                st.caption(
-                    "Enter your actual entry price and initial stop for each holding to see "
-                    "live R-multiples against the 2R/4R/8R default trim schedule. Defaults are "
-                    "starting points — backtest before trusting them."
-                )
-
-                sat_basket_closes = {t: sat_close_cache[t] for t in sat_top5["Ticker"] if t in sat_close_cache}
-
-                for _, row in sat_top5.iterrows():
-                    tkr, close, atr, cur_price = row["Ticker"], sat_close_cache[row["Ticker"]], row["ATR"], row["Close"]
-                    with st.expander(f"{tkr} — {row['Name']}  ·  Composite {row['Composite']}  ·  {row['quadrant']}"):
-                        ec1, ec2, ec3 = st.columns(3)
-                        entry_price = ec1.number_input(f"Your entry price ({tkr})", value=float(cur_price), key=f"sat_entry_{tkr}")
-                        default_stop = entry_price - 2*atr if atr else entry_price*0.92
-                        stop_price = ec2.number_input(f"Your stop price ({tkr})", value=float(round(default_stop,2)), key=f"sat_stop_{tkr}")
-                        ec3.metric("Current Price", f"${cur_price:,.2f}")
-
-                        r_unit = entry_price - stop_price
-                        if r_unit > 0:
-                            r_multiple = (cur_price - entry_price) / r_unit
-                            tcols = st.columns(3)
-                            for (thresh, label), col in zip(
-                                [(2,"First trim (33%)"), (4,"Second trim (33%)"), (8,"Final exit (remainder)")], tcols):
-                                hit = r_multiple >= thresh
-                                col.metric(label, f"{thresh}R", "✅ Triggered" if hit else f"{r_multiple:.1f}R now")
-                        else:
-                            st.warning("Stop must be below entry to compute R-multiples.")
-
-                        others = {k:v for k,v in sat_basket_closes.items() if k != tkr}
-                        dc = calc_danger_composite(close, sat_ohlcv[tkr].get("Volume"), others)
-                        cls = "danger" if dc["zone"]=="Euphoria" else ("warning" if dc["zone"]=="Elevated" else "info")
-                        detail_str = " · ".join(f"{k}: +{v}" for k,v in dc["detail"].items() if v>0) or "none firing"
-                        st.markdown(
-                            f'<div class="signal-box {cls}"><b>Danger Composite: {dc["score"]}/10 — {dc["zone"]}</b><br>'
-                            f"<small>{detail_str}</small></div>", unsafe_allow_html=True)
-                        if dc["zone"] == "Euphoria":
-                            st.caption("⚠️ Per the Level 6.5 iron rule: execute the next scheduled trim "
-                                       "regardless of R-multiple tier, or exit outright if none has triggered yet.")
-
-                st.markdown("---")
-                st.markdown("#### Bench (ranks 6–10) — promotion candidates on a vacancy")
-                if not sat_bench.empty:
-                    sat_bdisp = sat_bench[["Ticker","Name","Composite","quadrant"]].copy()
-                    sat_bdisp.columns = ["Ticker","Name","Composite","Quadrant"]
-                    st.dataframe(sat_bdisp, use_container_width=True)
-                else:
-                    st.caption("Fewer than 10 names clear the gate — bench is thin. Treat as a "
-                               "breadth warning alongside the empty-gate case above.")
-
-            st.markdown("---")
-            st.markdown("#### Rotation-on-Exit — where freed capital goes")
-            st.caption(
-                "The regime dashboard has veto power over the rotation dashboard. If a satellite "
-                "position exits and no qualifying bench name exists — or the exit was a Danger "
-                "Composite trigger rather than an idiosyncratic stop — route capital per the "
-                "current regime row below instead of mechanically refilling the next-ranked name."
-            )
-
-            _sat_assessment = None
-            if _REGIME_OK and fred_key_input:
-                try:
-                    _sat_assessment = full_assessment(fred_key_input)
-                except Exception:
-                    _sat_assessment = None
-
-            if _sat_assessment is not None:
-                _sat_reg_key = _sat_assessment["regime"]["key"]
-                _sat_target, _sat_why = SATELLITE_ROTATION_TARGETS.get(
-                    _sat_reg_key, SATELLITE_ROTATION_TARGETS["neutral"])
-                st.markdown(
-                    f'<div class="signal-box purple"><b>Live regime: {_sat_assessment["regime"]["label"]}</b><br>'
-                    f"Route freed capital → <b>{_sat_target}</b><br><small>{_sat_why}</small></div>",
-                    unsafe_allow_html=True)
-                _sat_k = _sat_assessment["kmlm"]
-                st.caption(f"KMLM sizing signal: {_sat_k['stance']} — {_sat_k['funding']}")
-            else:
-                st.info("Add a FRED key in the sidebar for a live regime-conditional target. "
-                        "Static rotation table below covers all four regime rows in the meantime.")
-                _sat_rt_rows = [{"Regime": k.replace('_',' ').title(), "Route To": v[0], "Why": v[1]}
-                                for k, v in SATELLITE_ROTATION_TARGETS.items() if k != "neutral"]
-                st.dataframe(pd.DataFrame(_sat_rt_rows), hide_index=True, use_container_width=True)
-
-            st.markdown("---")
-            st.caption(
-                "Exit-reason bias (apply manually — not yet automated here): a plain ATR stop "
-                "hit with no Danger Composite signal firing → refill from bench immediately. A "
-                "Danger Composite / euphoria exit → skip refill for one weekly cycle before "
-                "considering the next bench name, per the Level 6.5 cooling-off rule."
-            )
-
-    st.markdown("---")
-    st.caption("📌 Not financial advice. Growth Satellite scoring is a decision-support tool, "
-               "not a signal to act on automatically. Composite weights and gate thresholds are "
-               "backtestable starting points, not fixed rules. Data via Yahoo Finance.")
+        with st.expander("How this is built"):
+            st.markdown(
+                "**Evidence order — flow is evidence, markets is "
+                "interpretation, portfolio is action.**\n\n"
+                "1. **Preservation first.** CRITICAL tripwires, hostile "
+                "regimes and hollow scores are evaluated BEFORE anything "
+                "additive. In `liquidity_crisis` or `growth_scare` the engine "
+                "will not suggest adding to any risk sleeve regardless of "
+                "relative strength — but reductions remain available.\n"
+                "2. **Flow gates size, it does not generate ideas.** A regime "
+                "thesis unconfirmed by flow is a hypothesis, not a position. "
+                "Macro proposes; flow confirms, contradicts, or is silent. "
+                "Silent or contradicting halves or suppresses the "
+                "suggestion.\n"
+                "3. **Tier A outranks Tier B.** ETF creations/redemptions are "
+                "capital; volume pressure is not. With the Tier A layer dark, "
+                "no confirmation exists and every addition is capped at half "
+                "size.\n"
+                "4. **Zero suggestions is a valid outcome.** An engine that "
+                "always finds something to buy is a sales tool.")
+    except Exception as e:
+        st.error(f"Suggestions unavailable: {e}")
