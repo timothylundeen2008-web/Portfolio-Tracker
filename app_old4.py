@@ -33,16 +33,6 @@ try:
 except Exception:
     _REGIME_OK = False
 
-# ── Rotation bridge (reads the Rotation app's Tier-A/Tier-B signal summary,
-# published via the shared GitHub-backed storage_backend.py). Optional —
-# degrades gracefully to "not available" if either module isn't deployed
-# alongside this file, same pattern as the regime classifier import above.
-try:
-    from rotation_bridge import read_summary
-    _BRIDGE_OK = True
-except Exception:
-    _BRIDGE_OK = False
-
 # Educational signal guide (static — always renderable, no live data needed)
 SIGNAL_GUIDE = [
     ("SHORT real policy rate (EFFR − CPI YoY)",
@@ -837,26 +827,6 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("### Allocation Weights")
-
-    # Regime-suggested targets, ETF mode only — HYBRID_PORTFOLIO's stock
-    # tickers (NVDA, AAPL, etc.) aren't in BASE_WEIGHTS/REGIMES' sleeve map,
-    # so there's nothing to suggest against in Hybrid mode.
-    _sidebar_suggested, _sidebar_regime_label = None, None
-    if portfolio_mode == "ETF All-Weather" and _REGIME_OK and fred_key_input:
-        try:
-            _sb_assessment = full_assessment(fred_key_input)
-            _sidebar_suggested = target_weights(_sb_assessment["regime"]["key"])
-            _sidebar_regime_label = _sb_assessment["regime"]["label"]
-        except Exception:
-            _sidebar_suggested = None
-
-    if _sidebar_suggested is not None:
-        st.caption(f"🎯 Suggested state below reflects live regime: **{_sidebar_regime_label}**")
-    elif portfolio_mode == "ETF All-Weather":
-        st.caption("Add a FRED key above to see regime-suggested weights next to each slider.")
-    else:
-        st.caption("Regime suggestions apply to ETF mode only.")
-
     st.markdown("*Drag to model changes:*")
 
     custom_allocs = {}
@@ -866,20 +836,6 @@ with st.sidebar:
                         help=f"{name} — {cat}")
         custom_allocs[ticker] = val
         total_w += val
-        if _sidebar_suggested is not None and ticker in _sidebar_suggested:
-            _sugg = _sidebar_suggested[ticker]
-            _delta = _sugg - val
-            if abs(_delta) < 0.5:
-                st.markdown(f"<div style='font-size:0.72rem;color:#16a34a;margin-top:-8px;'>"
-                            f"✅ At regime target ({_sugg}%)</div>", unsafe_allow_html=True)
-            elif _delta > 0:
-                st.markdown(f"<div style='font-size:0.72rem;color:#f59e0b;margin-top:-8px;'>"
-                            f"🔼 Suggested {_sugg}% (current {val}% is {abs(_delta):.0f}pt low)</div>",
-                            unsafe_allow_html=True)
-            else:
-                st.markdown(f"<div style='font-size:0.72rem;color:#38bdf8;margin-top:-8px;'>"
-                            f"🔽 Suggested {_sugg}% (current {val}% is {abs(_delta):.0f}pt high)</div>",
-                            unsafe_allow_html=True)
 
     diff_from_100 = total_w - 100
     if diff_from_100 == 0:
@@ -913,40 +869,6 @@ st.markdown(f"# 📊 All-Weather Portfolio Dashboard  <small style='font-size:0.
             unsafe_allow_html=True)
 st.markdown(f"<small style='color:#666'>Updated: {datetime.now().strftime('%B %d, %Y %H:%M')} · Period: {period_label} · CPI: {cpi_rate}%</small>",
             unsafe_allow_html=True)
-st.markdown("---")
-
-# ─── ROTATION BRIDGE STATUS ────────────────────────────────────────────────────
-# Cross-dashboard link: reads the Rotation app's published signal summary
-# (accumulation scores, CMF, flow divergence, COT positioning) via the shared
-# GitHub-backed storage_backend.py. This is what feeds the Tier-A/Tier-B
-# confluence legs elsewhere in the framework — surfaced here, at the top, so
-# a stale or missing bridge is visible before anything downstream is trusted.
-if _BRIDGE_OK:
-    _bridge = read_summary()
-    if not _bridge.get("available"):
-        st.markdown(
-            f'<div class="signal-box warning">🌉 <b>Rotation Bridge:</b> not yet published. '
-            f'{_bridge.get("message","")}</div>', unsafe_allow_html=True)
-    else:
-        _cls = "danger" if _bridge.get("very_stale") else ("warning" if _bridge.get("stale") else "info")
-        _icon = "🔴" if _bridge.get("very_stale") else ("🟡" if _bridge.get("stale") else "🟢")
-        _sectors = _bridge.get("sectors", [])
-        _top = sorted([s for s in _sectors if s.get("accumulation_score") is not None],
-                      key=lambda s: s["accumulation_score"], reverse=True)[:3]
-        _top_str = (" · ".join(f"{s.get('ticker','?')} ({s.get('accumulation_score'):+.0f})" for s in _top)
-                    if _top else "no sector data published")
-        st.markdown(
-            f'<div class="signal-box {_cls}">🌉 <b>Rotation Bridge:</b> {_icon} {_bridge.get("message","")} '
-            f'&nbsp;·&nbsp; {len(_sectors)} sectors published &nbsp;·&nbsp; '
-            f'Top accumulation: {_top_str}</div>',
-            unsafe_allow_html=True)
-else:
-    st.markdown(
-        '<div class="signal-box warning">🌉 <b>Rotation Bridge:</b> not deployed alongside this file — '
-        'add <code>rotation_bridge.py</code> and <code>storage_backend.py</code> from the repo '
-        'to enable live cross-dashboard signal reads here.</div>',
-        unsafe_allow_html=True)
-
 st.markdown("---")
 
 # ─── TABS ─────────────────────────────────────────────────────────────────────
