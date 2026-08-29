@@ -850,100 +850,30 @@ with st.sidebar:
     period = period_map[period_label]
 
     st.markdown("---")
-    # AUTO-LOADED from this app's Streamlit secrets (FRED_API_KEY), same
-    # secrets-first resolution checklist_tab.py already uses internally. The
-    # box is now an OPTIONAL OVERRIDE, not a requirement re-typed every
-    # session — leave it blank and the secrets-sourced key is used silently.
-    # The typed value is never pre-filled into the box (the secret itself is
-    # never echoed back into the page), only its resolved PRESENCE is shown.
-    _fred_override = st.text_input(
-        "FRED API key (override, optional)", type="password",
-        help="Auto-loaded from this app's Streamlit secrets if FRED_API_KEY "
-             "is set there (Settings → Secrets in Streamlit Cloud) — leave "
-             "this blank to use it. Type a key here only to override it for "
-             "this session. Free key at fredaccount.stlouisfed.org.",
+    fred_key_input = st.text_input(
+        "FRED API key (optional)", type="password",
+        help="Enables the LIVE regime banner in the Education tab. Free key at "
+             "fredaccount.stlouisfed.org. Without it, the static signal guide "
+             "and quadrant map still render.",
     )
-    try:
-        from checklist_tab import _resolve_fred_key
-        fred_key_input = _resolve_fred_key(_fred_override)
-    except Exception:
-        fred_key_input = _fred_override
-    if fred_key_input and not _fred_override:
-        st.caption("🔑 Using FRED key from secrets")
-    elif not fred_key_input:
-        st.caption("⚠ No FRED key found — add FRED_API_KEY to this app's "
-                   "Streamlit secrets, or type one above.")
 
     st.markdown("---")
     st.markdown("### Allocation Weights")
 
-    # v2: sourced from suggestions.build() — the SAME synthesis engine used
-    # everywhere else a suggestion is shown, not a separate simplified
-    # target_weights() distance check. Capital preservation, flow
-    # confirmation and hostile-regime blocking now all apply HERE too, so
-    # this panel can never show an "add" the rest of the framework would
-    # refuse. Regime-suggested targets are ETF mode only — HYBRID_PORTFOLIO's
-    # stock tickers (NVDA, AAPL, etc.) aren't in BASE_WEIGHTS/REGIMES' sleeve
-    # map, so there is nothing to suggest against in Hybrid mode.
-    _sb_res, _sb_regime_label, _sb_hostile = None, None, False
+    # Regime-suggested targets, ETF mode only — HYBRID_PORTFOLIO's stock
+    # tickers (NVDA, AAPL, etc.) aren't in BASE_WEIGHTS/REGIMES' sleeve map,
+    # so there's nothing to suggest against in Hybrid mode.
+    _sidebar_suggested, _sidebar_regime_label = None, None
     if portfolio_mode == "ETF All-Weather" and _REGIME_OK and fred_key_input:
         try:
-            import suggestions as _sg
-            import markets_bridge as _mb
-            try:
-                import rotation_bridge as _rb
-                _sb_flow = _rb.read_summary()
-            except Exception as _e:
-                _sb_flow = {"available": False, "very_stale": True,
-                           "message": f"rotation_bridge unavailable: {_e}"}
-            _sb_mkts = _mb.read()
-            if not _sb_mkts.get("available"):
-                # No published Markets summary yet — fall back to a LIVE
-                # regime read so the sidebar is never blank just because
-                # nothing has been published to the bridge. Same fallback
-                # logic, same engine — just a locally-sourced markets dict
-                # shaped the way suggestions.build() expects.
-                _sb_assessment = full_assessment(fred_key_input)
-                _sb_reg = _sb_assessment["regime"]
-                _sb_mkts = {
-                    "available": True, "stale": False, "very_stale": False,
-                    "message": "Live (not yet published to the bridge).",
-                    "regime": {"key": _sb_reg["key"], "label": _sb_reg["label"]},
-                    "repression": _sb_assessment.get("repression", {}),
-                    "growth": _sb_assessment.get("growth", {}),
-                    "tripwires": [], "rs_quartiles": {}, "trend_states": {},
-                    "conviction": {},
-                    "regime_targets": target_weights(_sb_reg["key"]),
-                }
-            _sb_regime_label = _sb_mkts.get("regime", {}).get("label")
-            _sb_hostile = _sb_mkts.get("regime", {}).get("key") in (
-                "liquidity_crisis", "growth_scare")
-            _sb_res = _sg.build(_sb_mkts, _sb_flow,
-                               current_weights={t: a for t, (_, a, *_r)
-                                                in PORTFOLIO.items()},
-                               base_weights={t: a for t, (_, a, *_r)
-                                            in PORTFOLIO.items()})
-        except Exception as _e:
-            _sb_res = None
-            print(f"[sidebar] suggestions unavailable: {_e}")
+            _sb_assessment = full_assessment(fred_key_input)
+            _sidebar_suggested = target_weights(_sb_assessment["regime"]["key"])
+            _sidebar_regime_label = _sb_assessment["regime"]["label"]
+        except Exception:
+            _sidebar_suggested = None
 
-    _sb_by_ticker = {}
-    if _sb_res:
-        for _s in _sb_res.get("suggestions", []):
-            if _s.get("ticker"):
-                _sb_by_ticker[_s["ticker"]] = _s
-
-    if _sb_res is not None:
-        st.caption(f"🎯 Sourced from the same engine as Suggested Changes — "
-                  f"live regime: **{_sb_regime_label}** · confidence "
-                  f"{_sb_res.get('confidence', '?')}")
-        if _sb_hostile:
-            st.warning("🛡 Hostile regime — capital preservation blocks ALL "
-                      "additions below, regardless of relative strength or "
-                      "trend.")
-        for _pv in _sb_res.get("preservation", []):
-            if _pv.get("priority") == "CRITICAL":
-                st.error(f"🔴 {_pv['detail']}")
+    if _sidebar_suggested is not None:
+        st.caption(f"🎯 Suggested state below reflects live regime: **{_sidebar_regime_label}**")
     elif portfolio_mode == "ETF All-Weather":
         st.caption("Add a FRED key above to see regime-suggested weights next to each slider.")
     else:
@@ -958,25 +888,20 @@ with st.sidebar:
                         help=f"{name} — {cat}")
         custom_allocs[ticker] = val
         total_w += val
-
-        _sig = _sb_by_ticker.get(ticker)
-        if _sig is None:
-            continue
-        if _sig["action"] == "ADD":
-            st.markdown(f"<div style='font-size:0.72rem;color:#f59e0b;margin-top:-8px;'>"
-                       f"🔼 {_sig['detail']}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div style='font-size:0.65rem;color:#7a8394;"
-                       f"margin-top:-4px;'>{_sig['rationale'][:110]}"
-                       f"{'…' if len(_sig['rationale'])>110 else ''}"
-                       f"{' · ' + _sig['size'] if _sig.get('size') else ''}"
-                       f"</div>", unsafe_allow_html=True)
-        elif _sig["action"] == "REDUCE":
-            st.markdown(f"<div style='font-size:0.72rem;color:#38bdf8;margin-top:-8px;'>"
-                       f"🔽 {_sig['detail']}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div style='font-size:0.65rem;color:#7a8394;"
-                       f"margin-top:-4px;'>{_sig['rationale'][:110]}"
-                       f"{'…' if len(_sig['rationale'])>110 else ''}</div>",
-                       unsafe_allow_html=True)
+        if _sidebar_suggested is not None and ticker in _sidebar_suggested:
+            _sugg = _sidebar_suggested[ticker]
+            _delta = _sugg - val
+            if abs(_delta) < 0.5:
+                st.markdown(f"<div style='font-size:0.72rem;color:#16a34a;margin-top:-8px;'>"
+                            f"✅ At regime target ({_sugg}%)</div>", unsafe_allow_html=True)
+            elif _delta > 0:
+                st.markdown(f"<div style='font-size:0.72rem;color:#f59e0b;margin-top:-8px;'>"
+                            f"🔼 Suggested {_sugg}% (current {val}% is {abs(_delta):.0f}pt low)</div>",
+                            unsafe_allow_html=True)
+            else:
+                st.markdown(f"<div style='font-size:0.72rem;color:#38bdf8;margin-top:-8px;'>"
+                            f"🔽 Suggested {_sugg}% (current {val}% is {abs(_delta):.0f}pt high)</div>",
+                            unsafe_allow_html=True)
 
     diff_from_100 = total_w - 100
     if diff_from_100 == 0:
@@ -1047,7 +972,7 @@ else:
 st.markdown("---")
 
 # ─── TABS ─────────────────────────────────────────────────────────────────────
-tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8,tab9,tab_sug,tab_logs = st.tabs([
+tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8,tab9 = st.tabs([
     "🏠 Overview",
     "📈 Holding vs Benchmark",
     "🗂️ Category Performance",
@@ -1057,8 +982,6 @@ tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8,tab9,tab_sug,tab_logs = st.tabs([
     "⚖️ ETF vs Stocks",
     "📚 Education",
     "🛰️ Growth Satellite",
-    "💡 Suggested Changes",
-    "📋 Daily & Weekly Logs",
 ])
 
 # ════════════════════════════════════════════════════════════
@@ -2433,87 +2356,3 @@ with tab9:
     st.caption("📌 Not financial advice. Growth Satellite scoring is a decision-support tool, "
                "not a signal to act on automatically. Composite weights and gate thresholds are "
                "backtestable starting points, not fixed rules. Data via Yahoo Finance.")
-
-# ════════════════════════════════════════════════════════════
-#  TAB: SUGGESTED CHANGES — restored after the app_allweather.py merge
-# ════════════════════════════════════════════════════════════
-# Reconciliation note (2026-08-29): this tab and the Logs tab below were
-# built in this conversation and were absent from a parallel session's
-# app_allweather.py, which was independently pushed to this same app.py path
-# and added Growth Satellite (tab9) above. Both lineages' work is additive
-# and preserved here side by side -- nothing from Growth Satellite was
-# touched to make room for this.
-#
-# Reads BOTH bridges and joins them:
-#   rotation_bridge  <- Money Flow  (evidence: where capital is moving)
-#   markets_bridge   <- Markets     (interpretation: regime + detail)
-# and produces ranked suggestions with capital preservation checked FIRST.
-with tab_sug:
-    try:
-        import suggestions as _sg
-        import markets_bridge as _mb
-        try:
-            import rotation_bridge as _rb
-            _flow = _rb.read_summary()
-        except Exception as _e:
-            _flow = {"available": False, "very_stale": True,
-                     "message": f"rotation_bridge unavailable: {_e}"}
-
-        _mkts = _mb.read()
-
-        _base = None
-        try:
-            from regime_classifier import BASE_WEIGHTS as _BW
-            _base = _BW
-        except Exception:
-            pass
-
-        _res = _sg.build(_mkts, _flow, current_weights=_base,
-                         base_weights=_base)
-        _sg.render(st, _res)
-
-        with st.expander("How this is built"):
-            st.markdown(
-                "**Evidence order — flow is evidence, markets is "
-                "interpretation, portfolio is action.**\n\n"
-                "1. **Preservation first.** CRITICAL tripwires, hostile "
-                "regimes and hollow scores are evaluated BEFORE anything "
-                "additive. In `liquidity_crisis` or `growth_scare` the engine "
-                "will not suggest adding to any risk sleeve regardless of "
-                "relative strength — but reductions remain available.\n"
-                "2. **Flow gates size, it does not generate ideas.** A regime "
-                "thesis unconfirmed by flow is a hypothesis, not a position. "
-                "Macro proposes; flow confirms, contradicts, or is silent. "
-                "Silent or contradicting halves or suppresses the "
-                "suggestion.\n"
-                "3. **Tier A outranks Tier B.** ETF creations/redemptions are "
-                "capital; volume pressure is not. With the Tier A layer dark, "
-                "no confirmation exists and every addition is capped at half "
-                "size.\n"
-                "4. **Zero suggestions is a valid outcome.** An engine that "
-                "always finds something to buy is a sales tool.\n\n"
-                "**Relationship to the Growth Satellite tab:** Growth "
-                "Satellite screens its OWN 14-ETF universe for momentum/RRG "
-                "candidates outside the regime-governed core sleeves — a "
-                "different question (tactical satellite selection) from this "
-                "tab's (core allocation vs. the regime + flow evidence). The "
-                "two are complementary, not overlapping — Growth Satellite "
-                "does not feed into or read from this engine.")
-    except Exception as e:
-        st.error(f"Suggestions unavailable: {e}")
-
-
-# ════════════════════════════════════════════════════════════
-#  TAB: DAILY & WEEKLY LOGS — restored after the app_allweather.py merge
-# ════════════════════════════════════════════════════════════
-with tab_logs:
-    try:
-        import log_viewer
-        log_viewer.render(st)
-    except Exception as e:
-        st.error(f"Log viewer unavailable: {e}")
-        st.caption(
-            "Reports are still being written to `logs/summaries/` in the "
-            "repo regardless of this tab — check there, or the Actions run "
-            "page, if this fails."
-        )
