@@ -230,36 +230,7 @@ SATELLITE_UNIVERSE = {
     "IWM":  "Russell 2000",
     "IGV":  "iShares Expanded Tech-Software",
     "ARKK": "ARK Innovation",
-    # Added per user request. VOO/IVV/SCHG/VUG are ordinary unleveraged
-    # index/growth funds -- straightforward candidates, same treatment as
-    # everything above.
-    "VOO":  "Vanguard S&P 500",
-    "IVV":  "iShares Core S&P 500",
-    "SCHG": "Schwab US Large-Cap Growth",
-    "VUG":  "Vanguard Growth",
-    # TQQQ/SOXL are 3x DAILY-RESET LEVERAGED products -- a structurally
-    # different instrument from everything else in this universe, not just a
-    # riskier version of the same thing. Daily rebalancing causes volatility
-    # decay that compounds against a holder even in a flat market (see the
-    # 2022 QQQ -33% / TQQQ -79% example discussed when this framework's own
-    # leverage gates were built). The name itself carries the warning so it
-    # is visible in every render of this table, not just a one-time caption
-    # a reader could scroll past. This screening/gating/ranking loop applies
-    # to them identically to every other candidate here -- it does NOT
-    # widen stops, shorten holding periods, or otherwise adjust position
-    # mechanics for the 3x decay profile. That is a real, known gap; treat
-    # any BUY signal on these two with materially more skepticism than the
-    # same signal on an unleveraged name, and prefer the correspondingly
-    # sized options overlay (position_sizing.py's leverage gates) over a
-    # raw leveraged-ETF hold if convexity is the actual goal.
-    "TQQQ": "⚠ 3x LEVERAGED — ProShares UltraPro QQQ",
-    "SOXL": "⚠ 3x LEVERAGED — Direxion Daily Semiconductor Bull",
 }
-
-# Referenceable flag for any future logic (sizing, stop-width, holding-period
-# rules) that should treat these differently. Not currently consumed by the
-# exit/rotation logic below -- see the warning above.
-SATELLITE_LEVERAGED = {"TQQQ", "SOXL"}
 SATELLITE_TOP_N   = 5   # live satellite holdings
 SATELLITE_BENCH_N = 5   # ranks 6-10 tracked as promotion bench
 
@@ -275,13 +246,6 @@ SATELLITE_TIER = {
     "VGT": 2,    # inferred — VGT not in source dashboard's universe
     "SMH": 3, "SOXX": 3, "IGV": 3,                      # $50M-$200M
     "ARKK": 3,   # inferred — ARKK not in source dashboard's universe
-    # Inferred, same caveat as VGT/ARKK above — not copied from the source
-    # dashboard's own universe, confirm against actual ADDV before relying
-    # on the volume-spike threshold for these six specifically.
-    "VOO": 1, "IVV": 1,     # among the largest, most liquid ETFs in existence
-    "TQQQ": 1, "SOXL": 1,   # leveraged products trade extremely heavily by
-                            # share/dollar volume despite smaller AUM
-    "SCHG": 2, "VUG": 2,    # large, liquid, but not at VOO/IVV's scale
 }
 TIER_THRESHOLDS = {1: 1.25, 2: 1.50, 3: 2.00, 4: 3.00}  # ported verbatim
 
@@ -2240,21 +2204,6 @@ with tab9:
         "tactical conviction capital, not the strategic core — see the "
         "Education tab's regime map for how the core sleeves rebalance."
     )
-    if SATELLITE_LEVERAGED & set(SATELLITE_UNIVERSE):
-        st.warning(
-            f"⚠ **{', '.join(sorted(SATELLITE_LEVERAGED))} are 3x daily-reset "
-            f"leveraged products**, screened here alongside unleveraged "
-            f"names. Daily rebalancing causes volatility decay that "
-            f"compounds against a holder even in a flat market — a leveraged "
-            f"ETF is not simply a higher-conviction version of its underlying "
-            f"index, it is a structurally different instrument. This tab's "
-            f"exit/stop logic is NOT currently leverage-aware — it applies "
-            f"the same rules to these as to an unleveraged name. Treat any "
-            f"BUY signal on a leveraged ticker with materially more "
-            f"skepticism, and prefer explicit options-based convexity "
-            f"(Convexity Sleeve on the Markets Dashboard) if asymmetric "
-            f"upside, not raw leverage, is the actual goal."
-        )
 
     sat_tickers = list(SATELLITE_UNIVERSE.keys())
     sat_ohlcv   = fetch_ohlcv(sat_tickers, "2y")
