@@ -398,32 +398,6 @@ CRASH_SCENARIOS = {
 
 # ─── DATA HELPERS ─────────────────────────────────────────────────────────────
 @st.cache_data(ttl=3600)
-@st.cache_data(ttl=3600, show_spinner=False)
-def _fetch_price_series(ticker: str, period: str = "2y") -> pd.Series:
-    """
-    Single-ticker close series. Adapter so relative_strength.rank_universe()
-    and trend_filter.assess_universe() -- both of which expect a per-ticker
-    callable -- can use this app's existing fetch layer. fetch_prices()
-    returns a multi-ticker DataFrame, a different shape entirely.
-    """
-    try:
-        raw = yf.download(ticker, period=period, auto_adjust=True,
-                          progress=False)
-        if raw is None or raw.empty:
-            return pd.Series(dtype=float)
-        close = raw["Close"]
-        if isinstance(close, pd.DataFrame):
-            close = close.iloc[:, 0]
-        return close.dropna()
-    except Exception:
-        return pd.Series(dtype=float)
-
-
-def fetch_prices_generic(ticker: str, period: str = "2y") -> pd.Series:
-    """Plain wrapper — keeps the call sites readable."""
-    return _fetch_price_series(ticker, period)
-
-
 def fetch_prices(tickers: list, period: str = "1y") -> pd.DataFrame:
     try:
         raw = yf.download(tickers, period=period, auto_adjust=True, progress=False)
@@ -2659,42 +2633,6 @@ with tab_cand:
         st.dataframe(pd.DataFrame(_rows), use_container_width=True,
                     hide_index=True)
 
-        # ── Live scorecard ──────────────────────────────────────────────
-        st.markdown("---")
-        try:
-            import substitution as _sub
-            import relative_strength as _rs_mod
-            import trend_filter as _tf_mod
-
-            with st.spinner(f"Scoring {len(_members)} candidates…"):
-                _rs = _rs_mod.rank_universe(fetch_prices_generic, _members)
-                _tr = _tf_mod.assess_universe(fetch_prices_generic, _members)
-
-            _peer_rs = [_rs.get("scores", {}).get(t, {}).get("composite")
-                        for t in _members]
-            _peer_rs = [v for v in _peer_rs if v is not None]
-
-            _sc = {}
-            for tk in _members:
-                _sc[tk] = _sub.score_candidate(
-                    tk, _members,
-                    rs_composite=_rs.get("scores", {}).get(tk, {}).get("composite"),
-                    rs_peer_values=_peer_rs,
-                    trend_scalar=_tr.get("states", {}).get(tk, {}).get("scalar"),
-                    liquidity_tier=SATELLITE_TIER.get(tk))
-
-            _eval = _sub.evaluate_role(_role_pick, _live_w, _sc)
-            _sub.render(st, _eval)
-        except Exception as _e:
-            st.warning(f"Live scoring unavailable: {_e}")
-            st.caption(
-                "The static comparison table above still works. Live scoring "
-                "needs relative_strength.py, trend_filter.py and "
-                "substitution.py present, plus price history for the role's "
-                "candidates."
-            )
-
-        st.markdown("---")
         _levered_here = [t for t in _members if _cu.is_leveraged(t)]
         if _levered_here:
             st.warning(
