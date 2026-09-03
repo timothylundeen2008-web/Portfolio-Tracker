@@ -1,14 +1,14 @@
 {
-  "published_at": "2026-09-03T00:29:44+00:00",
+  "published_at": "2026-09-03T20:37:45+00:00",
   "notes": "auto-published on Markets Dashboard render",
   "regime": {
     "key": "transition_ambiguous",
-    "label": "Transition \u2014 Growth Guard Active",
-    "transition_reason": "growth_guard",
+    "label": "Transition \u2014 Valuation Guard Active",
+    "transition_reason": "valuation_guard",
     "drivers": [
       "Short real rate +0.27% (positive)",
-      "HY OAS 2.65% (tight credit)",
-      "Growth guard BLOCKS: composite DETERIORATING (-2). Rates and credit alone say goldilocks, but labour/consumer data are weakening together \u2014 that is late-cycle, not benign."
+      "HY OAS 2.66% (tight credit)",
+      "Valuation guard BLOCKS a growth-additive regime: Shiller CAPE 42.0 \u2265 40 \u2014 dot-com-peak territory. Top-20 concentration 50.8% \u2265 45% \u2014 index-level single-theme risk. Adding to growth at a historic valuation extreme is not what a confirmed benign regime should instruct. Routing to the transition overlay instead."
     ]
   },
   "repression": {
@@ -19,8 +19,8 @@
     "missing": []
   },
   "growth": {
-    "state": "DETERIORATING",
-    "score": -2,
+    "state": "NEUTRAL",
+    "score": -1,
     "confirmed": true
   },
   "kmlm_stance": "INCREASE KMLM",
