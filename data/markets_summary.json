@@ -1,5 +1,5 @@
 {
-  "published_at": "2026-09-04T00:15:43+00:00",
+  "published_at": "2026-09-04T23:58:33+00:00",
   "notes": "auto-published on Markets Dashboard render",
   "regime": {
     "key": "transition_ambiguous",
@@ -7,20 +7,20 @@
     "transition_reason": "valuation_guard",
     "drivers": [
       "Short real rate +0.27% (positive)",
-      "HY OAS 2.66% (tight credit)",
+      "HY OAS 2.65% (tight credit)",
       "Valuation guard BLOCKS a growth-additive regime: Shiller CAPE 42.0 \u2265 40 \u2014 dot-com-peak territory. Top-20 concentration 50.8% \u2265 45% \u2014 index-level single-theme risk. Adding to growth at a historic valuation extreme is not what a confirmed benign regime should instruct. Routing to the transition overlay instead."
     ]
   },
   "repression": {
-    "score": 4,
-    "band": "Tightening cycle",
+    "score": 5,
+    "band": "Moderate repression",
     "hollow": true,
     "top_weight": "0/4",
     "missing": []
   },
   "growth": {
     "state": "NEUTRAL",
-    "score": -1,
+    "score": 0,
     "confirmed": true
   },
   "kmlm_stance": "INCREASE KMLM",
