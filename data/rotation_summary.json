@@ -1,5 +1,5 @@
 {
-  "published_at": "2026-09-04T20:38:31+00:00",
+  "published_at": "2026-09-04T23:18:57+00:00",
   "notes": "published by publish_to_checklist.py; etf_flow coverage: 21d history, ready=True",
   "cot_schema_ok": true,
   "sectors": [
@@ -15,11 +15,11 @@
     {
       "ticker": "XLV",
       "sector": "Healthcare",
-      "accumulation_score": 56.33,
+      "accumulation_score": 56.31,
       "event_score": 0.0,
       "stealth_label": "Stealth",
-      "cmf": 0.097,
-      "vol_ratio": 0.81
+      "cmf": 0.0969,
+      "vol_ratio": 0.82
     },
     {
       "ticker": "XLU",
@@ -27,16 +27,16 @@
       "accumulation_score": 30.19,
       "event_score": 0.0,
       "stealth_label": "Stealth",
-      "cmf": 0.155,
+      "cmf": 0.1551,
       "vol_ratio": 1.36
     },
     {
       "ticker": "XLP",
       "sector": "Consumer Defensive",
-      "accumulation_score": 13.99,
+      "accumulation_score": 13.96,
       "event_score": 0.0,
       "stealth_label": "Weak / Mixed",
-      "cmf": -0.0453,
+      "cmf": -0.0455,
       "vol_ratio": 1.0
     },
     {
@@ -69,7 +69,7 @@
     {
       "ticker": "XLC",
       "sector": "Communication Services",
-      "accumulation_score": -16.84,
+      "accumulation_score": -16.85,
       "event_score": 0.0,
       "stealth_label": "None",
       "cmf": -0.1122,
