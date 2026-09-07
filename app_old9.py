@@ -1110,7 +1110,7 @@ st.markdown("---")
 
 # ─── TABS ─────────────────────────────────────────────────────────────────────
 (tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8,tab9,tab_sug,tab_cand,tab_exp,
- tab_swing, tab_logs) = st.tabs([
+ tab_logs) = st.tabs([
     "🏠 Overview",
     "📈 Holding vs Benchmark",
     "🗂️ Category Performance",
@@ -1123,7 +1123,6 @@ st.markdown("---")
     "💡 Suggested Changes",
     "🔍 Candidate Review",
     "🧬 Exposure & Exits",
-    "🎯 Swing Desk",
     "📋 Daily & Weekly Logs",
 ])
 
@@ -2803,80 +2802,3 @@ with tab_exp:
             )
     except Exception as e:
         st.error(f"Exposure & exits unavailable: {e}")
-
-
-# ════════════════════════════════════════════════════════════
-#  TAB: SWING DESK — the active agent
-# ════════════════════════════════════════════════════════════
-# Reads the regime from markets_bridge (Level 1), sector quadrants from
-# rotation_bridge (Level 2), scans every ticker you give it against every
-# method in swing_trading_procedure.md -- long AND short -- and produces
-# trade cards with direction and reasoning, plus an explicit avoid list.
-# Direction is set by the regime, not by the chart.
-with tab_swing:
-    try:
-        import swing_desk as _sw
-        import markets_bridge as _mb
-
-        _mk = _mb.read()
-        _regime_key = (_mk.get("regime") or {}).get("key") if _mk.get("available") else None
-        if not _regime_key:
-            st.warning("Markets bridge has no regime published — defaulting to "
-                       "`transition_ambiguous` (both books, half size). Open the "
-                       "Markets Dashboard once to publish a live regime.")
-            _regime_key = "transition_ambiguous"
-
-        _quads = {}
-        try:
-            import rotation_bridge as _rb
-            _rot = _rb.read_summary()
-            for _sec in (_rot.get("sectors") or []):
-                if isinstance(_sec, dict) and _sec.get("ticker"):
-                    _quads[_sec["ticker"]] = _sec.get("quadrant")
-        except Exception:
-            pass
-
-        c1, c2, c3, c4 = st.columns([3, 1, 1, 1])
-        _tickers_in = c1.text_input(
-            "Tickers to evaluate (comma-separated)",
-            value="XLK, SMH, XLE, XLF, IWM, QQQ",
-            help="This evaluates any ticker fed to it. For DISCOVERY across the whole "
-                 "market -- fresh episodic pivots especially -- point a screener at the "
-                 "procedure's EP criteria and paste the survivors here.")
-        _equity = c2.number_input("Equity $", value=25000, step=1000, min_value=1000)
-        _pe_step = c3.selectbox("PE step", [0, 1, 2, 3], index=1,
-                                help="Progressive Exposure: 0=cash, 1=0.5%, 2=1.0%, 3=2.0% risk. "
-                                     "Step UP only after consecutive winners; DOWN immediately on losses.")
-        _heat = c4.number_input("Heat used %", value=0.0, step=0.5, min_value=0.0, max_value=15.0)
-
-        _tickers = [t.strip().upper() for t in _tickers_in.split(",") if t.strip()]
-        if _tickers and st.button("Scan", type="primary"):
-            with st.spinner(f"Scanning {len(_tickers)} tickers against every method…"):
-                _ohlcv = fetch_ohlcv(_tickers + ["SPY"], period="2y")
-                _bench = _ohlcv.get("SPY", pd.DataFrame()).get("Close")
-                def _fetch(tk):
-                    return _ohlcv.get(tk)
-                _res = _sw.scan(_tickers, _fetch, _regime_key, bench=_bench,
-                                equity=float(_equity), pe_step=int(_pe_step),
-                                heat_used_pct=float(_heat))
-                # per-ticker sector quadrant, where the rotation bridge has one
-                for _r in _res["cards"] + _res["avoid"]:
-                    _r["sector_quadrant"] = _quads.get(_r["ticker"])
-            _sw.render(st, _res)
-
-        with st.expander("How the desk decides"):
-            st.markdown(
-                "**Direction is set by the regime, not the chart.** Risk-on → long book leads. "
-                "growth_scare / liquidity_crisis → long book CLOSED, short book ACTIVE. "
-                "Transition / term-premium → both books at half size, 2-of-3 minimum.\n\n"
-                "**Methods scanned:** M1 VCP (Trend Template + contraction), M2 Breakout "
-                "(10/20 EMA surf + range break), M2 Episodic Pivot (≥10% gap on volume), "
-                "M2c Momentum Burst (3–5 day), M2b Parabolic Short (≥5 baseline-ADR above "
-                "10 EMA + climax + reversal), M2b Failed-Breakout Short.\n\n"
-                "**Aggression comes from concentration at tight stops**, capped at 30% of "
-                "equity per position and 15% total heat — never from raising risk per trade. "
-                "**A clean long setup in a hostile regime is reported and refused**, with the "
-                "regime named. Full rules: `swing_trading_procedure.md`."
-            )
-    except Exception as e:
-        st.error(f"Swing Desk unavailable: {e}")
