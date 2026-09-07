@@ -2836,63 +2836,33 @@ with tab_swing:
         except Exception:
             pass
 
-        _mode = st.radio("Discovery", ["📡 Screen from Money Flow", "⌨️ Manual tickers"],
-                         horizontal=True,
-                         help="Money Flow mode uses the rotation dashboard as the screener: "
-                              "sectors money is rotating INTO become long hunting grounds, "
-                              "sectors it is rotating OUT OF become short hunting grounds, and "
-                              "each is expanded to the ETF plus its top constituents. The "
-                              "rotation confluence leg is then sourced from Money Flow, not typed.")
-        c2, c3, c4 = st.columns(3)
+        c1, c2, c3, c4 = st.columns([3, 1, 1, 1])
+        _tickers_in = c1.text_input(
+            "Tickers to evaluate (comma-separated)",
+            value="XLK, SMH, XLE, XLF, IWM, QQQ",
+            help="This evaluates any ticker fed to it. For DISCOVERY across the whole "
+                 "market -- fresh episodic pivots especially -- point a screener at the "
+                 "procedure's EP criteria and paste the survivors here.")
         _equity = c2.number_input("Equity $", value=25000, step=1000, min_value=1000)
         _pe_step = c3.selectbox("PE step", [0, 1, 2, 3], index=1,
                                 help="Progressive Exposure: 0=cash, 1=0.5%, 2=1.0%, 3=2.0% risk. "
                                      "Step UP only after consecutive winners; DOWN immediately on losses.")
         _heat = c4.number_input("Heat used %", value=0.0, step=0.5, min_value=0.0, max_value=15.0)
 
-        if _mode.startswith("📡"):
-            import swing_screener as _ss
-            try:
-                import rotation_bridge as _rb2   # own import: the earlier one may have failed
-                _rot_full = _rb2.read_summary()
-            except Exception as _e:
-                _rot_full = {"available": False, "message": str(_e)}
-            # Tier A confirmed tickers from flow_integrity, when the Money Flow
-            # store is reachable from here (it usually is not -- separate repo --
-            # so stealth flags stand in as the confirmation signal).
-            _tier_a = set()
-            if st.button("Screen & Scan", type="primary"):
-                with st.spinner("Reading Money Flow rotation → expanding to constituents → scanning…"):
-                    def _fetch_many(tks):
-                        return fetch_ohlcv(tks, period="2y")
-                    _out = _ss.screen(_rot_full, _regime_key, _fetch_many, _sw.evaluate,
-                                      tier_a_confirmed=_tier_a, equity=float(_equity),
-                                      pe_step=int(_pe_step), heat_used_pct=float(_heat))
-                _ss.render_selection(st, _out["selected"], _out["candidates"])
-                st.markdown("---")
-                if _out["scan"]:
-                    _sw.render(st, _out["scan"])
-                else:
-                    st.info(_out["message"])
-        else:
-            _tickers_in = st.text_input(
-                "Tickers to evaluate (comma-separated)",
-                value="XLK, SMH, XLE, XLF, IWM, QQQ",
-                help="Evaluates any ticker. For episodic pivots across the whole market, "
-                     "point an external screener at the EP criteria and paste survivors here.")
-            _tickers = [t.strip().upper() for t in _tickers_in.split(",") if t.strip()]
-            if _tickers and st.button("Scan", type="primary"):
-                with st.spinner(f"Scanning {len(_tickers)} tickers against every method…"):
-                    _ohlcv = fetch_ohlcv(_tickers + ["SPY"], period="2y")
-                    _bench = _ohlcv.get("SPY", pd.DataFrame()).get("Close")
-                    def _fetch(tk):
-                        return _ohlcv.get(tk)
-                    _res = _sw.scan(_tickers, _fetch, _regime_key, bench=_bench,
-                                    equity=float(_equity), pe_step=int(_pe_step),
-                                    heat_used_pct=float(_heat))
-                    for _r in _res["cards"] + _res["avoid"]:
-                        _r["sector_quadrant"] = _quads.get(_r["ticker"])
-                _sw.render(st, _res)
+        _tickers = [t.strip().upper() for t in _tickers_in.split(",") if t.strip()]
+        if _tickers and st.button("Scan", type="primary"):
+            with st.spinner(f"Scanning {len(_tickers)} tickers against every method…"):
+                _ohlcv = fetch_ohlcv(_tickers + ["SPY"], period="2y")
+                _bench = _ohlcv.get("SPY", pd.DataFrame()).get("Close")
+                def _fetch(tk):
+                    return _ohlcv.get(tk)
+                _res = _sw.scan(_tickers, _fetch, _regime_key, bench=_bench,
+                                equity=float(_equity), pe_step=int(_pe_step),
+                                heat_used_pct=float(_heat))
+                # per-ticker sector quadrant, where the rotation bridge has one
+                for _r in _res["cards"] + _res["avoid"]:
+                    _r["sector_quadrant"] = _quads.get(_r["ticker"])
+            _sw.render(st, _res)
 
         with st.expander("How the desk decides"):
             st.markdown(
