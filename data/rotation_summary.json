@@ -1,6 +1,6 @@
 {
-  "published_at": "2026-09-07T12:00:04+00:00",
-  "notes": "published by publish_to_checklist.py; etf_flow coverage: 21d history, ready=True",
+  "published_at": "2026-09-07T20:01:26+00:00",
+  "notes": "published by publish_to_checklist.py; etf_flow coverage: 22d history, ready=True",
   "cot_schema_ok": true,
   "sectors": [
     {
@@ -105,86 +105,86 @@
   ],
   "flow_divergences": [
     {
+      "ticker": "TLT",
+      "price_chg_pct": -0.71,
+      "net_flow_pct_aum": 11.34,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true
+    },
+    {
       "ticker": "XLF",
-      "price_chg_pct": -0.62,
-      "net_flow_pct_aum": 6.72,
+      "price_chg_pct": 0.89,
+      "net_flow_pct_aum": 5.91,
+      "verdict": "CONFIRMED UPTREND",
+      "divergence": false
+    },
+    {
+      "ticker": "XLE",
+      "price_chg_pct": 11.43,
+      "net_flow_pct_aum": 1.53,
+      "verdict": "CONFIRMED UPTREND",
+      "divergence": false
+    },
+    {
+      "ticker": "XOP",
+      "price_chg_pct": 14.64,
+      "net_flow_pct_aum": 1.24,
+      "verdict": "CONFIRMED UPTREND",
+      "divergence": false
+    },
+    {
+      "ticker": "XLP",
+      "price_chg_pct": -0.6,
+      "net_flow_pct_aum": 1.03,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true
+    },
+    {
+      "ticker": "XLB",
+      "price_chg_pct": -0.77,
+      "net_flow_pct_aum": 0.95,
       "verdict": "ACCUMULATION (price down, money in)",
       "divergence": true
     },
     {
       "ticker": "GLD",
-      "price_chg_pct": 3.14,
-      "net_flow_pct_aum": 0.0,
-      "verdict": "CONFIRMED DOWNTREND",
-      "divergence": false
+      "price_chg_pct": 1.62,
+      "net_flow_pct_aum": -0.75,
+      "verdict": "DISTRIBUTION (price up, money out)",
+      "divergence": true
     },
     {
-      "ticker": "RING",
-      "price_chg_pct": 18.21,
-      "net_flow_pct_aum": 0.0,
+      "ticker": "XLU",
+      "price_chg_pct": -1.25,
+      "net_flow_pct_aum": -0.97,
       "verdict": "CONFIRMED DOWNTREND",
       "divergence": false
     },
     {
       "ticker": "QQQ",
-      "price_chg_pct": -1.12,
-      "net_flow_pct_aum": 0.0,
+      "price_chg_pct": -0.53,
+      "net_flow_pct_aum": -1.4,
       "verdict": "CONFIRMED DOWNTREND",
       "divergence": false
     },
     {
       "ticker": "XLI",
-      "price_chg_pct": -7.3,
-      "net_flow_pct_aum": 0.0,
+      "price_chg_pct": -5.35,
+      "net_flow_pct_aum": -1.47,
       "verdict": "CONFIRMED DOWNTREND",
       "divergence": false
     },
     {
-      "ticker": "TLT",
-      "price_chg_pct": -1.4,
-      "net_flow_pct_aum": 0.0,
-      "verdict": "CONFIRMED DOWNTREND",
-      "divergence": false
-    },
-    {
-      "ticker": "XLB",
-      "price_chg_pct": 0.6,
-      "net_flow_pct_aum": 0.0,
-      "verdict": "CONFIRMED DOWNTREND",
-      "divergence": false
-    },
-    {
-      "ticker": "XLE",
-      "price_chg_pct": 13.54,
-      "net_flow_pct_aum": 0.0,
-      "verdict": "CONFIRMED DOWNTREND",
-      "divergence": false
-    },
-    {
-      "ticker": "XLU",
-      "price_chg_pct": -2.31,
-      "net_flow_pct_aum": 0.0,
-      "verdict": "CONFIRMED DOWNTREND",
-      "divergence": false
-    },
-    {
-      "ticker": "XLP",
-      "price_chg_pct": 0.19,
-      "net_flow_pct_aum": 0.0,
-      "verdict": "CONFIRMED DOWNTREND",
-      "divergence": false
-    },
-    {
-      "ticker": "XOP",
-      "price_chg_pct": 16.92,
-      "net_flow_pct_aum": 0.0,
-      "verdict": "CONFIRMED DOWNTREND",
-      "divergence": false
+      "ticker": "RING",
+      "price_chg_pct": 12.2,
+      "net_flow_pct_aum": -2.58,
+      "verdict": "DISTRIBUTION (price up, money out)",
+      "divergence": true
     },
     {
       "ticker": "IWM",
-      "price_chg_pct": -2.01,
-      "net_flow_pct_aum": -2.6,
+      "price_chg_pct": -1.83,
+      "net_flow_pct_aum": -3.39,
       "verdict": "CONFIRMED DOWNTREND",
       "divergence": false
     }
@@ -413,5 +413,139 @@
       "top3_return_share": 0.524,
       "dispersion": 0.0479
     }
-  ]
+  ],
+  "constituents": {
+    "XLK": [
+      "NVDA",
+      "AAPL",
+      "MSFT",
+      "AVGO",
+      "MU",
+      "AMD",
+      "PLTR",
+      "CSCO",
+      "LRCX",
+      "AMAT"
+    ],
+    "XLF": [
+      "BRK-B",
+      "JPM",
+      "V",
+      "MA",
+      "BAC",
+      "WFC",
+      "GS",
+      "SPGI",
+      "AXP",
+      "MS"
+    ],
+    "XLE": [
+      "XOM",
+      "CVX",
+      "COP",
+      "WMB",
+      "EOG",
+      "SLB",
+      "OKE",
+      "MPC",
+      "PSX",
+      "KMI"
+    ],
+    "XLV": [
+      "LLY",
+      "UNH",
+      "JNJ",
+      "ABBV",
+      "MRK",
+      "TMO",
+      "ABT",
+      "ISRG",
+      "AMGN",
+      "PFE"
+    ],
+    "XLI": [
+      "GE",
+      "CAT",
+      "RTX",
+      "UNP",
+      "HON",
+      "BA",
+      "UPS",
+      "ETN",
+      "DE",
+      "LMT"
+    ],
+    "XLY": [
+      "AMZN",
+      "TSLA",
+      "HD",
+      "MCD",
+      "BKNG",
+      "LOW",
+      "TJX",
+      "SBUX",
+      "NKE",
+      "CMG"
+    ],
+    "XLU": [
+      "NEE",
+      "SO",
+      "DUK",
+      "CEG",
+      "AEP",
+      "SRE",
+      "D",
+      "EXC",
+      "PCG",
+      "XEL"
+    ],
+    "XLRE": [
+      "PLD",
+      "AMT",
+      "EQIX",
+      "WELL",
+      "CCI",
+      "PSA",
+      "SPG",
+      "O",
+      "DLR",
+      "CBRE"
+    ],
+    "XLB": [
+      "LIN",
+      "SHW",
+      "APD",
+      "FCX",
+      "ECL",
+      "NEM",
+      "NUE",
+      "DOW",
+      "PPG",
+      "VMC"
+    ],
+    "XLC": [
+      "META",
+      "GOOGL",
+      "GOOG",
+      "NFLX",
+      "DIS",
+      "TMUS",
+      "VZ",
+      "CMCSA",
+      "T",
+      "EA"
+    ],
+    "XLP": [
+      "COST",
+      "PG",
+      "WMT",
+      "KO",
+      "PEP",
+      "PM",
+      "MO",
+      "MDLZ",
+      "CL",
+      "TGT"
+    ]
+  }
 }
