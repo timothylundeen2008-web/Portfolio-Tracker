@@ -1,14 +1,15 @@
 {
-  "published_at": "2026-09-08T00:36:13+00:00",
+  "published_at": "2026-09-08T22:08:23+00:00",
   "notes": "auto-published on Markets Dashboard render",
   "regime": {
-    "key": "transition_ambiguous",
-    "label": "Transition \u2014 Valuation Guard Active",
-    "transition_reason": "valuation_guard",
+    "key": "term_premium_repricing",
+    "label": "Term Premium Repricing \u2014 fiscal/currency risk",
+    "transition_reason": null,
     "drivers": [
-      "Short real rate +0.27% (positive)",
-      "HY OAS 2.65% (tight credit)",
-      "Valuation guard BLOCKS a growth-additive regime: Shiller CAPE 42.0 \u2265 40 \u2014 dot-com-peak territory. Top-20 concentration 50.8% \u2265 45% \u2014 index-level single-theme risk. Adding to growth at a historic valuation extreme is not what a confirmed benign regime should instruct. Routing to the transition overlay instead."
+      "Short real rate +0.27% (positive \u2014 savers PAID, the inverse of repression)",
+      "Long real yield RISING (+0.24pp/3mo) while the dollar FELL -1.2% over ~1 month",
+      "Higher yields failing to attract capital price FISCAL/CREDIBILITY risk, not growth or inflation expectations",
+      "HY OAS 2.68% \u2014 credit CALM, so this is a repricing, not yet a credit event"
     ]
   },
   "repression": {
@@ -30,20 +31,20 @@
   "trend_states": {},
   "conviction": {},
   "regime_targets": {
-    "VGT": 17.0,
+    "VGT": 16.0,
     "SMH": 3.0,
-    "QQQ": 3.0,
-    "GLD": 10.0,
-    "SLV": 4.0,
-    "RING": 4.0,
-    "XLE": 5.0,
-    "PDBC": 3.0,
-    "SCHD": 14.0,
-    "XLV": 5.0,
+    "QQQ": 2.0,
+    "GLD": 12.0,
+    "SLV": 7.0,
+    "RING": 5.0,
+    "XLE": 6.0,
+    "PDBC": 5.0,
+    "SCHD": 13.0,
+    "XLV": 4.0,
     "XLU": 3.0,
-    "SGOV": 8.0,
-    "USFR": 7.0,
-    "TLT": 7.0,
-    "KMLM": 7.0
+    "SGOV": 9.0,
+    "USFR": 5.0,
+    "TLT": 4.0,
+    "KMLM": 6.0
   }
 }
