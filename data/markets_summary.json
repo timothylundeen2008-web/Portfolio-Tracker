@@ -1,5 +1,5 @@
 {
-  "published_at": "2026-09-09T01:40:45+00:00",
+  "published_at": "2026-09-10T00:58:55+00:00",
   "notes": "auto-published on Markets Dashboard render",
   "regime": {
     "key": "term_premium_repricing",
@@ -7,9 +7,9 @@
     "transition_reason": null,
     "drivers": [
       "Short real rate +0.27% (positive \u2014 savers PAID, the inverse of repression)",
-      "Long real yield RISING (+0.24pp/3mo) while the dollar FELL -1.2% over ~1 month",
+      "Long real yield RISING (+0.22pp/3mo) while the dollar FELL -1.2% over ~1 month",
       "Higher yields failing to attract capital price FISCAL/CREDIBILITY risk, not growth or inflation expectations",
-      "HY OAS 2.68% \u2014 credit CALM, so this is a repricing, not yet a credit event"
+      "HY OAS 2.67% \u2014 credit CALM, so this is a repricing, not yet a credit event"
     ]
   },
   "repression": {
