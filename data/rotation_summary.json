@@ -1,5 +1,5 @@
 {
-  "published_at": "2026-09-10T23:24:07+00:00",
+  "published_at": "2026-09-10T23:27:14+00:00",
   "notes": "published by publish_to_checklist.py; etf_flow coverage: 25d history, ready=True",
   "cot_schema_ok": true,
   "sectors": [
@@ -83,6 +83,15 @@
       "stealth_label": "None",
       "cmf": -0.148,
       "vol_ratio": 0.92
+    },
+    {
+      "ticker": "XLI",
+      "sector": "Industrials",
+      "accumulation_score": -32.59,
+      "event_score": 0.0,
+      "stealth_label": "Weak / Mixed",
+      "cmf": -0.307,
+      "vol_ratio": 1.12
     },
     {
       "ticker": "XLY",
