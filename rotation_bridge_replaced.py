@@ -72,29 +72,13 @@ def publish_summary(sector_df: pd.DataFrame | None = None,
     }
 
     if sector_df is not None and not sector_df.empty:
-        # quadrant + rotation_direction + spread are what the Swing Desk's
-        # Level-2 leg reads: the quadrant says WHERE, the arrow (Strengthening
-        # vs Bottoming hook) says which PHASE of the rotation you are entering.
-        keep = [c for c in ("ticker", "sector", "quadrant", "rotation_direction",
-                            "rs_ratio", "rs_momentum", "spread", "signal_score",
-                            "accumulation_score", "event_score", "stealth_label",
-                            "cmf", "vol_ratio", "signal", "momentum_accel")
-                if c in sector_df.columns]
+        keep = [c for c in ("ticker", "sector", "quadrant", "accumulation_score",
+                            "event_score", "stealth_label", "cmf", "vol_ratio",
+                            "signal", "momentum_accel") if c in sector_df.columns]
         d = sector_df[keep].copy()
         if "accumulation_score" in d.columns:
             d = d.sort_values("accumulation_score", ascending=False, na_position="last")
         payload["sectors"] = d.head(15).to_dict("records")
-
-    # v2: publish the canonical constituent map so the Swing Desk can expand
-    # a rotating-in sector to the stocks inside it. Published through the
-    # bridge rather than copied into Portfolio-Tracker -- constituent_breadth
-    # calls this map CANONICAL for a reason; two copies would drift.
-    try:
-        from constituent_breadth import SECTOR_CONSTITUENTS
-        payload["constituents"] = {etf: [t for t, _ in holds]
-                                   for etf, holds in SECTOR_CONSTITUENTS.items()}
-    except Exception:
-        payload["constituents"] = {}
 
     if flow_divergence is not None and not flow_divergence.empty:
         keep = [c for c in ("ticker", "price_chg_pct", "net_flow_pct_aum",
@@ -119,7 +103,7 @@ def publish_summary(sector_df: pd.DataFrame | None = None,
     return {"ok": bool(res.get("github") or res.get("local")),
             "durable": res.get("durable", False), "storage": res,
             "counts": {k: len(payload[k]) for k in
-                       ("sectors", "flow_divergences", "cot", "breadth", "constituents")}}
+                       ("sectors", "flow_divergences", "cot", "breadth")}}
 
 
 # ── Consumer side (this app) ──────────────────────────────────────────────────
@@ -156,7 +140,6 @@ def read_summary() -> dict:
         "stale": stale, "very_stale": very_stale,
         "published_at": data.get("published_at"),
         "sectors": data.get("sectors", []),
-        "constituents": data.get("constituents", {}),
         "flow_divergences": data.get("flow_divergences", []),
         "cot": data.get("cot", []),
         "breadth": data.get("breadth", []),
