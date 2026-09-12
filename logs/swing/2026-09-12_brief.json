@@ -1,0 +1,642 @@
+{
+  "date": "2026-09-12",
+  "generated_at": "2026-09-12T23:23:15+00:00",
+  "annotated": false,
+  "refusals": [],
+  "data_gaps": [],
+  "regime": {
+    "key": "transition_ambiguous",
+    "label": "Transition \u2014 Ambiguous (short real rate at zero)",
+    "direction": "both",
+    "size_mult": 0.5,
+    "long_book": "open",
+    "short_book": "open",
+    "drivers": [
+      "Short real policy rate +0.23% sits INSIDE the \u00b10.25% transition band \u2014 within the noise of a single CPI print. The framework's primary gauge is not currently giving a directional reading, so no regime that depends on its sign can be confirmed."
+    ],
+    "fed_posture": null,
+    "tripwires": [],
+    "bridge_age_hours": 0.1,
+    "regime_read": null
+  },
+  "exposure": {
+    "step": 1,
+    "risk_pct": 0.5,
+    "streak": "none:0",
+    "closed_trades": 0,
+    "why": "New campaign: no closed swing trades yet. Procedure Part 3 starts every campaign at 0.5% risk regardless of how good the setups look.",
+    "last_5_R": [],
+    "equity": 10000.0,
+    "starting_equity": 10000.0,
+    "realized_pnl": 0.0,
+    "heat_used_pct": 0.0,
+    "heat_cap_pct": 15.0,
+    "open_count": 0,
+    "slots_open": 4,
+    "max_positions": 4
+  },
+  "hunting_grounds": {
+    "long": [
+      {
+        "ticker": "XLC",
+        "quadrant": "Improving",
+        "direction": "Weakening",
+        "stealth": "None"
+      },
+      {
+        "ticker": "XLF",
+        "quadrant": "Improving",
+        "direction": "Bottoming",
+        "stealth": "None"
+      },
+      {
+        "ticker": "XLRE",
+        "quadrant": "Improving",
+        "direction": "Bottoming",
+        "stealth": "None"
+      }
+    ],
+    "short": [
+      {
+        "ticker": "XLB",
+        "quadrant": "Lagging",
+        "direction": "Topping"
+      },
+      {
+        "ticker": "XLP",
+        "quadrant": "Lagging",
+        "direction": "Weakening"
+      }
+    ],
+    "watchlist": [],
+    "candidates": [
+      "AMT",
+      "APD",
+      "AXP",
+      "BAC",
+      "BRK-B",
+      "CBRE",
+      "CCI",
+      "CL",
+      "CMCSA",
+      "COST",
+      "DIS",
+      "DLR",
+      "DOW",
+      "EA",
+      "ECL",
+      "EQIX",
+      "FCX",
+      "GOOG",
+      "GOOGL",
+      "GS",
+      "JPM",
+      "KO",
+      "LIN",
+      "MA",
+      "MDLZ",
+      "META",
+      "MO",
+      "MS",
+      "NEM",
+      "NFLX",
+      "NUE",
+      "O",
+      "PEP",
+      "PG",
+      "PLD",
+      "PM",
+      "PPG",
+      "PSA",
+      "SHW",
+      "SPG",
+      "SPGI",
+      "T",
+      "TGT",
+      "TMUS",
+      "V",
+      "VMC",
+      "VZ",
+      "WELL",
+      "WFC",
+      "WMT",
+      "XLB",
+      "XLC",
+      "XLF",
+      "XLP",
+      "XLRE"
+    ]
+  },
+  "breadth": {
+    "pct_above_200": 61.5,
+    "n": 109,
+    "source": "109-name sector-constituent proxy (not the full S&P 500)",
+    "size_cut": false,
+    "read": "tailwind"
+  },
+  "events": {
+    "blackout": [],
+    "earnings_48h": {},
+    "caveat": "earnings dates are yfinance estimates \u2014 confirm on the IR page before entering"
+  },
+  "cards": [],
+  "watch": [],
+  "avoid": [
+    {
+      "ticker": "AMT",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 177.85,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 2.1% / $vol 354,020,873 | Trend Template fails: 3 200 MA rising 1mo+, 4 50 MA > 150 & 200, 5 >=25% above 52w low | parabolic: only 0.5 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "APD",
+      "sector": "XLB",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 291.43,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.93% / $vol 290,617,700 | Trend Template fails: 1 price > 50/150/200 MA, 7 RS rank >= 70, 8 price > 50 MA | parabolic: only -1.2 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "AXP",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 324.69,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.49% / $vol 782,818,600 | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only -0.4 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "BAC",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 62.69,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.74% / $vol 1,876,956,263 | Trend Template fails: 7 RS rank >= 70 | parabolic: only 0.3 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "BRK-B",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 510.37,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.04% / $vol 2,003,398,107 | Trend Template fails: 2 150 MA > 200 MA, 4 50 MA > 150 & 200, 5 >=25% above 52w low | parabolic: only 0.5 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "CBRE",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 140.51,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 2.82% / $vol 213,003,084 | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only -0.7 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "CCI",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 75.62,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 2.26% / $vol 187,881,041 | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only 0.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "CL",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 86.8,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.75% / $vol 381,989,731 | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only -1.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "CMCSA",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 25.2,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 2.4% / $vol 576,365,996 | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 4 50 MA > 150 & 200 | parabolic: only -1.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "COST",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 904.77,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.48% / $vol 1,754,927,432 | Trend Template fails: 1 price > 50/150/200 MA, 4 50 MA > 150 & 200, 5 >=25% above 52w low | parabolic: only -0.9 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "DIS",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 106.55,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 2.03% / $vol 813,170,708 | Trend Template fails: 2 150 MA > 200 MA, 3 200 MA rising 1mo+, 4 50 MA > 150 & 200 | parabolic: only 0.2 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "DLR",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 188.58,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 2.58% / $vol 372,817,740 | Trend Template fails: 7 RS rank >= 70 | parabolic: only 0.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "DOW",
+      "sector": "XLB",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 29.03,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 3.08% / $vol 256,260,562 | Trend Template fails: 1 price > 50/150/200 MA, 4 50 MA > 150 & 200, 6 within 25% of 52w high | parabolic: only -0.9 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "ECL",
+      "sector": "XLB",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 276.18,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.81% / $vol 412,485,915 | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only -0.3 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "EQIX",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 1037.72,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 2.91% / $vol 552,744,415 | Trend Template fails: 1 price > 50/150/200 MA, 7 RS rank >= 70, 8 price > 50 MA | parabolic: only -0.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "FCX",
+      "sector": "XLB",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 71.07,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 3.63% / $vol 1,104,171,041 | Trend Template fails: 7 RS rank >= 70 | parabolic: only -1.0 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "GOOG",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 335.45,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.72% / $vol 5,180,482,282 | Trend Template fails: 1 price > 50/150/200 MA, 7 RS rank >= 70, 8 price > 50 MA | parabolic: only 0.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "GOOGL",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 338.5,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.76% / $vol 7,802,134,496 | Trend Template fails: 1 price > 50/150/200 MA, 7 RS rank >= 70, 8 price > 50 MA | parabolic: only 0.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "GS",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 1029.18,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 2.13% / $vol 1,820,720,432 | Trend Template fails: 1 price > 50/150/200 MA, 7 RS rank >= 70, 8 price > 50 MA | parabolic: only 0.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "JPM",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 356.23,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.54% / $vol 1,983,114,351 | Trend Template fails: 7 RS rank >= 70 | parabolic: only 0.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "KO",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 88.29,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.39% / $vol 1,289,367,410 | Trend Template fails: 7 RS rank >= 70 | parabolic: only -0.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "LIN",
+      "sector": "XLB",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 466.22,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.44% / $vol 925,499,332 | Trend Template fails: 1 price > 50/150/200 MA, 4 50 MA > 150 & 200, 5 >=25% above 52w low | parabolic: only -1.0 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "MA",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 569.19,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.45% / $vol 1,546,090,094 | Trend Template fails: 2 150 MA > 200 MA, 4 50 MA > 150 & 200, 5 >=25% above 52w low | parabolic: only -0.7 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "MDLZ",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 62.44,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.79% / $vol 447,389,402 | Trend Template fails: 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only 0.2 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "META",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 648.03,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 3.04% / $vol 10,573,087,864 | Trend Template fails: 2 150 MA > 200 MA, 3 200 MA rising 1mo+, 4 50 MA > 150 & 200 | parabolic: only 1.5 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "MO",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 68.98,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.83% / $vol 571,596,453 | Trend Template fails: 1 price > 50/150/200 MA, 7 RS rank >= 70, 8 price > 50 MA | parabolic: only 0.3 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "MS",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 214.38,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 2.06% / $vol 822,743,423 | Trend Template fails: 1 price > 50/150/200 MA, 7 RS rank >= 70, 8 price > 50 MA | parabolic: only -0.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "NEM",
+      "sector": "XLB",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 126.81,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 2.95% / $vol 1,020,527,468 | Trend Template fails: 4 50 MA > 150 & 200, 7 RS rank >= 70 | parabolic: only -0.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "NFLX",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 77.4,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 2.61% / $vol 2,154,103,432 | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only -0.5 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "NUE",
+      "sector": "XLB",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 259.43,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 3.5% / $vol 354,205,455 | Trend Template fails: 7 RS rank >= 70 | parabolic: only 0.3 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "O",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 59.5,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.13% / $vol 316,448,253 | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only -1.5 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "PEP",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 136.32,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.32% / $vol 984,321,446 | Trend Template fails: 1 price > 50/150/200 MA, 3 200 MA rising 1mo+, 4 50 MA > 150 & 200 | parabolic: only -0.7 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "PG",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 145.27,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.39% / $vol 1,353,974,873 | Trend Template fails: 1 price > 50/150/200 MA, 3 200 MA rising 1mo+, 4 50 MA > 150 & 200 | parabolic: only 0.2 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "PLD",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 135.75,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.3% / $vol 408,322,955 | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only -0.9 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "PM",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 191.06,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 2.21% / $vol 824,234,786 | Trend Template fails: 7 RS rank >= 70 | parabolic: only 0.7 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "PPG",
+      "sector": "XLB",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 105.5,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 2.1% / $vol 152,394,616 | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only -1.6 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "PSA",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 296.5,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.79% / $vol 232,027,189 | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only -1.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "SHW",
+      "sector": "XLB",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 323.31,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.86% / $vol 526,476,213 | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 4 50 MA > 150 & 200 | parabolic: only -0.9 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "SPG",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 204.83,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.47% / $vol 246,834,068 | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only -1.0 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "SPGI",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 410.71,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 2.51% / $vol 791,857,870 | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only -1.6 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "T",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 26.06,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.77% / $vol 824,389,969 | Trend Template fails: 4 50 MA > 150 & 200, 7 RS rank >= 70 | parabolic: only 0.8 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "TGT",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 155.83,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 2.86% / $vol 737,724,539 | vcp: pullbacks not contracting | parabolic: only -0.8 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "TMUS",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 182.33,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 2.25% / $vol 723,744,929 | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only 0.3 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "V",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 370.45,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.44% / $vol 2,328,678,787 | Trend Template fails: 2 150 MA > 200 MA, 4 50 MA > 150 & 200, 7 RS rank >= 70 | parabolic: only -0.3 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "VMC",
+      "sector": "XLB",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 252.74,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 2.34% / $vol 249,598,271 | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only -1.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "VZ",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 50.61,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.47% / $vol 867,514,736 | Trend Template fails: 7 RS rank >= 70 | parabolic: only 0.6 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "WELL",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 235.62,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.82% / $vol 586,122,130 | Trend Template fails: 1 price > 50/150/200 MA, 7 RS rank >= 70, 8 price > 50 MA | parabolic: only -0.3 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "WFC",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 90.29,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.94% / $vol 1,088,830,934 | Trend Template fails: 2 150 MA > 200 MA, 4 50 MA > 150 & 200, 5 >=25% above 52w low | parabolic: only 1.0 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "WMT",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 107.15,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.84% / $vol 2,960,665,597 | Trend Template fails: 1 price > 50/150/200 MA, 4 50 MA > 150 & 200, 5 >=25% above 52w low | parabolic: only 0.3 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "XLB",
+      "sector": "XLB",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 50.95,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.3% / $vol 568,223,976 | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only -1.4 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "XLC",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 112.6,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.21% / $vol 449,582,368 | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only 0.5 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "XLF",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 57.25,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 0.98% / $vol 1,709,925,279 | Trend Template fails: 2 150 MA > 200 MA, 4 50 MA > 150 & 200, 5 >=25% above 52w low | parabolic: only -0.4 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "XLP",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 83.38,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 0.95% / $vol 820,259,417 | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only -0.9 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "XLRE",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 43.42,
+      "setup": null,
+      "reason": "Not a setup. universe filter: ADR 1.02% / $vol 225,005,456 | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only -0.8 ADR above 10 EMA (need 5.0)"
+    }
+  ],
+  "errors": [
+    {
+      "ticker": "EA",
+      "error": "insufficient history"
+    }
+  ],
+  "open_positions": [],
+  "unconfirmed_from_prior": [],
+  "question_of_the_day": null,
+  "review": null
+}
