@@ -1,15 +1,12 @@
 {
-  "published_at": "2026-09-11T10:18:02+00:00",
+  "published_at": "2026-09-12T23:13:41+00:00",
   "notes": "auto-published on Markets Dashboard render",
   "regime": {
-    "key": "term_premium_repricing",
-    "label": "Term Premium Repricing \u2014 fiscal/currency risk",
-    "transition_reason": null,
+    "key": "transition_ambiguous",
+    "label": "Transition \u2014 Ambiguous (short real rate at zero)",
+    "transition_reason": "band_ambiguous",
     "drivers": [
-      "Short real rate +0.27% (positive \u2014 savers PAID, the inverse of repression)",
-      "Long real yield RISING (+0.26pp/3mo) while the dollar FELL -1.2% over ~1 month",
-      "Higher yields failing to attract capital price FISCAL/CREDIBILITY risk, not growth or inflation expectations",
-      "HY OAS 2.71% \u2014 credit CALM, so this is a repricing, not yet a credit event"
+      "Short real policy rate +0.23% sits INSIDE the \u00b10.25% transition band \u2014 within the noise of a single CPI print. The framework's primary gauge is not currently giving a directional reading, so no regime that depends on its sign can be confirmed."
     ]
   },
   "repression": {
@@ -31,20 +28,20 @@
   "trend_states": {},
   "conviction": {},
   "regime_targets": {
-    "VGT": 16.0,
+    "VGT": 17.0,
     "SMH": 3.0,
-    "QQQ": 2.0,
-    "GLD": 12.0,
-    "SLV": 7.0,
-    "RING": 5.0,
-    "XLE": 6.0,
-    "PDBC": 5.0,
-    "SCHD": 13.0,
-    "XLV": 4.0,
+    "QQQ": 3.0,
+    "GLD": 10.0,
+    "SLV": 4.0,
+    "RING": 4.0,
+    "XLE": 5.0,
+    "PDBC": 3.0,
+    "SCHD": 14.0,
+    "XLV": 5.0,
     "XLU": 3.0,
-    "SGOV": 9.0,
-    "USFR": 5.0,
-    "TLT": 4.0,
-    "KMLM": 6.0
+    "SGOV": 8.0,
+    "USFR": 7.0,
+    "TLT": 7.0,
+    "KMLM": 7.0
   }
 }
