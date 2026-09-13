@@ -165,13 +165,10 @@ def universe_filter(df: pd.DataFrame) -> dict:
     adr = _adr_pct(df)
     dvol = float((df["Close"] * df["Volume"]).tail(20).mean())
     c = df["Close"]
-    above = bool(c.iloc[-1] > _sma(c, 20).iloc[-1] and c.iloc[-1] > _sma(c, 50).iloc[-1])
-    failed = []
-    if adr < ADR_MIN_PCT: failed.append(f"ADR {adr:.2f}% < {ADR_MIN_PCT}%")
-    if dvol < DOLLAR_VOL_MIN: failed.append(f"$vol {dvol:,.0f} < {DOLLAR_VOL_MIN:,}")
-    if not above: failed.append("price not above 20 & 50 SMA")
-    return {"passes": not failed, "adr_pct": round(adr, 2), "dollar_vol": round(dvol),
-            "above_20_50": above, "failed": failed}
+    ok = (adr >= ADR_MIN_PCT and dvol >= DOLLAR_VOL_MIN
+          and c.iloc[-1] > _sma(c, 20).iloc[-1] and c.iloc[-1] > _sma(c, 50).iloc[-1])
+    return {"passes": ok, "adr_pct": round(adr, 2), "dollar_vol": round(dvol),
+            "above_20_50": bool(c.iloc[-1] > _sma(c, 20).iloc[-1] > 0 and c.iloc[-1] > _sma(c, 50).iloc[-1])}
 
 
 def detect_breakout(df: pd.DataFrame) -> dict:
@@ -290,102 +287,6 @@ def detect_failed_breakout(df: pd.DataFrame) -> dict:
 
 # ── Confluence + sizing + the card ──────────────────────────────────────────
 
-# ── Method 0: Rotation reclaim (the framework's own Level-4 entry) ──────────
-#
-# WHY THIS EXISTS. The first live brief (12 Sep 2026) evaluated 55 sector
-# constituents and produced zero cards: 2 of 54 cleared the M2 ADR>3.5%
-# filter (Kullamagi's universe is high-ADR momentum names, not mega-caps),
-# and the M1 Trend Template's RS-rank gate is by construction a LEADING-
-# quadrant test, while Money Flow sends the desk to IMPROVING sectors. So
-# the constituent universe had no native setup. This is the one the
-# investing agent prompt already defines at Level 4:
-#     RRG Improving/hook  +  price reclaiming the 20-week MA (or breaking
-#     the prior swing high)  +  A/D / volume confirmation at the ETF's
-#     liquidity tier.  ATR stop (2.0x ETF, 1.5x mega-cap). 20-week trail.
-# It is a lower-ADR, multi-week rotation swing -- sized by ATR, not ADR --
-# and it is ONLY offered where M1/M2 cannot apply (ETFs, or stocks that
-# fail the M2 ADR filter). It never replaces a qualifying M1/M2 setup.
-
-M0_SMA = 100                       # ~20 trading weeks on a daily series
-M0_ATR_MULT_ETF, M0_ATR_MULT_STOCK = 2.0, 1.5
-M0_RS_FLOOR = 50                   # a stock must not be LOSING to the market
-VOLUME_TIERS = ((2_000_000_000, 1.25), (200_000_000, 1.50), (50_000_000, 2.00), (0, 3.00))
-
-
-def volume_tier_mult(addv: float) -> float:
-    """Per-liquidity-tier spike threshold (investing agent prompt, Level 2)."""
-    for floor, mult in VOLUME_TIERS:
-        if addv >= floor:
-            return mult
-    return 3.0
-
-
-def _atr(df: pd.DataFrame, n: int = 14) -> float:
-    h, l, c = df["High"], df["Low"], df["Close"].shift(1)
-    tr = pd.concat([h - l, (h - c).abs(), (l - c).abs()], axis=1).max(axis=1)
-    return float(tr.tail(n).mean())
-
-
-def _cmf(df: pd.DataFrame, n: int = 20) -> float:
-    h, l, c, v = df["High"], df["Low"], df["Close"], df["Volume"]
-    rng = (h - l).replace(0, np.nan)
-    mfv = ((c - l) - (h - c)) / rng * v
-    return float(mfv.tail(n).sum() / max(v.tail(n).sum(), 1))
-
-
-def detect_rotation_reclaim(df: pd.DataFrame, is_etf: bool = False) -> dict:
-    """
-    Structure: close above a RISING 20-week SMA, and either (a) it was below
-    that SMA within the last 20 bars (a reclaim) or (b) it cleared the prior
-    40-bar swing high within the last 5 bars (a breakout). Volume: today
-    >= tier multiple x 20-day average, OR CMF(20) positive (quiet A/D).
-    Entry: clear today's high. Stop: entry - k x ATR(14).
-    """
-    c = df["Close"]
-    if len(c) < M0_SMA + 25:
-        return {"is_setup": False, "reason": "need ~6 months of history"}
-    sma = _sma(c, M0_SMA)
-    px, s_now = float(c.iloc[-1]), float(sma.iloc[-1])
-    rising = bool(sma.iloc[-1] >= sma.iloc[-11] * 0.995)   # rising or flat; a reclaim often turns the MA
-    above = px > s_now
-    was_below = bool((c.tail(20) < sma.tail(20)).any())
-    # A breakout needs a BASE: the 40-bar swing high must have held for at
-    # least 15 bars before the break. A straight-line rise makes a new high
-    # every bar and is extension, not a breakout.
-    win = df["High"].iloc[-45:-5]
-    swing_hi = float(win.max())
-    bars_since_hi = len(win) - 1 - int(np.argmax(win.values))
-    held = bars_since_hi >= 15 and bool((c.iloc[-45 + int(np.argmax(win.values)) + 1:-5] <= swing_hi).all())
-    broke_out = held and bool((c.tail(5) > swing_hi).any())
-    extended = px > s_now * 1.10          # >10% above the 20-wk SMA is late, not an entry
-    addv = float((c * df["Volume"]).tail(20).mean())
-    mult = volume_tier_mult(addv)
-    vol_ratio = float(df["Volume"].iloc[-1] / max(df["Volume"].tail(20).mean(), 1))
-    cmf = _cmf(df)
-    structure = above and rising and (was_below or broke_out) and not extended
-    vol_ok = vol_ratio >= mult or cmf > 0.05
-    atr = _atr(df)
-    k = M0_ATR_MULT_ETF if is_etf else M0_ATR_MULT_STOCK
-    entry = float(df["High"].iloc[-1])
-    stop = entry - k * atr
-    why = []
-    if not above: why.append(f"close {px:.2f} below 20-wk SMA {s_now:.2f}")
-    if not rising: why.append("20-wk SMA not rising")
-    if above and rising and extended:
-        why.append(f"{(px/s_now-1)*100:.0f}% above the 20-wk SMA -- already extended, not an entry")
-    elif above and rising and not (was_below or broke_out):
-        why.append("above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry")
-    return {"is_setup": structure, "structure_ok": structure, "volume_ok": vol_ok,
-            "kind": "reclaim" if was_below else ("breakout" if broke_out else None),
-            "sma": round(s_now, 2), "sma_rising": rising, "swing_high": round(swing_hi, 2),
-            "vol_ratio": round(vol_ratio, 2), "tier_mult": mult, "addv": round(addv), "cmf": round(cmf, 3),
-            "atr": round(atr, 2), "atr_mult": k, "entry": round(entry, 2), "stop": round(stop, 2),
-            "stop_pct": round((entry - stop) / entry * 100, 2),
-            "reason": ("; ".join(why) if why else
-                       f"{'reclaim of' if was_below else 'breakout above'} 20-wk SMA {s_now:.2f} (rising); "
-                       f"vol {vol_ratio:.2f}x vs tier {mult}x; CMF {cmf:+.2f}; ATR stop {k}x = {stop:.2f} ({(entry-stop)/entry*100:.1f}%)")}
-
-
 def confluence(rotation_ok: Optional[bool], structure_ok: bool, volume_ok: bool) -> dict:
     """Each leg independently sourced. A leg with no data does NOT pass."""
     legs = {"rotation": bool(rotation_ok), "structure": structure_ok, "volume": volume_ok}
@@ -426,7 +327,7 @@ def evaluate(ticker: str, df: pd.DataFrame, regime_key: str, *,
              sector_quadrant: Optional[str] = None, tier_a_confirmed: Optional[bool] = None,
              catalyst: Optional[str] = None, equity: float = 25_000.0,
              pe_step: int = 1, heat_used_pct: float = 0.0,
-             earnings_within_48h: bool = False, is_etf: bool = False) -> dict:
+             earnings_within_48h: bool = False) -> dict:
     """
     The full agent pass for one ticker. Returns a classification, the
     confluence table, a trade card (when tradeable), and -- always -- the
@@ -463,15 +364,6 @@ def evaluate(ticker: str, df: pd.DataFrame, regime_key: str, *,
             mb = detect_momentum_burst(df); out["detail"]["burst"] = mb
             if mb["is_setup"]:
                 candidates.append(("M2c Burst", "long", float(df["Close"].iloc[-1]), mb["bar_low"], mb["reason"]))
-        # M0 rotation reclaim: ONLY where M1/M2 cannot apply -- an ETF, or a
-        # stock that fails the M2 ADR filter -- and only if nothing else fired.
-        if not candidates and (is_etf or not uf["passes"]):
-            rs_ok = is_etf or (tt.get("rs_rank") is not None and tt["rs_rank"] >= M0_RS_FLOOR)
-            m0 = detect_rotation_reclaim(df, is_etf); out["detail"]["rotation"] = m0
-            if m0["is_setup"] and not rs_ok:
-                m0["reason"] = f"reclaim present but RS rank {tt.get('rs_rank')} < {M0_RS_FLOOR}: losing to the market; ETF-level exposure instead"
-            elif m0["is_setup"]:
-                candidates.append(("M0 Rotation", "long", m0["entry"], m0["stop"], m0["reason"]))
     # Short side. Parabolic shorts are an ALL-market setup (Kullamägi's #3):
     # evaluated even in risk-on regimes, at half size. Failed-breakout shorts
     # only where the regime already permits the short book.
@@ -501,9 +393,7 @@ def evaluate(ticker: str, df: pd.DataFrame, regime_key: str, *,
             # name the closest miss
             near = []
             if not uf["passes"]:
-                near.append("M2 universe filter: " + "; ".join(uf["failed"]))
-            if "rotation" in out["detail"] and out["detail"]["rotation"].get("reason"):
-                near.append(f"M0: {out['detail']['rotation']['reason']}")
+                near.append(f"universe filter: ADR {uf['adr_pct']}% / $vol {uf['dollar_vol']:,}")
             if not tt["passes"] and tt.get("failed"):
                 near.append(f"Trend Template fails: {', '.join(tt['failed'][:3])}")
             for k in ("breakout", "vcp", "ep", "burst", "parabolic"):
@@ -520,12 +410,8 @@ def evaluate(ticker: str, df: pd.DataFrame, regime_key: str, *,
              (sector_quadrant in ("Weakening", "Lagging"))
     if tier_a_confirmed:
         rot_ok = rot_ok or (side == "long")
-    if setup == "M0 Rotation":
-        m0 = out["detail"]["rotation"]
-        vol_ok, structure_ok = m0["volume_ok"], m0["structure_ok"]
-    else:
-        vol_ok, structure_ok = float(df["Volume"].iloc[-1]) >= BREAKOUT_VOL_MULT * float(df["Volume"].tail(50).mean()), True
-    cf = confluence(rot_ok if sector_quadrant else None, structure_ok, vol_ok)
+    vol_ok = float(df["Volume"].iloc[-1]) >= BREAKOUT_VOL_MULT * float(df["Volume"].tail(50).mean())
+    cf = confluence(rot_ok if sector_quadrant else None, True, vol_ok)
     if setup == "M2 EP" and not catalyst:
         cf["score"] = min(cf["score"], 2); cf["size_mult"] = 0.5
         cf["missing"].append("catalyst not named")
@@ -542,7 +428,7 @@ def evaluate(ticker: str, df: pd.DataFrame, regime_key: str, *,
     sz = size_position(equity, entry, stop, risk_pct, regime_mult, cf["size_mult"], heat_used_pct)
     r = abs(entry - stop)
     tgt = (lambda k: entry + k * r) if side == "long" else (lambda k: entry - k * r)
-    trail = {"M0 Rotation": "100 SMA (20-week)", "M1 VCP": "50-day SMA", "M2 Breakout": "10 EMA (aggressive) / 20 EMA (patient)",
+    trail = {"M1 VCP": "50-day SMA", "M2 Breakout": "10 EMA (aggressive) / 20 EMA (patient)",
              "M2 EP": "10 EMA", "M2c Burst": "exit day 3-5 or first close < 5 EMA — no trail",
              "M2b Parabolic Short": "cover at 10 EMA, then 20 EMA",
              "M2b Failed-BO Short": "cover at base low"}[setup]
@@ -554,7 +440,6 @@ def evaluate(ticker: str, df: pd.DataFrame, regime_key: str, *,
         "targets": {"2R": round(tgt(2), 2), "4R": round(tgt(4), 2), "8R": round(tgt(8), 2)},
         "trail": trail,
         "instrument": ("put debit spread 45-90 DTE" if side == "short" and equity < 100_000 else
-                       "stock/ETF (ATR stop is tight in $; no options needed)" if setup == "M0 Rotation" else
                        "call debit spread 45-90 DTE" if sz["blocked_by_heat"] or equity < 15_000 else
                        "stock"),
         "invalidated_when": (f"close {'below' if side == 'long' else 'above'} {stop:.2f} "
@@ -632,52 +517,17 @@ def _synth(kind: str, n: int = 300, seed: int = 1) -> pd.DataFrame:
     elif kind == "chop":
         base = 50 + rng.normal(0, 1.5, n).cumsum() * 0.1
         vol = np.full(n, 1_000_000)
-    elif kind == "reclaim":
-        # low-ADR ETF: 80 -> 66 over 150 bars, flat base, then climbs back
-        # through the (now flattening/rising) 20-wk SMA on a volume bar
-        # downtrend -> 130-bar base BELOW the 20-wk SMA -> sharp reclaim in the last 20 bars
-        base = np.concatenate([np.linspace(80, 66, 150), np.linspace(66, 65, 130) + rng.normal(0, 0.08, 130),
-                               np.linspace(65, 70.5, 19), [71.2]])
-        vol = np.concatenate([np.full(299, 30_000_000), [50_000_000]])
-    elif kind == "extended":
-        base = np.concatenate([np.linspace(50, 60, 200), np.linspace(60, 95, 100)])
-        vol = np.full(n, 30_000_000)
     else:
         raise ValueError(kind)
     c = pd.Series(base, index=idx)
-    band = 0.006 if kind in ("reclaim", "extended") else 0.02      # low-ADR kinds ~1.2% ADR
     df = pd.DataFrame({"Open": c.shift(1).fillna(c), "Close": c,
-                       "High": c * (1 + band), "Low": c * (1 - band), "Volume": vol}, index=idx)
+                       "High": c * 1.02, "Low": c * 0.98, "Volume": vol}, index=idx)
     df["High"] = df[["Open", "Close", "High"]].max(axis=1); df["Low"] = df[["Open", "Close", "Low"]].min(axis=1)
     return df
 
 
 def selftest() -> dict:
     f = []
-    # ── M0 rotation reclaim ─────────────────────────────────────────────
-    rc = _synth("reclaim")
-    m0 = detect_rotation_reclaim(rc, is_etf=True)
-    if not m0["is_setup"]:
-        f.append(f"synthetic reclaim not detected: {m0}")
-    r = evaluate("XLF", rc, "goldilocks", sector_quadrant="Improving", equity=10_000, pe_step=1, is_etf=True)
-    if not r["card"] or r["card"]["setup"] != "M0 Rotation":
-        f.append(f"ETF in Improving with a reclaim must get an M0 card: {r['avoid_reason']}")
-    elif r["card"]["stop_pct"] > 4.0 or r["card"]["size"]["position_pct"] < 15:
-        f.append(f"M0 ATR stop should be tight and size large: {r['card']}")
-    ex = evaluate("XLE", _synth("extended"), "goldilocks", sector_quadrant="Leading", is_etf=True)
-    if ex["card"] or "extended" not in (ex["avoid_reason"] or ""):
-        f.append(f"extended ETF must be refused as 'already extended': {ex['avoid_reason']}")
-    # a stock losing to the market gets no M0 card even with a reclaim
-    bench = pd.Series(np.geomspace(100, 400, 300), index=rc.index)
-    st = evaluate("KO", rc, "goldilocks", bench=bench, sector_quadrant="Improving", equity=10_000, is_etf=False)
-    if st["card"] or "RS rank" not in (st["avoid_reason"] or ""):
-        f.append(f"low-RS stock must be refused with the RS reason: {st['avoid_reason']}")
-    # M0 never pre-empts a qualifying M2 setup
-    bo = evaluate("XOM", _synth("breakout"), "goldilocks", sector_quadrant="Improving", equity=10_000)
-    if not bo["card"] or bo["card"]["setup"] == "M0 Rotation":
-        f.append("M0 must not replace an M2 breakout")
-    if volume_tier_mult(3e9) != 1.25 or volume_tier_mult(1e8) != 2.0 or volume_tier_mult(1e7) != 3.0:
-        f.append("volume tier thresholds wrong")
     bo = evaluate("BO", _synth("breakout"), "goldilocks", sector_quadrant="Leading", pe_step=2)
     if bo["card"] is None or bo["side"] != "long":
         f.append(f"breakout in goldilocks should produce a long card: {bo.get('avoid_reason')}")

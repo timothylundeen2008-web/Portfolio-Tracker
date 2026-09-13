@@ -148,10 +148,7 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
         brief["refusals"].append("Progressive Exposure step 0: " + pe["why"]); cards_allowed = False
 
     # ── 3. Rotation: hunting grounds ───────────────────────────────────────
-    # max_long=5 so LEADING sectors are not crowded out by the Improving-first
-    # ranking: Improving feeds M0/M2 (early phase), Leading feeds M1 VCP
-    # (confirmed-leader phase). One method per phase -- see 12 Sep review.
-    sel = swing_screener.select_sectors(rotation, max_long=5, max_short=3)
+    sel = swing_screener.select_sectors(rotation)
     cands = swing_screener.expand_candidates(sel, rotation.get("constituents", {}))
     all_meta = {**cands["short"], **cands["long"]}
     for r in sel.get("reasons", []):
@@ -174,9 +171,7 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
                         "stealth": None, "tier_a": False, "is_etf": tk in quad_of_sector,
                         "watchlist_reason": w.get("reason")}
     brief["hunting_grounds"] = {"long": [{"ticker": s["ticker"], "quadrant": s.get("quadrant"),
-                                          "direction": s.get("rotation_direction"), "stealth": s.get("stealth_label"),
-                                          "feeds": "M1 VCP (confirmed leaders)" if s.get("quadrant") == "Leading"
-                                                   else "M0 rotation reclaim / M2 breakout (early phase)"}
+                                          "direction": s.get("rotation_direction"), "stealth": s.get("stealth_label")}
                                          for s in sel["long"]],
                                 "short": [{"ticker": s["ticker"], "quadrant": s.get("quadrant"),
                                            "direction": s.get("rotation_direction")} for s in sel["short"]],
@@ -211,8 +206,7 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
                                     tier_a_confirmed=bool(m.get("stealth")),
                                     equity=eq["equity"] or 0.0, pe_step=pe["step"],
                                     heat_used_pct=heat["heat_pct"] or 0.0,
-                                    earnings_within_48h=tk in brief["events"]["earnings_48h"],
-                                    is_etf=bool(m.get("is_etf")))
+                                    earnings_within_48h=tk in brief["events"]["earnings_48h"])
         except Exception as e:
             errors.append({"ticker": tk, "error": f"{type(e).__name__}: {e}"}); continue
         base = {"ticker": tk, "sector": m.get("sector"), "sector_quadrant": m.get("quadrant"),
@@ -326,7 +320,7 @@ def render_md(b: dict) -> str:
             L += [""]
     hg = b["hunting_grounds"]
     L += ["## Hunting grounds",
-          "Long: " + (", ".join(f"{s['ticker']} ({s['quadrant']}, {s['direction']} → {s['feeds']})" for s in hg["long"]) or "none"),
+          "Long: " + (", ".join(f"{s['ticker']} ({s['quadrant']}, {s['direction']})" for s in hg["long"]) or "none"),
           "Short: " + (", ".join(f"{s['ticker']} ({s['quadrant']})" for s in hg["short"]) or "none"),
           "Watchlist: " + (", ".join(hg["watchlist"]) or "empty"), ""]
     if b["events"]["blackout"]:

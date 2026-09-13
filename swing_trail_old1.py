@@ -71,7 +71,6 @@ def trail_guidance(setup: str, df: Optional[pd.DataFrame] = None, adr_pct: Optio
     out = {"default": DEFAULT, "stats": None, "switch_note": None}
 
     fixed = {
-        "M0 Rotation": ("100 SMA (20-week)", "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one."),
         "M1 VCP": ("50 SMA", "Method 1 trails the 50-day; a VCP leader is a multi-week hold and the 10 EMA would shake it out."),
         "M2c Burst": ("none — exit day 3-5 or first close < 5 EMA", "Burst trades are not trend trades. No trail by rule."),
         "M2b Parabolic Short": ("cover at 10 EMA, then 20 EMA", "Parabolic reversal targets are the EMAs themselves, not a trail."),
