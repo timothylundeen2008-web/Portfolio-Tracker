@@ -2814,13 +2814,99 @@ with tab_exp:
 # trade cards with direction and reasoning, plus an explicit avoid list.
 # Direction is set by the regime, not by the chart.
 with tab_swing:
-    # v2 (Sep 2026): the tab is the AGENT'S surface, not a scanner. It renders
-    # the latest brief written by swing_agent.py (scheduled job), hosts the
-    # decision buttons (every click -> swing_journal, append-only, GitHub-
-    # backed), the watchlist, and the journal/review. The old manual scanner
-    # survives as an explicitly non-journaled ad-hoc tab. See swing_tab.py.
     try:
-        import swing_tab as _stab
-        _stab.render(st, fetch_ohlcv)
+        import swing_desk as _sw
+        import markets_bridge as _mb
+
+        _mk = _mb.read()
+        _regime_key = (_mk.get("regime") or {}).get("key") if _mk.get("available") else None
+        if not _regime_key:
+            st.warning("Markets bridge has no regime published — defaulting to "
+                       "`transition_ambiguous` (both books, half size). Open the "
+                       "Markets Dashboard once to publish a live regime.")
+            _regime_key = "transition_ambiguous"
+
+        _quads = {}
+        try:
+            import rotation_bridge as _rb
+            _rot = _rb.read_summary()
+            for _sec in (_rot.get("sectors") or []):
+                if isinstance(_sec, dict) and _sec.get("ticker"):
+                    _quads[_sec["ticker"]] = _sec.get("quadrant")
+        except Exception:
+            pass
+
+        _mode = st.radio("Discovery", ["📡 Screen from Money Flow", "⌨️ Manual tickers"],
+                         horizontal=True,
+                         help="Money Flow mode uses the rotation dashboard as the screener: "
+                              "sectors money is rotating INTO become long hunting grounds, "
+                              "sectors it is rotating OUT OF become short hunting grounds, and "
+                              "each is expanded to the ETF plus its top constituents. The "
+                              "rotation confluence leg is then sourced from Money Flow, not typed.")
+        c2, c3, c4 = st.columns(3)
+        _equity = c2.number_input("Equity $", value=25000, step=1000, min_value=1000)
+        _pe_step = c3.selectbox("PE step", [0, 1, 2, 3], index=1,
+                                help="Progressive Exposure: 0=cash, 1=0.5%, 2=1.0%, 3=2.0% risk. "
+                                     "Step UP only after consecutive winners; DOWN immediately on losses.")
+        _heat = c4.number_input("Heat used %", value=0.0, step=0.5, min_value=0.0, max_value=15.0)
+
+        if _mode.startswith("📡"):
+            import swing_screener as _ss
+            try:
+                import rotation_bridge as _rb2   # own import: the earlier one may have failed
+                _rot_full = _rb2.read_summary()
+            except Exception as _e:
+                _rot_full = {"available": False, "message": str(_e)}
+            # Tier A confirmed tickers from flow_integrity, when the Money Flow
+            # store is reachable from here (it usually is not -- separate repo --
+            # so stealth flags stand in as the confirmation signal).
+            _tier_a = set()
+            if st.button("Screen & Scan", type="primary"):
+                with st.spinner("Reading Money Flow rotation → expanding to constituents → scanning…"):
+                    def _fetch_many(tks):
+                        return fetch_ohlcv(tks, period="2y")
+                    _out = _ss.screen(_rot_full, _regime_key, _fetch_many, _sw.evaluate,
+                                      tier_a_confirmed=_tier_a, equity=float(_equity),
+                                      pe_step=int(_pe_step), heat_used_pct=float(_heat))
+                _ss.render_selection(st, _out["selected"], _out["candidates"])
+                st.markdown("---")
+                if _out["scan"]:
+                    _sw.render(st, _out["scan"])
+                else:
+                    st.info(_out["message"])
+        else:
+            _tickers_in = st.text_input(
+                "Tickers to evaluate (comma-separated)",
+                value="XLK, SMH, XLE, XLF, IWM, QQQ",
+                help="Evaluates any ticker. For episodic pivots across the whole market, "
+                     "point an external screener at the EP criteria and paste survivors here.")
+            _tickers = [t.strip().upper() for t in _tickers_in.split(",") if t.strip()]
+            if _tickers and st.button("Scan", type="primary"):
+                with st.spinner(f"Scanning {len(_tickers)} tickers against every method…"):
+                    _ohlcv = fetch_ohlcv(_tickers + ["SPY"], period="2y")
+                    _bench = _ohlcv.get("SPY", pd.DataFrame()).get("Close")
+                    def _fetch(tk):
+                        return _ohlcv.get(tk)
+                    _res = _sw.scan(_tickers, _fetch, _regime_key, bench=_bench,
+                                    equity=float(_equity), pe_step=int(_pe_step),
+                                    heat_used_pct=float(_heat))
+                    for _r in _res["cards"] + _res["avoid"]:
+                        _r["sector_quadrant"] = _quads.get(_r["ticker"])
+                _sw.render(st, _res)
+
+        with st.expander("How the desk decides"):
+            st.markdown(
+                "**Direction is set by the regime, not the chart.** Risk-on → long book leads. "
+                "growth_scare / liquidity_crisis → long book CLOSED, short book ACTIVE. "
+                "Transition / term-premium → both books at half size, 2-of-3 minimum.\n\n"
+                "**Methods scanned:** M1 VCP (Trend Template + contraction), M2 Breakout "
+                "(10/20 EMA surf + range break), M2 Episodic Pivot (≥10% gap on volume), "
+                "M2c Momentum Burst (3–5 day), M2b Parabolic Short (≥5 baseline-ADR above "
+                "10 EMA + climax + reversal), M2b Failed-Breakout Short.\n\n"
+                "**Aggression comes from concentration at tight stops**, capped at 30% of "
+                "equity per position and 15% total heat — never from raising risk per trade. "
+                "**A clean long setup in a hostile regime is reported and refused**, with the "
+                "regime named. Full rules: `swing_trading_procedure.md`."
+            )
     except Exception as e:
         st.error(f"Swing Desk unavailable: {e}")
