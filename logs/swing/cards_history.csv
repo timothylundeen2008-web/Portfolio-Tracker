@@ -1,0 +1,6 @@
+date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_reason
+2026-09-13,AMZN,M0 Rotation,long,3-of-3,257.59,249.15,256.78,transition_ambiguous,True,
+2026-09-13,XLC,M0 Rotation,long,2-of-3,113.04,109.98,112.6,transition_ambiguous,True,
+2026-09-13,CSCO,M0 Rotation,long,2-of-3,112.22,109.09,112.13,transition_ambiguous,True,
+2026-09-13,GS,M0 Rotation,long,2-of-3,1042.99,1009.82,1029.18,transition_ambiguous,False,ok
+2026-09-13,MU,M1 VCP,long,2-of-3,938.4,910.25,975.26,transition_ambiguous,False,ok
