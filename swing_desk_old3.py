@@ -382,8 +382,7 @@ def detect_rotation_reclaim(df: pd.DataFrame, is_etf: bool = False) -> dict:
             "atr": round(atr, 2), "atr_mult": k, "entry": round(entry, 2), "stop": round(stop, 2),
             "stop_pct": round((entry - stop) / entry * 100, 2),
             "reason": ("; ".join(why) if why else
-                       f"{'reclaim of' if was_below else 'breakout above'} 20-wk SMA {s_now:.2f} "
-                       f"(close {(px / s_now - 1) * 100:+.1f}% vs SMA, {'rising' if sma.iloc[-1] > sma.iloc[-11] else 'flat'}); "
+                       f"{'reclaim of' if was_below else 'breakout above'} 20-wk SMA {s_now:.2f} (rising); "
                        f"vol {vol_ratio:.2f}x vs tier {mult}x; CMF {cmf:+.2f}; ATR stop {k}x = {stop:.2f} ({(entry-stop)/entry*100:.1f}%)")}
 
 
@@ -449,11 +448,7 @@ def evaluate(ticker: str, df: pd.DataFrame, regime_key: str, *,
         if tt["passes"]:
             vcp = detect_vcp(df)
             out["detail"]["vcp"] = vcp
-            px_now = float(df["Close"].iloc[-1])
-            if vcp["is_vcp"] and px_now > vcp["pivot"] * 1.05:
-                vcp["reason"] = (f"VCP pivot {vcp['pivot']:.2f} already broken; close {px_now:.2f} is "
-                                 f"{(px_now / vcp['pivot'] - 1) * 100:.1f}% past it -- outside the 5% buy zone, chasing")
-            elif vcp["is_vcp"]:
+            if vcp["is_vcp"]:
                 candidates.append(("M1 VCP", "long", vcp["pivot"],
                                    vcp["pivot"] * (1 - min(MAX_STOP_PCT_M1, max(3.0, vcp["last_contraction_pct"] + 1)) / 100),
                                    vcp["reason"]))

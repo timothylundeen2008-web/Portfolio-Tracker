@@ -105,12 +105,7 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
                 today: Optional[date] = None, earnings_lookup: Optional[Callable] = None,
                 macro_lookup: Optional[Callable] = None) -> dict:
     fetch = fetch_ohlcv or _default_fetch
-    if today is None:
-        try:
-            import market_time as mt
-            today = mt.et_date()          # the runner's clock is UTC; 8pm ET is already tomorrow there
-        except Exception:
-            today = date.today()
+    today = today or date.today()
     markets, rotation = bridges or _read_bridges()
     cfg = sj.load_config()
     journal = sj.load()
@@ -235,7 +230,8 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
             shares = int(shares * breadth_mult)
         legs = r["confluence"]
         card = {**base, "setup": c["setup"], "side": c["side"], "confluence": c["confluence"],
-                "legs": {**legs["legs"], "missing": legs.get("missing", [])},
+                "legs": {"rotation": legs.get("rotation"), "structure": legs.get("structure"),
+                         "volume": legs.get("volume"), "missing": legs.get("missing", [])},
                 "entry": c["entry"], "stop": c["stop"], "stop_pct": c["stop_pct"],
                 "risk_per_share": c["risk_per_share"], "risk_pct": round(c["risk_pct"] * c["regime_mult"] * legs["size_mult"] * breadth_mult, 3),
                 "shares": shares, "notional": round(shares * c["entry"], 2),
@@ -257,11 +253,7 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
             card["entry_block_reason"] = "; ".join(brief["refusals"])
         if shares == 0 and card["entry_permitted"]:
             card["entry_permitted"] = False
-            budget = (eq["equity"] or 0) * card["risk_pct"] / 100
-            card["entry_block_reason"] = (sz.get("reason") if sz.get("blocked_by_heat") else
-                f"risk budget ${budget:,.2f} at this step/regime is below one share's risk (${c['risk_per_share']:,.2f}) "
-                f"— a single share breaches Progressive Exposure; the only expression is a 45-90 DTE call "
-                f"debit spread with premium <= ${budget:,.0f}, or skip")
+            card["entry_block_reason"] = sz.get("reason") or "sized to zero shares at this step/stop"
         cards.append(card)
 
     cards.sort(key=lambda c: (not c["entry_permitted"], -int(c["confluence"][0]),
