@@ -72,28 +72,6 @@ REDUNDANCY_GROUPS = [
     {"name": "Semiconductors", "members": {"SMH", "SOXX"},
      "why": "Same sector, near-identical top holdings. Cost and liquidity "
             "are the real differentiators."},
-    {"name": "Physical gold", "members": {"GLD", "IAU"},
-     "why": "Both are physically-backed trusts tracking spot gold. They hold "
-            "the SAME metal in the same vaults -- tracking difference is "
-            "expense, full stop. Ranking them on momentum would be ranking "
-            "noise, and the cost gap here is unusually large for a redundancy "
-            "pair (0.40% vs 0.25% = 0.15%/yr, permanent, on what is often a "
-            "12-16% sleeve)."},
-]
-
-# SOFT redundancy: same ROLE and highly correlated, but genuinely different
-# methodology -- so cost is a strong consideration, NOT an automatic
-# tiebreak the way it is for two funds holding identical assets.
-SOFT_REDUNDANCY_GROUPS = [
-    {"name": "Managed futures", "members": {"KMLM", "DBMF"},
-     "why": "Both are managed-futures/trend sleeves and will correlate "
-            "highly, but they are NOT the same product. KMLM tracks a "
-            "rules-based index (KFA MLM); DBMF uses a replication approach "
-            "that reverse-engineers the positioning of large CTAs. Same job, "
-            "different engine -- so unlike GLD/IAU, the cheaper one is not "
-            "automatically correct. Holding BOTH is defensible as "
-            "methodology diversification within the trend sleeve; holding "
-            "both at full size is closet doubling of one bet."},
 ]
 
 # Leverage adjustment. NOT a hidden penalty buried in the composite -- it is
@@ -272,17 +250,6 @@ def evaluate_role(role: str, held: dict,
         out["notes"].append(
             f"{g['name']}: {winner['ticker']} preferred deterministically "
             f"(cost/liquidity), momentum not used.")
-
-    # ── Soft redundancy: FLAG for a human decision, never auto-swap ────────
-    for g in SOFT_REDUNDANCY_GROUPS:
-        present = [x for x in ranked if x["ticker"] in g["members"]]
-        held_in_group = [x for x in present if x["ticker"] in held_tickers]
-        if len(present) >= 2 and held_in_group:
-            out["notes"].append(
-                f"{g['name']}: {', '.join(sorted(g['members']))} occupy the same "
-                f"role and will correlate highly. {g['why']} No automatic "
-                f"substitution suggested — this is a methodology choice, not a "
-                f"cost arbitrage.")
 
     # ── Materiality: challenger must beat incumbent by a real margin ────────
     if out["incumbents"] and out["challengers"]:

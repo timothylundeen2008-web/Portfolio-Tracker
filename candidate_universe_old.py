@@ -57,8 +57,6 @@ ROLE_DURATION = "DURATION"
 ROLE_CASH = "CASH"
 ROLE_TREND = "TREND"
 ROLE_INNOVATION = "INNOVATION"
-ROLE_GLOBAL_VALUE = "GLOBAL_VALUE"      # ex-US + US value; fills the international gap
-ROLE_INSURANCE_LINKED = "INSURANCE_LINKED"   # CAT bonds — correlates to weather, not markets
 
 # Roles whose weight is governed by the regime classifier at Level 1 and
 # should NOT be displaced by momentum ranking. Substitution WITHIN these
@@ -177,54 +175,9 @@ UNIVERSE = {
              "sectors": {"tech": 0.40, "healthcare": 0.25, "cons_disc": 0.15,
                         "financials": 0.12, "other": 0.08}},
 
-    # ── Global value — fills the 0% international exposure gap ──────────────
-    "AVGV": {"name": "Avantis All Equity Markets Value", "role": ROLE_GLOBAL_VALUE,
-             "leverage": 1.0, "expense": 0.26, "core": False,
-             # Fund-of-funds: US large/small value + developed intl + EM value.
-             # Sector split is approximate and value-tilted (heavier financials
-             # and energy, far lighter tech than a cap-weighted global index).
-             "sectors": {"financials": 0.22, "industrials": 0.14, "cons_disc": 0.12,
-                        "energy": 0.10, "tech": 0.09, "materials": 0.08,
-                        "healthcare": 0.08, "staples": 0.07, "comm_svcs": 0.05,
-                        "utilities": 0.03, "reits": 0.02}},
-
-    # ── Insurance-linked — genuinely uncorrelated, but read the caveats ─────
-    # CBYYX (Victory Pioneer CAT Bond Y) was evaluated and REJECTED for this
-    # universe: $5M minimum initial investment on the Y share class, a 1.44%
-    # expense ratio ~407% above its category average, and a mutual-fund
-    # structure (NAV-only pricing) that makes it ineligible for every swing
-    # method and for Tier A flow confirmation. Same asset class, wrong wrapper.
-    "ILS":  {"name": "Brookmont Catastrophic Bond ETF", "role": ROLE_INSURANCE_LINKED,
-             "leverage": 1.0,
-             # EXPENSE DELIBERATELY None -- not verified. score_candidate()
-             # handles a missing expense by scoring it NEUTRAL (50) and naming
-             # it in `missing`, which is correct: an unverified number should
-             # not silently drive a cost ranking. Fill it in once confirmed
-             # from the fund's own fact sheet.
-             "expense": None, "core": False,
-             "caveat": ("First US exchange-listed cat bond fund (NYSE, Apr 2025), "
-                        "sub-advised by King Ridge Capital. Real diversification: "
-                        "cat bond returns track hurricanes and earthquakes, not "
-                        "the Fed, so the low correlation is structural rather "
-                        "than statistical coincidence. REAL RISKS, per the fund's "
-                        "own documents: (1) a triggering event can wipe out ALL "
-                        "principal in an affected security, and multiple events "
-                        "can cause substantial fund-level losses -- this tail is "
-                        "fat and does NOT show up in a low beta or standard "
-                        "deviation; (2) holdings are largely below investment "
-                        "grade; (3) AUM crossed ~$25M only recently -- small for "
-                        "an ETF, so expect wider spreads and non-trivial closure "
-                        "risk; (4) launched Apr 2025, so there is no full "
-                        "hurricane-season-loss cycle in its live track record. "
-                        "Size it as a small diversifier, never as a bond "
-                        "substitute."),
-             "sectors": {"insurance_linked": 1.00}},
-
     # ── Regime-governed sleeves ─────────────────────────────────────────────
     "GLD":  {"name": "SPDR Gold", "role": ROLE_METALS, "leverage": 1.0,
              "expense": 0.40, "core": True, "sectors": {"gold": 1.00}},
-    "IAU":  {"name": "iShares Gold Trust", "role": ROLE_METALS, "leverage": 1.0,
-             "expense": 0.25, "core": False, "sectors": {"gold": 1.00}},
     "SLV":  {"name": "iShares Silver", "role": ROLE_METALS, "leverage": 1.0,
              "expense": 0.50, "core": True, "sectors": {"silver": 1.00}},
     "RING": {"name": "iShares Gold Miners", "role": ROLE_METALS, "leverage": 1.0,
@@ -244,26 +197,9 @@ UNIVERSE = {
     "KMLM": {"name": "KFA Mount Lucas Managed Futures", "role": ROLE_TREND,
              "leverage": 1.0, "expense": 0.90, "core": True,
              "sectors": {"managed_futures": 1.00}},
-    "DBMF": {"name": "iMGP DBi Managed Futures Strategy", "role": ROLE_TREND,
-             "leverage": 1.0, "expense": 0.85, "core": False,
-             "sectors": {"managed_futures": 1.00}},
 }
 
 LEVERAGED = {t for t, m in UNIVERSE.items() if m["leverage"] > 1.0}
-
-# Instrument structure. Everything without an explicit "structure" key is an
-# ETF. This distinction is NOT cosmetic:
-#   * mutual funds price once daily at NAV -- no intraday entry, so they are
-#     structurally incompatible with every swing_desk method (all of which
-#     need an intraday trigger and a same-day stop)
-#   * they have no Authorized Participant creation/redemption mechanism, so
-#     they can never carry a Tier A capital-flow confirmation -- the entire
-#     etf_flow_tracker layer is inapplicable, not merely unpopulated
-#   * many carry minimum initial investments that make them unreachable
-#     regardless of allocation logic
-MUTUAL_FUNDS = {t for t, m in UNIVERSE.items() if m.get("structure") == "mutual_fund"}
-SWING_ELIGIBLE = {t for t in UNIVERSE if t not in MUTUAL_FUNDS}
-TIER_A_ELIGIBLE = SWING_ELIGIBLE
 
 
 def by_role(role: str) -> list[str]:
