@@ -1,12 +1,14 @@
 {
-  "published_at": "2026-09-18T17:28:29+00:00",
+  "published_at": "2026-09-19T00:28:59+00:00",
   "notes": "auto-published on Markets Dashboard render",
   "regime": {
     "key": "transition_ambiguous",
-    "label": "Transition \u2014 Ambiguous (short real rate at zero)",
-    "transition_reason": "band_ambiguous",
+    "label": "Transition \u2014 Valuation Guard Active",
+    "transition_reason": "valuation_guard",
     "drivers": [
-      "Short real policy rate +0.23% sits INSIDE the \u00b10.25% transition band \u2014 within the noise of a single CPI print. The framework's primary gauge is not currently giving a directional reading, so no regime that depends on its sign can be confirmed."
+      "Short real rate +0.48% (positive)",
+      "HY OAS 2.70% (tight credit)",
+      "Valuation guard BLOCKS a growth-additive regime: Shiller CAPE 42.0 \u2265 40 \u2014 dot-com-peak territory. Top-20 concentration 50.8% \u2265 45% \u2014 index-level single-theme risk. Adding to growth at a historic valuation extreme is not what a confirmed benign regime should instruct. Routing to the transition overlay instead."
     ]
   },
   "repression": {
