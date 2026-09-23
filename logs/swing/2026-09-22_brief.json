@@ -1,0 +1,1003 @@
+{
+  "date": "2026-09-22",
+  "generated_at": "2026-09-23T00:55:26+00:00",
+  "annotated": false,
+  "refusals": [],
+  "data_gaps": [],
+  "regime": {
+    "key": "transition_ambiguous",
+    "label": "Transition \u2014 Valuation Guard Active",
+    "direction": "both",
+    "size_mult": 0.5,
+    "long_book": "open",
+    "short_book": "open",
+    "drivers": [
+      "Short real rate +0.48% (positive)",
+      "HY OAS 2.66% (tight credit)",
+      "Valuation guard BLOCKS a growth-additive regime: Shiller CAPE 42.0 \u2265 40 \u2014 dot-com-peak territory. Top-20 concentration 50.8% \u2265 45% \u2014 index-level single-theme risk. Adding to growth at a historic valuation extreme is not what a confirmed benign regime should instruct. Routing to the transition overlay instead."
+    ],
+    "fed_posture": null,
+    "tripwires": [],
+    "bridge_age_hours": 0.1,
+    "regime_read": null
+  },
+  "exposure": {
+    "step": 1,
+    "risk_pct": 0.5,
+    "streak": "none:0",
+    "closed_trades": 0,
+    "why": "New campaign: no closed swing trades yet. Procedure Part 3 starts every campaign at 0.5% risk regardless of how good the setups look.",
+    "last_5_R": [],
+    "equity": 10000.0,
+    "starting_equity": 10000.0,
+    "realized_pnl": 0.0,
+    "heat_used_pct": 0.0,
+    "heat_cap_pct": 15.0,
+    "open_count": 0,
+    "slots_open": 4,
+    "max_positions": 4
+  },
+  "hunting_grounds": {
+    "long": [
+      {
+        "ticker": "XLF",
+        "quadrant": "Improving",
+        "direction": "Bottoming",
+        "stealth": "None",
+        "feeds": "M0 rotation reclaim / M2 breakout (early phase)"
+      },
+      {
+        "ticker": "XLRE",
+        "quadrant": "Improving",
+        "direction": "Bottoming",
+        "stealth": "None",
+        "feeds": "M0 rotation reclaim / M2 breakout (early phase)"
+      },
+      {
+        "ticker": "XLY",
+        "quadrant": "Improving",
+        "direction": "Bottoming",
+        "stealth": "None",
+        "feeds": "M0 rotation reclaim / M2 breakout (early phase)"
+      },
+      {
+        "ticker": "XLC",
+        "quadrant": "Improving",
+        "direction": "Weakening",
+        "stealth": "Loud \u2014 not stealth (see event score)",
+        "feeds": "M0 rotation reclaim / M2 breakout (early phase)"
+      },
+      {
+        "ticker": "XLK",
+        "quadrant": "Leading",
+        "direction": "Strengthening",
+        "stealth": "Stealth",
+        "feeds": "M1 VCP (confirmed leaders)"
+      }
+    ],
+    "short": [
+      {
+        "ticker": "XLP",
+        "quadrant": "Lagging",
+        "direction": "Weakening"
+      },
+      {
+        "ticker": "XLI",
+        "quadrant": "Lagging",
+        "direction": "Topping"
+      },
+      {
+        "ticker": "XLU",
+        "quadrant": "Lagging",
+        "direction": "Weakening"
+      }
+    ],
+    "watchlist": [],
+    "candidates": [
+      "AAPL",
+      "AEP",
+      "AMAT",
+      "AMD",
+      "AMT",
+      "AMZN",
+      "AVGO",
+      "AXP",
+      "BA",
+      "BAC",
+      "BKNG",
+      "BRK-B",
+      "CAT",
+      "CBRE",
+      "CCI",
+      "CEG",
+      "CL",
+      "CMCSA",
+      "CMG",
+      "COST",
+      "CSCO",
+      "D",
+      "DE",
+      "DIS",
+      "DLR",
+      "DUK",
+      "EQIX",
+      "ETN",
+      "EXC",
+      "GE",
+      "GOOGL",
+      "GS",
+      "HD",
+      "HON",
+      "JPM",
+      "KO",
+      "LMT",
+      "LOW",
+      "LRCX",
+      "MA",
+      "MCD",
+      "MDLZ",
+      "META",
+      "MO",
+      "MS",
+      "MSFT",
+      "MU",
+      "NEE",
+      "NFLX",
+      "NKE",
+      "NVDA",
+      "O",
+      "PCG",
+      "PEP",
+      "PG",
+      "PLD",
+      "PLTR",
+      "PM",
+      "PSA",
+      "RTX",
+      "SBUX",
+      "SO",
+      "SPG",
+      "SPGI",
+      "SRE",
+      "T",
+      "TGT",
+      "TJX",
+      "TMUS",
+      "TSLA",
+      "TTWO",
+      "UNP",
+      "UPS",
+      "V",
+      "VZ",
+      "WELL",
+      "WFC",
+      "WMT",
+      "XEL",
+      "XLC",
+      "XLF",
+      "XLI",
+      "XLK",
+      "XLP",
+      "XLRE",
+      "XLU",
+      "XLY"
+    ]
+  },
+  "breadth": {
+    "pct_above_200": 0.0,
+    "n": 109,
+    "source": "109-name sector-constituent proxy (not the full S&P 500)",
+    "size_cut": true,
+    "read": "headwind \u2014 most breakouts fail; planned size halved again"
+  },
+  "events": {
+    "blackout": [
+      {
+        "event": "PCE",
+        "date": "2026-09-25",
+        "days_away": 2,
+        "affects": "Rates-sensitive sleeves",
+        "blackout": true
+      }
+    ],
+    "earnings_48h": {
+      "COST": {
+        "date": "2026-09-24",
+        "days_away": 1
+      }
+    },
+    "caveat": "earnings dates are yfinance estimates \u2014 confirm on the IR page before entering"
+  },
+  "cards": [],
+  "watch": [],
+  "avoid": [
+    {
+      "ticker": "AAPL",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.26% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "AEP",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.45% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "AMAT",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 3.18% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "AMD",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "AMT",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.09% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "AMZN",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.87% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "AVGO",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.51% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "AXP",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.58% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "BA",
+      "sector": "XLI",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.23% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "BAC",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.01% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "BKNG",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 3.18% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "BRK-B",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.13% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "CAT",
+      "sector": "XLI",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.33% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "CBRE",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.71% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "CCI",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.40% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "CEG",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "CL",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.57% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "CMCSA",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.69% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "CMG",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.89% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "COST",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.32% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "CSCO",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.98% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "D",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.63% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "DE",
+      "sector": "XLI",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.34% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "DIS",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.93% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "DLR",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.49% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "DUK",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.22% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "EQIX",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.65% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "ETN",
+      "sector": "XLI",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.88% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "EXC",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.50% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "GE",
+      "sector": "XLI",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.28% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "GOOGL",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.91% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "GS",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.50% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "HD",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.73% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "HON",
+      "sector": "XLI",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.01% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "JPM",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.76% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "KO",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.31% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "LMT",
+      "sector": "XLI",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.20% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "LOW",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.96% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "LRCX",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "MA",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.27% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "MCD",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.47% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "MDLZ",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.88% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "META",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "MO",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.72% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "MS",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.26% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "MSFT",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.92% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "MU",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "NEE",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.43% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "NFLX",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.63% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "NKE",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.26% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "NVDA",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.56% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "O",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.41% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "PCG",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "PEP",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.37% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "PG",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.31% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "PLD",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.47% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "PLTR",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "PM",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.15% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "PSA",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.01% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "RTX",
+      "sector": "XLI",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.79% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "SBUX",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.14% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "SO",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.33% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "SPG",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.50% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "SPGI",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.37% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "SRE",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.98% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "T",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.08% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "TGT",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.25% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "TJX",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.99% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "TMUS",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.73% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "TSLA",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 3.19% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "TTWO",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "UNP",
+      "sector": "XLI",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.90% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "UPS",
+      "sector": "XLI",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.04% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "V",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.27% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "VZ",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.78% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "WELL",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.03% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "WFC",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.21% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "WMT",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.58% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "XEL",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.57% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "XLC",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.38% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "XLF",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.09% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "XLI",
+      "sector": "XLI",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.26% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "XLK",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.33% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "XLP",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 0.81% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "XLRE",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.09% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "XLU",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.31% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    },
+    {
+      "ticker": "XLY",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": NaN,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.04% < 3.5%; price not above 20 & 50 SMA | M0: close nan below 20-wk SMA nan; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: no reversal signal yet"
+    }
+  ],
+  "errors": [],
+  "open_positions": [],
+  "unconfirmed_from_prior": [],
+  "question_of_the_day": null,
+  "review": null
+}
