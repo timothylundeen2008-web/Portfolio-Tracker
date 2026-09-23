@@ -1,6 +1,6 @@
 {
-  "published_at": "2026-09-22T23:48:40+00:00",
-  "notes": "published by publish_to_checklist.py; etf_flow coverage: 33d history, ready=True",
+  "published_at": "2026-09-23T23:57:20+00:00",
+  "notes": "published by publish_to_checklist.py; etf_flow coverage: 34d history, ready=True",
   "cot_schema_ok": true,
   "sectors": [
     {
@@ -8,305 +8,290 @@
       "sector": "Technology",
       "quadrant": "Leading",
       "rotation_direction": "Strengthening",
-      "rs_ratio": 125.07746897227172,
-      "rs_momentum": 105.60193297948408,
-      "spread": 4.963333333333334,
-      "signal_score": 14.202388385790798,
-      "accumulation_score": 42.7,
+      "rs_ratio": 125.22985901980117,
+      "rs_momentum": 105.5597747680945,
+      "spread": 4.630000000000001,
+      "signal_score": 14.071504145927186,
+      "accumulation_score": 38.58,
       "event_score": 0.0,
       "stealth_label": "Stealth",
-      "cmf": 0.2174,
-      "vol_ratio": 1.25
+      "cmf": 0.1768,
+      "vol_ratio": 1.16
     },
     {
       "ticker": "XLE",
       "sector": "Energy",
       "quadrant": "Weakening",
       "rotation_direction": "Topping",
-      "rs_ratio": 127.85912688855707,
-      "rs_momentum": 75.48815042373703,
-      "spread": -7.056666666666667,
-      "signal_score": 3.0,
-      "accumulation_score": 8.97,
+      "rs_ratio": 130.00026650321135,
+      "rs_momentum": 73.87667120039393,
+      "spread": -6.296666666666667,
+      "signal_score": 3.331191300049431,
+      "accumulation_score": 4.03,
       "event_score": 0.0,
       "stealth_label": "Weak / Mixed",
-      "cmf": -0.0732,
-      "vol_ratio": 1.33
+      "cmf": -0.0866,
+      "vol_ratio": 1.2
     },
     {
       "ticker": "XLU",
       "sector": "Utilities",
       "quadrant": "Lagging",
       "rotation_direction": "Weakening",
-      "rs_ratio": 87.24692131079107,
-      "rs_momentum": 96.70493020702084,
-      "spread": -1.4033333333333333,
-      "signal_score": 1.4089512822550465,
-      "accumulation_score": 3.36,
+      "rs_ratio": 86.0805372704741,
+      "rs_momentum": 96.66087278774519,
+      "spread": -2.6599999999999997,
+      "signal_score": 0.4111466363477866,
+      "accumulation_score": -2.25,
       "event_score": 0.0,
       "stealth_label": "Weak / Mixed",
-      "cmf": -0.0507,
-      "vol_ratio": 1.04
+      "cmf": -0.0813,
+      "vol_ratio": 1.13
     },
     {
       "ticker": "XLV",
       "sector": "Healthcare",
       "quadrant": "Weakening",
       "rotation_direction": "Topping",
-      "rs_ratio": 111.61071239342999,
-      "rs_momentum": 97.47597831546136,
-      "spread": -6.36,
-      "signal_score": 0.8025375228360738,
-      "accumulation_score": -19.48,
+      "rs_ratio": 111.55824427684354,
+      "rs_momentum": 97.4359751866979,
+      "spread": -6.743333333333333,
+      "signal_score": 0.2944523073193599,
+      "accumulation_score": -25.73,
       "event_score": 0.0,
       "stealth_label": "None",
-      "cmf": -0.1661,
-      "vol_ratio": 0.99
-    },
-    {
-      "ticker": "XLI",
-      "sector": "Industrials",
-      "quadrant": "Lagging",
-      "rotation_direction": "Topping",
-      "rs_ratio": 99.73347462389415,
-      "rs_momentum": 96.77642376352827,
-      "spread": -3.8900000000000006,
-      "signal_score": -0.36172605430628413,
-      "accumulation_score": -23.98,
-      "event_score": 0.0,
-      "stealth_label": "Weak / Mixed",
-      "cmf": -0.0944,
-      "vol_ratio": 1.1
-    },
-    {
-      "ticker": "XLF",
-      "sector": "Financial",
-      "quadrant": "Improving",
-      "rotation_direction": "Bottoming",
-      "rs_ratio": 90.90281457219467,
-      "rs_momentum": 113.29866402164488,
-      "spread": -5.02,
-      "signal_score": 15.18454080067012,
-      "accumulation_score": -31.48,
-      "event_score": 0.0,
-      "stealth_label": "None",
-      "cmf": -0.1479,
-      "vol_ratio": 1.49
-    },
-    {
-      "ticker": "XLP",
-      "sector": "Consumer Defensive",
-      "quadrant": "Lagging",
-      "rotation_direction": "Weakening",
-      "rs_ratio": 95.21217667742403,
-      "rs_momentum": 99.74958682419073,
-      "spread": -2.9833333333333334,
-      "signal_score": -0.08319232535128021,
-      "accumulation_score": -36.93,
-      "event_score": 0.0,
-      "stealth_label": "None",
-      "cmf": -0.3621,
-      "vol_ratio": 0.93
-    },
-    {
-      "ticker": "XLB",
-      "sector": "Basic Materials",
-      "quadrant": "Weakening",
-      "rotation_direction": "Topping",
-      "rs_ratio": 100.50174204839205,
-      "rs_momentum": 98.0402561176478,
-      "spread": -5.12,
-      "signal_score": 1.6120774789297068,
-      "accumulation_score": -37.43,
-      "event_score": 0.0,
-      "stealth_label": "None",
-      "cmf": -0.285,
-      "vol_ratio": 0.9
-    },
-    {
-      "ticker": "XLRE",
-      "sector": "Real Estate",
-      "quadrant": "Improving",
-      "rotation_direction": "Bottoming",
-      "rs_ratio": 93.5520125877045,
-      "rs_momentum": 104.60591654820932,
-      "spread": -3.5999999999999996,
-      "signal_score": 13.114496540958243,
-      "accumulation_score": -41.58,
-      "event_score": 0.0,
-      "stealth_label": "None",
-      "cmf": -0.2421,
-      "vol_ratio": 1.03
-    },
-    {
-      "ticker": "XLY",
-      "sector": "Consumer Cyclical",
-      "quadrant": "Improving",
-      "rotation_direction": "Bottoming",
-      "rs_ratio": 83.0082044859753,
-      "rs_momentum": 113.47334876600299,
-      "spread": -4.263333333333334,
-      "signal_score": 14.669784387409546,
-      "accumulation_score": -43.58,
-      "event_score": 0.0,
-      "stealth_label": "None",
-      "cmf": -0.2817,
-      "vol_ratio": 1.08
+      "cmf": -0.212,
+      "vol_ratio": 1.0
     },
     {
       "ticker": "XLC",
       "sector": "Communication Services",
       "quadrant": "Improving",
       "rotation_direction": "Weakening",
-      "rs_ratio": 85.29534543936548,
-      "rs_momentum": 109.22326898945911,
-      "spread": 0.18999999999999995,
-      "signal_score": 11.263458377358528,
-      "accumulation_score": -49.64,
-      "event_score": 40.31,
-      "stealth_label": "Loud \u2014 not stealth (see event score)",
-      "cmf": -0.1888,
-      "vol_ratio": 1.51
+      "rs_ratio": 85.06782506729206,
+      "rs_momentum": 109.19161108136812,
+      "spread": -0.3899999999999999,
+      "signal_score": 11.344738026429008,
+      "accumulation_score": -28.53,
+      "event_score": 0.0,
+      "stealth_label": "None",
+      "cmf": -0.1548,
+      "vol_ratio": 1.43
+    },
+    {
+      "ticker": "XLB",
+      "sector": "Basic Materials",
+      "quadrant": "Weakening",
+      "rotation_direction": "Topping",
+      "rs_ratio": 100.60496228979558,
+      "rs_momentum": 97.99895304071013,
+      "spread": -5.426666666666667,
+      "signal_score": 1.2060728590128997,
+      "accumulation_score": -37.74,
+      "event_score": 0.0,
+      "stealth_label": "None",
+      "cmf": -0.318,
+      "vol_ratio": 0.9
+    },
+    {
+      "ticker": "XLP",
+      "sector": "Consumer Defensive",
+      "quadrant": "Lagging",
+      "rotation_direction": "Weakening",
+      "rs_ratio": 95.42591654896107,
+      "rs_momentum": 99.72289251721588,
+      "spread": -3.213333333333333,
+      "signal_score": -0.35077710820482055,
+      "accumulation_score": -38.56,
+      "event_score": 0.0,
+      "stealth_label": "None",
+      "cmf": -0.4087,
+      "vol_ratio": 0.94
+    },
+    {
+      "ticker": "XLF",
+      "sector": "Financial",
+      "quadrant": "Improving",
+      "rotation_direction": "Bottoming",
+      "rs_ratio": 91.13521484600555,
+      "rs_momentum": 113.07205376261204,
+      "spread": -6.62,
+      "signal_score": 16.409744769156816,
+      "accumulation_score": -40.71,
+      "event_score": 0.0,
+      "stealth_label": "None",
+      "cmf": -0.2175,
+      "vol_ratio": 1.35
+    },
+    {
+      "ticker": "XLRE",
+      "sector": "Real Estate",
+      "quadrant": "Improving",
+      "rotation_direction": "Strengthening",
+      "rs_ratio": 92.64539971039983,
+      "rs_momentum": 104.57213240533447,
+      "spread": -4.583333333333333,
+      "signal_score": 13.923481337283844,
+      "accumulation_score": -41.6,
+      "event_score": 0.0,
+      "stealth_label": "None",
+      "cmf": -0.2785,
+      "vol_ratio": 1.12
+    },
+    {
+      "ticker": "XLY",
+      "sector": "Consumer Cyclical",
+      "quadrant": "Improving",
+      "rotation_direction": "Bottoming",
+      "rs_ratio": 82.25177446721565,
+      "rs_momentum": 113.42461651504259,
+      "spread": -5.2,
+      "signal_score": 15.397341289153538,
+      "accumulation_score": -43.4,
+      "event_score": 0.0,
+      "stealth_label": "None",
+      "cmf": -0.2921,
+      "vol_ratio": 1.06
     }
   ],
   "flow_divergences": [
     {
       "ticker": "TLT",
-      "price_chg_pct": -0.95,
-      "net_flow_pct_aum": 11.81,
+      "price_chg_pct": -2.09,
+      "net_flow_pct_aum": 11.86,
       "verdict": "ACCUMULATION (price down, money in)",
       "divergence": true
     },
     {
       "ticker": "XLF",
-      "price_chg_pct": -4.03,
-      "net_flow_pct_aum": 9.8,
-      "verdict": "ACCUMULATION (price down, money in)",
-      "divergence": true
-    },
-    {
-      "ticker": "XLB",
-      "price_chg_pct": -7.19,
-      "net_flow_pct_aum": 6.25,
-      "verdict": "ACCUMULATION (price down, money in)",
-      "divergence": true
-    },
-    {
-      "ticker": "HYG",
-      "price_chg_pct": -1.09,
-      "net_flow_pct_aum": 5.03,
-      "verdict": "ACCUMULATION (price down, money in)",
-      "divergence": true
-    },
-    {
-      "ticker": "XLU",
-      "price_chg_pct": -5.97,
-      "net_flow_pct_aum": 4.78,
+      "price_chg_pct": -6.07,
+      "net_flow_pct_aum": 11.78,
       "verdict": "ACCUMULATION (price down, money in)",
       "divergence": true
     },
     {
       "ticker": "XOP",
-      "price_chg_pct": -0.84,
-      "net_flow_pct_aum": 4.38,
-      "verdict": "ACCUMULATION (price down, money in)",
-      "divergence": true
-    },
-    {
-      "ticker": "XLP",
-      "price_chg_pct": -6.36,
-      "net_flow_pct_aum": 4.25,
+      "price_chg_pct": -0.68,
+      "net_flow_pct_aum": 6.11,
       "verdict": "ACCUMULATION (price down, money in)",
       "divergence": true
     },
     {
       "ticker": "XLE",
-      "price_chg_pct": -1.07,
-      "net_flow_pct_aum": 4.07,
+      "price_chg_pct": -0.49,
+      "net_flow_pct_aum": 5.15,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true
+    },
+    {
+      "ticker": "HYG",
+      "price_chg_pct": -1.43,
+      "net_flow_pct_aum": 5.09,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true
+    },
+    {
+      "ticker": "XLU",
+      "price_chg_pct": -6.44,
+      "net_flow_pct_aum": 5.07,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true
+    },
+    {
+      "ticker": "XLB",
+      "price_chg_pct": -5.68,
+      "net_flow_pct_aum": 4.63,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true
+    },
+    {
+      "ticker": "XLP",
+      "price_chg_pct": -4.4,
+      "net_flow_pct_aum": 3.25,
       "verdict": "ACCUMULATION (price down, money in)",
       "divergence": true
     },
     {
       "ticker": "EEM",
-      "price_chg_pct": 5.95,
-      "net_flow_pct_aum": 3.36,
+      "price_chg_pct": 3.92,
+      "net_flow_pct_aum": 3.11,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false
-    },
-    {
-      "ticker": "IBB",
-      "price_chg_pct": 3.59,
-      "net_flow_pct_aum": 3.06,
-      "verdict": "CONFIRMED UPTREND",
-      "divergence": false
-    },
-    {
-      "ticker": "RING",
-      "price_chg_pct": -9.17,
-      "net_flow_pct_aum": 2.77,
-      "verdict": "ACCUMULATION (price down, money in)",
-      "divergence": true
     },
     {
       "ticker": "XLY",
-      "price_chg_pct": -6.24,
-      "net_flow_pct_aum": 2.3,
+      "price_chg_pct": -4.97,
+      "net_flow_pct_aum": 2.19,
       "verdict": "ACCUMULATION (price down, money in)",
       "divergence": true
     },
     {
       "ticker": "XLV",
-      "price_chg_pct": 0.31,
-      "net_flow_pct_aum": 2.29,
+      "price_chg_pct": 1.49,
+      "net_flow_pct_aum": 1.75,
+      "verdict": "CONFIRMED UPTREND",
+      "divergence": false
+    },
+    {
+      "ticker": "SLV",
+      "price_chg_pct": 1.37,
+      "net_flow_pct_aum": 1.71,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false
     },
     {
       "ticker": "XLI",
-      "price_chg_pct": -5.05,
-      "net_flow_pct_aum": 1.58,
+      "price_chg_pct": -4.56,
+      "net_flow_pct_aum": 1.4,
       "verdict": "ACCUMULATION (price down, money in)",
       "divergence": true
     },
     {
-      "ticker": "SLV",
-      "price_chg_pct": 0.15,
-      "net_flow_pct_aum": 1.34,
+      "ticker": "IBB",
+      "price_chg_pct": 6.35,
+      "net_flow_pct_aum": 1.3,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false
     },
     {
       "ticker": "GLD",
-      "price_chg_pct": -7.08,
-      "net_flow_pct_aum": 1.3,
+      "price_chg_pct": -7.27,
+      "net_flow_pct_aum": 1.18,
       "verdict": "ACCUMULATION (price down, money in)",
       "divergence": true
     },
     {
       "ticker": "IWM",
-      "price_chg_pct": -4.19,
-      "net_flow_pct_aum": 0.22,
-      "verdict": "ACCUMULATION (price down, money in)",
-      "divergence": true
+      "price_chg_pct": -4.1,
+      "net_flow_pct_aum": -0.3,
+      "verdict": "CONFIRMED DOWNTREND",
+      "divergence": false
+    },
+    {
+      "ticker": "RING",
+      "price_chg_pct": -8.27,
+      "net_flow_pct_aum": -0.36,
+      "verdict": "CONFIRMED DOWNTREND",
+      "divergence": false
     },
     {
       "ticker": "QQQ",
-      "price_chg_pct": 4.97,
-      "net_flow_pct_aum": -4.59,
+      "price_chg_pct": 5.17,
+      "net_flow_pct_aum": -5.41,
       "verdict": "DISTRIBUTION (price up, money out)",
       "divergence": true
     },
     {
       "ticker": "XLK",
-      "price_chg_pct": 4.58,
-      "net_flow_pct_aum": -6.16,
+      "price_chg_pct": 3.29,
+      "net_flow_pct_aum": -6.89,
       "verdict": "DISTRIBUTION (price up, money out)",
       "divergence": true
     },
     {
       "ticker": "SMH",
-      "price_chg_pct": 4.69,
-      "net_flow_pct_aum": -10.06,
+      "price_chg_pct": 3.37,
+      "net_flow_pct_aum": -11.99,
       "verdict": "DISTRIBUTION (price up, money out)",
       "divergence": true
     }
@@ -462,78 +447,78 @@
       "etf": "XLK",
       "signal_quality": "BROAD",
       "pct_positive_cmf": 0.8,
-      "top3_return_share": 0.536,
-      "dispersion": 0.1026
+      "top3_return_share": 0.498,
+      "dispersion": 0.1103
     },
     {
       "etf": "XLF",
       "signal_quality": "CONCENTRATED",
       "pct_positive_cmf": 0.2,
-      "top3_return_share": 0.32,
-      "dispersion": 0.0338
+      "top3_return_share": 0.384,
+      "dispersion": 0.0376
     },
     {
       "etf": "XLE",
-      "signal_quality": "CONCENTRATED",
+      "signal_quality": "NARROW",
       "pct_positive_cmf": 0.4,
-      "top3_return_share": 0.587,
-      "dispersion": 0.0503
+      "top3_return_share": 0.462,
+      "dispersion": 0.0443
     },
     {
       "etf": "XLV",
-      "signal_quality": "BROAD",
-      "pct_positive_cmf": 0.6,
-      "top3_return_share": 0.539,
-      "dispersion": 0.0505
+      "signal_quality": "CONCENTRATED",
+      "pct_positive_cmf": 0.5,
+      "top3_return_share": 0.553,
+      "dispersion": 0.0536
     },
     {
       "etf": "XLI",
-      "signal_quality": "NARROW",
-      "pct_positive_cmf": 0.4,
-      "top3_return_share": 0.417,
-      "dispersion": 0.0607
+      "signal_quality": "CONCENTRATED",
+      "pct_positive_cmf": 0.3,
+      "top3_return_share": 0.421,
+      "dispersion": 0.0596
     },
     {
       "etf": "XLY",
       "signal_quality": "CONCENTRATED",
       "pct_positive_cmf": 0.1,
-      "top3_return_share": 0.399,
-      "dispersion": 0.0641
+      "top3_return_share": 0.516,
+      "dispersion": 0.084
     },
     {
       "etf": "XLU",
       "signal_quality": "CONCENTRATED",
-      "pct_positive_cmf": 0.2,
-      "top3_return_share": 0.414,
-      "dispersion": 0.0711
+      "pct_positive_cmf": 0.1,
+      "top3_return_share": 0.454,
+      "dispersion": 0.08
     },
     {
       "etf": "XLRE",
       "signal_quality": "CONCENTRATED",
-      "pct_positive_cmf": 0.3,
-      "top3_return_share": 0.217,
-      "dispersion": 0.0312
+      "pct_positive_cmf": 0.2,
+      "top3_return_share": 0.316,
+      "dispersion": 0.03
     },
     {
       "etf": "XLB",
       "signal_quality": "CONCENTRATED",
       "pct_positive_cmf": 0.1,
-      "top3_return_share": 0.541,
-      "dispersion": 0.0357
+      "top3_return_share": 0.466,
+      "dispersion": 0.0358
     },
     {
       "etf": "XLC",
       "signal_quality": "CONCENTRATED",
-      "pct_positive_cmf": 0.222,
-      "top3_return_share": 0.827,
-      "dispersion": 0.1422
+      "pct_positive_cmf": 0.0,
+      "top3_return_share": 0.828,
+      "dispersion": 0.1386
     },
     {
       "etf": "XLP",
       "signal_quality": "CONCENTRATED",
       "pct_positive_cmf": 0.3,
-      "top3_return_share": 0.549,
-      "dispersion": 0.0457
+      "top3_return_share": 0.448,
+      "dispersion": 0.0451
     }
   ],
   "constituents": {
