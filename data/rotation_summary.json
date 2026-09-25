@@ -1,6 +1,6 @@
 {
-  "published_at": "2026-09-25T21:16:29+00:00",
-  "notes": "published by publish_to_checklist.py; etf_flow coverage: 36d history, ready=True",
+  "published_at": "2026-09-25T22:17:02+00:00",
+  "notes": "published by publish_to_checklist.py; etf_flow coverage: 66d history, ready=True",
   "cot_schema_ok": true,
   "sectors": [
     {
@@ -171,6 +171,139 @@
   ],
   "flow_divergences": [
     {
+      "ticker": "XHB",
+      "price_chg_pct": -7.15,
+      "net_flow_pct_aum": 18.28,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true
+    },
+    {
+      "ticker": "XOP",
+      "price_chg_pct": -3.33,
+      "net_flow_pct_aum": 5.16,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true
+    },
+    {
+      "ticker": "XRT",
+      "price_chg_pct": -5.47,
+      "net_flow_pct_aum": 3.14,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true
+    },
+    {
+      "ticker": "XLU",
+      "price_chg_pct": -5.81,
+      "net_flow_pct_aum": 1.64,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true
+    },
+    {
+      "ticker": "XLC",
+      "price_chg_pct": 0.93,
+      "net_flow_pct_aum": 1.15,
+      "verdict": "CONFIRMED UPTREND",
+      "divergence": false
+    },
+    {
+      "ticker": "XLY",
+      "price_chg_pct": -5.14,
+      "net_flow_pct_aum": 0.87,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true
+    },
+    {
+      "ticker": "MDY",
+      "price_chg_pct": -3.59,
+      "net_flow_pct_aum": 0.72,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true
+    },
+    {
+      "ticker": "XLF",
+      "price_chg_pct": -5.48,
+      "net_flow_pct_aum": 0.06,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true
+    },
+    {
+      "ticker": "XLK",
+      "price_chg_pct": 4.76,
+      "net_flow_pct_aum": 0.0,
+      "verdict": "CONFIRMED UPTREND",
+      "divergence": false
+    },
+    {
+      "ticker": "XLE",
+      "price_chg_pct": -2.44,
+      "net_flow_pct_aum": -0.28,
+      "verdict": "CONFIRMED DOWNTREND",
+      "divergence": false
+    },
+    {
+      "ticker": "XLV",
+      "price_chg_pct": -1.01,
+      "net_flow_pct_aum": -0.35,
+      "verdict": "CONFIRMED DOWNTREND",
+      "divergence": false
+    },
+    {
+      "ticker": "XLP",
+      "price_chg_pct": -2.98,
+      "net_flow_pct_aum": -0.75,
+      "verdict": "CONFIRMED DOWNTREND",
+      "divergence": false
+    },
+    {
+      "ticker": "XLI",
+      "price_chg_pct": -2.87,
+      "net_flow_pct_aum": -1.61,
+      "verdict": "CONFIRMED DOWNTREND",
+      "divergence": false
+    },
+    {
+      "ticker": "XLRE",
+      "price_chg_pct": -5.11,
+      "net_flow_pct_aum": -1.96,
+      "verdict": "CONFIRMED DOWNTREND",
+      "divergence": false
+    },
+    {
+      "ticker": "XLB",
+      "price_chg_pct": -4.64,
+      "net_flow_pct_aum": -2.18,
+      "verdict": "CONFIRMED DOWNTREND",
+      "divergence": false
+    },
+    {
+      "ticker": "KBE",
+      "price_chg_pct": -5.82,
+      "net_flow_pct_aum": -2.25,
+      "verdict": "CONFIRMED DOWNTREND",
+      "divergence": false
+    },
+    {
+      "ticker": "XTN",
+      "price_chg_pct": -6.43,
+      "net_flow_pct_aum": -3.42,
+      "verdict": "CONFIRMED DOWNTREND",
+      "divergence": false
+    },
+    {
+      "ticker": "XBI",
+      "price_chg_pct": -4.07,
+      "net_flow_pct_aum": -4.3,
+      "verdict": "CONFIRMED DOWNTREND",
+      "divergence": false
+    },
+    {
+      "ticker": "KRE",
+      "price_chg_pct": -4.38,
+      "net_flow_pct_aum": -6.07,
+      "verdict": "CONFIRMED DOWNTREND",
+      "divergence": false
+    },
+    {
       "ticker": "EEM",
       "price_chg_pct": 4.29,
       "net_flow_pct_aum": NaN,
@@ -238,76 +371,6 @@
       "price_chg_pct": -3.24,
       "net_flow_pct_aum": NaN,
       "verdict": "UNRELIABLE \u2014 stale-AUM artifact: AUM updated on only 7% of the last 15 sessions (last update 2026-09-07); AUM frozen for the last 14 sessions",
-      "divergence": false
-    },
-    {
-      "ticker": "XLB",
-      "price_chg_pct": -5.59,
-      "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 stale-AUM artifact: AUM updated on only 0% of the last 15 sessions (last update never); AUM frozen for the last 15 sessions; share changes mirror price (corr -1.00)",
-      "divergence": false
-    },
-    {
-      "ticker": "XLE",
-      "price_chg_pct": 0.13,
-      "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 stale-AUM artifact: AUM updated on only 0% of the last 15 sessions (last update never); AUM frozen for the last 15 sessions; share changes mirror price (corr -1.00)",
-      "divergence": false
-    },
-    {
-      "ticker": "XLF",
-      "price_chg_pct": -5.79,
-      "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 stale-AUM artifact: AUM updated on only 0% of the last 15 sessions (last update never); AUM frozen for the last 15 sessions; share changes mirror price (corr -1.00)",
-      "divergence": false
-    },
-    {
-      "ticker": "XLI",
-      "price_chg_pct": -4.87,
-      "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 stale-AUM artifact: AUM updated on only 0% of the last 15 sessions (last update never); AUM frozen for the last 15 sessions; share changes mirror price (corr -1.00)",
-      "divergence": false
-    },
-    {
-      "ticker": "XLK",
-      "price_chg_pct": 5.22,
-      "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 stale-AUM artifact: AUM updated on only 0% of the last 15 sessions (last update never); AUM frozen for the last 15 sessions; share changes mirror price (corr -1.00)",
-      "divergence": false
-    },
-    {
-      "ticker": "XLP",
-      "price_chg_pct": -3.09,
-      "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 stale-AUM artifact: AUM updated on only 0% of the last 15 sessions (last update never); AUM frozen for the last 15 sessions; share changes mirror price (corr -1.00)",
-      "divergence": false
-    },
-    {
-      "ticker": "XLU",
-      "price_chg_pct": -7.92,
-      "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 stale-AUM artifact: AUM updated on only 0% of the last 15 sessions (last update never); AUM frozen for the last 15 sessions; share changes mirror price (corr -1.00)",
-      "divergence": false
-    },
-    {
-      "ticker": "XLV",
-      "price_chg_pct": -0.57,
-      "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 stale-AUM artifact: AUM updated on only 0% of the last 15 sessions (last update never); AUM frozen for the last 15 sessions; share changes mirror price (corr -1.00)",
-      "divergence": false
-    },
-    {
-      "ticker": "XLY",
-      "price_chg_pct": -4.94,
-      "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 stale-AUM artifact: AUM updated on only 0% of the last 15 sessions (last update never); AUM frozen for the last 15 sessions; share changes mirror price (corr -1.00)",
-      "divergence": false
-    },
-    {
-      "ticker": "XOP",
-      "price_chg_pct": -1.53,
-      "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 stale-AUM artifact: AUM updated on only 0% of the last 15 sessions (last update never); AUM frozen for the last 15 sessions; share changes mirror price (corr -1.00)",
       "divergence": false
     }
   ],
