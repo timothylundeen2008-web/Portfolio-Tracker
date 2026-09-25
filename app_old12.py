@@ -550,14 +550,7 @@ def fetch_ohlcv(tickers: list, period: str = "2y") -> dict:
         for t in tickers:
             try:
                 df = raw[t] if isinstance(raw.columns, pd.MultiIndex) else raw
-                # Sept 2026: drop bars with no Close, not just all-NaN rows.
-                # yfinance can return a last bar with NaN OHLC but Volume=0;
-                # how="all" kept it, so Close.iloc[-1] was NaN and every
-                # MA/trend gate read False (the Swing Desk blind spot).
                 df = df.dropna(how="all")
-                if "Close" in df.columns:
-                    df = df.dropna(subset=["Close"])
-                df = df[~df.index.duplicated(keep="last")].sort_index()
                 if not df.empty:
                     out[t] = df
             except Exception:

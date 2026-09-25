@@ -56,9 +56,27 @@ LLM_FIELDS = {"why_note", "what_would_make_this_wrong", "instrument_note", "teac
               "trigger_note", "decline_consequence", "regime_read", "question_of_the_day"}
 BREADTH_HALVE_BELOW = 40.0      # % of proxy universe above 200-day
 BREADTH_TAILWIND_ABOVE = 50.0
+# If more than this fraction of requested tickers come back missing or with a
+# stale last bar, the run is a DATA FAILURE, not a "no setups" day.
+DATA_FAIL_FRACTION = 0.20
 
 
 # ── Inputs ──────────────────────────────────────────────────────────────────
+
+def _clean_ohlcv(df: Optional[pd.DataFrame]) -> Optional[pd.DataFrame]:
+    """Drop rows with no Close, de-duplicate and sort the index.
+
+    Sept 2026 fix: yfinance can return a final bar whose OHLC is NaN but whose
+    Volume is filled (0). `dropna(how="all")` keeps that row, so Close.iloc[-1]
+    is NaN and every comparison against it is False. From 2026-09-14 that made
+    every name fail the Trend Template and read breadth as 0.0%, and the brief
+    reported it as "no setups" for nine sessions."""
+    if df is None or df.empty or "Close" not in df.columns:
+        return df
+    df = df.dropna(subset=["Close"])
+    df = df[~df.index.duplicated(keep="last")].sort_index()
+    return df
+
 
 def _default_fetch(tickers: list[str], period: str = "2y") -> dict:
     import yfinance as yf
@@ -69,12 +87,35 @@ def _default_fetch(tickers: list[str], period: str = "2y") -> dict:
     for t in set(tickers):
         try:
             df = raw[t] if isinstance(raw.columns, pd.MultiIndex) else raw
-            df = df.dropna(how="all")
-            if not df.empty:
+            df = _clean_ohlcv(df.dropna(how="all"))
+            if df is not None and not df.empty:
                 out[t] = df
         except Exception:
             continue
     return out
+
+
+def _data_health(raw: dict, clean: dict, requested: list[str]) -> dict:
+    """Did the price fetch actually work? Separates 'the market gave no setups'
+    from 'the data never arrived' -- two states that demand opposite reads.
+
+    missing    requested but absent/empty after cleaning
+    nan_last   names whose RAW last bar had a NaN close (cleaned, but counted)
+    stale      names whose last bar is older than the most common last bar"""
+    req = sorted(set(requested))
+    missing = [t for t in req if clean.get(t) is None or clean[t].empty]
+    nan_last = sorted(t for t, d in raw.items()
+                      if d is not None and not d.empty and "Close" in d.columns and pd.isna(d["Close"].iloc[-1]))
+    last = {t: clean[t].index[-1] for t in req if t not in missing}
+    stale, ref = [], None
+    if last:
+        ref = pd.Series(list(last.values())).mode().iloc[0]
+        stale = sorted(t for t, d in last.items() if d < ref)
+    bad = len(missing) + len(stale)
+    frac = bad / len(req) if req else 0.0
+    return {"requested": len(req), "missing": missing, "stale": stale, "nan_last_cleaned": nan_last,
+            "last_bar": str(ref.date()) if ref is not None and hasattr(ref, "date") else (str(ref) if ref is not None else None),
+            "bad_fraction": round(frac, 3), "failed": bool(req) and frac > DATA_FAIL_FRACTION}
 
 
 def _read_bridges() -> tuple[dict, dict]:
@@ -89,8 +130,11 @@ def _breadth_proxy(ohlcv: dict, universe: list[str]) -> dict:
         df = ohlcv.get(tk)
         if df is None or len(df) < 200:
             continue
+        px, ma = df["Close"].iloc[-1], df["Close"].rolling(200).mean().iloc[-1]
+        if pd.isna(px) or pd.isna(ma):
+            continue                      # unknown is not "below" -- never count it
         tot += 1
-        above += int(df["Close"].iloc[-1] > df["Close"].rolling(200).mean().iloc[-1])
+        above += int(px > ma)
     pct = round(above / tot * 100, 1) if tot else None
     return {"pct_above_200": pct, "n": tot, "source": f"{tot}-name sector-constituent proxy (not the full S&P 500)",
             "size_cut": bool(pct is not None and pct < BREADTH_HALVE_BELOW),
@@ -191,8 +235,21 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
     opens = sj.open_positions(journal)
     breadth_universe = sorted({t for names in constituents.values() for t in names})
     tickers = sorted(set(all_meta) | set(opens) | set(breadth_universe) | {"SPY"})
-    ohlcv = fetch(tickers) if tickers else {}
-    bench = ohlcv.get("SPY", pd.DataFrame()).get("Close")
+    raw_ohlcv = fetch(tickers) if tickers else {}
+    ohlcv = {t: _clean_ohlcv(d) for t, d in raw_ohlcv.items()}
+    health = _data_health(raw_ohlcv, ohlcv, tickers)
+    brief["data_health"] = health
+    if health["nan_last_cleaned"]:
+        brief["data_gaps"].append(f"Price feed returned a NaN last close for {len(health['nan_last_cleaned'])} names "
+                                  f"(dropped the empty bar, used the prior close).")
+    if health["failed"]:
+        brief["refusals"].append(
+            f"DATA FAILURE: {len(health['missing'])} missing + {len(health['stale'])} stale of "
+            f"{health['requested']} tickers ({health['bad_fraction']:.0%}). No cards until the price feed is healthy; "
+            f"today's scan is NOT a 'no setups' verdict.")
+        cards_allowed = False
+    stale_set = set(health["stale"])
+    bench = (ohlcv.get("SPY") if ohlcv.get("SPY") is not None else pd.DataFrame()).get("Close")
     brief["breadth"] = _breadth_proxy(ohlcv, breadth_universe)
     breadth_mult = 0.5 if brief["breadth"]["size_cut"] else 1.0
 
@@ -210,6 +267,8 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
         df = ohlcv.get(tk)
         if df is None or len(df) < 60:
             errors.append({"ticker": tk, "error": "insufficient history"}); continue
+        if tk in stale_set:
+            errors.append({"ticker": tk, "error": f"stale last bar {df.index[-1]} (expected {health['last_bar']})"}); continue
         m = all_meta[tk]
         try:
             r = swing_desk.evaluate(tk, df, regime_key, bench=bench, sector_quadrant=m.get("quadrant"),
@@ -340,7 +399,11 @@ def render_md(b: dict) -> str:
     if b["events"]["blackout"]:
         L += ["**Event block:** " + "; ".join(f"{e['event']} in {e['days_away']}d" for e in b["events"]["blackout"]), ""]
     L += [f"## Trade cards ({len(b['cards'])})"]
-    if not b["cards"]:
+    dh = b.get("data_health") or {}
+    if not b["cards"] and dh.get("failed"):
+        L += [f"**No cards because the price data failed** ({dh.get('bad_fraction', 0):.0%} of tickers missing or stale). "
+              "This is a data gap, not a market verdict.", ""]
+    elif not b["cards"]:
         L += ["No card today. That is a valid answer, not a gap.", ""]
     for c in b["cards"]:
         tag = "ENTRY PERMITTED" if c["entry_permitted"] else f"NOT PERMITTED — {c['entry_block_reason']}"
@@ -455,6 +518,34 @@ def selftest() -> dict:
         f.append("CVX chop must be in avoid with a named reason")
     if any(c["shares"] > 0 and c["notional_pct"] and c["notional_pct"] > 30.5 for c in b["cards"]):
         f.append("concentration cap breached")
+    # Sept 2026 regression: a trailing bar with NaN OHLC and Volume=0 (the
+    # yfinance shape that blinded the desk from 09-14) must be cleaned away
+    # and produce the same cards as clean data.
+    def _nan_tail(d):
+        extra = pd.DataFrame({c: [float("nan")] for c in d.columns}, index=[d.index[-1] + pd.Timedelta(days=1)])
+        if "Volume" in extra.columns:
+            extra["Volume"] = 0
+        return pd.concat([d, extra])
+    fetch_nan = lambda tks, period="2y": {t: _nan_tail(synth[t]) for t in tks if t in synth}
+    bn = build_brief(fetch_nan, (markets, rotation), date(2026, 9, 14), no_earn, no_macro)
+    if sorted((c["ticker"], c["setup"]) for c in bn["cards"]) != sorted((c["ticker"], c["setup"]) for c in b["cards"]):
+        f.append(f"NaN-tail bar changed the cards: {[c['ticker'] for c in bn['cards']]} vs {[c['ticker'] for c in b['cards']]}")
+    if not bn["data_health"]["nan_last_cleaned"] or bn["data_health"]["failed"]:
+        f.append(f"NaN tail must be reported as cleaned, not failed: {bn['data_health']}")
+    # half the tickers missing -> DATA FAILURE, never 'valid answer'
+    half = {"XOM", "SPY"}
+    fetch_half = lambda tks, period="2y": {t: synth[t] for t in tks if t in synth and t in half}
+    bh = build_brief(fetch_half, (markets, rotation), date(2026, 9, 14), no_earn, no_macro)
+    mdh = render_md(bh)
+    if not bh["data_health"]["failed"] or not any("DATA FAILURE" in r for r in bh["refusals"]):
+        f.append(f"missing prices must trigger DATA FAILURE: {bh['data_health']}")
+    if any(c["entry_permitted"] for c in bh["cards"]) or "valid answer" in mdh:
+        f.append("a data failure must block entries and must not render as 'valid answer'")
+    # a name whose last bar is a day behind the rest is skipped, not scanned
+    fetch_stale = lambda tks, period="2y": {t: (synth[t].iloc[:-1] if t == "CVX" else synth[t]) for t in tks if t in synth}
+    bs = build_brief(fetch_stale, (markets, rotation), date(2026, 9, 14), no_earn, no_macro)
+    if "CVX" not in bs["data_health"]["stale"] or not any(e["ticker"] == "CVX" and "stale" in e["error"] for e in bs["errors"]):
+        f.append("stale-last-bar ticker must be named and skipped")
     # regime gate: growth_scare closes the long book
     b2 = build_brief(fetch, (dict(markets, regime={"key": "growth_scare", "label": "", "drivers": []}), rotation),
                      date(2026, 9, 14), no_earn, no_macro)
