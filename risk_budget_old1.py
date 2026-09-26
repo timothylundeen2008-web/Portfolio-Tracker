@@ -88,10 +88,6 @@ REGIME_STANCE = {
     "neutral":                 -1.0,   # mixed signals
     "stagflation":             -2.0,   # growth rolling over
     "liquidity_crisis":        -4.0,   # credit leads equities; get small
-    # Sept 2026: these three were missing and silently took the -1.0 default.
-    "restrictive_tightening":  -1.5,   # real rates rising at both ends; multiples under pressure
-    "term_premium_repricing":  -2.0,   # long end repricing on credibility, bonds not a hedge
-    "growth_scare":            -2.5,   # contraction signal; between stagflation and crisis
 }
 
 # Confidence tiers -> multiplier on the stance-adjusted target.

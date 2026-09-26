@@ -305,12 +305,6 @@ SATELLITE_ROTATION_TARGETS = {
                                   "Decisively positive real rates + tight credit + leadership intact. This regime ADDS growth — don't park freed capital defensively here, the base sleeve itself is the target."),
     "growth_scare":             ("SCHD / XLV / XLU / SGOV+USFR / KMLM",
                                   "Growth composite CONTRACTING (labour+consumer data deteriorating together), independent of real-rate sign. Cash-flow defensives + front-end carry + trend; duration deliberately NOT added — a growth scare and a fiscal/term-premium scare look identical early."),
-    # Sept 2026: both keys were missing here, so freed satellite capital fell
-    # back to the "neutral" cash answer whenever either regime was live.
-    "term_premium_repricing":   ("GLD / SLV / PDBC / KMLM / USFR",
-                                  "Short real + with long real RISING while the dollar FALLS — higher yields pricing fiscal/credibility risk. Real assets and trend win; long duration and high-multiple growth are the direct losers."),
-    "restrictive_tightening":   ("SGOV / USFR / KMLM / SCHD",
-                                  "Real rates rising at both ends with a firm dollar and calm credit. Front-end cash earns a positive real rate; trend works in persistent rate moves; do NOT recycle freed capital into long-duration growth or TLT."),
     "transition_ambiguous":     ("Hold near base weights / SGOV",
                                   "Primary short-real-rate gauge is inside its own ±0.25% noise band (or a valuation/leadership guard blocked goldilocks) — express NEITHER the repression nor the reflation trade until it clears. Approximate: exact overlay lives in regime_bands.py, which I haven't verified line-by-line."),
     "neutral":                  ("SGOV / USFR",
@@ -2088,9 +2082,6 @@ with tab8:
                   "liquidity_crisis":"#dc2626","stagflation":"#d97706",
                   "goldilocks":"#16a34a","growth_scare":"#ea580c",
                   "transition_ambiguous":"#0891b2",
-                  # Sept 2026: both were missing and fell back to gray.
-                  "term_premium_repricing":"#b45309",
-                  "restrictive_tightening":"#2563eb",
                   "neutral":"#6b7280"}.get(_r["key"], "#6b7280")
         st.markdown(
             f"<div style='padding:12px 16px;border-radius:8px;background:{_color}22;"
@@ -2132,17 +2123,14 @@ with tab8:
                  "stagflation":"short real −  ·  2s10s re-steepening",
                  "goldilocks":"short real +  ·  credit tight  ·  leadership intact",
                  "growth_scare":"growth composite CONTRACTING (≥3 of 4 series)",
-                 "term_premium_repricing":"short real +  ·  long real ↑  ·  dollar ↓  ·  credit calm",
-                 "restrictive_tightening":"short real +  ·  long real ↑ ≥0.20pp/3mo  ·  dollar firm  ·  credit calm",
                  "transition_ambiguous":"short real inside ±0.25% band, or valuation/leadership guard"}
         _rows=[]
-        # Sept 2026: iterate the classifier's own regime list so a new regime
-        # can never be silently missing from this table again.
-        for _kk in [k for k in REGIMES if k != "neutral"]:
+        for _kk in ["inflationary_repression","hard_repression","liquidity_crisis",
+                    "stagflation","goldilocks","growth_scare","transition_ambiguous"]:
             _w = target_weights(_kk)
             _rows.append({
                 "Regime": REGIMES[_kk]["label"] + (" ⬅ ACTIVE" if _kk==_active else ""),
-                "Trigger": _disc.get(_kk, "(trigger text not written for this regime)"),
+                "Trigger": _disc[_kk],
                 "TLT": f"{_w['TLT']}%", "KMLM": f"{_w['KMLM']}%",
                 "Real assets": f"{_w['GLD']+_w['SLV']+_w['RING']+_w['XLE']+_w['PDBC']}%",
                 "Cash": f"{_w['SGOV']+_w['USFR']}%",

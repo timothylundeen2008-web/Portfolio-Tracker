@@ -56,9 +56,6 @@ REGIME_DIRECTION = {
     "goldilocks":              ("long", 1.0),
     "inflationary_repression": ("long", 1.0),
     "term_premium_repricing":  ("both", 0.5),
-    # v6 Sept 2026: rising real yields at both ends. Both books stay open at
-    # half size — leadership can persist, but multiples are under pressure.
-    "restrictive_tightening":  ("both", 0.5),
     "transition_ambiguous":    ("both", 0.5),
     "neutral":                 ("both", 0.5),
     "hard_repression":         ("both", 0.5),
