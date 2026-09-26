@@ -150,16 +150,31 @@ def _get(obj, name: str, default=None):
 # never passed, so both permanently landed in missing[] and the live score was
 # structurally capped at 8/10 while always reporting itself as incomplete.
 #
-# v4, Sept 2026: all four flags (fed_bs_expanding, deficit_gt_5pct_gdp, cape,
-# top20_concentration_pct) now come from macro_flags.py — one module shared
-# by all three repos. Live where a source exists (WALCL, SPY holdings,
-# multpl), dated manual fallback otherwise, with staleness warnings. Update
-# manual values in macro_flags.MANUAL, never here.
-import macro_flags as _mflags
-
-
-def _macro_flags(fred_fetch=None, key: str = "") -> dict:
-    return _mflags.get_flags(fetch_fred=fred_fetch, api_key=key)
+# Review these when the underlying facts change — they are assumptions, and
+# they are stated here so they are visible rather than buried in a call.
+#
+#   FED_BS_EXPANDING     True as of July 2026. The Fed balance sheet has grown
+#                        roughly $150bn since January via reserve-management
+#                        T-bill purchases (~$250bn in bills), with reserves
+#                        around $3.1tn. Reserve-management growth still counts
+#                        as expansion for this signal's purpose: it adds
+#                        duration-free liquidity and absorbs bill supply.
+#   DEFICIT_GT_5PCT_GDP  True. FY2026 deficit $1.9tn = 5.8% of GDP, with net
+#                        interest crossing $1.0tn (3.3% of GDP).
+#   CAPE_CURRENT          42.0 (multpl.com, 2026-08-10). Arms the goldilocks
+#                        valuation guard (regime_bands.valuation_ok). Without
+#                        it the guard fails OPEN and reports "not supplied" —
+#                        not a safe default, since CAPE has been above the
+#                        guard's own 40.0 block level since mid-2026.
+#   TOP20_CONCENTRATION_PCT  50.8 (JPMorgan, cited in the 2026-08-07 review).
+#                        Arms the same guard's second leg.
+#
+# Last reviewed: 2026-08-13.
+FED_BS_EXPANDING = True
+DEFICIT_GT_5PCT_GDP = True
+CAPE_CURRENT = 42.0
+TOP20_CONCENTRATION_PCT = 50.8
+MACRO_FLAGS_REVIEWED = "2026-08-13"
 
 def _cfg_bls_key() -> str:
     """BLS v1 works with no key (3y history, enough for the cross-check);
@@ -206,18 +221,18 @@ def _safe_assessment(fred_key: str) -> dict:
         from regime_classifier import full_assessment
         try:
             from fred_client import fetch_fred as _ff
-            flags = _macro_flags(_ff, key)
-            out = full_assessment(fred_api_key=key, fetch_fred=_ff,
-                                  **_mflags.classifier_kwargs(flags)) or {}
+            return full_assessment(fred_api_key=key, fetch_fred=_ff,
+                                   fed_bs_expanding=FED_BS_EXPANDING,
+                                   deficit_gt_5pct_gdp=DEFICIT_GT_5PCT_GDP,
+                                   cape=CAPE_CURRENT,
+                                   top20_concentration_pct=TOP20_CONCENTRATION_PCT) or {}
         except ImportError:
-            # fred_client absent — original behaviour (needs a key); the
-            # Fed flag falls back to its dated manual value.
-            flags = _macro_flags(None, key)
-            out = full_assessment(fred_api_key=key,
-                                  **_mflags.classifier_kwargs(flags)) or {}
-        if out:
-            out["macro_flags"] = flags
-        return out
+            # fred_client absent — original behaviour (needs a key)
+            return full_assessment(fred_api_key=key,
+                                   fed_bs_expanding=FED_BS_EXPANDING,
+                                   deficit_gt_5pct_gdp=DEFICIT_GT_5PCT_GDP,
+                                   cape=CAPE_CURRENT,
+                                   top20_concentration_pct=TOP20_CONCENTRATION_PCT) or {}
     except Exception as e:
         print(f"[checklist] full_assessment failed: {e}")
         return {}
@@ -347,12 +362,6 @@ def _autofetch(fred_key: str, live_weights: dict | None = None) -> dict:
     drivers = regime.get("drivers", []) or []
     vals["degraded"] = "YES — " + "; ".join(d for d in drivers if "unavailable" in d.lower()) \
         if any("unavailable" in str(d).lower() for d in drivers) else "No — inputs complete"
-    # Sept 2026: a stale or fallen-back macro flag (CAPE, concentration, Fed
-    # balance sheet) is a degraded input too — say so in the same field.
-    _flag_warn = ((a or {}).get("macro_flags") or {}).get("warnings") or []
-    if _flag_warn:
-        prefix = vals["degraded"] if vals["degraded"].startswith("YES") else "YES"
-        vals["degraded"] = prefix + " — macro flags: " + "; ".join(_flag_warn)
 
     # Regime transition vs last logged run (Weekly Step 1)
     prev = _last_logged_value("regime_key")
