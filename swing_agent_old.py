@@ -202,7 +202,7 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
     # (confirmed-leader phase). One method per phase -- see 12 Sep review.
     sel = swing_screener.select_sectors(rotation, max_long=5, max_short=3)
     cands = swing_screener.expand_candidates(sel, rotation.get("constituents", {}))
-    all_meta = swing_screener.merged_meta(cands)   # confirmed beats watch, long beats short
+    all_meta = {**cands["short"], **cands["long"]}
     for r in sel.get("reasons", []):
         brief["data_gaps"].append("Rotation: " + r)
     if rotation.get("available") and rotation.get("sectors") and all(r.get("quadrant") is None for r in rotation["sectors"]):
@@ -229,12 +229,6 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
                                          for s in sel["long"]],
                                 "short": [{"ticker": s["ticker"], "quadrant": s.get("quadrant"),
                                            "direction": s.get("rotation_direction")} for s in sel["short"]],
-                                "long_watch": [{"ticker": s["ticker"], "quadrant": s.get("quadrant"),
-                                                "accumulation": s.get("accumulation_score"), "why": s.get("watch_reason")}
-                                               for s in sel.get("long_watch", [])],
-                                "short_watch": [{"ticker": s["ticker"], "quadrant": s.get("quadrant"),
-                                                 "accumulation": s.get("accumulation_score"), "why": s.get("watch_reason")}
-                                                for s in sel.get("short_watch", [])],
                                 "watchlist": wl["ticker"].tolist(), "candidates": sorted(all_meta)}
 
     # ── prices: candidates + open positions + breadth proxy, one batch ─────
@@ -291,16 +285,6 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
             reason = r["avoid_reason"] or "no setup"
             (watch if "Watchlist only" in reason or "Watchlist it" in reason else avoid).append(
                 {**base, "setup": r.get("setup"), "reason": reason})
-            continue
-        # Fix 8: the hunting ground must agree with the card's side and the
-        # flow sign must confirm the ground. Otherwise the setup is real but
-        # fights Level 2 -- show it on watch with the reason, never as a card.
-        g_ok, g_why = swing_screener.ground_gate(r["card"].get("side"), m)
-        if not g_ok:
-            watch.append({**base, "setup": r["card"].get("setup"), "side": r["card"].get("side"),
-                          "confluence": r["card"].get("confluence"), "ground": m.get("ground"),
-                          "reason": f"{r['card'].get('setup')} {r['card'].get('side')} "
-                                    f"({r['card'].get('confluence')}) demoted — {g_why}"})
             continue
         c, sz = r["card"], r["card"]["size"]
         adr = (r["detail"].get("universe") or {}).get("adr_pct")
@@ -411,10 +395,6 @@ def render_md(b: dict) -> str:
     L += ["## Hunting grounds",
           "Long: " + (", ".join(f"{s['ticker']} ({s['quadrant']}, {s['direction']} → {s['feeds']})" for s in hg["long"]) or "none"),
           "Short: " + (", ".join(f"{s['ticker']} ({s['quadrant']})" for s in hg["short"]) or "none"),
-          *(["Watch grounds (price and money disagree — no cards): " + ", ".join(
-              f"{s['ticker']} ({s['quadrant']}, acc {s['accumulation'] if s['accumulation'] is not None else 'missing'})"
-              for s in hg.get("long_watch", []) + hg.get("short_watch", []))]
-            if hg.get("long_watch") or hg.get("short_watch") else []),
           "Watchlist: " + (", ".join(hg["watchlist"]) or "empty"), ""]
     if b["events"]["blackout"]:
         L += ["**Event block:** " + "; ".join(f"{e['event']} in {e['days_away']}d" for e in b["events"]["blackout"]), ""]
@@ -445,7 +425,7 @@ def render_md(b: dict) -> str:
                 L += [f"- **{lab}:** {c[k]}"]
         L += [""]
     if b["watch"]:
-        L += ["## Watch (1-of-3, regime-refused, or flow-unconfirmed ground)", *[f"- {w['ticker']} [{w['sector_quadrant']}]: {w['reason']}" for w in b["watch"]], ""]
+        L += ["## Watch (1-of-3 or regime-refused)", *[f"- {w['ticker']} [{w['sector_quadrant']}]: {w['reason']}" for w in b["watch"]], ""]
     if b["avoid"]:
         L += ["## Not a setup", *[f"- {a['ticker']}: {a['reason']}" for a in b["avoid"][:25]],
               *([f"- … {len(b['avoid'])-25} more"] if len(b["avoid"]) > 25 else []), ""]
@@ -573,25 +553,6 @@ def selftest() -> dict:
         f.append("long card produced in growth_scare")
     if not any("long" in (w["reason"] or "").lower() and "closed" in (w["reason"] or "").lower() for w in b2["watch"]):
         f.append("refused long must be reported on the watch list with the regime named")
-    # Fix 8: XLE Improving but accumulation negative -> watch ground; XOM's
-    # breakout must be demoted to watch with the flow reason, not carded.
-    rot_neg = dict(rotation, sectors=[dict(rotation["sectors"][0], accumulation_score=-35, stealth_label=None),
-                                      rotation["sectors"][1]])
-    bg = build_brief(fetch, (markets, rot_neg), date(2026, 9, 14), no_earn, no_macro)
-    if any(c["ticker"] == "XOM" for c in bg["cards"]):
-        f.append("XOM from an Improving sector with negative accumulation must not be a card")
-    if not any(w["ticker"] == "XOM" and "flow does not confirm" in w["reason"] for w in bg["watch"]):
-        f.append(f"XOM must be on watch with the flow reason: {[(w['ticker'], w['reason']) for w in bg['watch']]}")
-    if not bg["hunting_grounds"]["long_watch"] or "Watch grounds" not in render_md(bg):
-        f.append("watch grounds must be published and rendered")
-    # XLE as a SHORT ground (Weakening, distribution): a long breakout in XOM is blocked
-    rot_short = dict(rotation, sectors=[dict(rotation["sectors"][0], quadrant="Weakening", accumulation_score=-35,
-                                             stealth_label=None), rotation["sectors"][1]])
-    bsg = build_brief(fetch, (markets, rot_short), date(2026, 9, 14), no_earn, no_macro)
-    if any(c["ticker"] == "XOM" and c["side"] == "long" for c in bsg["cards"]):
-        f.append("long card from a short hunting ground must be demoted")
-    if "NVDA" not in {c["ticker"] for c in b["cards"]}:
-        f.append("NVDA short from a Lagging/negative ground must still be a card")
     # macro blackout blocks non-EP entries but keeps the card
     b3 = build_brief(fetch, (markets, rotation), date(2026, 9, 14), no_earn,
                      lambda d: [{"event": "FOMC", "days_away": 1, "blackout": True}])

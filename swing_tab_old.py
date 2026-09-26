@@ -145,12 +145,6 @@ def render(st, fetch_ohlcv=None):
                         + (", ".join(f"{s['ticker']} ({s['quadrant']}, {s.get('direction')})" for s in hg.get("long", [])) or "none")
                         + " · short: " + (", ".join(s["ticker"] for s in hg.get("short", [])) or "none")
                         + " · watchlist: " + (", ".join(hg.get("watchlist", [])) or "empty"))
-            _wg = hg.get("long_watch", []) + hg.get("short_watch", [])
-            if _wg:
-                st.caption("👁 Watch grounds — price and money disagree, no cards from these: "
-                           + ", ".join(f"{s['ticker']} ({s['quadrant']}, acc "
-                                       f"{s['accumulation'] if s.get('accumulation') is not None else 'missing'})"
-                                       for s in _wg))
             if brief.get("events", {}).get("blackout"):
                 st.error("Event block: " + "; ".join(f"{e['event']} in {e['days_away']}d" for e in brief["events"]["blackout"]))
 
