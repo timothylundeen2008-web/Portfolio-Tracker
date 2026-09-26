@@ -1,5 +1,5 @@
 {
-  "published_at": "2026-09-26T10:25:33+00:00",
+  "published_at": "2026-09-26T10:38:50+00:00",
   "notes": "published by publish_to_checklist.py; etf_flow coverage: 66d history, ready=True",
   "cot_schema_ok": true,
   "sectors": [
@@ -307,70 +307,70 @@
       "ticker": "EEM",
       "price_chg_pct": 0.61,
       "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 stale-AUM artifact: AUM updated on only 6% of the last 16 sessions (last update 2026-09-07); AUM frozen for the last 15 sessions",
+      "verdict": "UNRELIABLE \u2014 fewer than 2 sessions on current source (thirdparty_stockanalysis)",
       "divergence": false
     },
     {
       "ticker": "GLD",
       "price_chg_pct": -4.34,
       "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 stale-AUM artifact: AUM updated on only 0% of the last 16 sessions (last update never); AUM frozen for the last 16 sessions; share changes mirror price (corr -1.00)",
+      "verdict": "UNRELIABLE \u2014 fewer than 2 sessions on current source (thirdparty_stockanalysis)",
       "divergence": false
     },
     {
       "ticker": "HYG",
       "price_chg_pct": -2.25,
       "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 stale-AUM artifact: AUM updated on only 0% of the last 16 sessions (last update never); AUM frozen for the last 16 sessions; share changes mirror price (corr -1.00)",
+      "verdict": "UNRELIABLE \u2014 fewer than 2 sessions on current source (thirdparty_stockanalysis)",
       "divergence": false
     },
     {
       "ticker": "IBB",
       "price_chg_pct": -1.99,
       "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 stale-AUM artifact: AUM updated on only 0% of the last 16 sessions (last update never); AUM frozen for the last 16 sessions; share changes mirror price (corr -1.00)",
+      "verdict": "UNRELIABLE \u2014 fewer than 2 sessions on current source (thirdparty_stockanalysis)",
       "divergence": false
     },
     {
       "ticker": "IWM",
       "price_chg_pct": -4.8,
       "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 stale-AUM artifact: AUM updated on only 0% of the last 16 sessions (last update never); AUM frozen for the last 16 sessions; share changes mirror price (corr -1.00)",
+      "verdict": "UNRELIABLE \u2014 fewer than 2 sessions on current source (thirdparty_stockanalysis)",
       "divergence": false
     },
     {
       "ticker": "QQQ",
       "price_chg_pct": 3.47,
       "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 stale-AUM artifact: AUM updated on only 0% of the last 16 sessions (last update never); AUM frozen for the last 16 sessions; share changes mirror price (corr -1.00)",
+      "verdict": "UNRELIABLE \u2014 fewer than 2 sessions on current source (thirdparty_stockanalysis)",
       "divergence": false
     },
     {
       "ticker": "RING",
       "price_chg_pct": -7.93,
       "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 stale-AUM artifact: AUM updated on only 0% of the last 16 sessions (last update never); AUM frozen for the last 16 sessions; share changes mirror price (corr -1.00)",
+      "verdict": "UNRELIABLE \u2014 fewer than 2 sessions on current source (thirdparty_stockanalysis)",
       "divergence": false
     },
     {
       "ticker": "SLV",
       "price_chg_pct": -8.44,
       "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 stale-AUM artifact: AUM updated on only 6% of the last 16 sessions (last update 2026-09-07); AUM frozen for the last 15 sessions",
+      "verdict": "UNRELIABLE \u2014 fewer than 2 sessions on current source (thirdparty_stockanalysis)",
       "divergence": false
     },
     {
       "ticker": "SMH",
       "price_chg_pct": 7.19,
       "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 stale-AUM artifact: AUM updated on only 6% of the last 16 sessions (last update 2026-09-07); AUM frozen for the last 15 sessions; share changes mirror price (corr -1.00)",
+      "verdict": "UNRELIABLE \u2014 fewer than 2 sessions on current source (thirdparty_stockanalysis)",
       "divergence": false
     },
     {
       "ticker": "TLT",
       "price_chg_pct": -4.21,
       "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 stale-AUM artifact: AUM updated on only 6% of the last 16 sessions (last update 2026-09-07); AUM frozen for the last 15 sessions",
+      "verdict": "UNRELIABLE \u2014 fewer than 2 sessions on current source (thirdparty_stockanalysis)",
       "divergence": false
     }
   ],
