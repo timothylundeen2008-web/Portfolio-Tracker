@@ -1,24 +1,25 @@
 {
   "date": "2026-09-26",
-  "generated_at": "2026-09-26T12:46:05+00:00",
+  "generated_at": "2026-09-26T19:03:38+00:00",
   "annotated": false,
   "refusals": [],
   "data_gaps": [],
   "regime": {
-    "key": "transition_ambiguous",
-    "label": "Transition \u2014 Valuation Guard Active",
+    "key": "restrictive_tightening",
+    "label": "Restrictive Tightening \u2014 real rates rising",
     "direction": "both",
     "size_mult": 0.5,
     "long_book": "open",
     "short_book": "open",
     "drivers": [
-      "Short real rate +0.48% (positive)",
-      "HY OAS 2.73% (tight credit)",
-      "Valuation guard BLOCKS a growth-additive regime: Shiller CAPE 42.0 \u2265 40 \u2014 dot-com-peak territory. Top-20 concentration 50.8% \u2265 45% \u2014 index-level single-theme risk. Adding to growth at a historic valuation extreme is not what a confirmed benign regime should instruct. Routing to the transition overlay instead."
+      "Short real rate +0.48% (decisively positive, beyond \u00b10.25%) \u2014 policy is above inflation",
+      "Long real yield RISING +0.66pp over 3 months (threshold +0.20pp)",
+      "Dollar +1.0% over ~1 month \u2014 firm, so higher yields ARE attracting capital (ordinary tightening, not a credibility repricing)",
+      "HY OAS 2.80% \u2014 credit calm; tightening has not broken anything yet"
     ],
     "fed_posture": null,
     "tripwires": [],
-    "bridge_age_hours": 36.1,
+    "bridge_age_hours": 0.0,
     "regime_read": null
   },
   "exposure": {
@@ -39,34 +40,6 @@
   },
   "hunting_grounds": {
     "long": [
-      {
-        "ticker": "XLC",
-        "quadrant": "Improving",
-        "direction": "Bottoming",
-        "stealth": "None",
-        "feeds": "M0 rotation reclaim / M2 breakout (early phase)"
-      },
-      {
-        "ticker": "XLF",
-        "quadrant": "Improving",
-        "direction": "Bottoming",
-        "stealth": "Weak / Mixed",
-        "feeds": "M0 rotation reclaim / M2 breakout (early phase)"
-      },
-      {
-        "ticker": "XLRE",
-        "quadrant": "Improving",
-        "direction": "Bottoming",
-        "stealth": "None",
-        "feeds": "M0 rotation reclaim / M2 breakout (early phase)"
-      },
-      {
-        "ticker": "XLY",
-        "quadrant": "Improving",
-        "direction": "Bottoming",
-        "stealth": "None",
-        "feeds": "M0 rotation reclaim / M2 breakout (early phase)"
-      },
       {
         "ticker": "XLK",
         "quadrant": "Leading",
@@ -92,6 +65,33 @@
         "direction": "Topping"
       }
     ],
+    "long_watch": [
+      {
+        "ticker": "XLC",
+        "quadrant": "Improving",
+        "accumulation": -39.66,
+        "why": "price rotating in, money not (accumulation -39.66)"
+      },
+      {
+        "ticker": "XLF",
+        "quadrant": "Improving",
+        "accumulation": -42.57,
+        "why": "price rotating in, money not (accumulation -42.57)"
+      },
+      {
+        "ticker": "XLRE",
+        "quadrant": "Improving",
+        "accumulation": -46.9,
+        "why": "price rotating in, money not (accumulation -46.9)"
+      },
+      {
+        "ticker": "XLY",
+        "quadrant": "Improving",
+        "accumulation": -48.97,
+        "why": "price rotating in, money not (accumulation -48.97)"
+      }
+    ],
+    "short_watch": [],
     "watchlist": [],
     "candidates": [
       "AAPL",
@@ -252,102 +252,6 @@
       "pending_confirmation": true
     },
     {
-      "ticker": "XLF",
-      "sector": "XLF",
-      "sector_quadrant": "Improving",
-      "from_watchlist": false,
-      "close": 54.84,
-      "setup": "M0 Rotation",
-      "side": "long",
-      "confluence": "2-of-3",
-      "legs": {
-        "rotation": true,
-        "structure": true,
-        "volume": false,
-        "missing": [
-          "volume"
-        ]
-      },
-      "entry": 54.89,
-      "stop": 53.38,
-      "stop_pct": 2.75,
-      "risk_per_share": 1.51,
-      "risk_pct": 0.125,
-      "shares": 8,
-      "notional": 439.12,
-      "notional_pct": 4.4,
-      "heat_after": 0.12,
-      "blocked_by_heat": false,
-      "targets": {
-        "2R": 57.91,
-        "4R": 60.93,
-        "8R": 66.97
-      },
-      "trail": "100 SMA (20-week)",
-      "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
-      "trail_stats": null,
-      "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
-      "invalidated_when": "close below 53.38 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-      "why": "reclaim of 20-wk SMA 54.81 (close +0.1% vs SMA, rising); vol 0.85x vs tier 1.5x; CMF -0.21; ATR stop 2.0x = 53.38 (2.7%)",
-      "adr_pct": 1.22,
-      "event_risk": "clear",
-      "entry_permitted": true,
-      "entry_block_reason": null,
-      "why_note": null,
-      "what_would_make_this_wrong": null,
-      "instrument_note": null,
-      "teaching_question": null,
-      "pending_confirmation": true
-    },
-    {
-      "ticker": "XLC",
-      "sector": "XLC",
-      "sector_quadrant": "Improving",
-      "from_watchlist": false,
-      "close": 112.96,
-      "setup": "M0 Rotation",
-      "side": "long",
-      "confluence": "2-of-3",
-      "legs": {
-        "rotation": true,
-        "structure": true,
-        "volume": false,
-        "missing": [
-          "volume"
-        ]
-      },
-      "entry": 113.52,
-      "stop": 109.75,
-      "stop_pct": 3.32,
-      "risk_per_share": 3.77,
-      "risk_pct": 0.125,
-      "shares": 3,
-      "notional": 340.56,
-      "notional_pct": 3.4,
-      "heat_after": 0.11,
-      "blocked_by_heat": false,
-      "targets": {
-        "2R": 121.06,
-        "4R": 128.6,
-        "8R": 143.68
-      },
-      "trail": "100 SMA (20-week)",
-      "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
-      "trail_stats": null,
-      "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
-      "invalidated_when": "close below 109.75 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-      "why": "reclaim of 20-wk SMA 111.51 (close +1.3% vs SMA, flat); vol 0.99x vs tier 1.5x; CMF -0.14; ATR stop 2.0x = 109.75 (3.3%)",
-      "adr_pct": 1.42,
-      "event_risk": "clear",
-      "entry_permitted": true,
-      "entry_block_reason": null,
-      "why_note": null,
-      "what_would_make_this_wrong": null,
-      "instrument_note": null,
-      "teaching_question": null,
-      "pending_confirmation": true
-    },
-    {
       "ticker": "NVDA",
       "sector": "XLK",
       "sector_quadrant": "Leading",
@@ -394,7 +298,9 @@
       "instrument_note": null,
       "teaching_question": null,
       "pending_confirmation": true
-    },
+    }
+  ],
+  "watch": [
     {
       "ticker": "NUE",
       "sector": "XLB",
@@ -404,47 +310,9 @@
       "setup": "M0 Rotation",
       "side": "long",
       "confluence": "2-of-3",
-      "legs": {
-        "rotation": true,
-        "structure": true,
-        "volume": false,
-        "missing": [
-          "volume"
-        ]
-      },
-      "entry": 250.26,
-      "stop": 238.69,
-      "stop_pct": 4.62,
-      "risk_per_share": 11.57,
-      "risk_pct": 0.125,
-      "shares": 1,
-      "notional": 250.26,
-      "notional_pct": 2.5,
-      "heat_after": 0.12,
-      "blocked_by_heat": false,
-      "targets": {
-        "2R": 273.4,
-        "4R": 296.54,
-        "8R": 342.82
-      },
-      "trail": "100 SMA (20-week)",
-      "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
-      "trail_stats": null,
-      "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
-      "invalidated_when": "close below 238.69 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-      "why": "reclaim of 20-wk SMA 247.04 (close +0.1% vs SMA, rising); vol 0.80x vs tier 1.5x; CMF -0.18; ATR stop 1.5x = 238.69 (4.6%)",
-      "adr_pct": 2.8,
-      "event_risk": "clear",
-      "entry_permitted": false,
-      "entry_block_reason": "over slot cap (4 positions max, 4 open) \u2014 watch, or close something first",
-      "why_note": null,
-      "what_would_make_this_wrong": null,
-      "instrument_note": null,
-      "teaching_question": null,
-      "pending_confirmation": true
-    }
-  ],
-  "watch": [
+      "ground": "short",
+      "reason": "M0 Rotation long (2-of-3) demoted \u2014 long card from a short hunting ground (XLB Weakening, accumulation -42.15) \u2014 the setup fights the sector rotation; watch only"
+    },
     {
       "ticker": "TSLA",
       "sector": "XLY",
@@ -453,6 +321,30 @@
       "close": 372.11,
       "setup": "M2b Failed-BO Short",
       "reason": "Only 1-of-3 confluence (missing: rotation, volume). Watchlist only."
+    },
+    {
+      "ticker": "XLC",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 112.96,
+      "setup": "M0 Rotation",
+      "side": "long",
+      "confluence": "2-of-3",
+      "ground": "long_watch",
+      "reason": "M0 Rotation long (2-of-3) demoted \u2014 flow does not confirm the ground: XLC Improving \u2014 price rotating in, money not (accumulation -39.66); watch until accumulation turns positive"
+    },
+    {
+      "ticker": "XLF",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 54.84,
+      "setup": "M0 Rotation",
+      "side": "long",
+      "confluence": "2-of-3",
+      "ground": "long_watch",
+      "reason": "M0 Rotation long (2-of-3) demoted \u2014 flow does not confirm the ground: XLF Improving \u2014 price rotating in, money not (accumulation -42.57); watch until accumulation turns positive"
     }
   ],
   "avoid": [

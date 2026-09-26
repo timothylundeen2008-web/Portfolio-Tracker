@@ -4,8 +4,5 @@ date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_
 2026-09-13,CSCO,M0 Rotation,long,2-of-3,112.22,109.09,112.13,transition_ambiguous,True,
 2026-09-13,GS,M0 Rotation,long,2-of-3,1042.99,1009.82,1029.18,transition_ambiguous,False,ok
 2026-09-13,MU,M1 VCP,long,2-of-3,938.4,910.25,975.26,transition_ambiguous,False,ok
-2026-09-26,XLK,M0 Rotation,long,3-of-3,196.94,190.68,196.27,transition_ambiguous,True,
-2026-09-26,XLF,M0 Rotation,long,2-of-3,54.89,53.38,54.84,transition_ambiguous,True,
-2026-09-26,XLC,M0 Rotation,long,2-of-3,113.52,109.75,112.96,transition_ambiguous,True,
-2026-09-26,NVDA,M0 Rotation,long,2-of-3,226.94,219.13,225.07,transition_ambiguous,True,
-2026-09-26,NUE,M0 Rotation,long,2-of-3,250.26,238.69,247.25,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-09-26,XLK,M0 Rotation,long,3-of-3,196.94,190.68,196.27,restrictive_tightening,True,
+2026-09-26,NVDA,M0 Rotation,long,2-of-3,226.94,219.13,225.07,restrictive_tightening,True,
