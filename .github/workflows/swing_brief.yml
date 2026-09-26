@@ -1,246 +1,78 @@
-name: Markets Scheduled Logs
+name: Swing Desk Brief
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  DST-AWARE SCHEDULING
-# ─────────────────────────────────────────────────────────────────────────────
-#  GitHub Actions cron is UTC-only and has no timezone support, so a single
-#  fixed cron drifts by an hour twice a year. The fix is to fire at BOTH the
-#  EDT and EST equivalents and let the job itself check the real Eastern time,
-#  exiting early when it is the wrong one. Two triggers, one effective run.
+# Runs AFTER the daily checklist log (6:30 PM ET) so both bridges have
+# published for the day. Same DST twin-cron pattern as scheduled_logs.yml:
+#   22:45 UTC = 6:45 PM EDT   23:45 UTC = 6:45 PM EST
+# The gate accepts any firing from 18:00 ET onward on a trading day and
+# stands down if a brief was already written from within the window.
 #
-#  DAILY — 6:30 PM ET  (not 5:00 PM; see auto_log.py for the full rationale)
-#     One hour after the close is too early for the inputs this log depends on.
-#     Treasury H.15 posts ~4:15pm ET and takes time to reach FRED; ETF issuer
-#     shares files land 6-9pm ET. A 5:00pm run would routinely capture the
-#     PREVIOUS day's Treasury values while stamping them with today's date —
-#     a silent off-by-one that corrupts every momentum calculation built on
-#     the history. 6:30pm clears all sources with margin, same evening.
-#       22:30 UTC = 6:30 PM EDT (Mar-Nov)
-#       23:30 UTC = 6:30 PM EST (Nov-Mar)
-#
-#  WEEKLY — Sunday 6:00 AM ET  (as requested; well chosen and unchanged)
-#     Falls after the COT release (Friday 3:30pm ET) and before the week
-#     begins, which is exactly what Checklist v4 Weekly Step 5 requires.
-#       10:00 UTC = 6:00 AM EDT
-#       11:00 UTC = 6:00 AM EST
-# ─────────────────────────────────────────────────────────────────────────────
+# This job WRITES A BRIEF AND NOTHING ELSE. It never touches
+# data/swing_journal.csv -- decisions come only from the tab or chat.
 
 on:
   schedule:
-    - cron: '30 22 * * 1-5'   # daily, EDT
-    - cron: '30 23 * * 1-5'   # daily, EST
-    - cron: '0 10 * * 0'      # weekly, EDT
-    - cron: '0 11 * * 0'      # weekly, EST
+    - cron: '45 22 * * 1-5'
+    - cron: '45 23 * * 1-5'
   workflow_dispatch:
-    inputs:
-      mode:
-        description: 'Which log to run'
-        required: true
-        default: 'daily'
-        type: choice
-        options: [daily, weekly]
 
 concurrency:
-  group: scheduled-logs
+  group: swing-brief
   cancel-in-progress: false
 
 jobs:
-  log:
+  brief:
     runs-on: ubuntu-latest
-    # The Markets Dashboard lives in a subfolder, unlike Portfolio-Tracker
-    # where the modules sit at the repo root. Every step must run there or
-    # `import market_time` fails before the gate can even evaluate.
-    defaults:
-      run:
-        working-directory: Dashboard/Repression_Dashboard_Claude
     permissions:
       contents: write
-
     steps:
       - uses: actions/checkout@v4
-
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'   # match Streamlit Cloud; 3.11 broke cross_asset.py (Sept 2026)
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # v2 gate — window-based, not exact-hour. GitHub documents that
-      # scheduled workflows can be delayed, sometimes significantly, during
-      # platform load. The original gate required hour == 18 EXACTLY for
-      # daily; on 2026-08-12 GitHub delayed the 22:30 UTC trigger to ~7:30pm
-      # ET and the 23:30 UTC twin to ~8:04pm ET — both landed outside their
-      # single-hour windows, and the ENTIRE DAY silently produced no log,
-      # with both runs showing a misleading green "Success" (the workflow
-      # correctly did nothing, which looks identical to correctly doing
-      # something from the run list alone).
-      #
-      # Fix: accept ANY firing from the window's start onward (18:00+ ET
-      # weekdays, 06:00+ ET Sunday), gated on whether today's/this week's
-      # report has already been written. This self-heals against arbitrary
-      # delay — whichever trigger fires first after the window opens does the
-      # real work; a later trigger that day finds the report already exists
-      # and stands down rather than running (and committing) a second time.
-      - name: Decide whether this run should proceed
+      - name: Gate
         id: gate
         run: |
           python - <<'PY'
-          import os, sys
+          import os, json, sys
           sys.path.insert(0, '.')
           import market_time as mt
-
-          import json as _json
-
           dispatch = "${{ github.event_name }}" == "workflow_dispatch"
-          mode_in  = "${{ github.event.inputs.mode }}" or "daily"
-          now = mt.now_et()
-          hour, dow = now.hour, now.weekday()   # Mon=0 .. Sun=6
-
-          daily_report = f"logs/summaries/{now.date().isoformat()}_daily.md"
-
-          def window_capture_done(date_str, kind, window_start_hour):
-              """
-              True only when a report exists AND it was generated at or
-              after the window's start hour.
-
-              WHY NOT BARE FILE EXISTENCE: on 2026-08-13 a manual test run at
-              12:35pm ET (verifying an unrelated code fix) wrote
-              2026-08-13_daily.md. The OLD check -- os.path.exists(report) --
-              saw that file at 6:30pm and concluded "already done today,"
-              silently skipping the real end-of-day capture for the rest of
-              the day. A pre-close manual test and a proper post-close
-              capture are not the same event and must not be treated as
-              interchangeable.
-
-              Reads the .meta.json sidecar auto_log.py writes alongside every
-              report, which records the ET HOUR the run actually happened.
-              No meta file (an older report from before this fix, or one
-              written some other way) means we cannot PROVE it was a proper
-              window capture -- default to False or unavailable in that
-              case, so a report of unknown provenance never blocks a real
-              run. Missing safely in this direction; the failure mode this
-              replaces was silence, and silence must never be the default.
-              """
-              meta_path = f"logs/summaries/{date_str}_{kind}.meta.json"
-              if not os.path.exists(meta_path):
-                  return False
-              try:
-                  with open(meta_path) as f:
-                      meta = _json.load(f)
-                  return int(meta.get("et_hour", -1)) >= window_start_hour
-              except Exception:
-                  return False
-
-          if dispatch:
-              proceed, mode, why = True, mode_in, f"manual dispatch ({mode_in})"
-          elif dow == 6:  # Sunday — weekly window
-              if hour < 6:
-                  proceed, mode, why = False, "weekly", (
-                      f"before the weekly window (06:00 ET), now "
-                      f"{now:%H:%M} ET")
-              else:
-                  # Only a report GENERATED at or after 06:00 ET counts as
-                  # "already ran" — see window_capture_done() above.
-                  already = window_capture_done(
-                      now.date().isoformat(), "weekly", 6)
-                  if already:
-                      proceed, mode, why = False, "weekly", (
-                          "this week's report already exists — an earlier "
-                          "trigger already ran")
-                  else:
-                      proceed, mode, why = True, "weekly", (
-                          f"first trigger in the weekly window "
-                          f"({now:%H:%M} ET)")
-          elif dow < 5:  # weekday — daily window
-              if hour < 18:
-                  proceed, mode, why = False, "daily", (
-                      f"before the daily window (18:00 ET), now "
-                      f"{now:%H:%M} ET")
-              elif not mt.is_trading_day(now.date()):
-                  proceed, mode, why = False, "daily", (
-                      f"{now.date()} is a market holiday")
-              elif window_capture_done(now.date().isoformat(), "daily", 18):
-                  proceed, mode, why = False, "daily", (
-                      "today's report already exists FROM WITHIN THE "
-                      "WINDOW (18:00+ ET) — an earlier in-window trigger "
-                      "already ran")
-              else:
-                  proceed, mode, why = True, "daily", (
-                      f"first trigger in the daily window ({now:%H:%M} ET)")
-          else:
-              proceed, mode, why = False, "daily", "weekend, non-trading"
-
+          now = mt.now_et(); d = now.date().isoformat()
+          meta = f"logs/swing/{d}_brief.meta.json"
+          def done():
+              try: return int(json.load(open(meta)).get("et_hour", -1)) >= 18
+              except Exception: return False
+          if dispatch:               proceed, why = True, "manual dispatch"
+          elif now.weekday() >= 5:   proceed, why = False, "weekend"
+          elif not mt.is_trading_day(now.date()): proceed, why = False, "holiday"
+          elif now.hour < 18:        proceed, why = False, f"before window ({now:%H:%M} ET)"
+          elif done():               proceed, why = False, "brief already written from within the window"
+          else:                      proceed, why = True, f"first trigger in window ({now:%H:%M} ET)"
           print(f"::notice::{'RUN' if proceed else 'SKIP'} — {why}")
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-              f.write(f"proceed={'true' if proceed else 'false'}\n")
-              f.write(f"mode={mode}\n")
-              f.write(f"et={now:%Y-%m-%d %H:%M %Z}\n")
+              f.write(f"proceed={'true' if proceed else 'false'}\net={now:%Y-%m-%d %H:%M %Z}\n")
           PY
 
-      - name: Run the checklist log
+      - name: Build the brief
         if: steps.gate.outputs.proceed == 'true'
         env:
-          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
-          # A manual workflow_dispatch already told the gate step above to
-          # proceed regardless of day — but that permission has to reach
-          # auto_log.py itself too, or a Sunday test run silently no-ops
-          # (writes zero files) and the commit step below then fails trying
-          # to `git add` a logs/ directory that was never created. A
-          # scheduled cron run never sets this, so production behavior on
-          # real weekends/holidays is unchanged.
-          LOG_FORCE: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
-        run: |
-          python -c "import os; k=os.environ.get('FRED_API_KEY',''); print(f'FRED_API_KEY: {\"SET, \" + str(len(k)) + \" chars\" if k else \"EMPTY — not reaching this environment\"}')"
-          echo "Eastern time: ${{ steps.gate.outputs.et }}"
-          python auto_log.py ${{ steps.gate.outputs.mode }}
+          DATA_DIR: data
+        run: python swing_agent.py
 
-      - name: Commit logs
+      - name: Commit the brief
         if: steps.gate.outputs.proceed == 'true'
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # GUARD: logs/ may legitimately not exist — a non-forced daily run
-          # on a real holiday the calendar caught, or ANY crash in the
-          # previous step before a single file was written, both leave
-          # nothing on disk. `git add -A logs/` on a nonexistent path is a
-          # FATAL pathspec error that red-X's the whole job even though
-          # "nothing to commit" is not actually a failure. Check existence
-          # first and exit cleanly rather than let git decide that for us.
-          if [ ! -d logs ]; then
-            echo "No logs/ directory was produced this run — see the 'Run "
-            echo "the checklist log' step above for why (commonly: today is "
-            echo "not a trading day and this was not a forced run). Nothing "
-            echo "to commit; this is not a failure."
-            exit 0
-          fi
-
-          # `git add` FIRST, then check the staged index. `git diff` alone only
-          # sees TRACKED files, so on the first run the brand-new logs/ files
-          # are invisible to it and the commit is skipped — permanently, since
-          # they never become tracked. Same deadlock that blocked the ETF
-          # poller for months.
-          git add -A logs/
-          if git diff --cached --quiet -- logs/; then
-            echo "No new log data — nothing staged."
-          else
-            git commit -m "logs: ${{ steps.gate.outputs.mode }} checklist ${{ steps.gate.outputs.et }}"
+          [ -d logs/swing ] || { echo "no brief produced"; exit 0; }
+          git add -A logs/swing/
+          git diff --cached --quiet -- logs/swing/ && echo "nothing new" || {
+            git commit -m "swing: brief ${{ steps.gate.outputs.et }}"
             git pull --rebase --autostash origin ${{ github.ref_name }} || true
             git push
-            echo "Committed:"
-            git show --stat --oneline HEAD | tail -n +2
-          fi
-
-      - name: Publish summary to the run page
-        if: steps.gate.outputs.proceed == 'true'
-        run: |
-          LATEST=$(ls -t logs/summaries/*.md 2>/dev/null | head -1)
-          if [ -n "$LATEST" ]; then
-            cat "$LATEST" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "No summary file produced." >> "$GITHUB_STEP_SUMMARY"
-          fi
+          }
