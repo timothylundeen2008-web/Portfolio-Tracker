@@ -171,19 +171,11 @@ def render(st):
 
     daily = [r for r in reports if r.endswith("_daily.md")]
     weekly = [r for r in reports if r.endswith("_weekly.md")]
-    briefs = [r for r in reports if r.endswith("_brief.md")]
-    reports = [r for r in reports if r.endswith(".md")]
 
-    view = st.radio("View", ["Consolidated brief", "Latest daily", "Latest weekly",
-                             "Browse history", "Trends"],
-                    horizontal=True, label_visibility="collapsed")
+    view = st.radio("View", ["Latest daily", "Latest weekly", "Browse history",
+                             "Trends"], horizontal=True, label_visibility="collapsed")
 
-    if view == "Consolidated brief":
-        st.caption("One brief across every layer — regime, cross-asset, rotation, flow, breadth, "
-                   "portfolio, swing, next 48h — each section ending in a conclusion. Built after the "
-                   "daily log and the Swing Desk brief finish (workflow: Consolidated Daily Brief).")
-        _render_one(st, briefs, source, "brief")
-    elif view == "Latest daily":
+    if view == "Latest daily":
         _render_one(st, daily, source, "daily")
     elif view == "Latest weekly":
         _render_one(st, weekly, source, "weekly")
@@ -211,7 +203,7 @@ def _render_one(st, files: list[str], source: str, kind: str):
     # Staleness is stated, never implied. A report rendered without its age
     # reads as current regardless of when it was written.
     if age is not None:
-        if kind in ("daily", "brief") and age > 3:
+        if kind == "daily" and age > 3:
             st.warning(f"⚠ Latest daily report is **{age} days old** "
                        f"({latest}). The scheduled run may have stopped — "
                        f"check the Actions history.")

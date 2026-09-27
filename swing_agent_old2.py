@@ -223,7 +223,7 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
                         "stealth": None, "tier_a": False, "is_etf": tk in quad_of_sector,
                         "watchlist_reason": w.get("reason")}
     brief["hunting_grounds"] = {"long": [{"ticker": s["ticker"], "quadrant": s.get("quadrant"),
-                                          "direction": s.get("rotation_direction"), "stealth": s.get("stealth_label") if swing_screener.is_stealth(s.get("stealth_label")) else None,
+                                          "direction": s.get("rotation_direction"), "stealth": s.get("stealth_label"),
                                           "feeds": "M1 VCP (confirmed leaders)" if s.get("quadrant") == "Leading"
                                                    else "M0 rotation reclaim / M2 breakout (early phase)"}
                                          for s in sel["long"]],
@@ -263,9 +263,7 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
     import event_calendar as ec
     macro = (macro_lookup or ec.upcoming_macro)(2)
     blackout = [e for e in macro if e.get("blackout")]
-    # ETFs have no earnings; asking Yahoo for them only printed 404s into the log
-    _stocks = sorted(t for t, m in all_meta.items() if not m.get("is_etf"))
-    earn = (earnings_lookup or ec.earnings_dates)(_stocks) if _stocks else {}
+    earn = (earnings_lookup or ec.earnings_dates)(sorted(all_meta)) if all_meta else {}
     brief["events"] = {"blackout": blackout, "earnings_48h": {t: v for t, v in earn.items() if 0 <= v["days_away"] <= 2},
                        "caveat": "earnings dates are yfinance estimates — confirm on the IR page before entering"}
 

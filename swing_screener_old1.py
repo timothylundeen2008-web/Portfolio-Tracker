@@ -46,20 +46,6 @@ SHORT_QUADS = ("Weakening", "Lagging")
 QUAD_PRIORITY = {"Improving": 0, "Leading": 1, "Weakening": 2, "Lagging": 3}
 
 
-STEALTH_LABELS = ("stealth", "strong stealth")
-
-
-def is_stealth(label) -> bool:
-    """Money Flow publishes stealth_label as TEXT: "Strong Stealth", "Stealth",
-    "Weak / Mixed", "None", "Insufficient history", "Loud — not stealth".
-    Every one of those strings is truthy, so `bool(label)` treated EVERY sector
-    as stealth -- and swing_desk lets a stealth sector pass the rotation leg
-    for any long. (Found 26 Sep 2026: NUE in Weakening XLB scored rotation=True
-    because XLB's label was the string "None".) Only the two real stealth
-    grades count."""
-    return str(label or "").strip().lower() in STEALTH_LABELS
-
-
 def _acc(r) -> Optional[float]:
     v = r.get("accumulation_score")
     try:
@@ -123,7 +109,7 @@ def select_sectors(rotation: dict, max_long: int = 3, max_short: int = 2) -> dic
                     + ("missing" if a is None else f"{a:g}") + ")")))
     # Improving first, then by accumulation strength; stealth is a tiebreak
     longs.sort(key=lambda r: (QUAD_PRIORITY.get(r.get("quadrant"), 9), -_a0(r),
-                              0 if is_stealth(r.get("stealth_label")) else 1))
+                              0 if r.get("stealth_label") else 1))
     shorts.sort(key=lambda r: (-QUAD_PRIORITY.get(r.get("quadrant"), 0), _a0(r)))
     lw.sort(key=lambda r: (QUAD_PRIORITY.get(r.get("quadrant"), 9), -_a0(r)))
     sw.sort(key=lambda r: (-QUAD_PRIORITY.get(r.get("quadrant"), 0), _a0(r)))
@@ -164,8 +150,7 @@ def expand_candidates(selected: dict, constituents: dict,
             etf = sec["ticker"]
             meta = {"sector": etf, "quadrant": sec.get("quadrant"),
                     "accumulation_score": sec.get("accumulation_score"),
-                    "stealth": sec.get("stealth_label") if is_stealth(sec.get("stealth_label")) else None,
-                    "tier_a": False,
+                    "stealth": sec.get("stealth_label"), "tier_a": False,
                     "ground": side, "ground_reason": sec.get("watch_reason")}
             if include_etf:
                 out[side][etf] = dict(meta, is_etf=True)
@@ -275,7 +260,7 @@ def render_selection(st, sel: dict, cands: dict):
         st.markdown("**🟢 Rotating IN — long hunting grounds** (price + money)")
         for s in sel["long"]:
             st.caption(f"{s['ticker']} · {s.get('quadrant')} · acc {s.get('accumulation_score','?')}"
-                       f"{' · 🔍 stealth' if is_stealth(s.get('stealth_label')) else ''} · {_n('long', s['ticker'])} constituents")
+                       f"{' · 🔍 stealth' if s.get('stealth_label') else ''} · {_n('long', s['ticker'])} constituents")
         for s in sel.get("long_watch", []):
             st.caption(f"👁 {s['ticker']} · {s.get('quadrant')} · watch — {s.get('watch_reason')}")
     with c2:
@@ -343,17 +328,6 @@ def selftest() -> dict:
         f.append("short card from a short ground must be allowed")
     if not ground_gate("long", {"sector": "XLK", "quadrant": "Leading"})[0]:
         f.append("watchlist-origin ticker (no ground) must pass the gate")
-    # stealth labels are text; "None" / "Weak / Mixed" must NOT count as stealth
-    rot3 = {"available": True, "sectors": [
-        {"ticker": "XLB", "quadrant": "Weakening", "accumulation_score": -42, "stealth_label": "None"},
-        {"ticker": "XLF", "quadrant": "Improving", "accumulation_score": 5, "stealth_label": "Weak / Mixed"},
-        {"ticker": "XLK", "quadrant": "Leading", "accumulation_score": 50, "stealth_label": "Stealth"}],
-        "constituents": {"XLB": ["NUE"]}}
-    m3 = merged_meta(expand_candidates(select_sectors(rot3, 5, 3), rot3["constituents"]))
-    if m3["NUE"]["stealth"] or m3["XLF"]["stealth"] or m3["XLK"]["stealth"] != "Stealth":
-        f.append(f"stealth must be the real grade only: NUE={m3['NUE']['stealth']} XLF={m3['XLF']['stealth']} XLK={m3['XLK']['stealth']}")
-    if not is_stealth("Strong Stealth") or is_stealth("Loud — not stealth") or is_stealth(None):
-        f.append("is_stealth grades wrong")
     empty = select_sectors({"available": False})
     if empty["available"] or not empty["reasons"]:
         f.append("unavailable bridge must fail loudly")
