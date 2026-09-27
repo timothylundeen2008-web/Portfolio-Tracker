@@ -1,6 +1,6 @@
 {
  "session": "2026-09-25",
- "generated_et": "Sep 27, 2026 07:16 AM EDT",
+ "generated_et": "Sep 27, 2026 11:01 AM EDT",
  "scoreboard": {
   "rows": [
    {
@@ -1763,8 +1763,8 @@
   },
   {
    "input": "Markets bridge",
-   "asof": "2026-09-26",
-   "age_days": 1,
+   "asof": "2026-09-27",
+   "age_days": 0,
    "status": "OK",
    "note": ""
   },
@@ -1784,10 +1784,10 @@
   },
   {
    "input": "Daily log row",
-   "asof": "2026-09-25",
-   "age_days": 0,
+   "asof": "2026-09-27",
+   "age_days": -2,
    "status": "OK",
-   "note": ""
+   "note": "today's daily log not written yet \u2014 alerts section uses no row"
   },
   {
    "input": "COT (freshest)",
