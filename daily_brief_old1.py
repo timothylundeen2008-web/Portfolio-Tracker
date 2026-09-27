@@ -90,8 +90,6 @@ FRED_SCORE = [
     ("WTI crude", "DCOILWTICO", "$", "index"),
 ]
 EXTRA_FRED = ["DGS30"]
-FRESHER = {"VIXCLS": "^VIX", "DCOILWTICO": "CL=F"}      # yfinance splices for lagging FRED series
-FRED_MAX_AGE = {"DTWEXBGS": 10}                         # H.10 dollar index is published weekly
 PRICE_SCORE = [("S&P 500 (SPY)", "SPY"), ("Nasdaq 100 (QQQ)", "QQQ"),
                ("Gold (GLD)", "GLD"), ("Long Treasuries (TLT)", "TLT")]
 
@@ -174,12 +172,9 @@ def _series_clean(s) -> pd.Series:
     s = pd.to_numeric(pd.Series(s), errors="coerce").dropna()
     try:
         s.index = pd.to_datetime(s.index)
-        if getattr(s.index, "tz", None) is not None:      # yfinance can be tz-aware; FRED is naive
-            s.index = s.index.tz_localize(None)
-        s.index = s.index.normalize()
     except Exception:
         pass
-    return s[~s.index.duplicated(keep="last")].sort_index()
+    return s.sort_index()
 
 
 def _pctile(s: pd.Series, n: int = 252) -> Optional[float]:
@@ -300,7 +295,7 @@ def gather(today_et: Optional[datetime] = None, fred_key: str = "",
         inp["daily_log"] = pd.read_csv(DAILY_CSV) if DAILY_CSV.exists() else pd.DataFrame()
     except Exception as e:
         inp["daily_log"] = pd.DataFrame(); errors.append(f"daily_log.csv unreadable: {e}")
-    inp["swing"], inp["swing_file"] = _latest_swing(session, now.date())
+    inp["swing"], inp["swing_file"] = _latest_swing(session)
     try:
         import position_ledger as pl
         inp["ledger"] = pl.load_positions()
@@ -313,23 +308,12 @@ def gather(today_et: Optional[datetime] = None, fred_key: str = "",
     universe = sorted({t for names in constituents.values() for t in names})
     comp = sorted({t for _, a, b in COMPASS for t in a + b})
     ledger_tk = sorted(set(inp["ledger"]["ticker"].astype(str))) if not inp["ledger"].empty else []
-    tickers = sorted(set(universe) | set(comp) | set(ledger_tk) | {t for _, t in PRICE_SCORE}
-                     | set(FRESHER.values()))
+    tickers = sorted(set(universe) | set(comp) | set(ledger_tk) | {t for _, t in PRICE_SCORE})
     inp["universe"] = universe
     try:
         inp["prices"] = (fetch_prices or _default_prices)(tickers)
     except Exception as e:
         inp["prices"] = {}; errors.append(f"price fetch failed: {type(e).__name__}: {e}")
-    # FRED's VIXCLS and DCOILWTICO lag the market by 1-3 sessions; splice the
-    # yfinance closes after FRED's last date so the level is current but the
-    # 1-year history (percentile, σ) stays FRED's.
-    inp["fred_src"] = {}
-    for sid, yf_tk in FRESHER.items():
-        fs, ys = hist.get(sid, pd.Series(dtype=float)), _price_close(inp["prices"], yf_tk)
-        if len(ys) and (not len(fs) or ys.index[-1] > fs.index[-1]):
-            tail = ys[ys.index > fs.index[-1]] if len(fs) else ys
-            hist[sid] = pd.concat([fs, tail]).sort_index()
-            inp["fred_src"][sid] = f"FRED + yfinance {yf_tk} after {fs.index[-1].date() if len(fs) else 'n/a'}"
     missing = [t for t in tickers if t not in inp["prices"]]
     if missing:
         errors.append(f"prices missing for {len(missing)} of {len(tickers)} tickers"
@@ -346,15 +330,10 @@ def gather(today_et: Optional[datetime] = None, fred_key: str = "",
     return inp
 
 
-def _latest_swing(session: date, wall: Optional[date] = None) -> tuple:
-    """The Swing Desk names its brief by the date it RAN, not the session it
-    scanned: a Saturday run is a scan of Friday's close. So any brief dated
-    from the session through today is this session's scan (27 Sep 2026: the
-    first live run skipped the 09-26 brief and fell back to 09-24's)."""
+def _latest_swing(session: date) -> tuple:
     if not SWING_DIR.exists():
         return {}, None
-    cutoff = (wall or session).isoformat()
-    files = sorted(p for p in SWING_DIR.glob("*_brief.json") if p.name[:10] <= cutoff)
+    files = sorted(p for p in SWING_DIR.glob("*_brief.json") if p.name[:10] <= session.isoformat())
     if not files:
         return {}, None
     try:
@@ -403,7 +382,7 @@ def scoreboard(inp: dict) -> dict:
         s = pd.concat([h, pd.Series([srr])], ignore_index=True)
         r = _score_row("Short real rate (EFFR − CPI YoY)", s, "%", "rate",
                        source="classifier + daily log", pctile_ok=False)
-        r["asof"] = "live (EFFR − latest CPI)"
+        r["asof"] = getattr(sig, "asof", None) and str(getattr(sig, "asof"))
         rows.insert(0, r)
     for label, tk in PRICE_SCORE:
         rows.append(_score_row(label, _price_close(inp["prices"], tk), "$", "index", source="yfinance"))
@@ -1012,7 +991,7 @@ def swing_section(inp: dict) -> dict:
     b, fname = inp.get("swing") or {}, inp.get("swing_file")
     if not b:
         return {"available": False, "conclusion": "No swing brief found for this session."}
-    same = inp["session"].isoformat() <= str(b.get("date")) <= inp["now_et"].date().isoformat()
+    same = b.get("date") == inp["session"].isoformat()
     cards = b.get("cards", [])
     ok = [c for c in cards if c.get("entry_permitted")]
     watch = b.get("watch", [])
@@ -1137,10 +1116,7 @@ def data_health(inp: dict) -> list[dict]:
                     "status": st, "note": note})
     for label, sid, _, _ in FRED_SCORE:
         s = inp["fred"].get(sid, pd.Series(dtype=float))
-        note = (inp.get("fred_src") or {}).get(sid, "")
-        if sid in FRED_MAX_AGE:
-            note = (note + "; " if note else "") + "weekly release (Mondays) — a week's lag is normal"
-        add(f"FRED {sid}", s.index[-1].date().isoformat() if len(s) else None, FRED_MAX_AGE.get(sid, 4), note)
+        add(f"FRED {sid}", s.index[-1].date().isoformat() if len(s) else None, 4)
     a = inp.get("assessment")
     add("Regime assessment", today.isoformat() if a else None, 0, "" if a else "live assessment failed")
     rot = inp.get("rotation") or {}
@@ -1148,8 +1124,7 @@ def data_health(inp: dict) -> list[dict]:
     mk = inp.get("markets") or {}
     add("Markets bridge", (mk.get("published_at") or "")[:10] or None, 1, ref=wall)
     b = inp.get("swing") or {}
-    add("Swing brief", b.get("date"), 0 if not b.get("date") or b.get("date") <= today.isoformat() else 9,
-        "" if not b.get("date") or b.get("date") <= today.isoformat() else "run after the close — scans this session")
+    add("Swing brief", b.get("date"), 0)
     led = inp.get("ledger")
     lu = pd.to_datetime(led.get("last_updated"), errors="coerce").max() if led is not None and not led.empty else None
     add("Position ledger", lu.date().isoformat() if lu is not None and pd.notna(lu) else None, LEDGER_STALE_DAYS, ref=wall)
@@ -1208,14 +1183,9 @@ def headline(b: dict) -> list[str]:
     # 1 — what changed
     mv = sb.get("movers") or []
     if mv:
-        sess = b["session"]
-
-        def _when(r):
-            a = r.get("asof") or ""
-            return f", print dated {a[5:]}" if a[:4].isdigit() and a < sess else ""
         s1 = "Biggest moves: " + "; ".join(
             f"{r['name']} {r['d1_txt']} to {_fmt(r['value'], 2)}{r['unit'] if r['unit'] in ('%',) else ''} "
-            f"({r['z1d']:+.1f}σ{', ' + format(r['pctile_1y'], '.0f') + 'th pctile' if r['pctile_1y'] is not None else ''}{_when(r)})"
+            f"({r['z1d']:+.1f}σ{', ' + format(r['pctile_1y'], '.0f') + 'th pctile' if r['pctile_1y'] is not None else ''})"
             for r in mv[:2]) + "."
     else:
         s1 = "A normal-range session: no scoreboard input moved more than 1.5σ."
@@ -1467,7 +1437,6 @@ def selftest() -> dict:
             "DTWEXBGS": walk(120, 0.3), "VIXCLS": walk(16, 0.6).clip(lower=10), "DCOILWTICO": walk(70, 1.0),
             "DGS30": walk(4.6, 0.05)}
     fred["DFII10"].iloc[-1] = fred["DFII10"].iloc[-2] + 0.20        # a 5σ day
-    fred["VIXCLS"] = fred["VIXCLS"].iloc[:-2]                        # FRED lags the market
     fetch_fred = lambda sid, key="", start="": fred.get(sid, pd.Series(dtype=float))
 
     def px(v0, drift=0.0005):
@@ -1476,7 +1445,6 @@ def selftest() -> dict:
     tickers = {t for _, a, b in COMPASS for t in a + b} | {"QQQ", "GLD", "TLT", "XOM", "CVX", "NVDA", "AAPL"}
     prices = {t: px(100) for t in tickers}
     prices["TLT"] = px(100, drift=-0.001)
-    prices["^VIX"] = px(16, drift=0.0)
 
     sig = SimpleNamespace(short_real_rate=0.48, long_real_yield=2.85, long_real_mom_3m=0.66, breakeven_10y=2.3,
                           hy_oas=2.8, hy_oas_mom_2w=0.1, spread_2s10s=0.3, spread_2s10s_mom_3m=0.0,
@@ -1536,15 +1504,6 @@ def selftest() -> dict:
         md = render_md(b)
         out = write(b)
 
-        vix = next(r for r in b["scoreboard"]["rows"] if r["name"] == "VIX")
-        if vix["asof"] != "2026-09-25" or "yfinance ^VIX" not in (inp.get("fred_src") or {}).get("VIXCLS", ""):
-            f.append(f"lagging FRED VIX must be extended with the yfinance close: {vix['asof']} {inp.get('fred_src')}")
-        json.dump({"date": "2026-09-26", "cards": [], "watch": [], "hunting_grounds": {}},
-                  open("logs/swing/2026-09-26_brief.json", "w"))
-        sb_, fn_ = _latest_swing(date(2026, 9, 25), date(2026, 9, 27))
-        if fn_ != "2026-09-26_brief.json":
-            f.append(f"a Saturday swing run is the Friday session's scan and must be picked: {fn_}")
-        os.remove("logs/swing/2026-09-26_brief.json")
         if b["session"] != "2026-09-25":
             f.append(f"session date wrong: {b['session']}")
         dfii = next(r for r in b["scoreboard"]["rows"] if r["name"].startswith("10Y real"))
