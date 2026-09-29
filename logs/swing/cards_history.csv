@@ -6,3 +6,4 @@ date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_
 2026-09-13,MU,M1 VCP,long,2-of-3,938.4,910.25,975.26,transition_ambiguous,False,ok
 2026-09-26,XLK,M0 Rotation,long,3-of-3,196.94,190.68,196.27,restrictive_tightening,True,
 2026-09-26,NVDA,M0 Rotation,long,2-of-3,226.94,219.13,225.07,restrictive_tightening,True,
+2026-09-28,NVDA,M0 Rotation,long,2-of-3,233.21,225.48,228.86,restrictive_tightening,True,
