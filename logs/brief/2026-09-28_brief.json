@@ -1,6 +1,6 @@
 {
  "session": "2026-09-28",
- "generated_et": "Sep 29, 2026 04:29 AM EDT",
+ "generated_et": "Sep 29, 2026 05:48 AM EDT",
  "scoreboard": {
   "rows": [
    {
@@ -133,33 +133,33 @@
    },
    {
     "name": "VIX",
-    "value": 16.15999984741211,
+    "value": 16.139999389648438,
     "unit": "",
     "kind": "level",
-    "d1": 0.5600507423586087,
-    "d5": 13.722729397692524,
-    "d20": -1.101592121100925,
-    "d1_txt": "+0.6%",
-    "d5_txt": "+13.7%",
-    "d20_txt": "-1.1%",
-    "pctile_1y": 31.0,
+    "d1": 0.43559238427841596,
+    "d5": 13.581980222719459,
+    "d20": -1.2239939434000147,
+    "d1_txt": "+0.4%",
+    "d5_txt": "+13.6%",
+    "d20_txt": "-1.2%",
+    "pctile_1y": 30.0,
     "z1d": 0.1,
     "asof": "2026-09-29",
     "source": "FRED VIXCLS"
    },
    {
     "name": "WTI crude",
-    "value": 92.9800033569336,
+    "value": 92.52999877929688,
     "unit": "$",
     "kind": "index",
-    "d1": 0.4103724504042061,
-    "d5": -3.5577187460495874,
-    "d20": 6.836726826305406,
-    "d1_txt": "+0.4%",
-    "d5_txt": "-3.6%",
-    "d20_txt": "+6.8%",
-    "pctile_1y": 73.0,
-    "z1d": 0.1,
+    "d1": -0.07559362416597049,
+    "d5": -4.024480054665613,
+    "d20": 6.319658484771762,
+    "d1_txt": "-0.1%",
+    "d5_txt": "-4.0%",
+    "d20_txt": "+6.3%",
+    "pctile_1y": 71.0,
+    "z1d": -0.0,
     "asof": "2026-09-29",
     "source": "FRED DCOILWTICO"
    },
@@ -503,7 +503,7 @@
    },
    "vol": {
     "state": "CALM",
-    "reading": "16.2",
+    "reading": "16.1",
     "note": "Derivatives are not pricing acute stress. If equities are falling anyway, that combination favours the positioning-unwind reading over the macro-break reading \u2014 and it makes convexity comparatively cheap."
    },
    "fx": {
