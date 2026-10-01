@@ -1,6 +1,6 @@
 {
  "session": "2026-09-30",
- "generated_et": "Sep 30, 2026 09:34 PM EDT",
+ "generated_et": "Sep 30, 2026 10:15 PM EDT",
  "scoreboard": {
   "rows": [
    {
@@ -149,15 +149,15 @@
    },
    {
     "name": "WTI crude",
-    "value": 90.0999984741211,
+    "value": 90.31999969482422,
     "unit": "$",
     "kind": "index",
-    "d1": -6.301998259025476,
-    "d5": -3.5125310836141566,
-    "d20": -1.5085281218615076,
-    "d1_txt": "-6.3%",
-    "d5_txt": "-3.5%",
-    "d20_txt": "-1.5%",
+    "d1": -6.073211631838371,
+    "d5": -3.2769332889010294,
+    "d20": -1.26803706293811,
+    "d1_txt": "-6.1%",
+    "d5_txt": "-3.3%",
+    "d20_txt": "-1.3%",
     "pctile_1y": 66.0,
     "z1d": -1.7,
     "asof": "2026-09-30",
@@ -247,15 +247,15 @@
   "movers": [
    {
     "name": "WTI crude",
-    "value": 90.0999984741211,
+    "value": 90.31999969482422,
     "unit": "$",
     "kind": "index",
-    "d1": -6.301998259025476,
-    "d5": -3.5125310836141566,
-    "d20": -1.5085281218615076,
-    "d1_txt": "-6.3%",
-    "d5_txt": "-3.5%",
-    "d20_txt": "-1.5%",
+    "d1": -6.073211631838371,
+    "d5": -3.2769332889010294,
+    "d20": -1.26803706293811,
+    "d1_txt": "-6.1%",
+    "d5_txt": "-3.3%",
+    "d20_txt": "-1.3%",
     "pctile_1y": 66.0,
     "z1d": -1.7,
     "asof": "2026-09-30",
@@ -360,7 +360,7 @@
     "source": "yfinance"
    }
   ],
-  "conclusion": "Unusual moves today: WTI crude -6.3% (-1.7\u03c3). Everything else moved inside its normal daily range. At a 1-year extreme: 10Y real yield (DFII10) (100th pctile), 10Y Treasury (100th pctile), 2Y Treasury (100th pctile), Nasdaq 100 (QQQ) (96th pctile)."
+  "conclusion": "Unusual moves today: WTI crude -6.1% (-1.7\u03c3). Everything else moved inside its normal daily range. At a 1-year extreme: 10Y real yield (DFII10) (100th pctile), 10Y Treasury (100th pctile), 2Y Treasury (100th pctile), Nasdaq 100 (QQQ) (96th pctile)."
  },
  "regime": {
   "available": true,
@@ -1726,7 +1726,7 @@
   "KMLM": 8.0
  },
  "headline": [
-  "Biggest moves: WTI crude -6.3% to 90.10 (-1.7\u03c3, 66th pctile).",
+  "Biggest moves: WTI crude -6.1% to 90.32 (-1.7\u03c3, 66th pctile).",
   "Regime `restrictive_tightening` (session 4); cross-asset majority CALM; nearest flip is Dollar 20-day change -2.60% to `term_premium_repricing` (~7 typical days).",
   "Authorized today: XLU: stop hit (close 39.44 vs stop 44.78); TLT: stop hit (close 77.78 vs stop 82.18). (Ledger is 66 days old \u2014 confirm the positions exist first.)"
  ],
