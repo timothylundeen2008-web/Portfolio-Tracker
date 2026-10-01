@@ -652,15 +652,6 @@ def regime_section(inp: dict) -> dict:
         out["guard_warnings"] = []
     rep = a.get("repression") or {}
     out["repression"] = {"score": rep.get("score"), "band": rep.get("band"), "hollow": rep.get("hollow")}
-    # v7: spread-peak re-entry state (from the assessment, else from the scoreboard history)
-    cc = a.get("credit_cycle")
-    if not cc or cc.get("state") == "UNAVAILABLE":
-        try:
-            import regime_classifier as rc
-            cc = rc.credit_cycle_state((inp.get("fred") or {}).get("BAMLH0A0HYM2"))
-        except Exception:
-            cc = cc or None
-    out["credit_cycle"] = cc
     bridge_key = ((inp.get("markets") or {}).get("regime") or {}).get("key")
     out["bridge_key"] = bridge_key
     out["bridge_agrees"] = (bridge_key == key) if bridge_key else None
@@ -717,8 +708,6 @@ def cross_asset_section(inp: dict, regime_key: Optional[str]) -> dict:
         fit = st.get("rates") in ("STRESS", "WATCH") and st.get("credit") != "STRESS"
     elif regime_key == "liquidity_crisis":
         fit = st.get("credit") == "STRESS"
-    elif regime_key == "credit_stress":
-        fit = st.get("credit") in ("STRESS", "WATCH")
     elif regime_key == "goldilocks":
         fit = st.get("credit") == "CALM" and st.get("rates") != "STRESS"
     if fit is False:
@@ -1281,12 +1270,6 @@ def conclusions(b: dict) -> dict:
                       + (f" (~{f['typical_days']:.0f} typical days)" if f.get("typical_days") is not None else "")
                       + (f" — {f['note']}" if f.get("note") else ""))
     weekend = list(pf.get("weekend") or []) if pf.get("available") else []
-    _cc = (rg.get("credit_cycle") or {}).get("state")
-    if _cc == "RE_ENTRY":
-        weekend.append("HY spread peak CONFIRMED — run the quality-value screen; cyclical/deep value and "
-                       "small caps are eligible adds (still need Level 2 flow + Level 4 entry)")
-    elif _cc == "RE_ENTRY_PENDING":
-        weekend.append("HY spread peak-and-turn on 1 close — confirm on the next close before any cyclical adds")
     if rg.get("days_in_regime") == 2:
         weekend.insert(0, f"Regime `{rg['key']}` confirmed on two closes — rebalance to its targets (cuts, then hedges, then adds)")
     if pf.get("stale"):
@@ -1325,13 +1308,6 @@ def render_md(b: dict) -> str:
                  + (f", {rg['band_sessions']} logged sessions on this side" if rg.get("band_sessions") else ""))
     for d in rg.get("drivers", [])[:6]:
         L.append(f"  - {d}")
-    cc = rg.get("credit_cycle") or {}
-    if cc.get("state"):
-        det = ""
-        if cc.get("peak") is not None:
-            det = (f" (6-mo HY high {cc['peak']:.2f}% on {cc.get('peak_date')}, now {cc['current']:.2f}%, "
-                   f"2-wk {cc['mom_2w']:+.2f}pp)" if cc.get("mom_2w") is not None else "")
-        L.append(f"- Credit cycle: **{cc['state']}**{det} — {cc.get('action', '')}")
     if rg.get("flips"):
         L += ["", "**Nearest flips** (classifier re-run with one input moved, all else held):", "",
               "| Input | Now | Flips at | Move needed | Typical days | Becomes |", "|---|---|---|---|---|---|"]
@@ -1559,8 +1535,6 @@ def selftest() -> dict:
         b = build(inp)
         md = render_md(b)
         out = write(b)
-        if "Credit cycle:" not in md or not (b["regime"].get("credit_cycle") or {}).get("state"):
-            f.append("regime section must carry the credit-cycle (spread-peak re-entry) line")
 
         vix = next(r for r in b["scoreboard"]["rows"] if r["name"] == "VIX")
         if vix["asof"] != "2026-09-25" or "yfinance ^VIX" not in (inp.get("fred_src") or {}).get("VIXCLS", ""):

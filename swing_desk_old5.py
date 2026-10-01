@@ -59,10 +59,6 @@ REGIME_DIRECTION = {
     # v6 Sept 2026: rising real yields at both ends. Both books stay open at
     # half size — leadership can persist, but multiples are under pressure.
     "restrictive_tightening":  ("both", 0.5),
-    # v7: credit widening. Both books stay open (a long that is still making
-    # highs against widening spreads is real leadership) but at ~1/3 size,
-    # below neutral's 0.5, so the regime visibly changes risk taken.
-    "credit_stress":           ("both", 0.35),
     "transition_ambiguous":    ("both", 0.5),
     "neutral":                 ("both", 0.5),
     "hard_repression":         ("both", 0.5),

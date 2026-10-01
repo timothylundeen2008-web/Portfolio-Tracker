@@ -311,8 +311,6 @@ SATELLITE_ROTATION_TARGETS = {
                                   "Short real + with long real RISING while the dollar FALLS — higher yields pricing fiscal/credibility risk. Real assets and trend win; long duration and high-multiple growth are the direct losers."),
     "restrictive_tightening":   ("SGOV / USFR / KMLM / SCHD",
                                   "Real rates rising at both ends with a firm dollar and calm credit. Front-end cash earns a positive real rate; trend works in persistent rate moves; do NOT recycle freed capital into long-duration growth or TLT."),
-    "credit_stress":            ("SGOV / USFR / KMLM / XLV",
-                                  "HY OAS out of the calm zone (>= 3.5%) and widening or wide (>= 4.5%), short of the crisis override. Credit leads equities: trim growth/cyclicals, lift front-end cash and trend; duration neither added nor cut until the crisis override or falling long real yields decide it."),
     "transition_ambiguous":     ("Hold near base weights / SGOV",
                                   "Primary short-real-rate gauge is inside its own ±0.25% noise band (or a valuation/leadership guard blocked goldilocks) — express NEITHER the repression nor the reflation trade until it clears. Approximate: exact overlay lives in regime_bands.py, which I haven't verified line-by-line."),
     "neutral":                  ("SGOV / USFR",
@@ -1751,100 +1749,6 @@ with tab4:
             yaxis=dict(gridcolor="#2a2d3e",range=[0,max([r["trail"] for r in pe_rows2]+[35])+8]))
         st.plotly_chart(fig_pe,use_container_width=True)
 
-    # ── Quality-value screen (Oct 2026) ─────────────────────────────────
-    # Level 3 of the hierarchy: cheap vs OWN history, with balance-sheet and
-    # estimate-revision filters so a low P/E at peak earnings is flagged as
-    # a trap instead of a buy. Logic + tests live in value_screen.py.
-    st.markdown("---")
-    st.markdown("#### 🔎 Quality-Value Screen")
-    st.caption(
-        "Five tests: P/E below its own ~5-year median · net debt/EBITDA < 2× (utilities 5.5×; "
-        "N/A for financials/REITs) · interest cover > 8× · FCF yield > 5% · next-FY EPS estimate "
-        "not cut more than 2% in 90 days. Universe = the Money Flow sector constituents plus any "
-        "tickers you add. Fundamentals from Yahoo, cached 24h; a full run takes a minute or two."
-    )
-    try:
-        import value_screen as _vs
-        _VS_OK = True
-    except Exception as _e:
-        _VS_OK = False
-        st.info(f"value_screen.py not deployed ({_e}).")
-    if _VS_OK:
-        _vs_universe = []
-        if _BRIDGE_OK:
-            try:
-                _cons = (read_summary() or {}).get("constituents") or {}
-                _vs_universe = sorted({t for names in _cons.values() for t in names})
-            except Exception:
-                _vs_universe = []
-        vc1, vc2, vc3 = st.columns([3, 1, 1])
-        _vs_extra = vc1.text_input("Add tickers (comma-separated)", value="",
-                                   key="vs_extra", placeholder="e.g. CSCO, MRK, CMCSA")
-        _vs_cap = vc2.selectbox("Max forward P/E", ["none", "20", "15"], index=0, key="vs_cap")
-        _vs_only = vc3.selectbox("Show", ["all", "quality value only", "hide not-value"],
-                                 index=2, key="vs_only")
-        _extra = [x.strip().upper() for x in _vs_extra.split(",") if x.strip()]
-        _vs_tickers = sorted(set(_vs_universe) | set(_extra))
-        st.caption(f"Universe: {len(_vs_tickers)} tickers"
-                   + ("" if _vs_universe else " — Money Flow constituents unavailable; using added tickers only"))
-
-        @st.cache_data(ttl=86400, show_spinner=False)
-        def _vs_fetch(tk: str) -> dict:
-            return _vs.fetch_fundamentals(tk, yf)
-
-        if st.button("Run quality-value screen", key="vs_run", disabled=not _vs_tickers):
-            _reg_key, _cc_state = None, None
-            if _REGIME_OK and fred_key_input:
-                try:
-                    _vs_a = full_assessment(fred_key_input)
-                    _reg_key = _vs_a["regime"]["key"]
-                    _cc_state = (_vs_a.get("credit_cycle") or {}).get("state")
-                except Exception:
-                    _reg_key, _cc_state = None, None
-            _cap = None if _vs_cap == "none" else float(_vs_cap)
-            _prog = st.progress(0.0, text="Fetching fundamentals…")
-            _res = []
-            for _i, _tk in enumerate(_vs_tickers):
-                _res.append(_vs.evaluate(_vs_fetch(_tk), regime_key=_reg_key,
-                                         max_forward_pe=_cap, credit_state=_cc_state))
-                _prog.progress((_i + 1) / len(_vs_tickers), text=f"{_tk} ({_i + 1}/{len(_vs_tickers)})")
-            _prog.empty()
-            st.session_state["vs_results"] = {"res": _res, "regime": _reg_key, "cap": _cap,
-                                              "credit": _cc_state,
-                                              "at": datetime.now().strftime("%Y-%m-%d %H:%M")}
-
-        _vs_state = st.session_state.get("vs_results")
-        if _vs_state:
-            _res = _vs_state["res"]
-            if _vs_state["cap"] is not None:
-                _res = [r for r in _res if r["pe_cap_ok"]]
-            if _vs_only == "quality value only":
-                _res = [r for r in _res if r["verdict"] == "QUALITY VALUE"]
-            elif _vs_only == "hide not-value":
-                _res = [r for r in _res if r["verdict"] not in ("NOT VALUE", "INSUFFICIENT")]
-            _all = _vs_state["res"]
-            _cnt = lambda v: sum(1 for r in _all if r["verdict"].startswith(v))
-            m1, m2, m3, m4, m5 = st.columns(5)
-            m1.metric("Quality value", _cnt("QUALITY VALUE"))
-            m2.metric("Partial", _cnt("PARTIAL"))
-            m3.metric("Value-trap risk", _cnt("VALUE TRAP"))
-            m4.metric("Not value", _cnt("NOT VALUE"))
-            m5.metric("Insufficient data", _cnt("INSUFFICIENT"))
-            st.caption(f"Run {_vs_state['at']} · regime `{_vs_state['regime'] or 'unavailable'}`"
-                       f" · credit cycle `{_vs_state.get('credit') or 'unavailable'}`"
-                       + (f" · forward P/E ≤ {_vs_state['cap']:.0f}×" if _vs_state["cap"] else ""))
-            if _res:
-                st.dataframe(pd.DataFrame(_vs.to_rows(_res)), use_container_width=True, hide_index=True)
-            else:
-                st.info("No names pass the current filters.")
-            st.caption(
-                "✅ pass · ❌ fail · — not evaluated (reason shown). VALUE TRAP RISK = cheap vs its own "
-                "history but estimates falling or leverage failing — the market is probably right. "
-                "WAIT = deep cyclical while the regime is credit_stress/liquidity_crisis: buy after the "
-                "HY spread-peak signal, not during widening. A pass here is Level 3 only; it still "
-                "needs Level 2 flow and a Level 4 entry before it is a position."
-            )
-
     # Rebalancing alerts
     st.markdown("#### Rebalancing Alerts")
     any_alert=False
@@ -2187,7 +2091,6 @@ with tab8:
                   # Sept 2026: both were missing and fell back to gray.
                   "term_premium_repricing":"#b45309",
                   "restrictive_tightening":"#2563eb",
-                  "credit_stress":"#be123c",
                   "neutral":"#6b7280"}.get(_r["key"], "#6b7280")
         st.markdown(
             f"<div style='padding:12px 16px;border-radius:8px;background:{_color}22;"
@@ -2231,7 +2134,6 @@ with tab8:
                  "growth_scare":"growth composite CONTRACTING (≥3 of 4 series)",
                  "term_premium_repricing":"short real +  ·  long real ↑  ·  dollar ↓  ·  credit calm",
                  "restrictive_tightening":"short real +  ·  long real ↑ ≥0.20pp/3mo  ·  dollar firm  ·  credit calm",
-                 "credit_stress":"HY ≥ 3.5% and (widening ≥ +0.25pp/2wk or ≥ 4.5%)  ·  below crisis override",
                  "transition_ambiguous":"short real inside ±0.25% band, or valuation/leadership guard"}
         _rows=[]
         # Sept 2026: iterate the classifier's own regime list so a new regime
