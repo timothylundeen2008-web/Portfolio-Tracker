@@ -1,5 +1,5 @@
 {
-  "published_at": "2026-10-01T15:06:14+00:00",
+  "published_at": "2026-10-01T20:43:21+00:00",
   "notes": "auto-published on Markets Dashboard render",
   "regime": {
     "key": "restrictive_tightening",
@@ -7,7 +7,7 @@
     "transition_reason": null,
     "drivers": [
       "Short real rate +0.48% (decisively positive, beyond \u00b10.25%) \u2014 policy is above inflation",
-      "Long real yield RISING +0.71pp over 3 months (threshold +0.20pp)",
+      "Long real yield RISING +0.68pp over 3 months (threshold +0.20pp)",
       "Dollar +1.6% over ~1 month \u2014 firm, so higher yields ARE attracting capital (ordinary tightening, not a credibility repricing)",
       "HY OAS 3.12% \u2014 credit calm; tightening has not broken anything yet"
     ]
