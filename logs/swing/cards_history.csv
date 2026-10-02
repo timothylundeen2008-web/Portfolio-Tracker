@@ -11,3 +11,5 @@ date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_
 2026-09-30,AMAT,M0 Rotation,long,3-of-3,515.42,487.59,511.38,restrictive_tightening,False,binary macro event within 48h: NFP in 1d
 2026-09-30,NVDA,M0 Rotation,long,2-of-3,232.37,224.42,228.38,restrictive_tightening,False,binary macro event within 48h: NFP in 1d
 2026-09-30,PG,M2b Failed-BO Short,short,2-of-3,148.22,149.48,145.28,restrictive_tightening,False,binary macro event within 48h: NFP in 1d
+2026-10-01,AMAT,M0 Rotation,long,3-of-3,533.88,504.92,529.3,restrictive_tightening,False,binary macro event within 48h: NFP in 0d
+2026-10-01,NVDA,M0 Rotation,long,2-of-3,232.29,224.31,230.86,restrictive_tightening,False,binary macro event within 48h: NFP in 0d
