@@ -1,6 +1,6 @@
 {
  "session": "2026-10-01",
- "generated_et": "Oct 01, 2026 10:35 PM EDT",
+ "generated_et": "Oct 02, 2026 04:30 AM EDT",
  "scoreboard": {
   "rows": [
    {
@@ -133,34 +133,34 @@
    },
    {
     "name": "VIX",
-    "value": 16.389999389648438,
+    "value": 15.989999771118164,
     "unit": "",
     "kind": "level",
-    "d1": 0.3059938166979137,
-    "d5": 4.5947631758036955,
-    "d20": 14.455303000338237,
-    "d1_txt": "+0.3%",
-    "d5_txt": "+4.6%",
-    "d20_txt": "+14.5%",
-    "pctile_1y": 35.0,
-    "z1d": 0.0,
-    "asof": "2026-10-01",
+    "d1": -2.4405102710553184,
+    "d5": 7.531941971204881,
+    "d20": 10.04817461196259,
+    "d1_txt": "-2.4%",
+    "d5_txt": "+7.5%",
+    "d20_txt": "+10.0%",
+    "pctile_1y": 27.0,
+    "z1d": -0.3,
+    "asof": "2026-10-02",
     "source": "FRED VIXCLS"
    },
    {
     "name": "WTI crude",
-    "value": 92.94000244140625,
+    "value": 89.80999755859375,
     "unit": "$",
     "kind": "index",
-    "d1": 2.786998809436425,
-    "d5": -3.066330369830772,
-    "d20": 0.8573005332677575,
-    "d1_txt": "+2.8%",
-    "d5_txt": "-3.1%",
-    "d20_txt": "+0.9%",
-    "pctile_1y": 71.0,
-    "z1d": 0.8,
-    "asof": "2026-10-01",
+    "d1": -3.294933883374851,
+    "d5": 5.373691843944317,
+    "d20": -2.960564496387086,
+    "d1_txt": "-3.3%",
+    "d5_txt": "+5.4%",
+    "d20_txt": "-3.0%",
+    "pctile_1y": 65.0,
+    "z1d": -0.9,
+    "asof": "2026-10-02",
     "source": "FRED DCOILWTICO"
    },
    {
@@ -409,10 +409,10 @@
   ],
   "flip_error": null,
   "guards": [
-   "cape: 41.07 (live, as of 2026-10-01)",
-   "top20 concentration pct: 49.92 (live, as of 2026-10-01) \u2014 top 20 SPY weights summed",
+   "cape: 41.07 (live, as of 2026-10-02)",
+   "top20 concentration pct: 49.92 (live, as of 2026-10-02) \u2014 top 20 SPY weights summed",
    "fed bs expanding: False (live, as of 2026-09-30) \u2014 flat / neutral: 4-wk avg +1.5B/wk, 13-wk avg +1.4B/wk",
-   "deficit gt 5pct gdp: True (manual, as of 2026-08-13, 49d old)"
+   "deficit gt 5pct gdp: True (manual, as of 2026-08-13, 50d old)"
   ],
   "guard_warnings": [],
   "repression": {
@@ -450,7 +450,7 @@
    },
    "vol": {
     "state": "CALM",
-    "reading": "16.4",
+    "reading": "16.0",
     "note": "Derivatives are not pricing acute stress. If equities are falling anyway, that combination favours the positioning-unwind reading over the macro-break reading \u2014 and it makes convexity comparatively cheap."
    },
    "fx": {
@@ -1016,7 +1016,7 @@
  },
  "portfolio": {
   "available": true,
-  "ledger_age_days": 67,
+  "ledger_age_days": 68,
   "stale": true,
   "positions": [
    {
@@ -1293,7 +1293,7 @@
    "TLT: written invalidation has fired (DFII10 2.93% vs 2.50%) \u2014 exit or rewrite the thesis",
    "Drift outside \u00b120% band: VGT 28% vs 17%, SGOV 0% vs 11%, GLD 0% vs 10%, USFR 4% vs 8%, KMLM 5% vs 8%, RING 0% vs 5%, XLE 6% vs 5%, SLV 6% vs 4%"
   ],
-  "conclusion": "\u26a0 The ledger was last updated 67 days ago \u2014 every line below assumes those positions still exist. Update it before acting on any of them. Stops hit: XLU, TLT \u2014 daily-authorized exits. Invalidations fired: XLU, TLT (weekend list). Heat 3.3% of 15% cap (ledger market value basis; cash not in the ledger is excluded)."
+  "conclusion": "\u26a0 The ledger was last updated 68 days ago \u2014 every line below assumes those positions still exist. Update it before acting on any of them. Stops hit: XLU, TLT \u2014 daily-authorized exits. Invalidations fired: XLU, TLT (weekend list). Heat 3.3% of 15% cap (ledger market value basis; cash not in the ledger is excluded)."
  },
  "swing": {
   "available": true,
@@ -1568,12 +1568,12 @@
   "conclusion": "0 entry-permitted cards; 1 near-miss building on watch."
  },
  "next48": {
-  "horizon": "2026-10-05",
+  "horizon": "2026-10-06",
   "events": [
    {
     "event": "NFP",
     "date": "2026-10-02",
-    "days_away": 1,
+    "days_away": 0,
     "affects": "Rates-sensitive sleeves and growth",
     "blackout": true
    }
@@ -1659,15 +1659,15 @@
   },
   {
    "input": "FRED VIXCLS",
-   "asof": "2026-10-01",
-   "age_days": 0,
+   "asof": "2026-10-02",
+   "age_days": -1,
    "status": "OK",
    "note": "FRED + yfinance ^VIX after 2026-09-30"
   },
   {
    "input": "FRED DCOILWTICO",
-   "asof": "2026-10-01",
-   "age_days": 0,
+   "asof": "2026-10-02",
+   "age_days": -1,
    "status": "OK",
    "note": "FRED + yfinance CL=F after 2026-09-29"
   },
@@ -1681,14 +1681,14 @@
   {
    "input": "Money Flow bridge",
    "asof": "2026-10-02",
-   "age_days": -1,
+   "age_days": 0,
    "status": "OK",
    "note": ""
   },
   {
    "input": "Markets bridge",
    "asof": "2026-10-02",
-   "age_days": -1,
+   "age_days": 0,
    "status": "OK",
    "note": ""
   },
@@ -1702,7 +1702,7 @@
   {
    "input": "Position ledger",
    "asof": "2026-07-26",
-   "age_days": 67,
+   "age_days": 68,
    "status": "STALE",
    "note": ""
   },
@@ -1722,8 +1722,8 @@
   },
   {
    "input": "Prices (yfinance)",
-   "asof": "2026-10-01",
-   "age_days": 0,
+   "asof": "2026-10-02",
+   "age_days": -1,
    "status": "OK",
    "note": "139 tickers"
   },
@@ -1756,7 +1756,7 @@
  "headline": [
   "A normal-range session: no scoreboard input moved more than 1.5\u03c3. Still at 1-year extremes: 10Y real yield (DFII10) 2.93% (100th pctile), 10Y Treasury 5.29% (100th pctile).",
   "Regime `restrictive_tightening` (session 5); cross-asset majority CALM; nearest flip is Dollar 20-day change -2.60% to `term_premium_repricing` (~7 typical days).",
-  "Authorized today: XLU: stop hit (close 39.68 vs stop 44.78); TLT: stop hit (close 77.71 vs stop 82.18). (Ledger is 67 days old \u2014 confirm the positions exist first.)"
+  "Authorized today: XLU: stop hit (close 39.68 vs stop 44.78); TLT: stop hit (close 77.71 vs stop 82.18). (Ledger is 68 days old \u2014 confirm the positions exist first.)"
  ],
  "conclusions": {
   "base_case": "Base case: `restrictive_tightening` holds. Cross-asset: CALM majority, dissent from rates, fx. Money is confirming only XLK.",
@@ -1767,7 +1767,7 @@
    "Short real rate 0.48pp \u2192 0.25pp flips to `transition_ambiguous` \u2014 \u22480.9 \u00d7 a 25bp policy move, or the CPI equivalent"
   ],
   "weekend": [
-   "Update the position ledger (last touched 67 days ago)",
+   "Update the position ledger (last touched 68 days ago)",
    "XLU: written invalidation has fired (DFII10 3m momentum +0.68pp) \u2014 exit or rewrite the thesis",
    "TLT: written invalidation has fired (DFII10 2.93% vs 2.50%) \u2014 exit or rewrite the thesis",
    "Drift outside \u00b120% band: VGT 28% vs 17%, SGOV 0% vs 11%, GLD 0% vs 10%, USFR 4% vs 8%, KMLM 5% vs 8%, RING 0% vs 5%, XLE 6% vs 5%, SLV 6% vs 4%"
