@@ -312,7 +312,7 @@ SATELLITE_ROTATION_TARGETS = {
     "restrictive_tightening":   ("SGOV / USFR / KMLM / SCHD",
                                   "Real rates rising at both ends with a firm dollar and calm credit. Front-end cash earns a positive real rate; trend works in persistent rate moves; do NOT recycle freed capital into long-duration growth or TLT."),
     "credit_stress":            ("SGOV / USFR / KMLM / XLV",
-                                  "HY OAS out of the calm zone (>= 3.5%) and widening or wide (>= 4.5%), short of the crisis override. Credit leads equities: trim growth, cyclicals and miners; lift front-end cash and trend. While real yields are rising it keeps every tightening defence (TLT ~2%); duration comes back only when real yields turn down, and then only through the entry gate."),
+                                  "HY OAS out of the calm zone (>= 3.5%) and widening or wide (>= 4.5%), short of the crisis override. Credit leads equities: trim growth/cyclicals, lift front-end cash and trend; duration neither added nor cut until the crisis override or falling long real yields decide it."),
     "transition_ambiguous":     ("Hold near base weights / SGOV",
                                   "Primary short-real-rate gauge is inside its own ±0.25% noise band (or a valuation/leadership guard blocked goldilocks) — express NEITHER the repression nor the reflation trade until it clears. Approximate: exact overlay lives in regime_bands.py, which I haven't verified line-by-line."),
     "neutral":                  ("SGOV / USFR",
@@ -990,7 +990,7 @@ with st.sidebar:
                     "growth": _sb_assessment.get("growth", {}),
                     "tripwires": [], "rs_quartiles": {}, "trend_states": {},
                     "conviction": {},
-                    "regime_targets": _sb_assessment.get("targets") or target_weights(_sb_reg["key"]),
+                    "regime_targets": target_weights(_sb_reg["key"]),
                 }
             _sb_regime_label = _sb_mkts.get("regime", {}).get("label")
             _sb_hostile = _sb_mkts.get("regime", {}).get("key") in (
@@ -1664,49 +1664,6 @@ with tab3:
 # TAB 4 — CONSTRUCTION & P/E
 # ════════════════════════════════════════════════════════════
 with tab4:
-    # ── Model portfolio: what you SHOULD hold (Oct 2026) ─────────────────
-    # Read from the consolidated brief's output so the dashboard and the
-    # brief can never disagree. Built by daily_brief.py + model_book.py:
-    # regime targets -> entry gate -> portfolio circuit breaker.
-    try:
-        import glob as _glob, json as _json, os as _os
-        _bj = sorted(_glob.glob(_os.path.join("logs", "brief", "*_brief.json")))
-        _mb = _json.load(open(_bj[-1])) if _bj else None
-    except Exception as _e:
-        _mb = None
-    _mdl = (_mb or {}).get("model") or {}
-    st.markdown("### 🎯 Model Portfolio — what you SHOULD hold")
-    if _mdl.get("available"):
-        _sm = _mdl["summary"]
-        _brk = _sm.get("breaker") == "ON"
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Regime", _sm.get("regime", "—"))
-        c2.metric("Circuit breaker", "ON — risk halved" if _brk else "OFF")
-        c3.metric("Model drawdown", f"{_sm.get('drawdown_pct', 0):+.1f}%",
-                  help="Model book vs its running peak. Warning at -5%, breaker trips at -8%.")
-        c4.metric("Model 20-day", f"{_sm['ret_20d']:+.2f}%" if _sm.get("ret_20d") is not None else "—")
-        if _brk:
-            st.error("Circuit breaker ON: every risk sleeve is halved and the freed weight is in SGOV. "
-                     "Release needs drawdown back above -5% and SPY above its 50-day on 2 closes.")
-        elif _sm.get("warn"):
-            st.warning("Model drawdown is past the -5% warning line; the breaker trips at -8%.")
-        _rows = pd.DataFrame(_mdl.get("rows") or [])
-        if not _rows.empty:
-            _rows = _rows.rename(columns={"ticker": "Sleeve", "weight": "Should hold %", "change": "Change today",
-                                          "gate": "Entry gate (adds)", "gate_trigger": "Pending until",
-                                          "hold_trend": "Hold trend (200-day)"})
-            st.dataframe(_rows, use_container_width=True, hide_index=True)
-        st.caption(f"As of the {_mb.get('session')} close · model book {_sm.get('nav', 0):.2f}, tracked since "
-                   f"{_sm.get('since')}. Regime targets → entry gate (adds must be above a rising 200-day and "
-                   "their 50-day; blocked adds wait in SGOV) → circuit breaker. A model, not a broker "
-                   "statement: daily-rebalanced, before costs and taxes. Full reasoning: Logs tab → "
-                   "Consolidated brief, sections 3 and 8.")
-        if _mdl.get("conclusion"):
-            st.info(_mdl["conclusion"])
-    else:
-        st.info("The model portfolio appears here after the next Consolidated Daily Brief run "
-                "(GitHub Actions → Consolidated Daily Brief → Run workflow).")
-    st.markdown("---")
     st.markdown("### Portfolio Construction")
     cl, cr = st.columns(2)
     with cl:
@@ -2280,9 +2237,7 @@ with tab8:
         # Sept 2026: iterate the classifier's own regime list so a new regime
         # can never be silently missing from this table again.
         for _kk in [k for k in REGIMES if k != "neutral"]:
-            # Reference table: the raw regime allocation, before the entry gate
-            # (the gated, trade-ready version is in the consolidated brief).
-            _w = target_weights(_kk, gate=False)
+            _w = target_weights(_kk)
             _rows.append({
                 "Regime": REGIMES[_kk]["label"] + (" ⬅ ACTIVE" if _kk==_active else ""),
                 "Trigger": _disc.get(_kk, "(trigger text not written for this regime)"),
@@ -2292,9 +2247,6 @@ with tab8:
                 "Growth": f"{_w['VGT']+_w['SMH']+_w['QQQ']}%",
             })
         st.dataframe(pd.DataFrame(_rows), hide_index=True, use_container_width=True)
-        st.caption("Weights shown are each regime's raw allocation, before the entry gate. "
-                   "The live, trade-ready version — with every add checked against its 200-day and "
-                   "50-day and blocked adds parked in SGOV — is in the consolidated brief (section 3).")
         st.caption("TLT is a *contingent* sleeve: 0% in inflationary repression "
                    "(rising long real yields), armed in a liquidity crisis. "
                    "GLD tilts shown here are pre-momentum-gate — the live "

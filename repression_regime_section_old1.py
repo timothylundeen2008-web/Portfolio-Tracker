@@ -330,8 +330,7 @@ def _quadrant_table(active_key):
     for k in order:
         if k not in disc:
             disc[k] = "(discriminator text not yet written for this regime)"
-        # raw regime allocation (before the v7.1 entry gate) — a reference map
-        w = rc.target_weights(k, gate=False)
+        w = rc.target_weights(k)
         star = " ⬅ **ACTIVE**" if k == active_key else ""
         rows.append({
             "Regime": rc.REGIMES[k]["label"] + star,

@@ -75,7 +75,6 @@ CASH_SLEEVES = {"SGOV", "USFR", "BIL", "SHV"}   # ATR stops do not apply to cash
 HEAT_CAP_PCT = 15.0
 DRIFT_BAND_REL = 0.20
 LEDGER_STALE_DAYS = 7
-LEDGER_ACTIVE_DAYS = 30          # older than this = not tracking real positions; the model portfolio is the reference
 
 # FRED series used for the scoreboard. (label, series, unit, kind)
 #   kind "rate": Δ shown in bp;  "level": Δ in %;  "index": Δ in %
@@ -295,7 +294,6 @@ def gather(today_et: Optional[datetime] = None, fred_key: str = "",
     inp["fred"] = hist
 
     # ── Files: bridges, logs, ledger ──────────────────────────────────────
-    inp["data_dir"] = data_dir
     inp["rotation"] = _read_json_file(ROTATION_FILE, data_dir)
     inp["markets"] = _read_json_file(MARKETS_FILE, data_dir)
     try:
@@ -315,13 +313,8 @@ def gather(today_et: Optional[datetime] = None, fred_key: str = "",
     universe = sorted({t for names in constituents.values() for t in names})
     comp = sorted({t for _, a, b in COMPASS for t in a + b})
     ledger_tk = sorted(set(inp["ledger"]["ticker"].astype(str))) if not inp["ledger"].empty else []
-    try:
-        import regime_classifier as _rc
-        sleeves = set(_rc.BASE_WEIGHTS)
-    except Exception:
-        sleeves = set()
     tickers = sorted(set(universe) | set(comp) | set(ledger_tk) | {t for _, t in PRICE_SCORE}
-                     | set(FRESHER.values()) | sleeves)
+                     | set(FRESHER.values()))
     inp["universe"] = universe
     try:
         inp["prices"] = (fetch_prices or _default_prices)(tickers)
@@ -659,36 +652,6 @@ def regime_section(inp: dict) -> dict:
         out["guard_warnings"] = []
     rep = a.get("repression") or {}
     out["repression"] = {"score": rep.get("score"), "band": rep.get("band"), "hollow": rep.get("hollow")}
-    # v7.1: gated rebalance plans. Entry gate evaluated on the 2y closes the
-    # brief already fetched (no extra network). Shown for (a) a regime change
-    # still being executed and (b) the nearest flip, as a ready contingency.
-    out["plans"], out["gates_today"] = [], {}
-    try:
-        import regime_classifier as rc
-        prices = inp.get("prices") or {}
-        gate_fp = lambda t, p="2y": _price_close(prices, t)
-        out["gates_today"] = {t: rc.entry_gate(t, gate_fp)
-                              for t, d in rc.regime_overlay(key, sig).items()
-                              if d > 0 and t not in rc.ENTRY_EXEMPT}
-        if n <= 2 and prev_key and prev_key != key and prev_key in rc.REGIMES:
-            pl = rc.transition_plan(prev_key, key, gate_fp, sig)
-            pl["title"] = (f"Rebalance QUEUED: `{prev_key}` → `{key}` — executes only if the next close "
-                           "confirms" if n == 1 else
-                           f"Rebalance CONFIRMED: `{prev_key}` → `{key}` — execute at the weekend review")
-            out["plans"].append(pl)
-        # contingencies: the nearest flip, plus any credit escalation in the flip list
-        targets_ = []
-        for f_ in ok:
-            t_ = f_.get("to")
-            if t_ in rc.REGIMES and t_ != key and t_ not in targets_ and (
-                    not targets_ or t_ in ("credit_stress", "liquidity_crisis", "growth_scare")):
-                targets_.append(t_)
-        for t_ in targets_[:3]:
-            pl = rc.transition_plan(key, t_, gate_fp, sig)
-            pl["title"] = f"Contingency — if `{t_}` confirms on two closes"
-            out["plans"].append(pl)
-    except Exception as e:
-        out["plan_error"] = f"{type(e).__name__}: {e}"
     # v7: spread-peak re-entry state (from the assessment, else from the scoreboard history)
     cc = a.get("credit_cycle")
     if not cc or cc.get("state") == "UNAVAILABLE":
@@ -965,27 +928,10 @@ def check_invalidation(text: str, ctx: dict) -> dict:
     return {"status": "INTACT", "detail": "; ".join(d for _, d in hits)}
 
 
-def _ledger_age(inp: dict) -> Optional[int]:
-    led = inp.get("ledger")
-    if led is None or led.empty or "last_updated" not in led:
-        return None
-    lu = pd.to_datetime(led.get("last_updated"), errors="coerce").max()
-    return (inp["now_et"].date() - lu.date()).days if pd.notna(lu) else None
-
-
-def portfolio_section(inp: dict, targets: dict, regime_key: Optional[str], force: bool = False) -> dict:
-    """REAL positions vs the model. Only used when the ledger is actively
-    maintained (updated within LEDGER_ACTIVE_DAYS); otherwise it would
-    describe positions that do not exist, so it stays out of the brief."""
+def portfolio_section(inp: dict, targets: dict, regime_key: Optional[str]) -> dict:
     led = inp.get("ledger")
     if led is None or led.empty:
-        return {"available": False, "active": False,
-                "conclusion": "No real positions tracked — the model portfolio is the reference."}
-    age = _ledger_age(inp)
-    if not force and (age is None or age > LEDGER_ACTIVE_DAYS):
-        return {"available": False, "active": False, "ledger_age_days": age,
-                "conclusion": (f"Ledger last touched {age} days ago — not tracking real positions, so it is not "
-                               "used. The model portfolio (section 8) is what you SHOULD hold.")}
+        return {"available": False, "conclusion": "Ledger is empty — no stop, heat or drift checks are possible."}
     import position_ledger as pl
     a = inp.get("assessment") or {}
     sig = a.get("signals")
@@ -1066,106 +1012,9 @@ def portfolio_section(inp: dict, targets: dict, regime_key: Optional[str], force
         c += "No stop hit and no machine-checkable invalidation fired. "
     if heat is not None:
         c += f"Heat {heat:.1f}% of {HEAT_CAP_PCT:.0f}% cap (ledger market value basis; cash not in the ledger is excluded)."
-    return {"available": True, "active": True, "ledger_age_days": ledger_age, "stale": stale, "positions": rows,
+    return {"available": True, "ledger_age_days": ledger_age, "stale": stale, "positions": rows,
             "heat_pct": heat, "drift": drift, "authorized_today": authorized, "weekend": weekend,
             "conclusion": c.strip()}
-
-
-# ── Model portfolio (what you SHOULD hold) ──────────────────────────────────
-
-def model_section(inp: dict, rg: dict) -> dict:
-    """The framework's answer, every session: regime targets after the entry
-    gate and the portfolio circuit breaker, tracked as a model book."""
-    out = {"available": False, "conclusion": ""}
-    try:
-        import regime_classifier as rc
-        import model_book as mbk
-    except Exception as e:
-        out["conclusion"] = f"Model book unavailable: {type(e).__name__}: {e}"
-        return out
-    a = inp.get("assessment") or {}
-    key = rg.get("key")
-    if not key or key not in rc.REGIMES:
-        out["conclusion"] = "No live regime — the model portfolio cannot be computed today."
-        return out
-    prices = inp.get("prices") or {}
-    closes = {t: _price_close(prices, t) for t in prices}
-
-    def weights_fn(reg, d):
-        d = pd.Timestamp(d)
-        fp = lambda t, p="2y": (closes.get(t, pd.Series(dtype=float))
-                                [lambda x: x.index <= d] if t in closes else pd.Series(dtype=float))
-        return rc.target_weights(reg if reg in rc.REGIMES else "neutral", fp)
-
-    log = inp.get("daily_log")
-    regime_by_date = {}
-    if log is not None and not log.empty and "regime" in log:
-        lg = log.dropna(subset=["regime"]).sort_values("et_date").drop_duplicates("et_date", keep="last")
-        regime_by_date = {r.et_date: r.regime for r in lg.itertuples()
-                          if str(r.et_date) <= inp["session"].isoformat()}
-    # Today's weights come from the SAME gate evaluation the table shows
-    # (the brief's own 2y closes + live signals), so "should hold" and the
-    # entry-gate column can never disagree. Fall back to the assessment's
-    # targets only when the brief has no prices.
-    sig = a.get("signals")
-    if closes:
-        full_fp = lambda t, p="2y": closes.get(t, pd.Series(dtype=float))
-        today_w = rc.target_weights(key, full_fp, sig)
-    else:
-        today_w = a.get("targets") or None
-        if today_w and abs(sum(float(v) for v in today_w.values()) - 100) > 1.0:
-            today_w = None
-        if today_w is None:
-            today_w = rc.target_weights(key, None, sig, gate=False)
-    path = Path(inp.get("data_dir") or "data") / "model_book.csv"
-    try:
-        book = mbk.advance(mbk.load(path), inp["session"], regime_by_date, prices, weights_fn, key, today_w)
-    except Exception as e:
-        out["conclusion"] = f"Model book failed: {type(e).__name__}: {e}"
-        return out
-    sm = mbk.summary(book)
-    gates = rg.get("gates_today") or {}
-    try:
-        import trend_filter as tf
-    except Exception:
-        tf = None
-    rows = []
-    for t, w in sorted(sm["weights"].items(), key=lambda kv: -kv[1]):
-        if w < 0.05:
-            continue
-        hold = None
-        if tf is not None and t not in tf.EXEMPT:
-            hold = tf.assess_ticker(closes.get(t, pd.Series(dtype=float)))["state"]
-        ch = next((c["change"] for c in sm["changes"] if c["ticker"] == t), 0.0)
-        rows.append({"ticker": t, "weight": w, "change": ch,
-                     "gate": (gates.get(t) or {}).get("state"),
-                     "gate_trigger": (gates.get(t) or {}).get("trigger"),
-                     "hold_trend": hold or ("cash" if t in rc.ENTRY_EXEMPT else "—")})
-    actions, weekend = [], []
-    if sm["breaker"] == "ON" and sm["breaker_changed"]:
-        actions.append(f"CIRCUIT BREAKER ON — model drawdown {sm['drawdown_pct']:.1f}% breached "
-                       f"{mbk.TRIGGER_DD:.0f}%: risk sleeves halved, freed weight to SGOV (weekday-authorized, like a stop)")
-    elif sm["breaker"] == "OFF" and sm["breaker_changed"]:
-        weekend.append("Circuit breaker RELEASED — re-risk through the entry gate (gated adds only), not all at once")
-    if sm["changes"] and not actions:
-        moved = ", ".join(f"{c['ticker']} {c['change']:+.1f}" for c in sm["changes"][:8])
-        weekend.append(f"Model portfolio changed today ({moved}) — execute at the weekend review if following it")
-    c = (f"You SHOULD hold the `{key}` model above"
-         + (" — with the CIRCUIT BREAKER ON (risk sleeves halved)" if sm["breaker"] == "ON" else "")
-         + f". Model book {sm['nav']:.2f} ({sm['drawdown_pct']:+.1f}% from peak"
-         + (f"; 20d {sm['ret_20d']:+.1f}%" if sm.get("ret_20d") is not None else "") + "). ")
-    if sm["warn"] and sm["breaker"] != "ON":
-        c += f"⚠ Drawdown past the {mbk.WARN_DD:.0f}% warning line — the breaker trips at {mbk.TRIGGER_DD:.0f}%. "
-    if sm["breaker"] == "ON":
-        c += (f"Release needs drawdown back above {mbk.RELEASE_DD:.0f}% and SPY above its 50-day on "
-              f"{mbk.RELEASE_CLOSES} closes ({sm['release_count']}/{mbk.RELEASE_CLOSES} so far). ")
-    blocked = [r["ticker"] for r in rows if r["gate"] in ("BLOCKED", "UNAVAILABLE")]
-    if blocked:
-        c += f"Adds waiting on the entry gate (parked in SGOV): {', '.join(blocked)}. "
-    c += "No change today." if not sm["changes"] else f"{len(sm['changes'])} weight change(s) vs the prior session."
-    out.update(available=True, summary=sm, rows=rows, actions=actions, weekend=weekend,
-               conclusion=c.strip(), _book=book, path=str(path))
-    return out
 
 
 # ── Swing ──────────────────────────────────────────────────────────────────
@@ -1314,13 +1163,7 @@ def data_health(inp: dict) -> list[dict]:
         "" if not b.get("date") or b.get("date") <= today.isoformat() else "run after the close — scans this session")
     led = inp.get("ledger")
     lu = pd.to_datetime(led.get("last_updated"), errors="coerce").max() if led is not None and not led.empty else None
-    _lage = _ledger_age(inp)
-    if _lage is None or _lage > LEDGER_ACTIVE_DAYS:
-        out.append({"input": "Position ledger", "asof": lu.date().isoformat() if lu is not None and pd.notna(lu) else None,
-                    "age_days": _lage, "status": "UNUSED",
-                    "note": "not tracking real positions — the model portfolio (section 8) is the reference"})
-    else:
-        add("Position ledger", lu.date().isoformat() if lu is not None and pd.notna(lu) else None, LEDGER_STALE_DAYS, ref=wall)
+    add("Position ledger", lu.date().isoformat() if lu is not None and pd.notna(lu) else None, LEDGER_STALE_DAYS, ref=wall)
     log = inp.get("daily_log")
     last_log = str(log["et_date"].max()) if log is not None and not log.empty else None
     add("Daily log row", last_log, 0, "" if last_log == today.isoformat() else "today's daily log not written yet — alerts section uses no row")
@@ -1358,14 +1201,13 @@ def build(inp: dict) -> dict:
     br = breadth_section(inp)
     targets = a.get("targets") or (inp.get("markets") or {}).get("regime_targets") or {}
     pf = portfolio_section(inp, targets, rg.get("key"))
-    mdl = model_section(inp, rg)
     sw = swing_section(inp)
     nx = next48_section(inp, rg)
     al = alerts_section(inp)
     dh = data_health(inp)
     brief = {"session": inp["session"].isoformat(), "generated_et": mt.fmt_et(inp["now_et"]),
              "scoreboard": sb, "regime": rg, "cross_asset": xa, "rotation": ro, "flow": fl,
-             "breadth": br, "model": mdl, "portfolio": pf, "swing": sw, "next48": nx, "alerts": al,
+             "breadth": br, "portfolio": pf, "swing": sw, "next48": nx, "alerts": al,
              "data_health": dh, "errors": inp.get("errors", []), "targets": targets}
     brief["headline"] = headline(brief)
     brief["conclusions"] = conclusions(brief)
@@ -1406,22 +1248,16 @@ def headline(b: dict) -> list[str]:
         s2 += (f"; nearest flip is {near['label']} {near['delta']:+.2f}{near['unit']} to `{near['to']}`"
                + (f" (~{near['typical_days']:.0f} typical days)" if near.get("typical_days") is not None else ""))
     s2 += "."
-    # 3 — what the model says to do
-    md_ = b.get("model") or {}
-    sm = md_.get("summary") or {}
-    auth = list(md_.get("actions") or [])
-    if pf.get("active"):
-        auth += list(pf.get("authorized_today") or [])
-    if sm:
-        s3 = (f"Model portfolio: `{sm.get('regime')}`"
-              + (", CIRCUIT BREAKER ON" if sm.get("breaker") == "ON" else "")
-              + f", drawdown {sm.get('drawdown_pct', 0):+.1f}%"
-              + (f", {len(sm.get('changes') or [])} weight change(s) today" if sm.get("changes") else ", no change today")
-              + ".")
-    else:
-        s3 = "Model portfolio unavailable."
+    # 3 — what is authorized
+    auth = (pf.get("authorized_today") or []) if pf.get("available") else []
     if auth:
-        s3 += " Authorized today: " + "; ".join(x.split(" —")[0] for x in auth) + "."
+        s3 = "Authorized today: " + "; ".join(a.split(" —")[0] for a in auth) + "."
+        if pf.get("stale"):
+            s3 += f" (Ledger is {pf['ledger_age_days']} days old — confirm the positions exist first.)"
+    else:
+        s3 = "Nothing is authorized today under the daily rule"
+        wk = len(pf.get("weekend") or []) if pf.get("available") else 0
+        s3 += f"; {wk} item{'s' if wk != 1 else ''} queued for the weekend review." if wk else "."
     if sw.get("available") and sw.get("permitted"):
         s3 += f" Swing: {len(sw['permitted'])} entry-permitted card{'s' if len(sw['permitted']) != 1 else ''}."
     return [s1, s2, s3]
@@ -1444,9 +1280,7 @@ def conclusions(b: dict) -> dict:
         change.append(f"{f['label']} {_fmt(f['now'], 2)}{f['unit']} → {_fmt(f['at'], 2)}{f['unit']} flips to `{f['to']}`"
                       + (f" (~{f['typical_days']:.0f} typical days)" if f.get("typical_days") is not None else "")
                       + (f" — {f['note']}" if f.get("note") else ""))
-    weekend = list((b.get("model") or {}).get("weekend") or [])
-    if pf.get("active"):
-        weekend += list(pf.get("weekend") or [])
+    weekend = list(pf.get("weekend") or []) if pf.get("available") else []
     _cc = (rg.get("credit_cycle") or {}).get("state")
     if _cc == "RE_ENTRY":
         weekend.append("HY spread peak CONFIRMED — run the quality-value screen; cyclical/deep value and "
@@ -1454,9 +1288,8 @@ def conclusions(b: dict) -> dict:
     elif _cc == "RE_ENTRY_PENDING":
         weekend.append("HY spread peak-and-turn on 1 close — confirm on the next close before any cyclical adds")
     if rg.get("days_in_regime") == 2:
-        weekend.insert(0, f"Regime `{rg['key']}` confirmed on two closes — execute the gated rebalance plan in "
-                          "section 3 (cuts, then hedges, then adds; blocked adds stay parked in SGOV)")
-    if pf.get("active") and pf.get("stale"):
+        weekend.insert(0, f"Regime `{rg['key']}` confirmed on two closes — rebalance to its targets (cuts, then hedges, then adds)")
+    if pf.get("stale"):
         weekend.insert(0, f"Update the position ledger (last touched {pf['ledger_age_days']} days ago)")
     return {"base_case": base, "what_would_change": change, "weekend": weekend}
 
@@ -1507,22 +1340,6 @@ def render_md(b: dict) -> str:
                      f"{f['delta']:+.2f}{f['unit']} | {_fmt(f.get('typical_days'), 0) if f.get('typical_days') is not None else (f.get('note') or 'n/a')} | `{f['to']}` |")
     elif rg.get("flip_error"):
         L.append(f"- Nearest flip: {rg['flip_error']}")
-    gt = rg.get("gates_today") or {}
-    if gt:
-        L += ["", "**Entry gate on today's adds** (every add must be above a rising 200-day and its 50-day; "
-              "blocked adds park in SGOV, pullbacks go in at half):",
-              "- " + " · ".join(f"{t} {g['state']}" for t, g in sorted(gt.items()))]
-    for pl in rg.get("plans") or []:
-        L += ["", f"**{pl['title']}** — {pl['summary']}", "",
-              "| Step | Fund | From → To | Trade now | Pending | Entry gate | Pending until |",
-              "|---|---|---|---|---|---|---|"]
-        for r in pl["rows"]:
-            L.append(f"| {r['step']} | {r['ticker']} | {r['from']:.1f}% → {r['to']:.1f}% | {r['now']:+.1f} | "
-                     f"{r['pending']:+.1f} | {r['gate']} | {r['trigger'] or '—'} |")
-        L.append("_Model-portfolio weights. Cuts are never gated; an add executes only when its trend "
-                 "confirms. The same gate applies to weight returning through the base allocation._")
-    if rg.get("plan_error"):
-        L.append(f"- ⚠ Rebalance plan unavailable: {rg['plan_error']}")
     if rg.get("guards"):
         L += ["", "Guard inputs:", *[f"- {g}" for g in rg["guards"]]]
     L += ["", f"**Conclusion:** {rg['conclusion']}", ""]
@@ -1573,46 +1390,21 @@ def render_md(b: dict) -> str:
           "", f"**Conclusion:** {br['conclusion']}", ""]
 
     pf = b["portfolio"]
-    md_ = b.get("model") or {}
-    L += ["## 8 · Model portfolio — what you SHOULD hold (Levels 5–7)"]
-    if md_.get("available"):
-        sm = md_["summary"]
-        L.append(f"- Regime `{sm['regime']}` · breaker **{sm['breaker']}** · model book {sm['nav']:.2f} "
-                 f"({sm['drawdown_pct']:+.1f}% from peak {sm['peak']:.2f})"
-                 + (f" · 5d {sm['ret_5d']:+.2f}%" if sm.get("ret_5d") is not None else "")
-                 + (f" · 20d {sm['ret_20d']:+.2f}%" if sm.get("ret_20d") is not None else "")
-                 + f" · tracked since {sm['since']}"
-                 + (f" ({sm['reconstructed_sessions']} sessions reconstructed from the daily log)"
-                    if sm.get("reconstructed_sessions") else ""))
-        L += ["", "| Sleeve | Should hold | Change today | Entry gate (adds) | Hold trend (200-day) |",
-              "|---|---|---|---|---|"]
-        for r in md_["rows"]:
-            g = r["gate"] or "—"
-            if r.get("gate_trigger") and r["gate"] in ("BLOCKED", "PULLBACK", "UNAVAILABLE"):
-                g += f" — until {r['gate_trigger']}"
-            L.append(f"| {r['ticker']} | {r['weight']:.1f}% | {r['change']:+.1f} | {g} | {r['hold_trend']} |")
-        if md_.get("actions"):
-            L += ["", "**Authorized today:**", *[f"- {x}" for x in md_["actions"]]]
-        L.append("_Model: regime targets → entry gate (blocked adds parked in SGOV) → circuit breaker "
-                 "(halve risk sleeves at −8% drawdown). Daily-rebalanced, before costs and taxes._")
-    pf = b["portfolio"]
+    L += ["## 8 · Portfolio (Levels 5–7)"]
     if pf.get("available"):
-        L += ["", "**Your real positions vs the model** (ledger)"]
         if pf.get("stale"):
-            L.append(f"> ⚠ **Ledger last updated {pf['ledger_age_days']} days ago.**")
+            L.append(f"> ⚠ **Ledger last updated {pf['ledger_age_days']} days ago.** Positions below may not reflect your account.")
         L += ["| Position | Close | Stop | Stop status | Invalidation | Check |", "|---|---|---|---|---|---|"]
         for r in pf["positions"]:
             L.append(f"| {r['ticker']} | {_fmt(r['last'])} | {_fmt(r['stop'])} | {r['status']} — {r['note']} | "
                      f"{r['invalidation'][:70]} | **{r['inv_status']}** {r['inv_detail']} |")
         if pf.get("drift"):
             br_ = [d for d in pf["drift"] if d["breach"]]
-            L += ["", "Drift vs the model (ledger-value basis): "
+            L += ["", f"Drift vs `{b['regime'].get('key')}` targets (ledger-value basis): "
                   + (", ".join(f"{d['sleeve']} {d['live']:.1f}% vs {d['target']:.1f}%" for d in br_) if br_ else "all sleeves inside ±20%")]
         if pf.get("authorized_today"):
-            L += ["", "**Authorized today (real positions):**", *[f"- {x}" for x in pf["authorized_today"]]]
-    else:
-        L.append(f"- {pf.get('conclusion')}")
-    L += ["", f"**Conclusion:** {md_.get('conclusion') or pf.get('conclusion')}", ""]
+            L += ["", "**Authorized today:**", *[f"- {x}" for x in pf["authorized_today"]]]
+    L += ["", f"**Conclusion:** {pf['conclusion']}", ""]
 
     sw = b["swing"]
     L += ["## 9 · Swing (Level 4)"]
@@ -1652,7 +1444,7 @@ def render_md(b: dict) -> str:
     L += ["## 12 · Data health", "| Input | As of | Age | Status | Note |", "|---|---|---|---|---|"]
     for d in b["data_health"]:
         L.append(f"| {d['input']} | {d['asof'] or '—'} | {'' if d['age_days'] is None else str(d['age_days']) + 'd'} | "
-                 f"{'✅' if d['status'] == 'OK' else 'ℹ️' if d['status'] == 'UNUSED' else '⚠'} {d['status']} | {d['note']} |")
+                 f"{'✅' if d['status'] == 'OK' else '⚠'} {d['status']} | {d['note']} |")
     if b.get("errors"):
         L += ["", "Errors this run:", *[f"- {e}" for e in b["errors"]]]
     return "\n".join(L)
@@ -1672,14 +1464,6 @@ def write(b: dict) -> dict:
     mp = SUMMARY_DIR / f"{b['session']}_brief.md"
     jp = STATE_DIR / f"{b['session']}_brief.json"
     mp.write_text(render_md(b), encoding="utf-8")
-    md_ = b.get("model") or {}
-    book = md_.pop("_book", None)
-    if book is not None:
-        try:
-            import model_book as mbk
-            mbk.save(book, Path(md_.get("path") or mbk.BOOK_FILE))
-        except Exception as e:
-            b.setdefault("errors", []).append(f"model book not saved: {e}")
     jp.write_text(json.dumps(b, default=_jsonable, indent=1), encoding="utf-8")
     return {"md": str(mp), "json": str(jp)}
 
@@ -1775,8 +1559,6 @@ def selftest() -> dict:
         b = build(inp)
         md = render_md(b)
         out = write(b)
-        if not b["regime"].get("plans") or "Contingency" not in md or "Pending until" not in md:
-            f.append(f"regime section must carry the gated contingency plan: {b['regime'].get('plan_error')}")
         if "Credit cycle:" not in md or not (b["regime"].get("credit_cycle") or {}).get("state"):
             f.append("regime section must carry the credit-cycle (spread-peak re-entry) line")
 
@@ -1813,23 +1595,7 @@ def selftest() -> dict:
                 f.append(f"short real flip should sit at the +{BAND} band edge: {sr}")
         if rg["bridge_agrees"] is not False or "republish" not in rg["conclusion"]:
             f.append("bridge disagreement must be named")
-        if b["portfolio"].get("active") or any("ledger" in w.lower() for w in b["conclusions"]["weekend"]):
-            f.append("a 2-month-old ledger must be UNUSED: never in the weekend list or authorized items")
-        if "Authorized today: TLT" in " ".join(b["headline"]):
-            f.append("stale-ledger stop hits must not reach the headline")
-        mdl = b["model"]
-        if not mdl.get("available") or not mdl["rows"] or "SHOULD" not in md:
-            f.append(f"model portfolio section missing: {mdl.get('conclusion')}")
-        elif abs(sum(r["weight"] for r in mdl["rows"]) - 100) > 1.0:
-            f.append(f"model weights must sum to ~100: {sum(r['weight'] for r in mdl['rows'])}")
-        for r_ in mdl.get("rows") or []:
-            if r_["gate"] in ("BLOCKED", "UNAVAILABLE") and r_["change"] > 0.05:
-                f.append(f"{r_['ticker']} shows a BLOCKED add yet the model weight rose {r_['change']:+.1f}")
-        if not Path("data/model_book.csv").exists():
-            f.append("model book must be persisted by write()")
-        if not any(d["input"] == "Position ledger" and d["status"] == "UNUSED" for d in b["data_health"]):
-            f.append("data health must mark an old ledger UNUSED, not STALE")
-        pf = portfolio_section(inp, b["targets"], b["regime"].get("key"), force=True)
+        pf = b["portfolio"]
         tlt = next(r for r in pf["positions"] if r["ticker"] == "TLT")
         if tlt["inv_status"] != "FIRED":
             f.append(f"TLT invalidation 'DFII10 above 2.50%' with DFII10 2.85 must FIRE: {tlt}")
@@ -1839,6 +1605,8 @@ def selftest() -> dict:
         vgt = next(r for r in pf["positions"] if r["ticker"] == "VGT")
         if vgt["inv_status"] != "MANUAL":
             f.append("unrecognised invalidation text must be MANUAL, never guessed")
+        if not pf["stale"] or "Update the position ledger" not in b["conclusions"]["weekend"][0]:
+            f.append("a 2-month-old ledger must be flagged first on the weekend list")
         if tlt["status"] == "STOP HIT" and not pf["authorized_today"]:
             f.append("a stop hit must be listed as authorized today")
         ro = b["rotation"]
@@ -1860,6 +1628,8 @@ def selftest() -> dict:
         nx = b["next48"]
         if nx["events"] or not nx["next_event"] or "NFP" not in nx["conclusion"]:
             f.append("no event in window must name the next one")
+        if not any(d["input"] == "Position ledger" and d["status"] == "STALE" for d in b["data_health"]):
+            f.append("data health must mark the ledger STALE")
         for sec in ("## 1 ·", "## 6 ·", "## 12 ·", "**Conclusion:**"):
             if sec not in md:
                 f.append(f"render missing {sec}")
