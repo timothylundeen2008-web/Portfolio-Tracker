@@ -1,0 +1,73 @@
+name: Intraday Watch
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  ALERT-ONLY intraday checks of the model portfolio (intraday_watch.py).
+#  Never changes the model — it only emails you (a GitHub issue that
+#  @mentions you) when a close-based rule is about to fire.
+#
+#  Times are UTC (GitHub cron has no timezone) and GitHub may start a
+#  scheduled run late — accepted. One cron per slot, no DST twins (each twin
+#  costs a billed minute even when it skips):
+#    15:00 UTC = 11:00 AM EDT / 10:00 AM EST   — catch an opening gap
+#    17:30 UTC =  1:30 PM EDT / 12:30 PM EST   — midday
+#    18:45 UTC =  2:45 PM EDT /  1:45 PM EST   — pre-close verdict
+#  The script itself skips holidays and anything outside 9:30–4:00 ET.
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  schedule:
+    - cron: '0 15 * * 1-5'
+    - cron: '30 17 * * 1-5'
+    - cron: '45 18 * * 1-5'
+  workflow_dispatch:
+
+concurrency:
+  group: intraday-watch
+  cancel-in-progress: true
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      # Gate BEFORE installing anything: a skipped run then costs seconds.
+      - name: Market open?
+        id: gate
+        run: |
+          python - <<'PY'
+          import os, sys
+          sys.path.insert(0, '.')
+          import market_time as mt
+          now = mt.now_et()
+          manual = "${{ github.event_name }}" == "workflow_dispatch"
+          mins = now.hour * 60 + now.minute
+          if not mt.is_trading_day(now.date()):
+              ok, why = False, f"{now.date()} is not a trading day"
+          elif not (9 * 60 + 30 <= mins < 16 * 60) and not manual:
+              ok, why = False, f"market closed ({now:%H:%M} ET)"
+          else:
+              ok, why = True, f"{now:%H:%M} ET"
+          print(f"::notice::{'RUN' if ok else 'SKIP'} — {why}")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"proceed={'true' if ok else 'false'}\n")
+          PY
+
+      - name: Install (minimal)
+        if: steps.gate.outputs.proceed == 'true'
+        run: pip install yfinance pandas numpy requests
+
+      - name: Watch
+        if: steps.gate.outputs.proceed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python intraday_watch.py

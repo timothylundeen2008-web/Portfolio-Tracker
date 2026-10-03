@@ -18,13 +18,22 @@ name: Consolidated Daily Brief
 #  session, never a half-finished day.
 # ─────────────────────────────────────────────────────────────────────────────
 
+#  Oct 2026 (Actions-minute trim): the brief used to do a FULL run after every
+#  upstream completion — both DST twins of both upstream jobs, plus two
+#  fallback crons — about six full runs a night. Now:
+#    • triggered only by "Swing Desk Brief" (the last upstream job), and
+#    • a gate (before any install) runs it only when the session's daily log
+#      and swing brief both exist and no COMPLETE brief for that session has
+#      been written yet. Everything else stands down in seconds.
+#    • one fallback cron (02:15 UTC = 10:15 PM EDT / 9:15 PM EST) runs if no
+#      complete brief exists by then, even if inputs are missing.
+
 on:
   workflow_run:
-    workflows: ["Scheduled Checklist Logs", "Swing Desk Brief"]
+    workflows: ["Swing Desk Brief"]
     types: [completed]
   schedule:
-    - cron: '15 2 * * 2-6'    # 10:15 PM EDT Mon-Fri
-    - cron: '15 3 * * 2-6'    # 10:15 PM EST Mon-Fri
+    - cron: '15 2 * * 2-6'    # 10:15 PM EDT / 9:15 PM EST, Mon-Fri sessions
   workflow_dispatch:
 
 concurrency:
@@ -37,20 +46,74 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: main              # workflow_run checks out the triggering SHA otherwise; we want the newest logs
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+          cache: pip
+
+      - name: Gate
+        id: gate
+        run: |
+          git pull --ff-only origin main || true
+          python - <<'PY'
+          import os, sys, json, glob
+          from datetime import timedelta
+          sys.path.insert(0, '.')
+          import market_time as mt
+          event = "${{ github.event_name }}"
+          now = mt.now_et()
+          session = mt.last_trading_day(now.date())
+          if now.date() == session and now.hour < 16 and mt.is_trading_day(now.date()):
+              session = mt.last_trading_day(now.date() - timedelta(days=1))
+          d = session.isoformat()
+
+          def meta_ok(path):
+              try:
+                  return int(json.load(open(path)).get("et_hour", -1)) >= 18
+              except Exception:
+                  return False
+          # swing briefs are named by RUN date: accept the session date or later
+          swing = any(meta_ok(m) for m in glob.glob("logs/swing/*_brief.meta.json")
+                      if os.path.basename(m)[:10] >= d)
+          daily = meta_ok(f"logs/summaries/{d}_daily.meta.json")
+
+          def complete():
+              try:
+                  b = json.load(open(f"logs/brief/{d}_brief.json"))
+              except Exception:
+                  return False
+              dh = {x.get("input"): x for x in b.get("data_health", [])}
+              sw = (dh.get("Swing brief") or {}).get("asof") or ""
+              lg = (dh.get("Daily log row") or {}).get("asof") or ""
+              return sw >= d and lg == d and bool(b.get("model", {}).get("available"))
+          done = complete()
+          if event == "workflow_dispatch":
+              ok, why = True, "manual dispatch"
+          elif done:
+              ok, why = False, f"a complete brief for {d} already exists"
+          elif event == "schedule":
+              ok, why = True, f"fallback: no complete brief for {d} yet (daily log {daily}, swing {swing})"
+          elif daily and swing:
+              ok, why = True, f"inputs for {d} are ready"
+          else:
+              ok, why = False, f"waiting for inputs for {d} (daily log {daily}, swing {swing})"
+          print(f"::notice::{'RUN' if ok else 'SKIP'} — {why}")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"proceed={'true' if ok else 'false'}\n")
+          PY
 
       - name: Install dependencies
+        if: steps.gate.outputs.proceed == 'true'
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Build the brief
+        if: steps.gate.outputs.proceed == 'true'
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
           DATA_DIR: data
@@ -59,6 +122,7 @@ jobs:
           python daily_brief.py
 
       - name: Commit the brief
+        if: steps.gate.outputs.proceed == 'true'
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -76,6 +140,7 @@ jobs:
           fi
 
       - name: Publish to the run page
+        if: steps.gate.outputs.proceed == 'true'
         run: |
           LATEST=$(ls -t logs/summaries/*_brief.md 2>/dev/null | head -1)
           if [ -n "$LATEST" ]; then cat "$LATEST" >> "$GITHUB_STEP_SUMMARY"; fi

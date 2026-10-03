@@ -51,16 +51,13 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'   # match Streamlit Cloud; 3.11 broke cross_asset.py (Sept 2026)
+          cache: pip
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
 
       # v2 gate — window-based, not exact-hour. GitHub documents that
       # scheduled workflows can be delayed, sometimes significantly, during
@@ -173,6 +170,14 @@ jobs:
               f.write(f"mode={mode}\n")
               f.write(f"et={now:%Y-%m-%d %H:%M %Z}\n")
           PY
+
+      # Installed only AFTER the gate decides to run: a skipped DST twin then
+      # costs seconds of billed time instead of a full dependency install.
+      - name: Install dependencies
+        if: steps.gate.outputs.proceed == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Run the checklist log
         if: steps.gate.outputs.proceed == 'true'
