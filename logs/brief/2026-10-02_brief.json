@@ -1,6 +1,6 @@
 {
  "session": "2026-10-02",
- "generated_et": "Oct 02, 2026 09:21 PM EDT",
+ "generated_et": "Oct 02, 2026 09:27 PM EDT",
  "scoreboard": {
   "rows": [
    {
@@ -1366,9 +1366,9 @@
  },
  "swing": {
   "available": true,
-  "date": "2026-10-01",
-  "file": "2026-10-01_brief.json",
-  "same_session": false,
+  "date": "2026-10-02",
+  "file": "2026-10-02_brief.json",
+  "same_session": true,
   "regime": "restrictive_tightening",
   "grounds": {
    "long": [
@@ -1392,53 +1392,54 @@
      "direction": "Weakening"
     },
     {
-     "ticker": "XLI",
-     "quadrant": "Lagging",
-     "direction": "Strengthening"
+     "ticker": "XLV",
+     "quadrant": "Weakening",
+     "direction": "Topping"
     }
    ],
    "long_watch": [
     {
      "ticker": "XLF",
      "quadrant": "Improving",
-     "accumulation": -44.09,
-     "why": "price rotating in, money not (accumulation -44.09)"
+     "accumulation": -41.74,
+     "why": "price rotating in, money not (accumulation -41.74)"
     },
     {
      "ticker": "XLRE",
      "quadrant": "Improving",
-     "accumulation": -46.86,
-     "why": "price rotating in, money not (accumulation -46.86)"
+     "accumulation": -46.49,
+     "why": "price rotating in, money not (accumulation -46.49)"
     },
     {
      "ticker": "XLY",
      "quadrant": "Improving",
-     "accumulation": -49.16,
-     "why": "price rotating in, money not (accumulation -49.16)"
+     "accumulation": -49.15,
+     "why": "price rotating in, money not (accumulation -49.15)"
     },
     {
      "ticker": "XLC",
      "quadrant": "Improving",
-     "accumulation": -53.65,
-     "why": "price rotating in, money not (accumulation -53.65)"
+     "accumulation": -59.54,
+     "why": "price rotating in, money not (accumulation -59.54)"
     }
    ],
    "short_watch": [],
    "watchlist": [],
    "candidates": [
     "AAPL",
+    "ABBV",
+    "ABT",
     "AEP",
     "AMAT",
     "AMD",
+    "AMGN",
     "AMT",
     "AMZN",
     "AVGO",
     "AXP",
-    "BA",
     "BAC",
     "BKNG",
     "BRK-B",
-    "CAT",
     "CBRE",
     "CCI",
     "CEG",
@@ -1448,21 +1449,19 @@
     "COST",
     "CSCO",
     "D",
-    "DE",
     "DIS",
     "DLR",
     "DUK",
     "EQIX",
-    "ETN",
     "EXC",
-    "GE",
     "GOOGL",
     "GS",
     "HD",
-    "HON",
+    "ISRG",
+    "JNJ",
     "JPM",
     "KO",
-    "LMT",
+    "LLY",
     "LOW",
     "LRCX",
     "MA",
@@ -1470,6 +1469,7 @@
     "MDLZ",
     "META",
     "MO",
+    "MRK",
     "MS",
     "MSFT",
     "MU",
@@ -1480,12 +1480,12 @@
     "O",
     "PCG",
     "PEP",
+    "PFE",
     "PG",
     "PLD",
     "PLTR",
     "PM",
     "PSA",
-    "RTX",
     "SBUX",
     "SO",
     "SPG",
@@ -1494,11 +1494,11 @@
     "T",
     "TGT",
     "TJX",
+    "TMO",
     "TMUS",
     "TSLA",
     "TTWO",
-    "UNP",
-    "UPS",
+    "UNH",
     "V",
     "VZ",
     "WELL",
@@ -1507,61 +1507,15 @@
     "XEL",
     "XLC",
     "XLF",
-    "XLI",
     "XLK",
     "XLP",
     "XLRE",
     "XLU",
+    "XLV",
     "XLY"
    ]
   },
   "cards": [
-   {
-    "ticker": "AMAT",
-    "sector": "XLK",
-    "sector_quadrant": "Leading",
-    "from_watchlist": false,
-    "close": 529.3,
-    "setup": "M0 Rotation",
-    "side": "long",
-    "confluence": "3-of-3",
-    "legs": {
-     "rotation": true,
-     "structure": true,
-     "volume": true,
-     "missing": []
-    },
-    "entry": 533.88,
-    "stop": 504.92,
-    "stop_pct": 5.42,
-    "risk_per_share": 28.96,
-    "risk_pct": 0.25,
-    "shares": 0,
-    "notional": 0.0,
-    "notional_pct": 0.0,
-    "heat_after": 0.0,
-    "blocked_by_heat": false,
-    "targets": {
-     "2R": 591.8,
-     "4R": 649.72,
-     "8R": 765.56
-    },
-    "trail": "100 SMA (20-week)",
-    "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
-    "trail_stats": null,
-    "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
-    "invalidated_when": "close below 504.92 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-    "why": "reclaim of 20-wk SMA 509.84 (close +3.8% vs SMA, rising); vol 0.96x vs tier 1.25x; CMF +0.38; ATR stop 1.5x = 504.92 (5.4%)",
-    "adr_pct": 3.25,
-    "event_risk": "NFP in 0d",
-    "entry_permitted": false,
-    "entry_block_reason": "binary macro event within 48h: NFP in 0d",
-    "why_note": null,
-    "what_would_make_this_wrong": null,
-    "instrument_note": null,
-    "teaching_question": null,
-    "pending_confirmation": true
-   },
    {
     "ticker": "NVDA",
     "sector": "XLK",
@@ -1599,11 +1553,105 @@
     "trail_stats": null,
     "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
     "invalidated_when": "close below 224.31 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-    "why": "reclaim of 20-wk SMA 213.48 (close +8.1% vs SMA, rising); vol 0.89x vs tier 1.25x; CMF -0.15; ATR stop 1.5x = 224.31 (3.4%)",
+    "why": "reclaim of 20-wk SMA 213.48 (close +8.1% vs SMA, rising); vol 0.90x vs tier 1.25x; CMF -0.15; ATR stop 1.5x = 224.31 (3.4%)",
     "adr_pct": 2.04,
-    "event_risk": "NFP in 0d",
+    "event_risk": "clear",
+    "entry_permitted": true,
+    "entry_block_reason": null,
+    "why_note": null,
+    "what_would_make_this_wrong": null,
+    "instrument_note": null,
+    "teaching_question": null,
+    "pending_confirmation": true
+   },
+   {
+    "ticker": "TMO",
+    "sector": "XLV",
+    "sector_quadrant": "Weakening",
+    "from_watchlist": false,
+    "close": 652.51,
+    "setup": "M2b Failed-BO Short",
+    "side": "short",
+    "confluence": "2-of-3",
+    "legs": {
+     "rotation": true,
+     "structure": true,
+     "volume": false,
+     "missing": [
+      "volume"
+     ]
+    },
+    "entry": 678.39,
+    "stop": 683.63,
+    "stop_pct": 0.77,
+    "risk_per_share": 5.24,
+    "risk_pct": 0.125,
+    "shares": 2,
+    "notional": 1356.78,
+    "notional_pct": 13.6,
+    "heat_after": 0.1,
+    "blocked_by_heat": false,
+    "targets": {
+     "2R": 667.91,
+     "4R": 657.43,
+     "8R": 636.47
+    },
+    "trail": "cover at base low",
+    "trail_why": "Failed-breakout target is the base low; stop above the failed high.",
+    "trail_stats": null,
+    "instrument": "put debit spread 45-90 DTE",
+    "invalidated_when": "close above 683.63 (structural), OR regime flips risk-on, OR sector rotates to Improving/Leading",
+    "why": "Failed breakout",
+    "adr_pct": 2.34,
+    "event_risk": "clear",
+    "entry_permitted": true,
+    "entry_block_reason": null,
+    "why_note": null,
+    "what_would_make_this_wrong": null,
+    "instrument_note": null,
+    "teaching_question": null,
+    "pending_confirmation": true
+   },
+   {
+    "ticker": "AMAT",
+    "sector": "XLK",
+    "sector_quadrant": "Leading",
+    "from_watchlist": false,
+    "close": 529.3,
+    "setup": "M0 Rotation",
+    "side": "long",
+    "confluence": "3-of-3",
+    "legs": {
+     "rotation": true,
+     "structure": true,
+     "volume": true,
+     "missing": []
+    },
+    "entry": 533.88,
+    "stop": 504.92,
+    "stop_pct": 5.42,
+    "risk_per_share": 28.96,
+    "risk_pct": 0.25,
+    "shares": 0,
+    "notional": 0.0,
+    "notional_pct": 0.0,
+    "heat_after": 0.0,
+    "blocked_by_heat": false,
+    "targets": {
+     "2R": 591.8,
+     "4R": 649.72,
+     "8R": 765.56
+    },
+    "trail": "100 SMA (20-week)",
+    "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
+    "trail_stats": null,
+    "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
+    "invalidated_when": "close below 504.92 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "reclaim of 20-wk SMA 509.84 (close +3.8% vs SMA, rising); vol 0.96x vs tier 1.25x; CMF +0.38; ATR stop 1.5x = 504.92 (5.4%)",
+    "adr_pct": 3.25,
+    "event_risk": "clear",
     "entry_permitted": false,
-    "entry_block_reason": "binary macro event within 48h: NFP in 0d",
+    "entry_block_reason": "risk budget $25.00 at this step/regime is below one share's risk ($28.96) \u2014 a single share breaches Progressive Exposure; the only expression is a 45-90 DTE call debit spread with premium <= $25, or skip",
     "why_note": null,
     "what_would_make_this_wrong": null,
     "instrument_note": null,
@@ -1611,21 +1659,105 @@
     "pending_confirmation": true
    }
   ],
-  "permitted": [],
-  "near_misses": [
+  "permitted": [
    {
-    "ticker": "ETN",
-    "sector": "XLI",
-    "sector_quadrant": "Lagging",
+    "ticker": "NVDA",
+    "sector": "XLK",
+    "sector_quadrant": "Leading",
     "from_watchlist": false,
-    "close": 437.28,
+    "close": 230.86,
     "setup": "M0 Rotation",
     "side": "long",
     "confluence": "2-of-3",
-    "ground": "short",
-    "reason": "M0 Rotation long (2-of-3) demoted \u2014 long card from a short hunting ground (XLI Lagging, accumulation -22) \u2014 the setup fights the sector rotation; watch only"
+    "legs": {
+     "rotation": true,
+     "structure": true,
+     "volume": false,
+     "missing": [
+      "volume"
+     ]
+    },
+    "entry": 232.29,
+    "stop": 224.31,
+    "stop_pct": 3.44,
+    "risk_per_share": 7.98,
+    "risk_pct": 0.125,
+    "shares": 1,
+    "notional": 232.29,
+    "notional_pct": 2.3,
+    "heat_after": 0.08,
+    "blocked_by_heat": false,
+    "targets": {
+     "2R": 248.25,
+     "4R": 264.21,
+     "8R": 296.13
+    },
+    "trail": "100 SMA (20-week)",
+    "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
+    "trail_stats": null,
+    "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
+    "invalidated_when": "close below 224.31 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "reclaim of 20-wk SMA 213.48 (close +8.1% vs SMA, rising); vol 0.90x vs tier 1.25x; CMF -0.15; ATR stop 1.5x = 224.31 (3.4%)",
+    "adr_pct": 2.04,
+    "event_risk": "clear",
+    "entry_permitted": true,
+    "entry_block_reason": null,
+    "why_note": null,
+    "what_would_make_this_wrong": null,
+    "instrument_note": null,
+    "teaching_question": null,
+    "pending_confirmation": true
+   },
+   {
+    "ticker": "TMO",
+    "sector": "XLV",
+    "sector_quadrant": "Weakening",
+    "from_watchlist": false,
+    "close": 652.51,
+    "setup": "M2b Failed-BO Short",
+    "side": "short",
+    "confluence": "2-of-3",
+    "legs": {
+     "rotation": true,
+     "structure": true,
+     "volume": false,
+     "missing": [
+      "volume"
+     ]
+    },
+    "entry": 678.39,
+    "stop": 683.63,
+    "stop_pct": 0.77,
+    "risk_per_share": 5.24,
+    "risk_pct": 0.125,
+    "shares": 2,
+    "notional": 1356.78,
+    "notional_pct": 13.6,
+    "heat_after": 0.1,
+    "blocked_by_heat": false,
+    "targets": {
+     "2R": 667.91,
+     "4R": 657.43,
+     "8R": 636.47
+    },
+    "trail": "cover at base low",
+    "trail_why": "Failed-breakout target is the base low; stop above the failed high.",
+    "trail_stats": null,
+    "instrument": "put debit spread 45-90 DTE",
+    "invalidated_when": "close above 683.63 (structural), OR regime flips risk-on, OR sector rotates to Improving/Leading",
+    "why": "Failed breakout",
+    "adr_pct": 2.34,
+    "event_risk": "clear",
+    "entry_permitted": true,
+    "entry_block_reason": null,
+    "why_note": null,
+    "what_would_make_this_wrong": null,
+    "instrument_note": null,
+    "teaching_question": null,
+    "pending_confirmation": true
    }
   ],
+  "near_misses": [],
   "refusals": [],
   "breadth": {
    "pct_above_200": 41.3,
@@ -1634,7 +1766,7 @@
    "size_cut": false,
    "read": "mixed"
   },
-  "conclusion": "\u26a0 Latest swing brief is from 2026-10-01, not this session. 0 entry-permitted cards; 1 near-miss building on watch."
+  "conclusion": "2 entry-permitted cards (NVDA long 2-of-3, TMO short 2-of-3); 0 near-misses building on watch."
  },
  "next48": {
   "horizon": "2026-10-06",
@@ -1753,9 +1885,9 @@
   },
   {
    "input": "Swing brief",
-   "asof": "2026-10-01",
-   "age_days": 1,
-   "status": "STALE",
+   "asof": "2026-10-02",
+   "age_days": 0,
+   "status": "OK",
    "note": ""
   },
   {
@@ -1815,7 +1947,7 @@
  "headline": [
   "Biggest moves: HY OAS +12bp to 3.24% (+2.3\u03c3, 98th pctile, print dated 10-01); 2Y Treasury -10bp to 4.78% (-2.2\u03c3, 98th pctile, print dated 10-01).",
   "Regime `restrictive_tightening` (session 6); cross-asset majority WATCH; nearest flip is HY OAS +0.26pp to `credit_stress` (~5 typical days).",
-  "Authorized today: XLU: stop hit (close 39.68 vs stop 44.78); TLT: stop hit (close 77.71 vs stop 82.18). (Ledger is 68 days old \u2014 confirm the positions exist first.)"
+  "Authorized today: XLU: stop hit (close 39.68 vs stop 44.78); TLT: stop hit (close 77.71 vs stop 82.18). (Ledger is 68 days old \u2014 confirm the positions exist first.) Swing: 2 entry-permitted cards."
  ],
  "conclusions": {
   "base_case": "Base case: `restrictive_tightening` holds. Cross-asset: WATCH majority, dissent from rates, vol. Money is confirming only XLK.",
