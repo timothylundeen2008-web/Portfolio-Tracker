@@ -13,3 +13,6 @@ date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_
 2026-09-30,PG,M2b Failed-BO Short,short,2-of-3,148.22,149.48,145.28,restrictive_tightening,False,binary macro event within 48h: NFP in 1d
 2026-10-01,AMAT,M0 Rotation,long,3-of-3,533.88,504.92,529.3,restrictive_tightening,False,binary macro event within 48h: NFP in 0d
 2026-10-01,NVDA,M0 Rotation,long,2-of-3,232.29,224.31,230.86,restrictive_tightening,False,binary macro event within 48h: NFP in 0d
+2026-10-02,NVDA,M0 Rotation,long,2-of-3,232.29,224.31,230.86,restrictive_tightening,True,
+2026-10-02,TMO,M2b Failed-BO Short,short,2-of-3,678.39,683.63,652.51,restrictive_tightening,True,
+2026-10-02,AMAT,M0 Rotation,long,3-of-3,533.88,504.92,529.3,restrictive_tightening,False,"risk budget $25.00 at this step/regime is below one share's risk ($28.96) — a single share breaches Progressive Exposure; the only expression is a 45-90 DTE call debit spread with premium <= $25, or skip"
