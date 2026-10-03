@@ -1,6 +1,6 @@
 {
  "session": "2026-10-02",
- "generated_et": "Oct 03, 2026 05:08 AM EDT",
+ "generated_et": "Oct 03, 2026 06:47 PM EDT",
  "scoreboard": {
   "rows": [
    {
@@ -500,6 +500,176 @@
    "score": 4,
    "band": "Tightening cycle",
    "hollow": true
+  },
+  "plans": [
+   {
+    "from": "restrictive_tightening",
+    "to": "credit_stress",
+    "rows": [
+     {
+      "ticker": "VGT",
+      "from": 17.0,
+      "to": 14.0,
+      "change": -3.0,
+      "step": "1 cut",
+      "now": -3.0,
+      "pending": 0.0,
+      "gate": "\u2014",
+      "trigger": null,
+      "detail": "cuts are never gated"
+     },
+     {
+      "ticker": "PDBC",
+      "from": 3.0,
+      "to": 2.0,
+      "change": -1.0,
+      "step": "1 cut",
+      "now": -1.0,
+      "pending": 0.0,
+      "gate": "\u2014",
+      "trigger": null,
+      "detail": "cuts are never gated"
+     },
+     {
+      "ticker": "QQQ",
+      "from": 2.0,
+      "to": 1.0,
+      "change": -1.0,
+      "step": "1 cut",
+      "now": -1.0,
+      "pending": 0.0,
+      "gate": "\u2014",
+      "trigger": null,
+      "detail": "cuts are never gated"
+     },
+     {
+      "ticker": "RING",
+      "from": 5.0,
+      "to": 4.0,
+      "change": -1.0,
+      "step": "1 cut",
+      "now": -1.0,
+      "pending": 0.0,
+      "gate": "\u2014",
+      "trigger": null,
+      "detail": "cuts are never gated"
+     },
+     {
+      "ticker": "SMH",
+      "from": 3.0,
+      "to": 2.0,
+      "change": -1.0,
+      "step": "1 cut",
+      "now": -1.0,
+      "pending": 0.0,
+      "gate": "\u2014",
+      "trigger": null,
+      "detail": "cuts are never gated"
+     },
+     {
+      "ticker": "XLE",
+      "from": 5.0,
+      "to": 4.0,
+      "change": -1.0,
+      "step": "1 cut",
+      "now": -1.0,
+      "pending": 0.0,
+      "gate": "\u2014",
+      "trigger": null,
+      "detail": "cuts are never gated"
+     },
+     {
+      "ticker": "KMLM",
+      "from": 8.0,
+      "to": 9.0,
+      "change": 1.0,
+      "step": "2 hedge",
+      "now": 1.0,
+      "pending": 0.0,
+      "gate": "CONFIRMED",
+      "trigger": null,
+      "detail": "+9.9% vs rising 200d, +4.1% vs 50d \u2014 full add"
+     },
+     {
+      "ticker": "USFR",
+      "from": 8.0,
+      "to": 9.0,
+      "change": 1.0,
+      "step": "3 add",
+      "now": 1.0,
+      "pending": 0.0,
+      "gate": "EXEMPT",
+      "trigger": null,
+      "detail": "cash \u2014 no trend gate (gated adds park here)"
+     },
+     {
+      "ticker": "XLV",
+      "from": 4.5,
+      "to": 5.5,
+      "change": 1.0,
+      "step": "3 add",
+      "now": 0.5,
+      "pending": 0.5,
+      "gate": "PULLBACK",
+      "trigger": "close back above the 50-day (168.02)",
+      "detail": "+6.9% above a rising 200d but -1.1% below the 50d \u2014 pullback in an uptrend: half now"
+     },
+     {
+      "ticker": "SGOV",
+      "from": 13.0,
+      "to": 18.0,
+      "change": 5.0,
+      "step": "3 add",
+      "now": 5.5,
+      "pending": -0.5,
+      "gate": "EXEMPT",
+      "trigger": "drawn down as each blocked/half add clears its trigger",
+      "detail": "planned +5.0, +0.5pt parked from gated adds"
+     }
+    ],
+    "parked": 0.5,
+    "blocked": [],
+    "half": [
+     "XLV"
+    ],
+    "summary": "restrictive_tightening -> credit_stress: 6 cuts, 4 adds; half-size on pullback: XLV; 0.5pt parked",
+    "title": "Contingency \u2014 if `credit_stress` confirms on two closes"
+   }
+  ],
+  "gates_today": {
+   "KMLM": {
+    "ticker": "KMLM",
+    "state": "CONFIRMED",
+    "fraction": 1.0,
+    "close": 31.08,
+    "ma50": 29.86,
+    "ma200": 28.27,
+    "ma200_rising": true,
+    "detail": "+9.9% vs rising 200d, +4.1% vs 50d \u2014 full add",
+    "trigger": null
+   },
+   "SCHD": {
+    "ticker": "SCHD",
+    "state": "PULLBACK",
+    "fraction": 0.5,
+    "close": 32.72,
+    "ma50": 33.83,
+    "ma200": 31.24,
+    "ma200_rising": true,
+    "detail": "+4.7% above a rising 200d but -3.3% below the 50d \u2014 pullback in an uptrend: half now",
+    "trigger": "close back above the 50-day (33.83)"
+   },
+   "XLV": {
+    "ticker": "XLV",
+    "state": "PULLBACK",
+    "fraction": 0.5,
+    "close": 166.18,
+    "ma50": 168.02,
+    "ma200": 155.5,
+    "ma200_rising": true,
+    "detail": "+6.9% above a rising 200d but -1.1% below the 50d \u2014 pullback in an uptrend: half now",
+    "trigger": "close back above the 50-day (168.02)"
+   }
   },
   "credit_cycle": {
    "state": "NO_EPISODE",
@@ -1099,286 +1269,175 @@
   "rsp_20d": -4.331577411339493,
   "conclusion": "23% of the proxy universe is above its 50-day and 45% above its 200-day; 1 new 52-week highs vs 4 new lows. The index is up -0.2% over 20 days while equal-weight is -4.3% and most names are below their 50-day \u2014 the rally is carried by a few mega-caps. Narrow rallies fail more often; size accordingly."
  },
- "portfolio": {
+ "model": {
   "available": true,
-  "ledger_age_days": 69,
-  "stale": true,
-  "positions": [
-   {
-    "ticker": "QQQ",
-    "shares": 6.0,
-    "entry": 684.0,
-    "last": 749.5800170898438,
-    "stop": 675.0,
-    "status": "OK",
-    "note": "7.6 ATR above stop",
-    "mv": 4497.4801025390625,
-    "invalidation": "when the price drops below 670",
-    "inv_status": "INTACT",
-    "inv_detail": "close 749.58 vs 670"
+  "conclusion": "You SHOULD hold the `restrictive_tightening` model above. Model book 100.31 (-1.6% from peak; 20d -1.4%). No change today.",
+  "summary": {
+   "available": true,
+   "date": "2026-10-02",
+   "regime": "restrictive_tightening",
+   "weights": {
+    "VGT": 17.0,
+    "SMH": 3.0,
+    "QQQ": 2.0,
+    "GLD": 10.0,
+    "SLV": 4.0,
+    "RING": 5.0,
+    "XLE": 5.0,
+    "PDBC": 3.0,
+    "SCHD": 14.5,
+    "XLV": 4.5,
+    "XLU": 1.0,
+    "SGOV": 13.0,
+    "USFR": 8.0,
+    "TLT": 2.0,
+    "KMLM": 8.0
    },
+   "nav": 100.3103,
+   "peak": 101.9895,
+   "drawdown_pct": -1.65,
+   "breaker": "OFF",
+   "breaker_changed": false,
+   "release_count": 0,
+   "warn": false,
+   "ret_5d": -0.7,
+   "ret_20d": -1.41,
+   "sessions": 37,
+   "since": "2026-08-12",
+   "reconstructed_sessions": 36,
+   "changes": []
+  },
+  "rows": [
    {
     "ticker": "VGT",
-    "shares": 174.8405,
-    "entry": 114.39,
-    "last": 128.32000732421875,
-    "stop": 108.98,
-    "status": "OK",
-    "note": "10.2 ATR above stop",
-    "mv": 22435.53424057007,
-    "invalidation": "the regime reverts toward inflationary_repression/hard_repression, or the weekly RRG confirms Weakening with volume",
-    "inv_status": "INTACT",
-    "inv_detail": "regime `restrictive_tightening`"
-   },
-   {
-    "ticker": "SMH",
-    "shares": 6.8945,
-    "entry": 580.17,
-    "last": 630.5999755859375,
-    "stop": 530.52,
-    "status": "OK",
-    "note": "6.9 ATR above stop",
-    "mv": 4347.671531677246,
-    "invalidation": "same trigger as VGT \u2014 highest-beta growth expression, cut first on any reversal",
-    "inv_status": "MANUAL",
-    "inv_detail": "not machine-checkable \u2014 review by hand"
-   },
-   {
-    "ticker": "SLV",
-    "shares": 96.043,
-    "entry": 52.06,
-    "last": 54.7400016784668,
-    "stop": 48.29,
-    "status": "OK",
-    "note": "3.9 ATR above stop",
-    "mv": 5257.393981204987,
-    "invalidation": "the gold gate flips PASS and silver's own trend confirms",
-    "inv_status": "INTACT",
-    "inv_detail": "gold gate FAIL"
-   },
-   {
-    "ticker": "XLE",
-    "shares": 84.2034,
-    "entry": 59.38,
-    "last": 62.81999969482422,
-    "stop": 57.2,
-    "status": "OK",
-    "note": "4.6 ATR above stop",
-    "mv": 5289.657562303162,
-    "invalidation": "the weekly RRG rolls to Weakening, or energy re-spikes on renewed geopolitical/supply risk",
-    "inv_status": "MANUAL",
-    "inv_detail": "not machine-checkable \u2014 review by hand"
-   },
-   {
-    "ticker": "PDBC",
-    "shares": 166.113,
-    "entry": 18.06,
-    "last": 19.440000534057617,
-    "stop": 17.51,
-    "status": "OK",
-    "note": "6.0 ATR above stop",
-    "mv": 3229.236808713913,
-    "invalidation": "the same trigger as XLE \u2014 commodities move together on the inflation-impulse read",
-    "inv_status": "MANUAL",
-    "inv_detail": "not machine-checkable \u2014 review by hand"
+    "weight": 17.0,
+    "change": 0.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "CONFIRMED UPTREND"
    },
    {
     "ticker": "SCHD",
-    "shares": 396.3415,
-    "entry": 32.8,
-    "last": 32.720001220703125,
-    "stop": 32.09,
-    "status": "OK",
-    "note": "2.2 ATR above stop",
-    "mv": 12968.294363815308,
-    "invalidation": "defensives show Weakening on the weekly RRG, or the regime reverts toward inflationary_repression",
-    "inv_status": "INTACT",
-    "inv_detail": "regime `restrictive_tightening`"
+    "weight": 14.5,
+    "change": 0.0,
+    "gate": "PULLBACK",
+    "gate_trigger": "close back above the 50-day (33.83)",
+    "hold_trend": "CONFIRMED UPTREND"
    },
    {
-    "ticker": "XLV",
-    "shares": 24.777,
-    "entry": 161.44,
-    "last": 166.17999267578125,
-    "stop": 155.91,
-    "status": "OK",
-    "note": "4.6 ATR above stop",
-    "mv": 4117.441678527832,
-    "invalidation": "the same trigger as SCHD \u2014 defensive-equity de-rating",
-    "inv_status": "MANUAL",
-    "inv_detail": "not machine-checkable \u2014 review by hand"
+    "ticker": "SGOV",
+    "weight": 13.0,
+    "change": 0.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "cash"
    },
    {
-    "ticker": "XLU",
-    "shares": 64.9491,
-    "entry": 46.19,
-    "last": 39.83000183105469,
-    "stop": 44.78,
-    "status": "STOP HIT",
-    "note": "close 39.83 \u2264 stop 44.78",
-    "mv": 2586.922771925354,
-    "invalidation": "DFII10 momentum flips positive on two closes (removes the rate-relief case) or defensives roll to Weakening",
-    "inv_status": "FIRED",
-    "inv_detail": "DFII10 3m momentum +0.62pp"
+    "ticker": "GLD",
+    "weight": 10.0,
+    "change": 0.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "DOWNTREND"
    },
    {
     "ticker": "USFR",
-    "shares": 59.4413,
-    "entry": 50.47,
-    "last": 50.400001525878906,
-    "stop": 50.44,
-    "status": "CASH",
-    "note": "cash sleeve \u2014 ATR stop not applicable",
-    "mv": 2995.841610700226,
-    "invalidation": "FOMC language kills the near-term hike/cut tail this position is priced for",
-    "inv_status": "MANUAL",
-    "inv_detail": "not machine-checkable \u2014 review by hand"
-   },
-   {
-    "ticker": "TLT",
-    "shares": 120.2357,
-    "entry": 83.17,
-    "last": 77.4800033569336,
-    "stop": 82.18,
-    "status": "STOP HIT",
-    "note": "close 77.48 \u2264 stop 82.18",
-    "mv": 9315.86243962326,
-    "invalidation": "DFII10 closes back above 2.50%, reversing the re-arm case",
-    "inv_status": "FIRED",
-    "inv_detail": "DFII10 2.88% vs 2.50%"
+    "weight": 8.0,
+    "change": 0.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "cash"
    },
    {
     "ticker": "KMLM",
-    "shares": 133.9585,
-    "entry": 29.86,
-    "last": 31.079999923706055,
-    "stop": 29.31,
-    "status": "OK",
-    "note": "5.1 ATR above stop",
-    "mv": 4163.430169779777,
-    "invalidation": "60-day stock/bond correlation confirms below -0.30 (overlay and live signal converge), or the live kmlm_signal() stance itself rolls",
-    "inv_status": "INTACT",
-    "inv_detail": "stock/bond corr 0.48 vs -0.30"
+    "weight": 8.0,
+    "change": 0.0,
+    "gate": "CONFIRMED",
+    "gate_trigger": null,
+    "hold_trend": "CONFIRMED UPTREND"
+   },
+   {
+    "ticker": "RING",
+    "weight": 5.0,
+    "change": 0.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "NEAR RISING MA"
+   },
+   {
+    "ticker": "XLE",
+    "weight": 5.0,
+    "change": 0.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "CONFIRMED UPTREND"
+   },
+   {
+    "ticker": "XLV",
+    "weight": 4.5,
+    "change": 0.0,
+    "gate": "PULLBACK",
+    "gate_trigger": "close back above the 50-day (168.02)",
+    "hold_trend": "CONFIRMED UPTREND"
+   },
+   {
+    "ticker": "SLV",
+    "weight": 4.0,
+    "change": 0.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "DOWNTREND"
+   },
+   {
+    "ticker": "SMH",
+    "weight": 3.0,
+    "change": 0.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "CONFIRMED UPTREND"
+   },
+   {
+    "ticker": "PDBC",
+    "weight": 3.0,
+    "change": 0.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "CONFIRMED UPTREND"
+   },
+   {
+    "ticker": "QQQ",
+    "weight": 2.0,
+    "change": 0.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "CONFIRMED UPTREND"
+   },
+   {
+    "ticker": "TLT",
+    "weight": 2.0,
+    "change": 0.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "DOWNTREND"
+   },
+   {
+    "ticker": "XLU",
+    "weight": 1.0,
+    "change": 0.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "DOWNTREND"
    }
   ],
-  "heat_pct": 3.3,
-  "drift": [
-   {
-    "sleeve": "VGT",
-    "target": 17.0,
-    "live": 27.6,
-    "rel": 63.0,
-    "breach": true
-   },
-   {
-    "sleeve": "SCHD",
-    "target": 16.0,
-    "live": 16.0,
-    "rel": -0.0,
-    "breach": false
-   },
-   {
-    "sleeve": "SGOV",
-    "target": 11.0,
-    "live": 0.0,
-    "rel": -100.0,
-    "breach": true
-   },
-   {
-    "sleeve": "GLD",
-    "target": 10.0,
-    "live": 0.0,
-    "rel": -100.0,
-    "breach": true
-   },
-   {
-    "sleeve": "USFR",
-    "target": 8.0,
-    "live": 3.7,
-    "rel": -54.0,
-    "breach": true
-   },
-   {
-    "sleeve": "KMLM",
-    "target": 8.0,
-    "live": 5.1,
-    "rel": -36.0,
-    "breach": true
-   },
-   {
-    "sleeve": "RING",
-    "target": 5.0,
-    "live": 0.0,
-    "rel": -100.0,
-    "breach": true
-   },
-   {
-    "sleeve": "XLE",
-    "target": 5.0,
-    "live": 6.5,
-    "rel": 30.0,
-    "breach": true
-   },
-   {
-    "sleeve": "XLV",
-    "target": 5.0,
-    "live": 5.1,
-    "rel": 1.0,
-    "breach": false
-   },
-   {
-    "sleeve": "SLV",
-    "target": 4.0,
-    "live": 6.5,
-    "rel": 62.0,
-    "breach": true
-   },
-   {
-    "sleeve": "SMH",
-    "target": 3.0,
-    "live": 5.4,
-    "rel": 78.0,
-    "breach": true
-   },
-   {
-    "sleeve": "PDBC",
-    "target": 3.0,
-    "live": 4.0,
-    "rel": 33.0,
-    "breach": true
-   },
-   {
-    "sleeve": "QQQ",
-    "target": 2.0,
-    "live": 5.5,
-    "rel": 177.0,
-    "breach": true
-   },
-   {
-    "sleeve": "TLT",
-    "target": 2.0,
-    "live": 11.5,
-    "rel": 474.0,
-    "breach": true
-   },
-   {
-    "sleeve": "XLU",
-    "target": 1.0,
-    "live": 3.2,
-    "rel": 219.0,
-    "breach": true
-   }
-  ],
-  "authorized_today": [
-   "XLU: stop hit (close 39.83 vs stop 44.78) \u2014 a stop exit is a daily-authorized trade",
-   "TLT: stop hit (close 77.48 vs stop 82.18) \u2014 a stop exit is a daily-authorized trade"
-  ],
-  "weekend": [
-   "XLU: written invalidation has fired (DFII10 3m momentum +0.62pp) \u2014 exit or rewrite the thesis",
-   "TLT: written invalidation has fired (DFII10 2.88% vs 2.50%) \u2014 exit or rewrite the thesis",
-   "Drift outside \u00b120% band: VGT 28% vs 17%, SGOV 0% vs 11%, GLD 0% vs 10%, USFR 4% vs 8%, KMLM 5% vs 8%, RING 0% vs 5%, XLE 6% vs 5%, SLV 6% vs 4%"
-  ],
-  "conclusion": "\u26a0 The ledger was last updated 69 days ago \u2014 every line below assumes those positions still exist. Update it before acting on any of them. Stops hit: XLU, TLT \u2014 daily-authorized exits. Invalidations fired: XLU, TLT (weekend list). Heat 3.3% of 15% cap (ledger market value basis; cash not in the ledger is excluded)."
+  "actions": [],
+  "weekend": [],
+  "path": "data/model_book.csv"
+ },
+ "portfolio": {
+  "available": false,
+  "active": false,
+  "ledger_age_days": 69,
+  "conclusion": "Ledger last touched 69 days ago \u2014 not tracking real positions, so it is not used. The model portfolio (section 8) is what you SHOULD hold."
  },
  "swing": {
   "available": true,
@@ -1918,8 +1977,8 @@
    "input": "Position ledger",
    "asof": "2026-07-26",
    "age_days": 69,
-   "status": "STALE",
-   "note": ""
+   "status": "UNUSED",
+   "note": "not tracking real positions \u2014 the model portfolio (section 8) is the reference"
   },
   {
    "input": "Daily log row",
@@ -1940,7 +1999,7 @@
    "asof": "2026-10-02",
    "age_days": 0,
    "status": "OK",
-   "note": "139 tickers"
+   "note": "141 tickers"
   },
   {
    "input": "Event calendar",
@@ -1960,10 +2019,10 @@
   "RING": 5.0,
   "XLE": 5.0,
   "PDBC": 3.0,
-  "SCHD": 16.0,
-  "XLV": 5.0,
+  "SCHD": 14.5,
+  "XLV": 4.5,
   "XLU": 1.0,
-  "SGOV": 11.0,
+  "SGOV": 13.0,
   "USFR": 8.0,
   "TLT": 2.0,
   "KMLM": 8.0
@@ -1971,7 +2030,7 @@
  "headline": [
   "Biggest moves: HY OAS +12bp to 3.24% (+2.3\u03c3, 98th pctile, print dated 10-01); 2Y Treasury -10bp to 4.78% (-2.2\u03c3, 98th pctile, print dated 10-01).",
   "Regime `restrictive_tightening` (session 6); cross-asset majority WATCH; nearest flip is HY OAS +0.26pp to `credit_stress` (~5 typical days).",
-  "Authorized today: XLU: stop hit (close 39.83 vs stop 44.78); TLT: stop hit (close 77.48 vs stop 82.18). (Ledger is 69 days old \u2014 confirm the positions exist first.) Swing: 2 entry-permitted cards."
+  "Model portfolio: `restrictive_tightening`, drawdown -1.6%, no change today. Swing: 2 entry-permitted cards."
  ],
  "conclusions": {
   "base_case": "Base case: `restrictive_tightening` holds. Cross-asset: WATCH majority, dissent from rates, vol. Money is confirming only XLK.",
@@ -1981,11 +2040,6 @@
    "DFII10 3-month momentum 0.62pp \u2192 0.19pp flips to `transition_ambiguous` (~8 typical days)",
    "Short real rate 0.48pp \u2192 0.25pp flips to `transition_ambiguous` \u2014 \u22480.9 \u00d7 a 25bp policy move, or the CPI equivalent"
   ],
-  "weekend": [
-   "Update the position ledger (last touched 69 days ago)",
-   "XLU: written invalidation has fired (DFII10 3m momentum +0.62pp) \u2014 exit or rewrite the thesis",
-   "TLT: written invalidation has fired (DFII10 2.88% vs 2.50%) \u2014 exit or rewrite the thesis",
-   "Drift outside \u00b120% band: VGT 28% vs 17%, SGOV 0% vs 11%, GLD 0% vs 10%, USFR 4% vs 8%, KMLM 5% vs 8%, RING 0% vs 5%, XLE 6% vs 5%, SLV 6% vs 4%"
-  ]
+  "weekend": []
  }
 }
