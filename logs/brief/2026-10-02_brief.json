@@ -1,6 +1,6 @@
 {
  "session": "2026-10-02",
- "generated_et": "Oct 02, 2026 10:20 PM EDT",
+ "generated_et": "Oct 03, 2026 04:05 AM EDT",
  "scoreboard": {
   "rows": [
    {
@@ -149,15 +149,15 @@
    },
    {
     "name": "WTI crude",
-    "value": 91.26000213623047,
+    "value": 91.11000061035156,
     "unit": "$",
     "kind": "index",
-    "d1": -1.7336067220164009,
-    "d5": 7.074976107274988,
-    "d20": -1.3938388587461104,
-    "d1_txt": "-1.7%",
-    "d5_txt": "+7.1%",
-    "d20_txt": "-1.4%",
+    "d1": -1.8951244580373894,
+    "d5": 6.898979948787476,
+    "d20": -1.5559150617487139,
+    "d1_txt": "-1.9%",
+    "d5_txt": "+6.9%",
+    "d20_txt": "-1.6%",
     "pctile_1y": 67.0,
     "z1d": -0.5,
     "asof": "2026-10-02",
@@ -490,10 +490,10 @@
   ],
   "flip_error": null,
   "guards": [
-   "cape: 41.38 (live, as of 2026-10-02)",
-   "top20 concentration pct: 49.75 (live, as of 2026-10-02) \u2014 top 20 SPY weights summed",
+   "cape: 41.38 (live, as of 2026-10-03)",
+   "top20 concentration pct: 49.75 (live, as of 2026-10-03) \u2014 top 20 SPY weights summed",
    "fed bs expanding: False (live, as of 2026-09-30) \u2014 flat / neutral: 4-wk avg +1.5B/wk, 13-wk avg +1.4B/wk",
-   "deficit gt 5pct gdp: True (manual, as of 2026-08-13, 50d old)"
+   "deficit gt 5pct gdp: True (manual, as of 2026-08-13, 51d old)"
   ],
   "guard_warnings": [],
   "repression": {
@@ -1101,7 +1101,7 @@
  },
  "portfolio": {
   "available": true,
-  "ledger_age_days": 68,
+  "ledger_age_days": 69,
   "stale": true,
   "positions": [
    {
@@ -1378,7 +1378,7 @@
    "TLT: written invalidation has fired (DFII10 2.88% vs 2.50%) \u2014 exit or rewrite the thesis",
    "Drift outside \u00b120% band: VGT 28% vs 17%, SGOV 0% vs 11%, GLD 0% vs 10%, USFR 4% vs 8%, KMLM 5% vs 8%, RING 0% vs 5%, XLE 6% vs 5%, SLV 6% vs 4%"
   ],
-  "conclusion": "\u26a0 The ledger was last updated 68 days ago \u2014 every line below assumes those positions still exist. Update it before acting on any of them. Stops hit: XLU, TLT \u2014 daily-authorized exits. Invalidations fired: XLU, TLT (weekend list). Heat 3.3% of 15% cap (ledger market value basis; cash not in the ledger is excluded)."
+  "conclusion": "\u26a0 The ledger was last updated 69 days ago \u2014 every line below assumes those positions still exist. Update it before acting on any of them. Stops hit: XLU, TLT \u2014 daily-authorized exits. Invalidations fired: XLU, TLT (weekend list). Heat 3.3% of 15% cap (ledger market value basis; cash not in the ledger is excluded)."
  },
  "swing": {
   "available": true,
@@ -1787,10 +1787,18 @@
  "next48": {
   "horizon": "2026-10-06",
   "events": [],
-  "next_event": null,
-  "if_then": [],
+  "next_event": {
+   "event": "CPI",
+   "date": "2026-10-13",
+   "days_away": 10,
+   "affects": "ALL \u2014 moves the SHORT real rate, the regime's first input",
+   "blackout": false
+  },
+  "if_then": [
+   "CPI \u2014 hot (MoM \u2265 0.4%): YoY rises, so the short real rate FALLS. The short real rate (+0.48%) is 0.23pp from flipping the regime to `transition_ambiguous`. Cool (MoM \u2264 0.1%): the short real rate rises and the tightening read strengthens."
+  ],
   "calendar_asof": "2026-01-15",
-  "conclusion": "No scheduled binary event in the next two sessions \u2014 the event block is clear."
+  "conclusion": "No scheduled binary event in the next two sessions \u2014 the event block is clear. Next: CPI on 2026-10-13 (10 days)."
  },
  "alerts": [
   {
@@ -1888,14 +1896,14 @@
   {
    "input": "Money Flow bridge",
    "asof": "2026-10-03",
-   "age_days": -1,
+   "age_days": 0,
    "status": "OK",
    "note": ""
   },
   {
    "input": "Markets bridge",
    "asof": "2026-10-03",
-   "age_days": -1,
+   "age_days": 0,
    "status": "OK",
    "note": ""
   },
@@ -1909,7 +1917,7 @@
   {
    "input": "Position ledger",
    "asof": "2026-07-26",
-   "age_days": 68,
+   "age_days": 69,
    "status": "STALE",
    "note": ""
   },
@@ -1963,7 +1971,7 @@
  "headline": [
   "Biggest moves: HY OAS +12bp to 3.24% (+2.3\u03c3, 98th pctile, print dated 10-01); 2Y Treasury -10bp to 4.78% (-2.2\u03c3, 98th pctile, print dated 10-01).",
   "Regime `restrictive_tightening` (session 6); cross-asset majority WATCH; nearest flip is HY OAS +0.26pp to `credit_stress` (~5 typical days).",
-  "Authorized today: XLU: stop hit (close 39.83 vs stop 44.78); TLT: stop hit (close 77.48 vs stop 82.18). (Ledger is 68 days old \u2014 confirm the positions exist first.) Swing: 2 entry-permitted cards."
+  "Authorized today: XLU: stop hit (close 39.83 vs stop 44.78); TLT: stop hit (close 77.48 vs stop 82.18). (Ledger is 69 days old \u2014 confirm the positions exist first.) Swing: 2 entry-permitted cards."
  ],
  "conclusions": {
   "base_case": "Base case: `restrictive_tightening` holds. Cross-asset: WATCH majority, dissent from rates, vol. Money is confirming only XLK.",
@@ -1974,7 +1982,7 @@
    "Short real rate 0.48pp \u2192 0.25pp flips to `transition_ambiguous` \u2014 \u22480.9 \u00d7 a 25bp policy move, or the CPI equivalent"
   ],
   "weekend": [
-   "Update the position ledger (last touched 68 days ago)",
+   "Update the position ledger (last touched 69 days ago)",
    "XLU: written invalidation has fired (DFII10 3m momentum +0.62pp) \u2014 exit or rewrite the thesis",
    "TLT: written invalidation has fired (DFII10 2.88% vs 2.50%) \u2014 exit or rewrite the thesis",
    "Drift outside \u00b120% band: VGT 28% vs 17%, SGOV 0% vs 11%, GLD 0% vs 10%, USFR 4% vs 8%, KMLM 5% vs 8%, RING 0% vs 5%, XLE 6% vs 5%, SLV 6% vs 4%"
