@@ -1,6 +1,6 @@
 {
  "session": "2026-10-02",
- "generated_et": "Oct 03, 2026 06:47 PM EDT",
+ "generated_et": "Oct 03, 2026 06:49 PM EDT",
  "scoreboard": {
   "rows": [
    {
@@ -1982,10 +1982,10 @@
   },
   {
    "input": "Daily log row",
-   "asof": "2026-10-02",
-   "age_days": 0,
+   "asof": "2026-10-03",
+   "age_days": -1,
    "status": "OK",
-   "note": ""
+   "note": "today's daily log not written yet \u2014 alerts section uses no row"
   },
   {
    "input": "COT (freshest)",
