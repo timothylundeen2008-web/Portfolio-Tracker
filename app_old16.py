@@ -2271,7 +2271,7 @@ with tab8:
                  "liquidity_crisis":"HY blowout  ·  long real ↓",
                  "stagflation":"short real −  ·  2s10s re-steepening",
                  "goldilocks":"short real +  ·  credit tight  ·  leadership intact",
-                 "growth_scare":"growth composite CONTRACTING (≥3 of 4 series) AND price confirms (SPY < 200d or cyclicals trail defensives ≥3pp over 20d)",
+                 "growth_scare":"growth composite CONTRACTING (≥3 of 4 series)",
                  "term_premium_repricing":"short real +  ·  long real ↑  ·  dollar ↓  ·  credit calm",
                  "restrictive_tightening":"short real +  ·  long real ↑ ≥0.20pp/3mo  ·  dollar firm  ·  credit calm",
                  "credit_stress":"HY ≥ 3.5% and (widening ≥ +0.25pp/2wk or ≥ 4.5%)  ·  below crisis override",
