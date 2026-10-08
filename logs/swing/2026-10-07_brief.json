@@ -1,0 +1,1218 @@
+{
+  "date": "2026-10-07",
+  "generated_at": "2026-10-08T02:15:57+00:00",
+  "annotated": false,
+  "refusals": [],
+  "data_gaps": [],
+  "regime": {
+    "key": "restrictive_tightening",
+    "label": "Restrictive Tightening \u2014 real rates rising",
+    "direction": "both",
+    "size_mult": 0.5,
+    "long_book": "open",
+    "short_book": "open",
+    "drivers": [
+      "Short real rate +0.48% (decisively positive, beyond \u00b10.25%) \u2014 policy is above inflation",
+      "Long real yield RISING +0.60pp over 3 months (threshold +0.20pp)",
+      "Dollar +2.4% over ~1 month \u2014 firm, so higher yields ARE attracting capital (ordinary tightening, not a credibility repricing)",
+      "HY OAS 3.03% \u2014 credit calm; tightening has not broken anything yet"
+    ],
+    "fed_posture": null,
+    "tripwires": [],
+    "bridge_age_hours": 0.1,
+    "regime_read": null
+  },
+  "exposure": {
+    "step": 1,
+    "risk_pct": 0.5,
+    "streak": "none:0",
+    "closed_trades": 0,
+    "why": "New campaign: no closed swing trades yet. Procedure Part 3 starts every campaign at 0.5% risk regardless of how good the setups look.",
+    "last_5_R": [],
+    "equity": 10000.0,
+    "starting_equity": 10000.0,
+    "realized_pnl": 0.0,
+    "heat_used_pct": 0.0,
+    "heat_cap_pct": 15.0,
+    "open_count": 0,
+    "slots_open": 4,
+    "max_positions": 4
+  },
+  "hunting_grounds": {
+    "long": [
+      {
+        "ticker": "XLK",
+        "quadrant": "Leading",
+        "direction": "Strengthening",
+        "stealth": "Stealth",
+        "feeds": "M1 VCP (confirmed leaders)"
+      }
+    ],
+    "short": [
+      {
+        "ticker": "XLU",
+        "quadrant": "Lagging",
+        "direction": "Weakening"
+      },
+      {
+        "ticker": "XLP",
+        "quadrant": "Lagging",
+        "direction": "Weakening"
+      },
+      {
+        "ticker": "XLB",
+        "quadrant": "Weakening",
+        "direction": "Topping"
+      }
+    ],
+    "long_watch": [
+      {
+        "ticker": "XLC",
+        "quadrant": "Improving",
+        "accumulation": -35.4,
+        "why": "price rotating in, money not (accumulation -35.4)"
+      },
+      {
+        "ticker": "XLF",
+        "quadrant": "Improving",
+        "accumulation": -42.42,
+        "why": "price rotating in, money not (accumulation -42.42)"
+      },
+      {
+        "ticker": "XLY",
+        "quadrant": "Improving",
+        "accumulation": -43.99,
+        "why": "price rotating in, money not (accumulation -43.99)"
+      },
+      {
+        "ticker": "XLRE",
+        "quadrant": "Improving",
+        "accumulation": -46.76,
+        "why": "price rotating in, money not (accumulation -46.76)"
+      },
+      {
+        "ticker": "XLV",
+        "quadrant": "Leading",
+        "accumulation": -39.46,
+        "why": "price rotating in, money not (accumulation -39.46)"
+      }
+    ],
+    "short_watch": [],
+    "watchlist": [],
+    "candidates": [
+      "AAPL",
+      "ABBV",
+      "ABT",
+      "AEP",
+      "AMAT",
+      "AMD",
+      "AMGN",
+      "AMT",
+      "AMZN",
+      "APD",
+      "AVGO",
+      "AXP",
+      "BAC",
+      "BKNG",
+      "BRK-B",
+      "CBRE",
+      "CCI",
+      "CEG",
+      "CL",
+      "CMCSA",
+      "CMG",
+      "COST",
+      "CSCO",
+      "D",
+      "DIS",
+      "DLR",
+      "DOW",
+      "DUK",
+      "ECL",
+      "EQIX",
+      "EXC",
+      "FCX",
+      "GOOGL",
+      "GS",
+      "HD",
+      "ISRG",
+      "JNJ",
+      "JPM",
+      "KO",
+      "LIN",
+      "LLY",
+      "LOW",
+      "LRCX",
+      "MA",
+      "MCD",
+      "MDLZ",
+      "META",
+      "MO",
+      "MRK",
+      "MS",
+      "MSFT",
+      "MU",
+      "NEE",
+      "NEM",
+      "NFLX",
+      "NKE",
+      "NUE",
+      "NVDA",
+      "O",
+      "PCG",
+      "PEP",
+      "PFE",
+      "PG",
+      "PLD",
+      "PLTR",
+      "PM",
+      "PPG",
+      "PSA",
+      "SBUX",
+      "SHW",
+      "SO",
+      "SPG",
+      "SPGI",
+      "SRE",
+      "T",
+      "TGT",
+      "TJX",
+      "TMO",
+      "TMUS",
+      "TSLA",
+      "TTWO",
+      "UNH",
+      "V",
+      "VMC",
+      "VZ",
+      "WELL",
+      "WFC",
+      "WMT",
+      "XEL",
+      "XLB",
+      "XLC",
+      "XLF",
+      "XLK",
+      "XLP",
+      "XLRE",
+      "XLU",
+      "XLV",
+      "XLY"
+    ]
+  },
+  "data_health": {
+    "requested": 119,
+    "missing": [
+      "SPG"
+    ],
+    "stale": [],
+    "nan_last_cleaned": [],
+    "last_bar": "2026-10-07",
+    "bad_fraction": 0.008,
+    "failed": false
+  },
+  "breadth": {
+    "pct_above_200": 50.0,
+    "n": 108,
+    "source": "108-name sector-constituent proxy (not the full S&P 500)",
+    "size_cut": false,
+    "read": "tailwind"
+  },
+  "events": {
+    "blackout": [],
+    "earnings_48h": {
+      "PEP": {
+        "date": "2026-10-08",
+        "days_away": 0
+      }
+    },
+    "caveat": "earnings dates are yfinance estimates \u2014 confirm on the IR page before entering"
+  },
+  "cards": [
+    {
+      "ticker": "CSCO",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 117.39,
+      "setup": "M0 Rotation",
+      "side": "long",
+      "confluence": "3-of-3",
+      "legs": {
+        "rotation": true,
+        "structure": true,
+        "volume": true,
+        "missing": []
+      },
+      "entry": 118.39,
+      "stop": 114.41,
+      "stop_pct": 3.36,
+      "risk_per_share": 3.98,
+      "risk_pct": 0.25,
+      "shares": 6,
+      "notional": 710.34,
+      "notional_pct": 7.1,
+      "heat_after": 0.24,
+      "blocked_by_heat": false,
+      "targets": {
+        "2R": 126.35,
+        "4R": 134.31,
+        "8R": 150.23
+      },
+      "trail": "100 SMA (20-week)",
+      "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
+      "trail_stats": null,
+      "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
+      "invalidated_when": "close below 114.41 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+      "why": "reclaim of 20-wk SMA 114.45 (close +2.6% vs SMA, rising); vol 0.89x vs tier 1.25x; CMF +0.12; ATR stop 1.5x = 114.41 (3.4%)",
+      "adr_pct": 2.37,
+      "event_risk": "clear",
+      "entry_permitted": true,
+      "entry_block_reason": null,
+      "why_note": null,
+      "what_would_make_this_wrong": null,
+      "instrument_note": null,
+      "teaching_question": null,
+      "pending_confirmation": true
+    },
+    {
+      "ticker": "ECL",
+      "sector": "XLB",
+      "sector_quadrant": "Weakening",
+      "from_watchlist": false,
+      "close": 278.1,
+      "setup": "M2b Failed-BO Short",
+      "side": "short",
+      "confluence": "2-of-3",
+      "legs": {
+        "rotation": true,
+        "structure": true,
+        "volume": false,
+        "missing": [
+          "volume"
+        ]
+      },
+      "entry": 280.23,
+      "stop": 282.44,
+      "stop_pct": 0.79,
+      "risk_per_share": 2.21,
+      "risk_pct": 0.125,
+      "shares": 5,
+      "notional": 1401.15,
+      "notional_pct": 14.0,
+      "heat_after": 0.11,
+      "blocked_by_heat": false,
+      "targets": {
+        "2R": 275.81,
+        "4R": 271.39,
+        "8R": 262.55
+      },
+      "trail": "cover at base low",
+      "trail_why": "Failed-breakout target is the base low; stop above the failed high.",
+      "trail_stats": null,
+      "instrument": "put debit spread 45-90 DTE",
+      "invalidated_when": "close above 282.44 (structural), OR regime flips risk-on, OR sector rotates to Improving/Leading",
+      "why": "Failed breakout",
+      "adr_pct": 1.8,
+      "event_risk": "clear",
+      "entry_permitted": true,
+      "entry_block_reason": null,
+      "why_note": null,
+      "what_would_make_this_wrong": null,
+      "instrument_note": null,
+      "teaching_question": null,
+      "pending_confirmation": true
+    }
+  ],
+  "watch": [
+    {
+      "ticker": "DIS",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 104.75,
+      "setup": "M0 Rotation",
+      "side": "long",
+      "confluence": "2-of-3",
+      "ground": "long_watch",
+      "reason": "M0 Rotation long (2-of-3) demoted \u2014 flow does not confirm the ground: XLC Improving \u2014 price rotating in, money not (accumulation -35.4); watch until accumulation turns positive"
+    },
+    {
+      "ticker": "LLY",
+      "sector": "XLV",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 1188.72,
+      "setup": "M0 Rotation",
+      "side": "long",
+      "confluence": "2-of-3",
+      "ground": "long_watch",
+      "reason": "M0 Rotation long (2-of-3) demoted \u2014 flow does not confirm the ground: XLV Leading \u2014 price rotating in, money not (accumulation -39.46); watch until accumulation turns positive"
+    },
+    {
+      "ticker": "XLC",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 111.26,
+      "setup": "M0 Rotation",
+      "side": "long",
+      "confluence": "2-of-3",
+      "ground": "long_watch",
+      "reason": "M0 Rotation long (2-of-3) demoted \u2014 flow does not confirm the ground: XLC Improving \u2014 price rotating in, money not (accumulation -35.4); watch until accumulation turns positive"
+    }
+  ],
+  "avoid": [
+    {
+      "ticker": "AAPL",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 336.67,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.90% < 3.5% | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 7 RS rank >= 70 | parabolic: only 0.3 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "ABBV",
+      "sector": "XLV",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 271.36,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.02% < 3.5% | M0: 10% above the 20-wk SMA -- already extended, not an entry | Trend Template fails: 7 RS rank >= 70 | parabolic: only 1.2 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "ABT",
+      "sector": "XLV",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 98.73,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.12% < 3.5%; price not above 20 & 50 SMA | M0: close 98.73 below 20-wk SMA 99.06 | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only -0.4 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "AEP",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 122.08,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.57% < 3.5%; price not above 20 & 50 SMA | M0: close 122.08 below 20-wk SMA 126.75; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 4 50 MA > 150 & 200, 5 >=25% above 52w low | parabolic: only 1.0 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "AMAT",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 520.65,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 3.18% < 3.5% | M0: reclaim present but RS rank 45.0 < 50: losing to the market; ETF-level exposure instead | Trend Template fails: 6 within 25% of 52w high, 7 RS rank >= 70 | parabolic: only 0.5 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "AMD",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 645.86,
+      "setup": null,
+      "reason": "Not a setup. breakout: prior move -5% < 30 | vcp: pullbacks not contracting | ep: gap -2.3% < 10.0% | burst: no tight range + break on volume"
+    },
+    {
+      "ticker": "AMGN",
+      "sector": "XLV",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 413.08,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.36% < 3.5% | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 7 RS rank >= 70 | parabolic: only 0.6 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "AMT",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 166.18,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.19% < 3.5%; price not above 20 & 50 SMA | M0: close 166.18 below 20-wk SMA 172.46; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only 0.2 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "AMZN",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 259.92,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.94% < 3.5% | M0: 20-wk SMA not rising | Trend Template fails: 7 RS rank >= 70 | parabolic: only 1.4 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "APD",
+      "sector": "XLB",
+      "sector_quadrant": "Weakening",
+      "from_watchlist": false,
+      "close": 278.12,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.89% < 3.5%; price not above 20 & 50 SMA | M0: close 278.12 below 20-wk SMA 289.71; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only -0.2 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "AVGO",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 376.51,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.38% < 3.5% | M0: close 376.51 below 20-wk SMA 384.28; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 3 200 MA rising 1mo+, 4 50 MA > 150 & 200 | parabolic: only 1.7 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "AXP",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 304.25,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.76% < 3.5%; price not above 20 & 50 SMA | M0: close 304.25 below 20-wk SMA 328.66 | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only -0.3 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "BAC",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 53.52,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.03% < 3.5%; price not above 20 & 50 SMA | M0: close 53.52 below 20-wk SMA 58.20 | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only -1.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "BKNG",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 155.87,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 3.25% < 3.5%; price not above 20 & 50 SMA | M0: close 155.87 below 20-wk SMA 179.69 | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only -0.8 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "BRK-B",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 506.25,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.10% < 3.5%; price not above 20 & 50 SMA | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 4 50 MA > 150 & 200 | parabolic: only 0.3 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "CBRE",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 127.56,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.74% < 3.5%; price not above 20 & 50 SMA | M0: close 127.56 below 20-wk SMA 138.91; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only -1.0 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "CCI",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 69.01,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.64% < 3.5%; price not above 20 & 50 SMA | M0: close 69.01 below 20-wk SMA 77.64; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only 0.4 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "CEG",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 299.59,
+      "setup": null,
+      "reason": "Not a setup. Trend Template fails: 2 150 MA > 200 MA, 3 200 MA rising 1mo+, 4 50 MA > 150 & 200 | breakout: prior move 11% < 30 | ep: gap -3.3% < 10.0% | burst: no tight range + break on volume"
+    },
+    {
+      "ticker": "CL",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 87.21,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.62% < 3.5%; price not above 20 & 50 SMA | M0: close 87.21 below 20-wk SMA 89.81 | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only 0.7 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "CMCSA",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 20.94,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.61% < 3.5%; price not above 20 & 50 SMA | M0: close 20.94 below 20-wk SMA 23.74; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only -0.9 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "CMG",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 30.77,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 3.49% < 3.5%; price not above 20 & 50 SMA | M0: close 30.77 below 20-wk SMA 33.58 | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only -1.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "COST",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 942.25,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.56% < 3.5% | M0: close 942.25 below 20-wk SMA 948.64; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 4 50 MA > 150 & 200, 5 >=25% above 52w low | parabolic: only 1.5 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "D",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 61.53,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.66% < 3.5%; price not above 20 & 50 SMA | M0: close 61.53 below 20-wk SMA 66.36 | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only 0.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "DLR",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 180.47,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.24% < 3.5%; price not above 20 & 50 SMA | M0: close 180.47 below 20-wk SMA 184.88; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only 0.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "DOW",
+      "sector": "XLB",
+      "sector_quadrant": "Weakening",
+      "from_watchlist": false,
+      "close": 27.77,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.86% < 3.5%; price not above 20 & 50 SMA | M0: close 27.77 below 20-wk SMA 30.54; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 4 50 MA > 150 & 200, 6 within 25% of 52w high | parabolic: only -0.4 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "DUK",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 115.5,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.23% < 3.5%; price not above 20 & 50 SMA | M0: close 115.50 below 20-wk SMA 121.97; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 4 50 MA > 150 & 200, 5 >=25% above 52w low | parabolic: only 0.4 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "EQIX",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 1031.77,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.24% < 3.5%; price not above 20 & 50 SMA | M0: close 1031.77 below 20-wk SMA 1045.96 | Trend Template fails: 1 price > 50/150/200 MA, 7 RS rank >= 70, 8 price > 50 MA | parabolic: only 0.2 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "EXC",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 41.49,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.57% < 3.5%; price not above 20 & 50 SMA | M0: close 41.49 below 20-wk SMA 44.43; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 3 200 MA rising 1mo+, 4 50 MA > 150 & 200 | parabolic: only 0.6 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "FCX",
+      "sector": "XLB",
+      "sector_quadrant": "Weakening",
+      "from_watchlist": false,
+      "close": 71.86,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 3.19% < 3.5% | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 7 RS rank >= 70 | parabolic: only 0.0 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "GOOGL",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 350.5,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.34% < 3.5% | M0: close 350.50 below 20-wk SMA 353.54; 20-wk SMA not rising | Trend Template fails: 4 50 MA > 150 & 200, 7 RS rank >= 70 | parabolic: only 0.7 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "GS",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 887.21,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.44% < 3.5%; price not above 20 & 50 SMA | M0: close 887.21 below 20-wk SMA 1015.74 | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only -0.9 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "HD",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 285.77,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.92% < 3.5%; price not above 20 & 50 SMA | M0: close 285.77 below 20-wk SMA 321.99; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only -0.4 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "ISRG",
+      "sector": "XLV",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 414.52,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.88% < 3.5% | M0: 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only 1.0 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "JNJ",
+      "sector": "XLV",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 258.45,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.83% < 3.5%; price not above 20 & 50 SMA | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 1 price > 50/150/200 MA, 7 RS rank >= 70, 8 price > 50 MA | parabolic: only -0.5 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "JPM",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 329.58,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.83% < 3.5%; price not above 20 & 50 SMA | M0: close 329.58 below 20-wk SMA 335.59 | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only -0.6 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "KO",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 85.82,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.29% < 3.5%; price not above 20 & 50 SMA | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 1 price > 50/150/200 MA, 7 RS rank >= 70, 8 price > 50 MA | parabolic: only -0.6 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "LIN",
+      "sector": "XLB",
+      "sector_quadrant": "Weakening",
+      "from_watchlist": false,
+      "close": 483.98,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.62% < 3.5% | M0: close 483.98 below 20-wk SMA 495.56 | Trend Template fails: 1 price > 50/150/200 MA, 4 50 MA > 150 & 200, 7 RS rank >= 70 | parabolic: only 0.9 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "LOW",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 181.54,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.09% < 3.5%; price not above 20 & 50 SMA | M0: close 181.54 below 20-wk SMA 208.45; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only -0.9 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "LRCX",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 329.51,
+      "setup": null,
+      "reason": "Not a setup. Trend Template fails: 7 RS rank >= 70 | breakout: prior move -11% < 30 | ep: gap -3.5% < 10.0% | burst: no tight range + break on volume"
+    },
+    {
+      "ticker": "MA",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 570.06,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.59% < 3.5%; price not above 20 & 50 SMA | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 4 50 MA > 150 & 200 | parabolic: only 0.9 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "MCD",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 230.88,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.76% < 3.5%; price not above 20 & 50 SMA | M0: close 230.88 below 20-wk SMA 264.60; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only -1.0 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "MDLZ",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 59.38,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.73% < 3.5%; price not above 20 & 50 SMA | M0: close 59.38 below 20-wk SMA 60.69 | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only 0.2 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "META",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 721.31,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 3.46% < 3.5% | M0: 17% above the 20-wk SMA -- already extended, not an entry | Trend Template fails: 2 150 MA > 200 MA, 4 50 MA > 150 & 200, 7 RS rank >= 70 | parabolic: only -0.2 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "MO",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 69.38,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.78% < 3.5% | M0: reclaim present but RS rank 41.0 < 50: losing to the market; ETF-level exposure instead | Trend Template fails: 4 50 MA > 150 & 200, 7 RS rank >= 70 | parabolic: only 0.9 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "MRK",
+      "sector": "XLV",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 142.79,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.20% < 3.5%; price not above 20 & 50 SMA | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 7 RS rank >= 70 | parabolic: only -0.5 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "MS",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 189.71,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.32% < 3.5%; price not above 20 & 50 SMA | M0: close 189.71 below 20-wk SMA 210.12 | Trend Template fails: 1 price > 50/150/200 MA, 7 RS rank >= 70, 8 price > 50 MA | parabolic: only -0.6 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "MSFT",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 529.76,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.09% < 3.5% | M0: 19% above the 20-wk SMA -- already extended, not an entry | Trend Template fails: 2 150 MA > 200 MA, 4 50 MA > 150 & 200 | parabolic: only 1.2 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "MU",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 1088.0,
+      "setup": null,
+      "reason": "Not a setup. breakout: prior move 8% < 30 | vcp: volume not drying up | ep: gap -2.7% < 10.0% | burst: no tight range + break on volume"
+    },
+    {
+      "ticker": "NEE",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 77.06,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.66% < 3.5%; price not above 20 & 50 SMA | M0: close 77.06 below 20-wk SMA 84.39; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 3 200 MA rising 1mo+, 4 50 MA > 150 & 200 | parabolic: only -0.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "NEM",
+      "sector": "XLB",
+      "sector_quadrant": "Weakening",
+      "from_watchlist": false,
+      "close": 113.54,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.51% < 3.5%; price not above 20 & 50 SMA | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 4 50 MA > 150 & 200 | parabolic: only -1.0 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "NFLX",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 69.7,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.20% < 3.5%; price not above 20 & 50 SMA | M0: close 69.70 below 20-wk SMA 76.74; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only 0.0 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "NKE",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 34.36,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.81% < 3.5%; price not above 20 & 50 SMA | M0: close 34.36 below 20-wk SMA 40.63; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only -0.8 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "NUE",
+      "sector": "XLB",
+      "sector_quadrant": "Weakening",
+      "from_watchlist": false,
+      "close": 246.44,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.76% < 3.5%; price not above 20 & 50 SMA | M0: close 246.44 below 20-wk SMA 247.46 | Trend Template fails: 1 price > 50/150/200 MA, 7 RS rank >= 70, 8 price > 50 MA | parabolic: only 0.2 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "NVDA",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 237.47,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.89% < 3.5% | M0: 11% above the 20-wk SMA -- already extended, not an entry | Trend Template fails: 7 RS rank >= 70 | parabolic: only 0.8 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "O",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 53.35,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.53% < 3.5%; price not above 20 & 50 SMA | M0: close 53.35 below 20-wk SMA 60.51; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 4 50 MA > 150 & 200, 5 >=25% above 52w low | parabolic: only -1.5 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "PCG",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 12.79,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.97% < 3.5%; price not above 20 & 50 SMA | M0: close 12.79 below 20-wk SMA 15.96; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 3 200 MA rising 1mo+, 4 50 MA > 150 & 200 | parabolic: only 0.5 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "PEP",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 123.73,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.64% < 3.5%; price not above 20 & 50 SMA | M0: close 123.73 below 20-wk SMA 137.70; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only -1.8 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "PFE",
+      "sector": "XLV",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 28.0,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.70% < 3.5% | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only 0.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "PG",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 147.82,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.43% < 3.5% | M0: reclaim present but RS rank 42.0 < 50: losing to the market; ETF-level exposure instead | Trend Template fails: 2 150 MA > 200 MA, 4 50 MA > 150 & 200, 5 >=25% above 52w low | parabolic: only 0.6 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "PLD",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 127.3,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.53% < 3.5%; price not above 20 & 50 SMA | M0: close 127.30 below 20-wk SMA 139.47; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 4 50 MA > 150 & 200, 5 >=25% above 52w low | parabolic: only -1.4 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "PLTR",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 194.12,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 3.07% < 3.5% | M0: 27% above the 20-wk SMA -- already extended, not an entry | Trend Template fails: 2 150 MA > 200 MA, 4 50 MA > 150 & 200 | parabolic: only 0.7 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "PM",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 192.69,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.13% < 3.5% | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 7 RS rank >= 70 | parabolic: only 0.7 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "PPG",
+      "sector": "XLB",
+      "sector_quadrant": "Weakening",
+      "from_watchlist": false,
+      "close": 105.08,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.95% < 3.5%; price not above 20 & 50 SMA | M0: close 105.08 below 20-wk SMA 112.54 | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 4 50 MA > 150 & 200 | parabolic: only -0.3 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "PSA",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 281.99,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.85% < 3.5%; price not above 20 & 50 SMA | M0: close 281.99 below 20-wk SMA 307.84 | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only -0.5 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "SBUX",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 93.58,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.15% < 3.5%; price not above 20 & 50 SMA | M0: close 93.58 below 20-wk SMA 101.74; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only -0.7 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "SHW",
+      "sector": "XLB",
+      "sector_quadrant": "Weakening",
+      "from_watchlist": false,
+      "close": 315.0,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.28% < 3.5%; price not above 20 & 50 SMA | M0: close 315.00 below 20-wk SMA 328.86 | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only -1.0 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "SO",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 85.44,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.42% < 3.5%; price not above 20 & 50 SMA | M0: close 85.44 below 20-wk SMA 91.03; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 3 200 MA rising 1mo+, 4 50 MA > 150 & 200 | parabolic: only 0.9 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "SPGI",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 395.18,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.94% < 3.5%; price not above 20 & 50 SMA | M0: close 395.18 below 20-wk SMA 411.41 | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only -0.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "SRE",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 79.69,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.65% < 3.5%; price not above 20 & 50 SMA | M0: close 79.69 below 20-wk SMA 86.73; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 3 200 MA rising 1mo+, 4 50 MA > 150 & 200 | parabolic: only 0.4 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "T",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 24.47,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.06% < 3.5%; price not above 20 & 50 SMA | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 4 50 MA > 150 & 200 | parabolic: only -0.3 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "TGT",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 150.92,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.22% < 3.5%; price not above 20 & 50 SMA | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 1 price > 50/150/200 MA, 7 RS rank >= 70, 8 price > 50 MA | parabolic: only -1.2 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "TJX",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 138.8,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.13% < 3.5%; price not above 20 & 50 SMA | M0: close 138.80 below 20-wk SMA 148.07; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only 1.8 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "TMO",
+      "sector": "XLV",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 662.06,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.66% < 3.5% | M0: 18% above the 20-wk SMA -- already extended, not an entry | Trend Template fails: 2 150 MA > 200 MA, 4 50 MA > 150 & 200 | parabolic: only -0.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "TMUS",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 167.65,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.57% < 3.5%; price not above 20 & 50 SMA | M0: close 167.65 below 20-wk SMA 179.13; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only 0.4 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "TSLA",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 377.81,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.75% < 3.5% | M0: 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only 0.6 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "TTWO",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 204.01,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.83% < 3.5%; price not above 20 & 50 SMA | M0: close 204.01 below 20-wk SMA 228.90; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only -0.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "UNH",
+      "sector": "XLV",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 375.98,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.22% < 3.5%; price not above 20 & 50 SMA | M0: close 375.98 below 20-wk SMA 397.29 | Trend Template fails: 1 price > 50/150/200 MA, 7 RS rank >= 70, 8 price > 50 MA | parabolic: only 0.1 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "V",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 372.1,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.50% < 3.5% | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 7 RS rank >= 70 | parabolic: only 0.9 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "VMC",
+      "sector": "XLB",
+      "sector_quadrant": "Weakening",
+      "from_watchlist": false,
+      "close": 244.13,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.48% < 3.5%; price not above 20 & 50 SMA | M0: close 244.13 below 20-wk SMA 274.12; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only -0.2 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "VZ",
+      "sector": "XLC",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 45.77,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.83% < 3.5%; price not above 20 & 50 SMA | M0: close 45.77 below 20-wk SMA 46.57 | Trend Template fails: 1 price > 50/150/200 MA, 7 RS rank >= 70, 8 price > 50 MA | parabolic: only -0.6 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "WELL",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 221.12,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.06% < 3.5%; price not above 20 & 50 SMA | M0: close 221.12 below 20-wk SMA 227.91 | Trend Template fails: 1 price > 50/150/200 MA, 7 RS rank >= 70, 8 price > 50 MA | parabolic: only -1.4 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "WFC",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 80.26,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.23% < 3.5%; price not above 20 & 50 SMA | M0: close 80.26 below 20-wk SMA 84.03 | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only -0.7 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "WMT",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 108.16,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.83% < 3.5%; price not above 20 & 50 SMA | M0: close 108.16 below 20-wk SMA 112.54; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only 0.9 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "XEL",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 72.42,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.68% < 3.5%; price not above 20 & 50 SMA | M0: close 72.42 below 20-wk SMA 76.79; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 3 200 MA rising 1mo+, 4 50 MA > 150 & 200 | parabolic: only 0.7 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "XLB",
+      "sector": "XLB",
+      "sector_quadrant": "Weakening",
+      "from_watchlist": false,
+      "close": 48.98,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.32% < 3.5%; price not above 20 & 50 SMA | M0: close 48.98 below 20-wk SMA 50.95 | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only -0.6 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "XLF",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 53.75,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.25% < 3.5%; price not above 20 & 50 SMA | M0: close 53.75 below 20-wk SMA 55.03 | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only -0.6 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "XLK",
+      "sector": "XLK",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 201.39,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.24% < 3.5% | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 7 RS rank >= 70 | parabolic: only 1.3 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "XLP",
+      "sector": "XLP",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 81.7,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 0.95% < 3.5%; price not above 20 & 50 SMA | M0: close 81.70 below 20-wk SMA 83.57 | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only 0.3 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "XLRE",
+      "sector": "XLRE",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 40.57,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.20% < 3.5%; price not above 20 & 50 SMA | M0: close 40.57 below 20-wk SMA 43.68; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only -1.2 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "XLU",
+      "sector": "XLU",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 41.15,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.41% < 3.5%; price not above 20 & 50 SMA | M0: close 41.15 below 20-wk SMA 43.32; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 3 200 MA rising 1mo+, 4 50 MA > 150 & 200 | parabolic: only 1.5 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "XLV",
+      "sector": "XLV",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 168.81,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.34% < 3.5% | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 5 >=25% above 52w low, 7 RS rank >= 70 | parabolic: only 0.4 ADR above 10 EMA (need 5.0)"
+    },
+    {
+      "ticker": "XLY",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 111.36,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 1.16% < 3.5%; price not above 20 & 50 SMA | M0: close 111.36 below 20-wk SMA 115.04; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+ | parabolic: only 0.7 ADR above 10 EMA (need 5.0)"
+    }
+  ],
+  "errors": [
+    {
+      "ticker": "SPG",
+      "error": "insufficient history"
+    }
+  ],
+  "open_positions": [],
+  "unconfirmed_from_prior": [
+    {
+      "ticker": "CSCO",
+      "kind": "card",
+      "setup": "M0 Rotation",
+      "date": "2026-10-06"
+    },
+    {
+      "ticker": "AMAT",
+      "kind": "card",
+      "setup": "M0 Rotation",
+      "date": "2026-10-06"
+    }
+  ],
+  "question_of_the_day": null,
+  "review": null
+}
