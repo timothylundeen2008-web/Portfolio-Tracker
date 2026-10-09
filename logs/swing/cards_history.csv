@@ -21,3 +21,6 @@ date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_
 2026-10-06,AMAT,M0 Rotation,long,3-of-3,546.0,519.15,530.27,restrictive_tightening,False,"risk budget $25.00 at this step/regime is below one share's risk ($26.85) — a single share breaches Progressive Exposure; the only expression is a 45-90 DTE call debit spread with premium <= $25, or skip"
 2026-10-07,CSCO,M0 Rotation,long,3-of-3,118.39,114.41,117.39,restrictive_tightening,True,
 2026-10-07,ECL,M2b Failed-BO Short,short,2-of-3,280.23,282.44,278.1,restrictive_tightening,True,
+2026-10-08,CSCO,M0 Rotation,long,3-of-3,117.18,113.2,114.89,restrictive_tightening,True,
+2026-10-08,NVDA,M0 Rotation,long,2-of-3,237.07,229.04,230.48,restrictive_tightening,True,
+2026-10-08,ETN,M2b Failed-BO Short,short,2-of-3,442.49,446.73,424.51,restrictive_tightening,True,
