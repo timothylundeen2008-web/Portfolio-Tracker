@@ -1,6 +1,6 @@
 {
  "session": "2026-10-09",
- "generated_et": "Oct 09, 2026 09:55 PM EDT",
+ "generated_et": "Oct 10, 2026 05:58 PM EDT",
  "scoreboard": {
   "rows": [
    {
@@ -149,15 +149,15 @@
    },
    {
     "name": "WTI crude",
-    "value": 91.66000366210938,
+    "value": 91.8499984741211,
     "unit": "$",
     "kind": "index",
-    "d1": 0.18581899913583388,
-    "d5": -6.364282702922286,
-    "d20": -9.489479942619361,
-    "d1_txt": "+0.2%",
-    "d5_txt": "-6.4%",
-    "d20_txt": "-9.5%",
+    "d1": 0.39348630315589883,
+    "d5": -6.170192589517731,
+    "d20": -9.301867804758468,
+    "d1_txt": "+0.4%",
+    "d5_txt": "-6.2%",
+    "d20_txt": "-9.3%",
     "pctile_1y": 67.0,
     "z1d": 0.1,
     "asof": "2026-10-09",
@@ -441,10 +441,10 @@
   ],
   "flip_error": null,
   "guards": [
-   "cape: 41.87 (live, as of 2026-10-09)",
-   "top20 concentration pct: 49.88 (live, as of 2026-10-09) \u2014 top 20 SPY weights summed",
+   "cape: 41.87 (live, as of 2026-10-10)",
+   "top20 concentration pct: 49.88 (live, as of 2026-10-10) \u2014 top 20 SPY weights summed",
    "fed bs expanding: False (live, as of 2026-10-07) \u2014 flat / neutral: 4-wk avg +1.7B/wk, 13-wk avg +0.9B/wk",
-   "deficit gt 5pct gdp: True (manual, as of 2026-08-13, 57d old)"
+   "deficit gt 5pct gdp: True (manual, as of 2026-08-13, 58d old)"
   ],
   "guard_warnings": [],
   "repression": {
@@ -1362,6 +1362,11 @@
  "model": {
   "available": true,
   "conclusion": "You SHOULD hold the `restrictive_tightening` model above. Model book 100.89 (-1.1% from peak; 20d -0.1%). 2 weight change(s) vs the prior session.",
+  "spy_returns": {
+   "ret_1m": 2.99,
+   "ret_3m": 4.18,
+   "ret_12_1": 13.52
+  },
   "summary": {
    "available": true,
    "date": "2026-10-09",
@@ -1393,6 +1398,7 @@
    "ret_5d": 0.58,
    "ret_20d": -0.05,
    "sessions": 42,
+   "since_inception_pct": 0.89,
    "since": "2026-08-12",
    "reconstructed_sessions": 36,
    "changes": [
@@ -1417,7 +1423,11 @@
     "change": 0.0,
     "gate": null,
     "gate_trigger": null,
-    "hold_trend": "CONFIRMED UPTREND"
+    "hold_trend": "CONFIRMED UPTREND",
+    "ret_1m": 7.1,
+    "ret_3m": 10.86,
+    "ret_12_1": 25.02,
+    "vs_spy_3m": 6.68
    },
    {
     "ticker": "SCHD",
@@ -1425,7 +1435,11 @@
     "change": 0.0,
     "gate": "PULLBACK",
     "gate_trigger": "close back above the 50-day (33.78)",
-    "hold_trend": "CONFIRMED UPTREND"
+    "hold_trend": "CONFIRMED UPTREND",
+    "ret_1m": -2.02,
+    "ret_3m": 2.28,
+    "ret_12_1": 28.42,
+    "vs_spy_3m": -1.9
    },
    {
     "ticker": "SGOV",
@@ -1433,7 +1447,11 @@
     "change": -0.5,
     "gate": null,
     "gate_trigger": null,
-    "hold_trend": "cash"
+    "hold_trend": "cash",
+    "ret_1m": 0.31,
+    "ret_3m": 0.9,
+    "ret_12_1": 3.46,
+    "vs_spy_3m": -3.28
    },
    {
     "ticker": "GLD",
@@ -1441,7 +1459,11 @@
     "change": 0.0,
     "gate": null,
     "gate_trigger": null,
-    "hold_trend": "DOWNTREND"
+    "hold_trend": "DOWNTREND",
+    "ret_1m": -2.97,
+    "ret_3m": 4.75,
+    "ret_12_1": 6.46,
+    "vs_spy_3m": 0.57
    },
    {
     "ticker": "USFR",
@@ -1449,7 +1471,11 @@
     "change": 0.0,
     "gate": null,
     "gate_trigger": null,
-    "hold_trend": "cash"
+    "hold_trend": "cash",
+    "ret_1m": 0.35,
+    "ret_3m": 0.97,
+    "ret_12_1": 3.7,
+    "vs_spy_3m": -3.21
    },
    {
     "ticker": "KMLM",
@@ -1457,7 +1483,11 @@
     "change": 0.0,
     "gate": "CONFIRMED",
     "gate_trigger": null,
-    "hold_trend": "CONFIRMED UPTREND"
+    "hold_trend": "CONFIRMED UPTREND",
+    "ret_1m": -0.29,
+    "ret_3m": 8.12,
+    "ret_12_1": 21.63,
+    "vs_spy_3m": 3.94
    },
    {
     "ticker": "RING",
@@ -1465,7 +1495,11 @@
     "change": 0.0,
     "gate": null,
     "gate_trigger": null,
-    "hold_trend": "NEAR RISING MA"
+    "hold_trend": "NEAR RISING MA",
+    "ret_1m": -7.7,
+    "ret_3m": 23.4,
+    "ret_12_1": 27.53,
+    "vs_spy_3m": 19.22
    },
    {
     "ticker": "XLE",
@@ -1473,7 +1507,11 @@
     "change": 0.0,
     "gate": null,
     "gate_trigger": null,
-    "hold_trend": "CONFIRMED UPTREND"
+    "hold_trend": "CONFIRMED UPTREND",
+    "ret_1m": 0.83,
+    "ret_3m": 15.38,
+    "ret_12_1": 49.23,
+    "vs_spy_3m": 11.2
    },
    {
     "ticker": "XLV",
@@ -1481,7 +1519,11 @@
     "change": 0.5,
     "gate": "CONFIRMED",
     "gate_trigger": null,
-    "hold_trend": "CONFIRMED UPTREND"
+    "hold_trend": "CONFIRMED UPTREND",
+    "ret_1m": 3.5,
+    "ret_3m": 6.23,
+    "ret_12_1": 16.11,
+    "vs_spy_3m": 2.05
    },
    {
     "ticker": "SLV",
@@ -1489,7 +1531,11 @@
     "change": 0.0,
     "gate": null,
     "gate_trigger": null,
-    "hold_trend": "DOWNTREND"
+    "hold_trend": "DOWNTREND",
+    "ret_1m": -4.73,
+    "ret_3m": 5.02,
+    "ret_12_1": 29.04,
+    "vs_spy_3m": 0.84
    },
    {
     "ticker": "SMH",
@@ -1497,7 +1543,11 @@
     "change": 0.0,
     "gate": null,
     "gate_trigger": null,
-    "hold_trend": "CONFIRMED UPTREND"
+    "hold_trend": "CONFIRMED UPTREND",
+    "ret_1m": 7.68,
+    "ret_3m": 3.02,
+    "ret_12_1": 62.4,
+    "vs_spy_3m": -1.16
    },
    {
     "ticker": "PDBC",
@@ -1505,7 +1555,11 @@
     "change": 0.0,
     "gate": null,
     "gate_trigger": null,
-    "hold_trend": "CONFIRMED UPTREND"
+    "hold_trend": "CONFIRMED UPTREND",
+    "ret_1m": -1.95,
+    "ret_3m": 16.33,
+    "ret_12_1": 53.6,
+    "vs_spy_3m": 12.15
    },
    {
     "ticker": "QQQ",
@@ -1513,7 +1567,11 @@
     "change": 0.0,
     "gate": null,
     "gate_trigger": null,
-    "hold_trend": "CONFIRMED UPTREND"
+    "hold_trend": "CONFIRMED UPTREND",
+    "ret_1m": 6.12,
+    "ret_3m": 5.66,
+    "ret_12_1": 16.33,
+    "vs_spy_3m": 1.48
    },
    {
     "ticker": "TLT",
@@ -1521,7 +1579,11 @@
     "change": 0.0,
     "gate": null,
     "gate_trigger": null,
-    "hold_trend": "DOWNTREND"
+    "hold_trend": "DOWNTREND",
+    "ret_1m": -3.08,
+    "ret_3m": -6.03,
+    "ret_12_1": -5.67,
+    "vs_spy_3m": -10.21
    },
    {
     "ticker": "XLU",
@@ -1529,7 +1591,11 @@
     "change": 0.0,
     "gate": null,
     "gate_trigger": null,
-    "hold_trend": "DOWNTREND"
+    "hold_trend": "DOWNTREND",
+    "ret_1m": -1.89,
+    "ret_3m": -8.76,
+    "ret_12_1": -4.38,
+    "vs_spy_3m": -12.94
    }
   ],
   "actions": [],
@@ -1541,8 +1607,8 @@
  "portfolio": {
   "available": false,
   "active": false,
-  "ledger_age_days": 75,
-  "conclusion": "Ledger last touched 75 days ago \u2014 not tracking real positions, so it is not used. The model portfolio (section 8) is what you SHOULD hold."
+  "ledger_age_days": 76,
+  "conclusion": "Ledger last touched 76 days ago \u2014 not tracking real positions, so it is not used. The model portfolio (section 8) is what you SHOULD hold."
  },
  "swing": {
   "available": true,
@@ -1946,7 +2012,7 @@
    {
     "event": "CPI",
     "date": "2026-10-13",
-    "days_away": 4,
+    "days_away": 3,
     "affects": "ALL \u2014 moves the SHORT real rate, the regime's first input",
     "blackout": false
    }
@@ -2054,14 +2120,14 @@
   {
    "input": "Money Flow bridge",
    "asof": "2026-10-10",
-   "age_days": -1,
+   "age_days": 0,
    "status": "OK",
    "note": ""
   },
   {
    "input": "Markets bridge",
    "asof": "2026-10-10",
-   "age_days": -1,
+   "age_days": 0,
    "status": "OK",
    "note": ""
   },
@@ -2075,7 +2141,7 @@
   {
    "input": "Position ledger",
    "asof": "2026-07-26",
-   "age_days": 75,
+   "age_days": 76,
    "status": "UNUSED",
    "note": "not tracking real positions \u2014 the model portfolio (section 8) is the reference"
   },
