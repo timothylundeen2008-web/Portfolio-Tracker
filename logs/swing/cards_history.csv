@@ -24,3 +24,5 @@ date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_
 2026-10-08,CSCO,M0 Rotation,long,3-of-3,117.18,113.2,114.89,restrictive_tightening,True,
 2026-10-08,NVDA,M0 Rotation,long,2-of-3,237.07,229.04,230.48,restrictive_tightening,True,
 2026-10-08,ETN,M2b Failed-BO Short,short,2-of-3,442.49,446.73,424.51,restrictive_tightening,True,
+2026-10-09,CSCO,M0 Rotation,long,3-of-3,118.65,114.55,118.39,restrictive_tightening,True,
+2026-10-09,NVDA,M0 Rotation,long,2-of-3,233.92,226.12,229.28,restrictive_tightening,True,
