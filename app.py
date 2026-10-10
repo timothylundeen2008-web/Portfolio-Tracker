@@ -1684,7 +1684,9 @@ with tab4:
         c2.metric("Circuit breaker", "ON — risk halved" if _brk else "OFF")
         c3.metric("Model drawdown", f"{_sm.get('drawdown_pct', 0):+.1f}%",
                   help="Model book vs its running peak. Warning at -5%, breaker trips at -8%.")
-        c4.metric("Model 20-day", f"{_sm['ret_20d']:+.2f}%" if _sm.get("ret_20d") is not None else "—")
+        c4.metric("Model 20-day", f"{_sm['ret_20d']:+.2f}%" if _sm.get("ret_20d") is not None else "—",
+                  help=(f"Since inception ({_sm.get('since')}): {_sm['since_inception_pct']:+.2f}%"
+                        if _sm.get("since_inception_pct") is not None else None))
         if _brk:
             st.error("Circuit breaker ON: every risk sleeve is halved and the freed weight is in SGOV. "
                      "Release needs drawdown back above -5% and SPY above its 50-day on 2 closes.")
@@ -1694,8 +1696,22 @@ with tab4:
         if not _rows.empty:
             _rows = _rows.rename(columns={"ticker": "Sleeve", "weight": "Should hold %", "change": "Change today",
                                           "gate": "Entry gate (adds)", "gate_trigger": "Pending until",
-                                          "hold_trend": "Hold trend (200-day)"})
-            st.dataframe(_rows, use_container_width=True, hide_index=True)
+                                          "hold_trend": "Hold trend (200-day)",
+                                          "ret_1m": "1M %", "ret_3m": "3M %",
+                                          "vs_spy_3m": "3M vs SPY (pp)", "ret_12_1": "12-1 %"})
+            # Older briefs (before these columns existed) simply lack them.
+            _cols = [c for c in ["Sleeve", "Should hold %", "Change today", "Entry gate (adds)",
+                                 "Pending until", "Hold trend (200-day)", "1M %", "3M %",
+                                 "3M vs SPY (pp)", "12-1 %"] if c in _rows.columns]
+            _fmt = {c: "{:+.1f}" for c in ("1M %", "3M %", "3M vs SPY (pp)", "12-1 %") if c in _cols}
+            st.dataframe(_rows[_cols].style.format(_fmt, na_rep="—"),
+                         use_container_width=True, hide_index=True)
+            if "12-1 %" in _cols:
+                _sr = _mdl.get("spy_returns") or {}
+                _f = lambda v: "—" if v is None else f"{v:+.1f}%"
+                st.caption("Returns are display-only and do not drive any gate or weight (dividend-adjusted closes). "
+                           "1M = 21 sessions, 3M = 63, **12-1** = 12-month return excluding the latest month. "
+                           f"SPY: 1M {_f(_sr.get('ret_1m'))} · 3M {_f(_sr.get('ret_3m'))} · 12-1 {_f(_sr.get('ret_12_1'))}.")
         st.caption(f"As of the {_mb.get('session')} close · model book {_sm.get('nav', 0):.2f}, tracked since "
                    f"{_sm.get('since')}. Regime targets → entry gate (adds must be above a rising 200-day and "
                    "their 50-day; blocked adds wait in SGOV) → circuit breaker. A model, not a broker "

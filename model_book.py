@@ -221,6 +221,9 @@ def summary(book: pd.DataFrame) -> dict:
             "breaker": t["breaker"], "breaker_changed": t["breaker"] != prev_state,
             "release_count": int(t["release_count"]), "warn": bool(t["warn"]),
             "ret_5d": ret(5), "ret_20d": ret(20), "sessions": len(b),
+            # The book only exists since `since` (a calendar-year figure would
+            # be false precision), so the honest long-run number is inception.
+            "since_inception_pct": round((float(nav.iloc[-1]) / float(nav.iloc[0]) - 1) * 100, 2) if len(nav) > 1 else None,
             "since": b.iloc[0]["date"], "reconstructed_sessions": int((b["source"] == "reconstructed").sum()),
             "changes": changes}
 

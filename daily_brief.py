@@ -393,6 +393,31 @@ def _price_close(prices: dict, tk: str) -> pd.Series:
     return _series_clean(df["Close"])
 
 
+TRAIL_1M, TRAIL_3M, TRAIL_12, TRAIL_SKIP = 21, 63, 252, 21
+
+
+def trailing_returns(close: pd.Series) -> dict:
+    """Display-only trailing returns in % from an adjusted-close series.
+
+    1M = last 21 sessions, 3M = last 63, 12-1 = the 12-month return that
+    EXCLUDES the most recent month (price 21 sessions ago over price 252
+    sessions ago) — the standard momentum construction, because the latest
+    month tends to partly reverse. Any window without enough history is None,
+    never a shorter-window number under the same label. Nothing here feeds a
+    gate, a weight or the circuit breaker."""
+    s = close.dropna() if close is not None else pd.Series(dtype=float)
+    n = len(s)
+
+    def span(a: int, b: int):
+        # return from `a` sessions ago to `b` sessions ago (b=0 → latest)
+        if n <= a or float(s.iloc[-1 - a]) <= 0:
+            return None
+        end = float(s.iloc[-1 - b])
+        return round((end / float(s.iloc[-1 - a]) - 1) * 100, 2)
+    return {"ret_1m": span(TRAIL_1M, 0), "ret_3m": span(TRAIL_3M, 0),
+            "ret_12_1": span(TRAIL_12, TRAIL_SKIP)}
+
+
 def scoreboard(inp: dict) -> dict:
     rows = []
     for label, sid, unit, kind in FRED_SCORE:
@@ -1130,9 +1155,14 @@ def model_section(inp: dict, rg: dict) -> dict:
     except Exception:
         tf = None
     rows = []
+    spy_tr = trailing_returns(closes.get("SPY", pd.Series(dtype=float)))
+    out["spy_returns"] = spy_tr
     for t, w in sorted(sm["weights"].items(), key=lambda kv: -kv[1]):
         if w < 0.05:
             continue
+        tr = trailing_returns(closes.get(t, pd.Series(dtype=float)))
+        vs = (round(tr["ret_3m"] - spy_tr["ret_3m"], 2)
+              if tr["ret_3m"] is not None and spy_tr["ret_3m"] is not None else None)
         hold = None
         if tf is not None and t not in tf.EXEMPT:
             hold = tf.assess_ticker(closes.get(t, pd.Series(dtype=float)))["state"]
@@ -1140,7 +1170,9 @@ def model_section(inp: dict, rg: dict) -> dict:
         rows.append({"ticker": t, "weight": w, "change": ch,
                      "gate": (gates.get(t) or {}).get("state"),
                      "gate_trigger": (gates.get(t) or {}).get("trigger"),
-                     "hold_trend": hold or ("cash" if t in rc.ENTRY_EXEMPT else "—")})
+                     "hold_trend": hold or ("cash" if t in rc.ENTRY_EXEMPT else "—"),
+                     "ret_1m": tr["ret_1m"], "ret_3m": tr["ret_3m"], "ret_12_1": tr["ret_12_1"],
+                     "vs_spy_3m": vs})
     actions, weekend = [], []
     if sm["breaker"] == "ON" and sm["breaker_changed"]:
         actions.append(f"CIRCUIT BREAKER ON — model drawdown {sm['drawdown_pct']:.1f}% breached "
@@ -1581,16 +1613,25 @@ def render_md(b: dict) -> str:
                  f"({sm['drawdown_pct']:+.1f}% from peak {sm['peak']:.2f})"
                  + (f" · 5d {sm['ret_5d']:+.2f}%" if sm.get("ret_5d") is not None else "")
                  + (f" · 20d {sm['ret_20d']:+.2f}%" if sm.get("ret_20d") is not None else "")
+                 + (f" · since inception {sm['since_inception_pct']:+.2f}%" if sm.get("since_inception_pct") is not None else "")
                  + f" · tracked since {sm['since']}"
                  + (f" ({sm['reconstructed_sessions']} sessions reconstructed from the daily log)"
                     if sm.get("reconstructed_sessions") else ""))
-        L += ["", "| Sleeve | Should hold | Change today | Entry gate (adds) | Hold trend (200-day) |",
-              "|---|---|---|---|---|"]
+        L += ["", "| Sleeve | Should hold | Change today | Entry gate (adds) | Hold trend (200-day) "
+                  "| 1M | 3M (vs SPY) | 12-1 |",
+              "|---|---|---|---|---|---|---|---|"]
+        _p = lambda v: "—" if v is None else f"{v:+.1f}%"
         for r in md_["rows"]:
             g = r["gate"] or "—"
             if r.get("gate_trigger") and r["gate"] in ("BLOCKED", "PULLBACK", "UNAVAILABLE"):
                 g += f" — until {r['gate_trigger']}"
-            L.append(f"| {r['ticker']} | {r['weight']:.1f}% | {r['change']:+.1f} | {g} | {r['hold_trend']} |")
+            m3 = _p(r.get("ret_3m")) + ("" if r.get("vs_spy_3m") is None else f" ({r['vs_spy_3m']:+.1f}pp)")
+            L.append(f"| {r['ticker']} | {r['weight']:.1f}% | {r['change']:+.1f} | {g} | {r['hold_trend']} "
+                     f"| {_p(r.get('ret_1m'))} | {m3} | {_p(r.get('ret_12_1'))} |")
+        _s = md_.get("spy_returns") or {}
+        L.append(f"_Returns are display-only (dividend-adjusted closes), not a rule input. 1M = 21 sessions, "
+                 f"3M = 63, **12-1** = the 12-month return excluding the latest month. SPY: 1M {_p(_s.get('ret_1m'))} · "
+                 f"3M {_p(_s.get('ret_3m'))} · 12-1 {_p(_s.get('ret_12_1'))}. “—” = not enough history._")
         if md_.get("actions"):
             L += ["", "**Authorized today:**", *[f"- {x}" for x in md_["actions"]]]
         L.append("_Model: regime targets → entry gate (blocked adds parked in SGOV) → circuit breaker "
@@ -1825,6 +1866,24 @@ def selftest() -> dict:
         for r_ in mdl.get("rows") or []:
             if r_["gate"] in ("BLOCKED", "UNAVAILABLE") and r_["change"] > 0.05:
                 f.append(f"{r_['ticker']} shows a BLOCKED add yet the model weight rose {r_['change']:+.1f}")
+        # Trailing returns: exact windows, and no mislabeled short-history numbers.
+        _ix = pd.bdate_range(end="2026-09-25", periods=300)
+        _ps = pd.Series(np.arange(300, dtype=float) + 100.0, index=_ix)   # 100 … 399
+        _tr = trailing_returns(_ps)
+        _ok = (abs(_tr["ret_1m"] - (399 / 378 - 1) * 100) < 0.01            # 21 sessions back
+               and abs(_tr["ret_3m"] - (399 / 336 - 1) * 100) < 0.01        # 63 sessions back
+               and abs(_tr["ret_12_1"] - (378 / 147 - 1) * 100) < 0.01)     # t-21 over t-252, latest month excluded
+        if not _ok:
+            f.append(f"trailing returns wrong on a known ramp: {_tr}")
+        _sh = trailing_returns(_ps.iloc[-100:])
+        if _sh["ret_12_1"] is not None or _sh["ret_3m"] is None:
+            f.append(f"12-1 needs 253 sessions and must be None on 100 bars; 3M must still resolve: {_sh}")
+        if any(v is not None for v in trailing_returns(pd.Series(dtype=float)).values()):
+            f.append("empty history must give no trailing returns")
+        if "12-1" not in md or "3M (vs SPY)" not in md:
+            f.append("section 8 must carry the 1M / 3M (vs SPY) / 12-1 columns")
+        if not any(r_.get("ret_3m") is not None for r_ in mdl.get("rows") or []):
+            f.append("model rows must carry trailing returns when 2y prices are present")
         if not Path("data/model_book.csv").exists():
             f.append("model book must be persisted by write()")
         if not any(d["input"] == "Position ledger" and d["status"] == "UNUSED" for d in b["data_health"]):
