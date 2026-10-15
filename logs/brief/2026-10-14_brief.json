@@ -1,0 +1,2375 @@
+{
+ "session": "2026-10-14",
+ "generated_et": "Oct 14, 2026 08:52 PM EDT",
+ "scoreboard": {
+  "rows": [
+   {
+    "name": "Short real rate (EFFR \u2212 CPI YoY)",
+    "value": 0.14,
+    "unit": "%",
+    "kind": "rate",
+    "d1": -0.33999999999999997,
+    "d5": -0.33999999999999997,
+    "d20": -0.33999999999999997,
+    "d1_txt": "-34bp",
+    "d5_txt": "-34bp",
+    "d20_txt": "-34bp",
+    "pctile_1y": null,
+    "z1d": -9.6,
+    "asof": "live (EFFR \u2212 latest CPI)",
+    "source": "classifier + daily log"
+   },
+   {
+    "name": "10Y real yield (DFII10)",
+    "value": 2.88,
+    "unit": "%",
+    "kind": "rate",
+    "d1": -0.03000000000000025,
+    "d5": -0.07000000000000028,
+    "d20": 0.2799999999999998,
+    "d1_txt": "-3bp",
+    "d5_txt": "-7bp",
+    "d20_txt": "+28bp",
+    "pctile_1y": 97.0,
+    "z1d": -0.9,
+    "asof": "2026-10-13",
+    "source": "FRED DFII10"
+   },
+   {
+    "name": "10Y Treasury",
+    "value": 5.21,
+    "unit": "%",
+    "kind": "rate",
+    "d1": -0.03000000000000025,
+    "d5": -0.09999999999999964,
+    "d20": 0.2400000000000002,
+    "d1_txt": "-3bp",
+    "d5_txt": "-10bp",
+    "d20_txt": "+24bp",
+    "pctile_1y": 96.0,
+    "z1d": -0.7,
+    "asof": "2026-10-13",
+    "source": "FRED DGS10"
+   },
+   {
+    "name": "2Y Treasury",
+    "value": 4.79,
+    "unit": "%",
+    "kind": "rate",
+    "d1": -0.009999999999999787,
+    "d5": -0.04999999999999982,
+    "d20": 0.13999999999999968,
+    "d1_txt": "-1bp",
+    "d5_txt": "-5bp",
+    "d20_txt": "+14bp",
+    "pctile_1y": 96.0,
+    "z1d": -0.2,
+    "asof": "2026-10-13",
+    "source": "FRED DGS2"
+   },
+   {
+    "name": "10Y breakeven",
+    "value": 2.35,
+    "unit": "%",
+    "kind": "rate",
+    "d1": 0.020000000000000018,
+    "d5": -0.009999999999999787,
+    "d20": -0.029999999999999805,
+    "d1_txt": "+2bp",
+    "d5_txt": "-1bp",
+    "d20_txt": "-3bp",
+    "pctile_1y": 74.0,
+    "z1d": 1.1,
+    "asof": "2026-10-14",
+    "source": "FRED T10YIE"
+   },
+   {
+    "name": "HY OAS",
+    "value": 3.16,
+    "unit": "%",
+    "kind": "rate",
+    "d1": 0.050000000000000266,
+    "d5": 0.13000000000000034,
+    "d20": 0.40000000000000036,
+    "d1_txt": "+5bp",
+    "d5_txt": "+13bp",
+    "d20_txt": "+40bp",
+    "pctile_1y": 92.0,
+    "z1d": 1.0,
+    "asof": "2026-10-13",
+    "source": "FRED BAMLH0A0HYM2"
+   },
+   {
+    "name": "IG OAS",
+    "value": 0.83,
+    "unit": "%",
+    "kind": "rate",
+    "d1": 0.0,
+    "d5": 0.0,
+    "d20": 0.029999999999999916,
+    "d1_txt": "+0bp",
+    "d5_txt": "+0bp",
+    "d20_txt": "+3bp",
+    "pctile_1y": 84.0,
+    "z1d": 0.0,
+    "asof": "2026-10-13",
+    "source": "FRED BAMLC0A0CM"
+   },
+   {
+    "name": "Broad dollar (DTWEXBGS)",
+    "value": 121.6023,
+    "unit": "",
+    "kind": "index",
+    "d1": 0.12795715658449058,
+    "d5": 0.17918223698518698,
+    "d20": 2.8674608290486736,
+    "d1_txt": "+0.1%",
+    "d5_txt": "+0.2%",
+    "d20_txt": "+2.9%",
+    "pctile_1y": 97.0,
+    "z1d": 0.5,
+    "asof": "2026-10-09",
+    "source": "FRED DTWEXBGS"
+   },
+   {
+    "name": "VIX",
+    "value": 16.8700008392334,
+    "unit": "",
+    "kind": "level",
+    "d1": 10.478067054573659,
+    "d5": 11.870032090407157,
+    "d20": -4.743078265198209,
+    "d1_txt": "+10.5%",
+    "d5_txt": "+11.9%",
+    "d20_txt": "-4.7%",
+    "pctile_1y": 46.0,
+    "z1d": 1.4,
+    "asof": "2026-10-14",
+    "source": "FRED VIXCLS"
+   },
+   {
+    "name": "WTI crude",
+    "value": 94.4800033569336,
+    "unit": "$",
+    "kind": "index",
+    "d1": 0.3611684400781412,
+    "d5": 7.0231135742728545,
+    "d20": -8.82068774663811,
+    "d1_txt": "+0.4%",
+    "d5_txt": "+7.0%",
+    "d20_txt": "-8.8%",
+    "pctile_1y": 73.0,
+    "z1d": 0.1,
+    "asof": "2026-10-14",
+    "source": "FRED DCOILWTICO"
+   },
+   {
+    "name": "S&P 500 (SPY)",
+    "value": 769.5999755859375,
+    "unit": "$",
+    "kind": "index",
+    "d1": -1.0809673492788385,
+    "d5": -0.9804167937545349,
+    "d20": 2.3156338819838362,
+    "d1_txt": "-1.1%",
+    "d5_txt": "-1.0%",
+    "d20_txt": "+2.3%",
+    "pctile_1y": 93.0,
+    "z1d": -1.4,
+    "asof": "2026-10-14",
+    "source": "yfinance"
+   },
+   {
+    "name": "Nasdaq 100 (QQQ)",
+    "value": 728.9500122070312,
+    "unit": "$",
+    "kind": "index",
+    "d1": -1.966189460733958,
+    "d5": -3.7981825984917172,
+    "d20": 3.546037740396679,
+    "d1_txt": "-2.0%",
+    "d5_txt": "-3.8%",
+    "d20_txt": "+3.5%",
+    "pctile_1y": 88.0,
+    "z1d": -1.6,
+    "asof": "2026-10-14",
+    "source": "yfinance"
+   },
+   {
+    "name": "Gold (GLD)",
+    "value": 375.989990234375,
+    "unit": "$",
+    "kind": "index",
+    "d1": -1.4882026340889976,
+    "d5": 0.02926076144880163,
+    "d20": -4.020523917044283,
+    "d1_txt": "-1.5%",
+    "d5_txt": "+0.0%",
+    "d20_txt": "-4.0%",
+    "pctile_1y": 16.0,
+    "z1d": -0.8,
+    "asof": "2026-10-14",
+    "source": "yfinance"
+   },
+   {
+    "name": "Long Treasuries (TLT)",
+    "value": 78.88999938964844,
+    "unit": "$",
+    "kind": "index",
+    "d1": 0.6635148970810523,
+    "d5": 2.255343913617258,
+    "d20": -2.0675890257191853,
+    "d1_txt": "+0.7%",
+    "d5_txt": "+2.3%",
+    "d20_txt": "-2.1%",
+    "pctile_1y": 5.0,
+    "z1d": 1.1,
+    "asof": "2026-10-14",
+    "source": "yfinance"
+   },
+   {
+    "name": "Equal/cap weight (RSP/SPY)",
+    "value": 0.2755847233186503,
+    "unit": "",
+    "kind": "index",
+    "d1": 0.5193015531151257,
+    "d5": 1.7046269593506302,
+    "d20": -1.9836441403614624,
+    "d1_txt": "+0.5%",
+    "d5_txt": "+1.7%",
+    "d20_txt": "-2.0%",
+    "pctile_1y": 15.0,
+    "z1d": 1.0,
+    "asof": "2026-10-14",
+    "source": "yfinance"
+   }
+  ],
+  "movers": [
+   {
+    "name": "Short real rate (EFFR \u2212 CPI YoY)",
+    "value": 0.14,
+    "unit": "%",
+    "kind": "rate",
+    "d1": -0.33999999999999997,
+    "d5": -0.33999999999999997,
+    "d20": -0.33999999999999997,
+    "d1_txt": "-34bp",
+    "d5_txt": "-34bp",
+    "d20_txt": "-34bp",
+    "pctile_1y": null,
+    "z1d": -9.6,
+    "asof": "live (EFFR \u2212 latest CPI)",
+    "source": "classifier + daily log"
+   },
+   {
+    "name": "Nasdaq 100 (QQQ)",
+    "value": 728.9500122070312,
+    "unit": "$",
+    "kind": "index",
+    "d1": -1.966189460733958,
+    "d5": -3.7981825984917172,
+    "d20": 3.546037740396679,
+    "d1_txt": "-2.0%",
+    "d5_txt": "-3.8%",
+    "d20_txt": "+3.5%",
+    "pctile_1y": 88.0,
+    "z1d": -1.6,
+    "asof": "2026-10-14",
+    "source": "yfinance"
+   }
+  ],
+  "extremes": [
+   {
+    "name": "10Y real yield (DFII10)",
+    "value": 2.88,
+    "unit": "%",
+    "kind": "rate",
+    "d1": -0.03000000000000025,
+    "d5": -0.07000000000000028,
+    "d20": 0.2799999999999998,
+    "d1_txt": "-3bp",
+    "d5_txt": "-7bp",
+    "d20_txt": "+28bp",
+    "pctile_1y": 97.0,
+    "z1d": -0.9,
+    "asof": "2026-10-13",
+    "source": "FRED DFII10"
+   },
+   {
+    "name": "10Y Treasury",
+    "value": 5.21,
+    "unit": "%",
+    "kind": "rate",
+    "d1": -0.03000000000000025,
+    "d5": -0.09999999999999964,
+    "d20": 0.2400000000000002,
+    "d1_txt": "-3bp",
+    "d5_txt": "-10bp",
+    "d20_txt": "+24bp",
+    "pctile_1y": 96.0,
+    "z1d": -0.7,
+    "asof": "2026-10-13",
+    "source": "FRED DGS10"
+   },
+   {
+    "name": "2Y Treasury",
+    "value": 4.79,
+    "unit": "%",
+    "kind": "rate",
+    "d1": -0.009999999999999787,
+    "d5": -0.04999999999999982,
+    "d20": 0.13999999999999968,
+    "d1_txt": "-1bp",
+    "d5_txt": "-5bp",
+    "d20_txt": "+14bp",
+    "pctile_1y": 96.0,
+    "z1d": -0.2,
+    "asof": "2026-10-13",
+    "source": "FRED DGS2"
+   },
+   {
+    "name": "Broad dollar (DTWEXBGS)",
+    "value": 121.6023,
+    "unit": "",
+    "kind": "index",
+    "d1": 0.12795715658449058,
+    "d5": 0.17918223698518698,
+    "d20": 2.8674608290486736,
+    "d1_txt": "+0.1%",
+    "d5_txt": "+0.2%",
+    "d20_txt": "+2.9%",
+    "pctile_1y": 97.0,
+    "z1d": 0.5,
+    "asof": "2026-10-09",
+    "source": "FRED DTWEXBGS"
+   },
+   {
+    "name": "Long Treasuries (TLT)",
+    "value": 78.88999938964844,
+    "unit": "$",
+    "kind": "index",
+    "d1": 0.6635148970810523,
+    "d5": 2.255343913617258,
+    "d20": -2.0675890257191853,
+    "d1_txt": "+0.7%",
+    "d5_txt": "+2.3%",
+    "d20_txt": "-2.1%",
+    "pctile_1y": 5.0,
+    "z1d": 1.1,
+    "asof": "2026-10-14",
+    "source": "yfinance"
+   }
+  ],
+  "conclusion": "Unusual moves today: Short real rate (EFFR \u2212 CPI YoY) -34bp (-9.6\u03c3); Nasdaq 100 (QQQ) -2.0% (-1.6\u03c3). Everything else moved inside its normal daily range. At a 1-year extreme: 10Y real yield (DFII10) (97th pctile), 10Y Treasury (96th pctile), 2Y Treasury (96th pctile), Broad dollar (DTWEXBGS) (97th pctile)."
+ },
+ "regime": {
+  "available": true,
+  "conclusion": "`transition_ambiguous` \u2014 Transition \u2014 Ambiguous (short real rate at zero). Day 1 under `transition_ambiguous` (previous close: `restrictive_tightening`). Nearest flip: HY OAS 3.16pp \u2192 4.50pp (+1.34pp, ~26 typical days) would make it `credit_stress`.",
+  "key": "transition_ambiguous",
+  "label": "Transition \u2014 Ambiguous (short real rate at zero)",
+  "drivers": [
+   "Short real policy rate +0.14% sits INSIDE the \u00b10.25% transition band \u2014 within the noise of a single CPI print. The framework's primary gauge is not currently giving a directional reading, so no regime that depends on its sign can be confirmed."
+  ],
+  "transition_reason": "band_ambiguous",
+  "source": "live (FRED)",
+  "days_in_regime": 1,
+  "previous_regime": "restrictive_tightening",
+  "confirm": "Day 1 under `transition_ambiguous` (previous close: `restrictive_tightening`). Per the two-close protocol, nothing executes on a new regime until a second consecutive close confirms it.",
+  "short_real": 0.14,
+  "band_state": "AMBIGUOUS",
+  "band_sessions": 1,
+  "flips": [
+   {
+    "input": "hy_oas",
+    "label": "HY OAS",
+    "unit": "pp",
+    "now": 3.16,
+    "delta": 1.34,
+    "at": 4.5,
+    "to": "credit_stress",
+    "typical_days": 25.7
+   },
+   {
+    "input": "short_real_rate",
+    "label": "Short real rate",
+    "unit": "pp",
+    "now": 0.14,
+    "delta": 0.12,
+    "at": 0.26,
+    "to": "restrictive_tightening",
+    "typical_days": null,
+    "note": "\u22480.5 \u00d7 a 25bp policy move, or the CPI equivalent"
+   }
+  ],
+  "flip_error": null,
+  "guards": [
+   "cape: 41.38 (live, as of 2026-10-14)",
+   "top20 concentration pct: 49.96 (live, as of 2026-10-14) \u2014 top 20 SPY weights summed",
+   "fed bs expanding: False (live, as of 2026-10-07) \u2014 flat / neutral: 4-wk avg +1.7B/wk, 13-wk avg +0.9B/wk",
+   "deficit gt 5pct gdp: True (manual, as of 2026-08-13, 62d old)"
+  ],
+  "guard_warnings": [],
+  "repression": {
+   "score": 4,
+   "band": "Tightening cycle",
+   "hollow": true
+  },
+  "plans": [
+   {
+    "from": "restrictive_tightening",
+    "to": "transition_ambiguous",
+    "rows": [
+     {
+      "ticker": "KMLM",
+      "from": 8.0,
+      "to": 7.0,
+      "change": -1.0,
+      "step": "1 cut",
+      "now": -1.0,
+      "pending": 0.0,
+      "gate": "\u2014",
+      "trigger": null,
+      "detail": "cuts are never gated"
+     },
+     {
+      "ticker": "RING",
+      "from": 5.0,
+      "to": 4.0,
+      "change": -1.0,
+      "step": "1 cut",
+      "now": -1.0,
+      "pending": 0.0,
+      "gate": "\u2014",
+      "trigger": null,
+      "detail": "cuts are never gated"
+     },
+     {
+      "ticker": "SCHD",
+      "from": 14.5,
+      "to": 13.5,
+      "change": -1.0,
+      "step": "1 cut",
+      "now": -1.0,
+      "pending": 0.0,
+      "gate": "\u2014",
+      "trigger": null,
+      "detail": "cuts are never gated"
+     },
+     {
+      "ticker": "USFR",
+      "from": 8.0,
+      "to": 7.0,
+      "change": -1.0,
+      "step": "1 cut",
+      "now": -1.0,
+      "pending": 0.0,
+      "gate": "\u2014",
+      "trigger": null,
+      "detail": "cuts are never gated"
+     },
+     {
+      "ticker": "SGOV",
+      "from": 12.5,
+      "to": 8.5,
+      "change": -4.0,
+      "step": "3 add",
+      "now": 3.0,
+      "pending": -7.0,
+      "gate": "\u2014",
+      "trigger": "drawn down as each blocked/half add clears its trigger",
+      "detail": "planned -4.0, +7.0pt parked from gated adds"
+     },
+     {
+      "ticker": "QQQ",
+      "from": 2.0,
+      "to": 3.0,
+      "change": 1.0,
+      "step": "3 add",
+      "now": 1.0,
+      "pending": 0.0,
+      "gate": "CONFIRMED",
+      "trigger": null,
+      "detail": "+8.4% vs rising 200d, +0.4% vs 50d \u2014 full add"
+     },
+     {
+      "ticker": "XLU",
+      "from": 1.0,
+      "to": 3.0,
+      "change": 2.0,
+      "step": "3 add",
+      "now": 0.0,
+      "pending": 2.0,
+      "gate": "BLOCKED",
+      "trigger": "close above a flat-or-rising 200-day (43.77)",
+      "detail": "-4.7% vs a FALLING 200d (43.77) \u2014 downtrend; add parked in SGOV"
+     },
+     {
+      "ticker": "TLT",
+      "from": 2.0,
+      "to": 7.0,
+      "change": 5.0,
+      "step": "3 add",
+      "now": 0.0,
+      "pending": 5.0,
+      "gate": "BLOCKED",
+      "trigger": "close above a flat-or-rising 200-day (83.45)",
+      "detail": "-5.5% vs a FALLING 200d (83.45) \u2014 downtrend; add parked in SGOV"
+     }
+    ],
+    "parked": 7.0,
+    "blocked": [
+     "XLU",
+     "TLT"
+    ],
+    "half": [],
+    "summary": "restrictive_tightening -> transition_ambiguous: 5 cuts, 3 adds; BLOCKED by trend (parked in SGOV): XLU, TLT; 7.0pt parked",
+    "title": "Rebalance QUEUED: `restrictive_tightening` \u2192 `transition_ambiguous` \u2014 executes only if the next close confirms"
+   },
+   {
+    "from": "transition_ambiguous",
+    "to": "credit_stress",
+    "rows": [
+     {
+      "ticker": "TLT",
+      "from": 7.0,
+      "to": 2.0,
+      "change": -5.0,
+      "step": "1 cut",
+      "now": -5.0,
+      "pending": 0.0,
+      "gate": "\u2014",
+      "trigger": null,
+      "detail": "cuts are never gated"
+     },
+     {
+      "ticker": "VGT",
+      "from": 17.0,
+      "to": 14.0,
+      "change": -3.0,
+      "step": "1 cut",
+      "now": -3.0,
+      "pending": 0.0,
+      "gate": "\u2014",
+      "trigger": null,
+      "detail": "cuts are never gated"
+     },
+     {
+      "ticker": "QQQ",
+      "from": 3.0,
+      "to": 1.0,
+      "change": -2.0,
+      "step": "1 cut",
+      "now": -2.0,
+      "pending": 0.0,
+      "gate": "\u2014",
+      "trigger": null,
+      "detail": "cuts are never gated"
+     },
+     {
+      "ticker": "XLU",
+      "from": 3.0,
+      "to": 1.0,
+      "change": -2.0,
+      "step": "1 cut",
+      "now": -2.0,
+      "pending": 0.0,
+      "gate": "\u2014",
+      "trigger": null,
+      "detail": "cuts are never gated"
+     },
+     {
+      "ticker": "PDBC",
+      "from": 3.0,
+      "to": 2.0,
+      "change": -1.0,
+      "step": "1 cut",
+      "now": -1.0,
+      "pending": 0.0,
+      "gate": "\u2014",
+      "trigger": null,
+      "detail": "cuts are never gated"
+     },
+     {
+      "ticker": "SMH",
+      "from": 3.0,
+      "to": 2.0,
+      "change": -1.0,
+      "step": "1 cut",
+      "now": -1.0,
+      "pending": 0.0,
+      "gate": "\u2014",
+      "trigger": null,
+      "detail": "cuts are never gated"
+     },
+     {
+      "ticker": "XLE",
+      "from": 5.0,
+      "to": 4.0,
+      "change": -1.0,
+      "step": "1 cut",
+      "now": -1.0,
+      "pending": 0.0,
+      "gate": "\u2014",
+      "trigger": null,
+      "detail": "cuts are never gated"
+     },
+     {
+      "ticker": "KMLM",
+      "from": 7.0,
+      "to": 9.0,
+      "change": 2.0,
+      "step": "2 hedge",
+      "now": 2.0,
+      "pending": 0.0,
+      "gate": "CONFIRMED",
+      "trigger": null,
+      "detail": "+10.1% vs rising 200d, +3.9% vs 50d \u2014 full add"
+     },
+     {
+      "ticker": "SCHD",
+      "from": 13.5,
+      "to": 14.5,
+      "change": 1.0,
+      "step": "3 add",
+      "now": 0.5,
+      "pending": 0.5,
+      "gate": "PULLBACK",
+      "trigger": "close back above the 50-day (33.79)",
+      "detail": "+7.1% above a rising 200d but -0.2% below the 50d \u2014 pullback in an uptrend: half now"
+     },
+     {
+      "ticker": "USFR",
+      "from": 7.0,
+      "to": 9.0,
+      "change": 2.0,
+      "step": "3 add",
+      "now": 2.0,
+      "pending": 0.0,
+      "gate": "EXEMPT",
+      "trigger": null,
+      "detail": "cash \u2014 no trend gate (gated adds park here)"
+     },
+     {
+      "ticker": "XLV",
+      "from": 5.0,
+      "to": 7.0,
+      "change": 2.0,
+      "step": "3 add",
+      "now": 2.0,
+      "pending": 0.0,
+      "gate": "CONFIRMED",
+      "trigger": null,
+      "detail": "+11.4% vs rising 200d, +2.9% vs 50d \u2014 full add"
+     },
+     {
+      "ticker": "SGOV",
+      "from": 8.5,
+      "to": 16.5,
+      "change": 8.0,
+      "step": "3 add",
+      "now": 8.5,
+      "pending": -0.5,
+      "gate": "EXEMPT",
+      "trigger": "drawn down as each blocked/half add clears its trigger",
+      "detail": "planned +8.0, +0.5pt parked from gated adds"
+     }
+    ],
+    "parked": 0.5,
+    "blocked": [],
+    "half": [
+     "SCHD"
+    ],
+    "summary": "transition_ambiguous -> credit_stress: 7 cuts, 5 adds; half-size on pullback: SCHD; 0.5pt parked",
+    "title": "Contingency \u2014 if `credit_stress` confirms on two closes"
+   }
+  ],
+  "gates_today": {
+   "KMLM": {
+    "ticker": "KMLM",
+    "state": "CONFIRMED",
+    "fraction": 1.0,
+    "close": 31.33,
+    "ma50": 30.15,
+    "ma200": 28.47,
+    "ma200_rising": true,
+    "detail": "+10.1% vs rising 200d, +3.9% vs 50d \u2014 full add",
+    "trigger": null
+   },
+   "SCHD": {
+    "ticker": "SCHD",
+    "state": "PULLBACK",
+    "fraction": 0.5,
+    "close": 33.71,
+    "ma50": 33.79,
+    "ma200": 31.49,
+    "ma200_rising": true,
+    "detail": "+7.1% above a rising 200d but -0.2% below the 50d \u2014 pullback in an uptrend: half now",
+    "trigger": "close back above the 50-day (33.79)"
+   },
+   "XLV": {
+    "ticker": "XLV",
+    "state": "CONFIRMED",
+    "fraction": 1.0,
+    "close": 173.96,
+    "ma50": 169.08,
+    "ma200": 156.18,
+    "ma200_rising": true,
+    "detail": "+11.4% vs rising 200d, +2.9% vs 50d \u2014 full add",
+    "trigger": null
+   }
+  },
+  "credit_cycle": {
+   "state": "NO_EPISODE",
+   "peak": 3.24,
+   "peak_date": "2026-10-01",
+   "peak_age": 8,
+   "trough": 2.6,
+   "current": 3.16,
+   "retrace_needed": 0.5,
+   "off_peak": 0.08,
+   "mom_2w": 0.08,
+   "action": "No credit episode in the last ~6 months \u2014 the re-entry rule is inactive."
+  },
+  "bridge_key": "transition_ambiguous",
+  "bridge_agrees": true
+ },
+ "cross_asset": {
+  "available": true,
+  "lanes": {
+   "credit": {
+    "state": "CALM",
+    "reading": "3.16%",
+    "note": "Below 350bp. Read this as late-cycle risk COMPRESSION, not safety \u2014 it leaves little room to tighten and a great deal to widen."
+   },
+   "rates": {
+    "state": "STRESS",
+    "reading": "2.88% / 30y 5.56%",
+    "note": "Long real yields rising from an already-high level: duration headwind and growth-multiple compression. Breakevens 2.35% are also elevated \u2014 inflation compensation is contributing, so real assets carry more of the hedge."
+   },
+   "vol": {
+    "state": "CALM",
+    "reading": "16.9",
+    "note": "Derivatives are not pricing acute stress. If equities are falling anyway, that combination favours the positioning-unwind reading over the macro-break reading \u2014 and it makes convexity comparatively cheap."
+   },
+   "fx": {
+    "state": "STRESS",
+    "reading": "121.6",
+    "note": "Dollar up +3.0% in 20 sessions \u2014 a global tightening impulse and a direct headwind to metals and non-US equity."
+   }
+  },
+  "n_known": 4,
+  "n_dark": 0,
+  "agreement_pct": 50.0,
+  "majority": "CALM",
+  "dissenters": [
+   "rates",
+   "fx"
+  ],
+  "flag": "DIVERGENCE (MODERATE): 2 of 4 lanes read CALM, but rates (STRESS), fx (STRESS) disagree. Highest-weight dissenter is RATES. Leads multiple compression. Distinguishes a term-premium repricing from an inflation-expectations shock \u2014 check whether breakevens are moving WITH real yields or against them.",
+  "headline": "Cross-asset SPLIT 50%: majority CALM, rates dissenting",
+  "dissent_severity": "MODERATE",
+  "dissent_weight": 0.8,
+  "fits_regime": null,
+  "conclusion": "The pressure is confined to rates: credit and vol are calm, so this is multiple COMPRESSION (a discount-rate problem for long-duration assets), not stress. It becomes stress only if credit joins."
+ },
+ "rotation": {
+  "available": true,
+  "published_at": "2026-10-15T00:07:05+00:00",
+  "sectors": [
+   {
+    "ticker": "XLK",
+    "sector": "Technology",
+    "quadrant": "Leading",
+    "direction": "Strengthening",
+    "accumulation": 60.83,
+    "stealth": true,
+    "prior_quadrant": "Leading",
+    "agree": true
+   },
+   {
+    "ticker": "XLV",
+    "sector": "Healthcare",
+    "quadrant": "Leading",
+    "direction": "Bottoming",
+    "accumulation": 10.42,
+    "stealth": true,
+    "prior_quadrant": "Leading",
+    "agree": true
+   },
+   {
+    "ticker": "XLU",
+    "sector": "Utilities",
+    "quadrant": "Improving",
+    "direction": "Weakening",
+    "accumulation": 2.57,
+    "stealth": true,
+    "prior_quadrant": "Improving",
+    "agree": true
+   },
+   {
+    "ticker": "XLP",
+    "sector": "Consumer Defensive",
+    "quadrant": "Improving",
+    "direction": "Bottoming",
+    "accumulation": -6.88,
+    "stealth": false,
+    "prior_quadrant": "Improving",
+    "agree": false
+   },
+   {
+    "ticker": "XLF",
+    "sector": "Financial",
+    "quadrant": "Improving",
+    "direction": "Bottoming",
+    "accumulation": -17.53,
+    "stealth": false,
+    "prior_quadrant": "Improving",
+    "agree": false
+   },
+   {
+    "ticker": "XLY",
+    "sector": "Consumer Cyclical",
+    "quadrant": "Improving",
+    "direction": "Bottoming",
+    "accumulation": -23.34,
+    "stealth": false,
+    "prior_quadrant": "Improving",
+    "agree": false
+   },
+   {
+    "ticker": "XLRE",
+    "sector": "Real Estate",
+    "quadrant": "Improving",
+    "direction": "Bottoming",
+    "accumulation": -32.41,
+    "stealth": false,
+    "prior_quadrant": "Improving",
+    "agree": false
+   },
+   {
+    "ticker": "XLC",
+    "sector": "Communication Services",
+    "quadrant": "Improving",
+    "direction": "Weakening",
+    "accumulation": -34.97,
+    "stealth": false,
+    "prior_quadrant": "Improving",
+    "agree": false
+   },
+   {
+    "ticker": "XLE",
+    "sector": "Energy",
+    "quadrant": "Weakening",
+    "direction": "Topping",
+    "accumulation": -0.32,
+    "stealth": false,
+    "prior_quadrant": "Weakening",
+    "agree": true
+   },
+   {
+    "ticker": "XLB",
+    "sector": "Basic Materials",
+    "quadrant": "Weakening",
+    "direction": "Topping",
+    "accumulation": -1.97,
+    "stealth": false,
+    "prior_quadrant": "Weakening",
+    "agree": true
+   },
+   {
+    "ticker": "XLI",
+    "sector": "Industrials",
+    "quadrant": "Lagging",
+    "direction": "Topping",
+    "accumulation": 12.02,
+    "stealth": false,
+    "prior_quadrant": "Lagging",
+    "agree": false
+   }
+  ],
+  "changes": [],
+  "ccw": [],
+  "has_prior": true,
+  "compass": [
+   {
+    "name": "Growth vs value",
+    "r20": 2.6,
+    "r60": 2.8,
+    "arrow": "\u2191",
+    "read": "growth leading"
+   },
+   {
+    "name": "Small vs large",
+    "r20": -6.6,
+    "r60": -11.0,
+    "arrow": "\u2193",
+    "read": "large caps leading (narrowing)"
+   },
+   {
+    "name": "Equal vs cap weight",
+    "r20": -2.0,
+    "r60": -3.0,
+    "arrow": "\u2193",
+    "read": "narrow, cap-weighted leadership"
+   },
+   {
+    "name": "Cyclicals vs defensives",
+    "r20": -3.7,
+    "r60": -5.4,
+    "arrow": "\u2193",
+    "read": "defensive rotation"
+   },
+   {
+    "name": "Intl developed vs US",
+    "r20": -4.4,
+    "r60": -4.2,
+    "arrow": "\u2193",
+    "read": "US leadership"
+   },
+   {
+    "name": "Emerging vs US",
+    "r20": -4.2,
+    "r60": -4.4,
+    "arrow": "\u2193",
+    "read": "US over EM"
+   },
+   {
+    "name": "Stocks vs long bonds",
+    "r20": 4.5,
+    "r60": 8.0,
+    "arrow": "\u2191",
+    "read": "equities over duration"
+   },
+   {
+    "name": "Gold vs stocks",
+    "r20": -6.2,
+    "r60": -2.7,
+    "arrow": "\u2193",
+    "read": "equities over gold"
+   },
+   {
+    "name": "Credit risk appetite (HY vs IG)",
+    "r20": -0.3,
+    "r60": 0.6,
+    "arrow": "\u2192",
+    "read": "no clear trend"
+   },
+   {
+    "name": "Semis vs software",
+    "r20": 0.9,
+    "r60": -17.5,
+    "arrow": "\u2192",
+    "read": "no clear trend"
+   },
+   {
+    "name": "Dollar (UUP)",
+    "r20": 2.5,
+    "r60": 2.2,
+    "arrow": "\u2191",
+    "read": "dollar strengthening"
+   }
+  ],
+  "grounds": {
+   "long": [
+    "XLK",
+    "XLV",
+    "XLU"
+   ],
+   "price_only": [
+    "XLP",
+    "XLF",
+    "XLY",
+    "XLRE",
+    "XLC"
+   ],
+   "short": [
+    "XLE",
+    "XLB"
+   ]
+  },
+  "conclusion": "Confirmed leadership in XLK, XLV, XLU (price and money agree). XLP, XLF, XLY, XLRE, XLC are rotating in on price with negative accumulation \u2014 a bounce without sponsorship, not a rotation. Equal-weight has lagged cap-weight by 2.0% over 20 days \u2014 narrow tape."
+ },
+ "flow": {
+  "available": true,
+  "confirmed": [
+   {
+    "ticker": "XHB",
+    "price_chg_pct": -3.18,
+    "net_flow_pct_aum": 20.77,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true
+   },
+   {
+    "ticker": "HYG",
+    "price_chg_pct": -1.98,
+    "net_flow_pct_aum": 13.89,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true
+   },
+   {
+    "ticker": "XRT",
+    "price_chg_pct": 1.35,
+    "net_flow_pct_aum": 12.1,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "XLU",
+    "price_chg_pct": 1.29,
+    "net_flow_pct_aum": 10.09,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "TLT",
+    "price_chg_pct": -3.22,
+    "net_flow_pct_aum": 9.66,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true
+   },
+   {
+    "ticker": "LQD",
+    "price_chg_pct": -1.74,
+    "net_flow_pct_aum": 6.71,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true
+   },
+   {
+    "ticker": "USFR",
+    "price_chg_pct": 0.0,
+    "net_flow_pct_aum": 6.31,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "KMLM",
+    "price_chg_pct": 1.82,
+    "net_flow_pct_aum": 6.14,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "XLC",
+    "price_chg_pct": -1.51,
+    "net_flow_pct_aum": 5.63,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true
+   },
+   {
+    "ticker": "SGOV",
+    "price_chg_pct": 0.01,
+    "net_flow_pct_aum": 3.48,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "XLY",
+    "price_chg_pct": 1.35,
+    "net_flow_pct_aum": 3.18,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "IBB",
+    "price_chg_pct": -2.24,
+    "net_flow_pct_aum": 2.85,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true
+   },
+   {
+    "ticker": "PPH",
+    "price_chg_pct": -1.75,
+    "net_flow_pct_aum": 2.68,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true
+   },
+   {
+    "ticker": "XOP",
+    "price_chg_pct": 0.05,
+    "net_flow_pct_aum": 2.66,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "IWM",
+    "price_chg_pct": -3.91,
+    "net_flow_pct_aum": 2.66,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true
+   },
+   {
+    "ticker": "HACK",
+    "price_chg_pct": 7.4,
+    "net_flow_pct_aum": 2.62,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "XLP",
+    "price_chg_pct": 0.53,
+    "net_flow_pct_aum": 2.42,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "IGV",
+    "price_chg_pct": 4.06,
+    "net_flow_pct_aum": 2.26,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "SKYY",
+    "price_chg_pct": 5.36,
+    "net_flow_pct_aum": 1.96,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "EWJ",
+    "price_chg_pct": 0.1,
+    "net_flow_pct_aum": 1.8,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "XLK",
+    "price_chg_pct": 6.79,
+    "net_flow_pct_aum": 1.63,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "SCHD",
+    "price_chg_pct": -2.8,
+    "net_flow_pct_aum": 1.32,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true
+   },
+   {
+    "ticker": "XLI",
+    "price_chg_pct": -0.12,
+    "net_flow_pct_aum": 1.23,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true
+   },
+   {
+    "ticker": "PAVE",
+    "price_chg_pct": 1.04,
+    "net_flow_pct_aum": 1.22,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "QQQ",
+    "price_chg_pct": 4.86,
+    "net_flow_pct_aum": 1.12,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "IHI",
+    "price_chg_pct": 1.59,
+    "net_flow_pct_aum": 1.0,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "SPY",
+    "price_chg_pct": 2.7,
+    "net_flow_pct_aum": 0.58,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "XLRE",
+    "price_chg_pct": -2.93,
+    "net_flow_pct_aum": 0.56,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true
+   },
+   {
+    "ticker": "XBI",
+    "price_chg_pct": -4.74,
+    "net_flow_pct_aum": 0.49,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true
+   },
+   {
+    "ticker": "EFA",
+    "price_chg_pct": -2.15,
+    "net_flow_pct_aum": 0.41,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true
+   },
+   {
+    "ticker": "XLE",
+    "price_chg_pct": 1.85,
+    "net_flow_pct_aum": 0.06,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "PDBC",
+    "price_chg_pct": 0.66,
+    "net_flow_pct_aum": 0.05,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "SLV",
+    "price_chg_pct": -4.18,
+    "net_flow_pct_aum": -0.05,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "MDY",
+    "price_chg_pct": -0.95,
+    "net_flow_pct_aum": -0.13,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "RING",
+    "price_chg_pct": -8.29,
+    "net_flow_pct_aum": -0.17,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "EEM",
+    "price_chg_pct": -1.15,
+    "net_flow_pct_aum": -0.3,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "XLV",
+    "price_chg_pct": 1.2,
+    "net_flow_pct_aum": -0.36,
+    "verdict": "DISTRIBUTION (price up, money out)",
+    "divergence": true
+   },
+   {
+    "ticker": "TIP",
+    "price_chg_pct": -1.23,
+    "net_flow_pct_aum": -0.43,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "IWO",
+    "price_chg_pct": -4.0,
+    "net_flow_pct_aum": -0.51,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "AMLP",
+    "price_chg_pct": -4.77,
+    "net_flow_pct_aum": -0.95,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "ITA",
+    "price_chg_pct": -5.83,
+    "net_flow_pct_aum": -1.23,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "PBJ",
+    "price_chg_pct": -1.88,
+    "net_flow_pct_aum": -1.29,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "XLB",
+    "price_chg_pct": -2.07,
+    "net_flow_pct_aum": -2.16,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "EMB",
+    "price_chg_pct": -2.17,
+    "net_flow_pct_aum": -2.47,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "SMH",
+    "price_chg_pct": 8.79,
+    "net_flow_pct_aum": -2.52,
+    "verdict": "DISTRIBUTION (price up, money out)",
+    "divergence": true
+   },
+   {
+    "ticker": "XLF",
+    "price_chg_pct": -3.56,
+    "net_flow_pct_aum": -2.66,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "IAI",
+    "price_chg_pct": -6.09,
+    "net_flow_pct_aum": -2.75,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "INDA",
+    "price_chg_pct": -2.9,
+    "net_flow_pct_aum": -2.75,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "FXI",
+    "price_chg_pct": -2.13,
+    "net_flow_pct_aum": -3.63,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "XTN",
+    "price_chg_pct": -3.53,
+    "net_flow_pct_aum": -4.13,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "OIH",
+    "price_chg_pct": -2.82,
+    "net_flow_pct_aum": -4.22,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "KBE",
+    "price_chg_pct": -7.34,
+    "net_flow_pct_aum": -4.46,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false
+   },
+   {
+    "ticker": "SOXX",
+    "price_chg_pct": 9.45,
+    "net_flow_pct_aum": -4.5,
+    "verdict": "DISTRIBUTION (price up, money out)",
+    "divergence": true
+   },
+   {
+    "ticker": "KRE",
+    "price_chg_pct": -6.73,
+    "net_flow_pct_aum": -10.18,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false
+   }
+  ],
+  "unreliable": [
+   "DBA",
+   "GLD",
+   "USO",
+   "VGT"
+  ],
+  "cot": [
+   {
+    "contract": "SP500",
+    "sleeve": "VGT / QQQ / SMH",
+    "report_date": "2026-10-06",
+    "age_days": 9.0,
+    "stale": false,
+    "flag": "COHORT DIVERGENCE (asset_mgr 67 vs lev_fund 10)"
+   },
+   {
+    "contract": "UST10Y",
+    "sleeve": "TLT",
+    "report_date": "2026-10-06",
+    "age_days": 9.0,
+    "stale": false,
+    "flag": "asset_mgr crowded LONG (99th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 99 vs lev_fund 47)"
+   },
+   {
+    "contract": "UST30Y",
+    "sleeve": "TLT",
+    "report_date": "2026-10-06",
+    "age_days": 9.0,
+    "stale": false,
+    "flag": "asset_mgr crowded SHORT (2th pctile) \u00b7 lev_fund crowded LONG (99th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 2 vs lev_fund 99)"
+   },
+   {
+    "contract": "UST2Y",
+    "sleeve": "USFR / SGOV",
+    "report_date": "2026-10-06",
+    "age_days": 9.0,
+    "stale": false,
+    "flag": "lev_fund crowded LONG (99th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 21 vs lev_fund 99)"
+   },
+   {
+    "contract": "DXY",
+    "sleeve": "Daily Step 4 dollar check",
+    "report_date": "2026-10-06",
+    "age_days": 9.0,
+    "stale": false,
+    "flag": "neutral"
+   },
+   {
+    "contract": "GOLD",
+    "sleeve": "GLD / SLV / RING",
+    "report_date": "2026-10-06",
+    "age_days": 9.0,
+    "stale": false,
+    "flag": "comm crowded SHORT (8th pctile) \u00b7 COHORT DIVERGENCE (noncomm 80 vs comm 8)"
+   },
+   {
+    "contract": "SILVER",
+    "sleeve": "SLV",
+    "report_date": "2026-10-06",
+    "age_days": 9.0,
+    "stale": false,
+    "flag": "neutral"
+   },
+   {
+    "contract": "WTI",
+    "sleeve": "XLE / XOP / PDBC",
+    "report_date": "2026-10-06",
+    "age_days": 9.0,
+    "stale": false,
+    "flag": "COHORT DIVERGENCE (noncomm 16 vs comm 84)"
+   }
+  ],
+  "conclusion": "54 of 58 ETFs pass the integrity test (20-session window). Inflows >1% of AUM: XHB, HYG, XRT, XLU, TLT, LQD. Outflows >1%: ITA, PBJ, XLB, EMB, SMH, XLF. Price down / money in (possible stealth accumulation): XHB, HYG, TLT, LQD, XLC, IBB \u2014 a watch signal only until price structure confirms. Crowded COT positioning: UST10Y (asset_mgr crowded LONG (99th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 99 vs lev_fund 47)); UST30Y (asset_mgr crowded SHORT (2th pctile) \u00b7 lev_fund crowded LONG (99th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 2 vs lev_fund 99)); UST2Y (lev_fund crowded LONG (99th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 21 vs lev_fund 99))."
+ },
+ "breadth": {
+  "pct_above_50": 44.0,
+  "pct_above_200": 51.4,
+  "n": 109,
+  "new_highs": 10,
+  "new_lows": 0,
+  "universe": "109-name sector-constituent proxy (not the full S&P 500)",
+  "spy_20d": 2.3156338819838362,
+  "rsp_20d": 0.2860558058102036,
+  "conclusion": "44% of the proxy universe is above its 50-day and 51% above its 200-day; 10 new 52-week highs vs 0 new lows. The index is up +2.3% over 20 days while equal-weight is +0.3% and most names are below their 50-day \u2014 the rally is carried by a few mega-caps. Narrow rallies fail more often; size accordingly."
+ },
+ "model": {
+  "available": true,
+  "conclusion": "You SHOULD hold the `transition_ambiguous` model above. Model book 100.08 (-1.9% from peak; 20d +0.2%). 8 weight change(s) vs the prior session.",
+  "spy_returns": {
+   "ret_1m": 1.86,
+   "ret_3m": 2.77,
+   "ret_12_1": 15.18
+  },
+  "summary": {
+   "available": true,
+   "date": "2026-10-14",
+   "regime": "transition_ambiguous",
+   "weights": {
+    "VGT": 17.0,
+    "SMH": 3.0,
+    "QQQ": 3.0,
+    "GLD": 10.0,
+    "SLV": 4.0,
+    "RING": 4.0,
+    "XLE": 5.0,
+    "PDBC": 3.0,
+    "SCHD": 13.5,
+    "XLV": 5.0,
+    "XLU": 3.0,
+    "SGOV": 8.5,
+    "USFR": 7.0,
+    "TLT": 7.0,
+    "KMLM": 7.0
+   },
+   "nav": 100.0765,
+   "peak": 101.9895,
+   "drawdown_pct": -1.88,
+   "breaker": "OFF",
+   "breaker_changed": false,
+   "release_count": 0,
+   "warn": false,
+   "ret_5d": -0.25,
+   "ret_20d": 0.23,
+   "sessions": 45,
+   "since_inception_pct": 0.08,
+   "since": "2026-08-12",
+   "reconstructed_sessions": 36,
+   "changes": [
+    {
+     "ticker": "KMLM",
+     "from": 8.0,
+     "to": 7.0,
+     "change": -1.0
+    },
+    {
+     "ticker": "QQQ",
+     "from": 2.0,
+     "to": 3.0,
+     "change": 1.0
+    },
+    {
+     "ticker": "RING",
+     "from": 5.0,
+     "to": 4.0,
+     "change": -1.0
+    },
+    {
+     "ticker": "SCHD",
+     "from": 14.5,
+     "to": 13.5,
+     "change": -1.0
+    },
+    {
+     "ticker": "SGOV",
+     "from": 12.5,
+     "to": 8.5,
+     "change": -4.0
+    },
+    {
+     "ticker": "TLT",
+     "from": 2.0,
+     "to": 7.0,
+     "change": 5.0
+    },
+    {
+     "ticker": "USFR",
+     "from": 8.0,
+     "to": 7.0,
+     "change": -1.0
+    },
+    {
+     "ticker": "XLU",
+     "from": 1.0,
+     "to": 3.0,
+     "change": 2.0
+    }
+   ]
+  },
+  "rows": [
+   {
+    "ticker": "VGT",
+    "weight": 17.0,
+    "change": 0.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "CONFIRMED UPTREND",
+    "ret_1m": 3.54,
+    "ret_3m": 7.66,
+    "ret_12_1": 26.2,
+    "vs_spy_3m": 4.89
+   },
+   {
+    "ticker": "SCHD",
+    "weight": 13.5,
+    "change": -1.0,
+    "gate": "PULLBACK",
+    "gate_trigger": "close back above the 50-day (33.79)",
+    "hold_trend": "CONFIRMED UPTREND",
+    "ret_1m": -1.02,
+    "ret_3m": 2.84,
+    "ret_12_1": 32.38,
+    "vs_spy_3m": 0.07
+   },
+   {
+    "ticker": "GLD",
+    "weight": 10.0,
+    "change": 0.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "DOWNTREND",
+    "ret_1m": -4.61,
+    "ret_3m": 3.02,
+    "ret_12_1": 4.25,
+    "vs_spy_3m": 0.25
+   },
+   {
+    "ticker": "SGOV",
+    "weight": 8.5,
+    "change": -4.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "cash",
+    "ret_1m": 0.29,
+    "ret_3m": 0.89,
+    "ret_12_1": 3.43,
+    "vs_spy_3m": -1.88
+   },
+   {
+    "ticker": "USFR",
+    "weight": 7.0,
+    "change": -1.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "cash",
+    "ret_1m": 0.31,
+    "ret_3m": 0.97,
+    "ret_12_1": 3.72,
+    "vs_spy_3m": -1.8
+   },
+   {
+    "ticker": "TLT",
+    "weight": 7.0,
+    "change": 5.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "DOWNTREND",
+    "ret_1m": -1.86,
+    "ret_3m": -5.2,
+    "ret_12_1": -7.13,
+    "vs_spy_3m": -7.97
+   },
+   {
+    "ticker": "KMLM",
+    "weight": 7.0,
+    "change": -1.0,
+    "gate": "CONFIRMED",
+    "gate_trigger": null,
+    "hold_trend": "CONFIRMED UPTREND",
+    "ret_1m": 1.69,
+    "ret_3m": 8.67,
+    "ret_12_1": 19.88,
+    "vs_spy_3m": 5.9
+   },
+   {
+    "ticker": "XLE",
+    "weight": 5.0,
+    "change": 0.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "CONFIRMED UPTREND",
+    "ret_1m": 3.19,
+    "ret_3m": 19.31,
+    "ret_12_1": 56.08,
+    "vs_spy_3m": 16.54
+   },
+   {
+    "ticker": "XLV",
+    "weight": 5.0,
+    "change": 0.0,
+    "gate": "CONFIRMED",
+    "gate_trigger": null,
+    "hold_trend": "CONFIRMED UPTREND",
+    "ret_1m": 4.15,
+    "ret_3m": 7.93,
+    "ret_12_1": 19.63,
+    "vs_spy_3m": 5.16
+   },
+   {
+    "ticker": "SLV",
+    "weight": 4.0,
+    "change": 0.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "DOWNTREND",
+    "ret_1m": -12.71,
+    "ret_3m": -0.34,
+    "ret_12_1": 21.73,
+    "vs_spy_3m": -3.11
+   },
+   {
+    "ticker": "RING",
+    "weight": 4.0,
+    "change": -1.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "DOWNTREND",
+    "ret_1m": -8.25,
+    "ret_3m": 19.17,
+    "ret_12_1": 31.0,
+    "vs_spy_3m": 16.4
+   },
+   {
+    "ticker": "SMH",
+    "weight": 3.0,
+    "change": 0.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "CONFIRMED UPTREND",
+    "ret_1m": 4.17,
+    "ret_3m": -0.73,
+    "ret_12_1": 60.06,
+    "vs_spy_3m": -3.5
+   },
+   {
+    "ticker": "QQQ",
+    "weight": 3.0,
+    "change": 1.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "CONFIRMED UPTREND",
+    "ret_1m": 3.57,
+    "ret_3m": 3.37,
+    "ret_12_1": 17.46,
+    "vs_spy_3m": 0.6
+   },
+   {
+    "ticker": "PDBC",
+    "weight": 3.0,
+    "change": 0.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "CONFIRMED UPTREND",
+    "ret_1m": 1.01,
+    "ret_3m": 16.37,
+    "ret_12_1": 56.14,
+    "vs_spy_3m": 13.6
+   },
+   {
+    "ticker": "XLU",
+    "weight": 3.0,
+    "change": 2.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "DOWNTREND",
+    "ret_1m": 1.71,
+    "ret_3m": -7.57,
+    "ret_12_1": -7.17,
+    "vs_spy_3m": -10.34
+   }
+  ],
+  "actions": [],
+  "weekend": [
+   "Model portfolio changed today (KMLM -1.0, QQQ +1.0, RING -1.0, SCHD -1.0, SGOV -4.0, TLT +5.0, USFR -1.0, XLU +2.0) \u2014 execute at the weekend review if following it"
+  ],
+  "path": "data/model_book.csv"
+ },
+ "portfolio": {
+  "available": false,
+  "active": false,
+  "ledger_age_days": 80,
+  "conclusion": "Ledger last touched 80 days ago \u2014 not tracking real positions, so it is not used. The model portfolio (section 8) is what you SHOULD hold."
+ },
+ "swing": {
+  "available": true,
+  "date": "2026-10-14",
+  "file": "2026-10-14_brief.json",
+  "same_session": true,
+  "regime": "transition_ambiguous",
+  "grounds": {
+   "long": [
+    {
+     "ticker": "XLU",
+     "quadrant": "Improving",
+     "direction": "Weakening",
+     "stealth": "Stealth",
+     "feeds": "M0 rotation reclaim / M2 breakout (early phase)"
+    },
+    {
+     "ticker": "XLK",
+     "quadrant": "Leading",
+     "direction": "Strengthening",
+     "stealth": "Stealth",
+     "feeds": "M1 VCP (confirmed leaders)"
+    },
+    {
+     "ticker": "XLV",
+     "quadrant": "Leading",
+     "direction": "Bottoming",
+     "stealth": "Stealth",
+     "feeds": "M1 VCP (confirmed leaders)"
+    }
+   ],
+   "short": [
+    {
+     "ticker": "XLB",
+     "quadrant": "Weakening",
+     "direction": "Topping"
+    },
+    {
+     "ticker": "XLE",
+     "quadrant": "Weakening",
+     "direction": "Topping"
+    }
+   ],
+   "long_watch": [
+    {
+     "ticker": "XLP",
+     "quadrant": "Improving",
+     "accumulation": -6.88,
+     "why": "price rotating in, money not (accumulation -6.88)"
+    },
+    {
+     "ticker": "XLF",
+     "quadrant": "Improving",
+     "accumulation": -17.53,
+     "why": "price rotating in, money not (accumulation -17.53)"
+    },
+    {
+     "ticker": "XLY",
+     "quadrant": "Improving",
+     "accumulation": -23.34,
+     "why": "price rotating in, money not (accumulation -23.34)"
+    },
+    {
+     "ticker": "XLRE",
+     "quadrant": "Improving",
+     "accumulation": -32.41,
+     "why": "price rotating in, money not (accumulation -32.41)"
+    },
+    {
+     "ticker": "XLC",
+     "quadrant": "Improving",
+     "accumulation": -34.97,
+     "why": "price rotating in, money not (accumulation -34.97)"
+    }
+   ],
+   "short_watch": [
+    {
+     "ticker": "XLI",
+     "quadrant": "Lagging",
+     "accumulation": 12.02,
+     "why": "price rotating out, money not leaving (accumulation 12.02)"
+    }
+   ],
+   "watchlist": [],
+   "candidates": [
+    "AAPL",
+    "ABBV",
+    "ABT",
+    "AEP",
+    "AMAT",
+    "AMD",
+    "AMGN",
+    "AMT",
+    "AMZN",
+    "APD",
+    "AVGO",
+    "AXP",
+    "BA",
+    "BAC",
+    "BKNG",
+    "BRK-B",
+    "CAT",
+    "CBRE",
+    "CCI",
+    "CEG",
+    "CL",
+    "CMCSA",
+    "CMG",
+    "COP",
+    "COST",
+    "CSCO",
+    "CVX",
+    "D",
+    "DE",
+    "DIS",
+    "DLR",
+    "DOW",
+    "DUK",
+    "ECL",
+    "EOG",
+    "EQIX",
+    "ETN",
+    "EXC",
+    "FCX",
+    "GE",
+    "GOOGL",
+    "GS",
+    "HD",
+    "HON",
+    "ISRG",
+    "JNJ",
+    "JPM",
+    "KMI",
+    "KO",
+    "LIN",
+    "LLY",
+    "LMT",
+    "LOW",
+    "LRCX",
+    "MA",
+    "MCD",
+    "MDLZ",
+    "META",
+    "MO",
+    "MPC",
+    "MRK",
+    "MS",
+    "MSFT",
+    "MU",
+    "NEE",
+    "NEM",
+    "NFLX",
+    "NKE",
+    "NUE",
+    "NVDA",
+    "O",
+    "OKE",
+    "PCG",
+    "PEP",
+    "PFE",
+    "PG",
+    "PLD",
+    "PLTR",
+    "PM",
+    "PPG",
+    "PSA",
+    "PSX",
+    "RTX",
+    "SBUX",
+    "SHW",
+    "SLB",
+    "SO",
+    "SPG",
+    "SPGI",
+    "SRE",
+    "T",
+    "TGT",
+    "TJX",
+    "TMO",
+    "TMUS",
+    "TSLA",
+    "TTWO",
+    "UNH",
+    "UNP",
+    "UPS",
+    "V",
+    "VMC",
+    "VZ",
+    "WELL",
+    "WFC",
+    "WMB",
+    "WMT",
+    "XEL",
+    "XLB",
+    "XLC",
+    "XLE",
+    "XLF",
+    "XLI",
+    "XLK",
+    "XLP",
+    "XLRE",
+    "XLU",
+    "XLV",
+    "XLY",
+    "XOM"
+   ]
+  },
+  "cards": [
+   {
+    "ticker": "WMB",
+    "sector": "XLE",
+    "sector_quadrant": "Weakening",
+    "from_watchlist": false,
+    "close": 72.8,
+    "setup": "M2b Failed-BO Short",
+    "side": "short",
+    "confluence": "2-of-3",
+    "legs": {
+     "rotation": true,
+     "structure": true,
+     "volume": false,
+     "missing": [
+      "volume"
+     ]
+    },
+    "entry": 72.85,
+    "stop": 74.65,
+    "stop_pct": 2.47,
+    "risk_per_share": 1.8,
+    "risk_pct": 0.125,
+    "shares": 6,
+    "notional": 437.1,
+    "notional_pct": 4.4,
+    "heat_after": 0.11,
+    "blocked_by_heat": false,
+    "targets": {
+     "2R": 69.25,
+     "4R": 65.65,
+     "8R": 58.45
+    },
+    "trail": "cover at base low",
+    "trail_why": "Failed-breakout target is the base low; stop above the failed high.",
+    "trail_stats": null,
+    "instrument": "put debit spread 45-90 DTE",
+    "invalidated_when": "close above 74.65 (structural), OR regime flips risk-on, OR sector rotates to Improving/Leading",
+    "why": "Failed breakout",
+    "adr_pct": 2.35,
+    "event_risk": "clear",
+    "entry_permitted": true,
+    "entry_block_reason": null,
+    "why_note": null,
+    "what_would_make_this_wrong": null,
+    "instrument_note": null,
+    "teaching_question": null,
+    "pending_confirmation": true
+   },
+   {
+    "ticker": "LLY",
+    "sector": "XLV",
+    "sector_quadrant": "Leading",
+    "from_watchlist": false,
+    "close": 1208.74,
+    "setup": "M0 Rotation",
+    "side": "long",
+    "confluence": "3-of-3",
+    "legs": {
+     "rotation": true,
+     "structure": true,
+     "volume": true,
+     "missing": []
+    },
+    "entry": 1216.71,
+    "stop": 1165.16,
+    "stop_pct": 4.24,
+    "risk_per_share": 51.55,
+    "risk_pct": 0.25,
+    "shares": 0,
+    "notional": 0.0,
+    "notional_pct": 0.0,
+    "heat_after": 0.0,
+    "blocked_by_heat": false,
+    "targets": {
+     "2R": 1319.81,
+     "4R": 1422.91,
+     "8R": 1629.11
+    },
+    "trail": "100 SMA (20-week)",
+    "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
+    "trail_stats": null,
+    "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
+    "invalidated_when": "close below 1165.16 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "reclaim of 20-wk SMA 1163.19 (close +3.9% vs SMA, rising); vol 1.37x vs tier 1.25x; CMF +0.11; ATR stop 1.5x = 1165.16 (4.2%)",
+    "adr_pct": 2.91,
+    "event_risk": "clear",
+    "entry_permitted": false,
+    "entry_block_reason": "risk budget $25.00 at this step/regime is below one share's risk ($51.55) \u2014 a single share breaches Progressive Exposure; the only expression is a 45-90 DTE call debit spread with premium <= $25, or skip",
+    "why_note": null,
+    "what_would_make_this_wrong": null,
+    "instrument_note": null,
+    "teaching_question": null,
+    "pending_confirmation": true
+   }
+  ],
+  "permitted": [
+   {
+    "ticker": "WMB",
+    "sector": "XLE",
+    "sector_quadrant": "Weakening",
+    "from_watchlist": false,
+    "close": 72.8,
+    "setup": "M2b Failed-BO Short",
+    "side": "short",
+    "confluence": "2-of-3",
+    "legs": {
+     "rotation": true,
+     "structure": true,
+     "volume": false,
+     "missing": [
+      "volume"
+     ]
+    },
+    "entry": 72.85,
+    "stop": 74.65,
+    "stop_pct": 2.47,
+    "risk_per_share": 1.8,
+    "risk_pct": 0.125,
+    "shares": 6,
+    "notional": 437.1,
+    "notional_pct": 4.4,
+    "heat_after": 0.11,
+    "blocked_by_heat": false,
+    "targets": {
+     "2R": 69.25,
+     "4R": 65.65,
+     "8R": 58.45
+    },
+    "trail": "cover at base low",
+    "trail_why": "Failed-breakout target is the base low; stop above the failed high.",
+    "trail_stats": null,
+    "instrument": "put debit spread 45-90 DTE",
+    "invalidated_when": "close above 74.65 (structural), OR regime flips risk-on, OR sector rotates to Improving/Leading",
+    "why": "Failed breakout",
+    "adr_pct": 2.35,
+    "event_risk": "clear",
+    "entry_permitted": true,
+    "entry_block_reason": null,
+    "why_note": null,
+    "what_would_make_this_wrong": null,
+    "instrument_note": null,
+    "teaching_question": null,
+    "pending_confirmation": true
+   }
+  ],
+  "near_misses": [
+   {
+    "ticker": "BRK-B",
+    "sector": "XLF",
+    "sector_quadrant": "Improving",
+    "from_watchlist": false,
+    "close": 526.35,
+    "setup": "M0 Rotation",
+    "side": "long",
+    "confluence": "2-of-3",
+    "ground": "long_watch",
+    "reason": "M0 Rotation long (2-of-3) demoted \u2014 flow does not confirm the ground: XLF Improving \u2014 price rotating in, money not (accumulation -17.53); watch until accumulation turns positive"
+   },
+   {
+    "ticker": "DIS",
+    "sector": "XLC",
+    "sector_quadrant": "Improving",
+    "from_watchlist": false,
+    "close": 108.99,
+    "setup": "M0 Rotation",
+    "side": "long",
+    "confluence": "2-of-3",
+    "ground": "long_watch",
+    "reason": "M0 Rotation long (2-of-3) demoted \u2014 flow does not confirm the ground: XLC Improving \u2014 price rotating in, money not (accumulation -34.97); watch until accumulation turns positive"
+   },
+   {
+    "ticker": "MDLZ",
+    "sector": "XLP",
+    "sector_quadrant": "Improving",
+    "from_watchlist": false,
+    "close": 62.57,
+    "setup": "M0 Rotation",
+    "side": "long",
+    "confluence": "2-of-3",
+    "ground": "long_watch",
+    "reason": "M0 Rotation long (2-of-3) demoted \u2014 flow does not confirm the ground: XLP Improving \u2014 price rotating in, money not (accumulation -6.88); watch until accumulation turns positive"
+   },
+   {
+    "ticker": "MO",
+    "sector": "XLP",
+    "sector_quadrant": "Improving",
+    "from_watchlist": false,
+    "close": 73.13,
+    "setup": "M0 Rotation",
+    "side": "long",
+    "confluence": "3-of-3",
+    "ground": "long_watch",
+    "reason": "M0 Rotation long (3-of-3) demoted \u2014 flow does not confirm the ground: XLP Improving \u2014 price rotating in, money not (accumulation -6.88); watch until accumulation turns positive"
+   },
+   {
+    "ticker": "PG",
+    "sector": "XLP",
+    "sector_quadrant": "Improving",
+    "from_watchlist": false,
+    "close": 156.53,
+    "setup": "M0 Rotation",
+    "side": "long",
+    "confluence": "3-of-3",
+    "ground": "long_watch",
+    "reason": "M0 Rotation long (3-of-3) demoted \u2014 flow does not confirm the ground: XLP Improving \u2014 price rotating in, money not (accumulation -6.88); watch until accumulation turns positive"
+   },
+   {
+    "ticker": "V",
+    "sector": "XLF",
+    "sector_quadrant": "Improving",
+    "from_watchlist": false,
+    "close": 391.43,
+    "setup": "M0 Rotation",
+    "side": "long",
+    "confluence": "2-of-3",
+    "ground": "long_watch",
+    "reason": "M0 Rotation long (2-of-3) demoted \u2014 flow does not confirm the ground: XLF Improving \u2014 price rotating in, money not (accumulation -17.53); watch until accumulation turns positive"
+   },
+   {
+    "ticker": "XLP",
+    "sector": "XLP",
+    "sector_quadrant": "Improving",
+    "from_watchlist": false,
+    "close": 86.06,
+    "setup": "M0 Rotation",
+    "side": "long",
+    "confluence": "3-of-3",
+    "ground": "long_watch",
+    "reason": "M0 Rotation long (3-of-3) demoted \u2014 flow does not confirm the ground: XLP Improving \u2014 price rotating in, money not (accumulation -6.88); watch until accumulation turns positive"
+   }
+  ],
+  "refusals": [],
+  "breadth": {
+   "pct_above_200": 51.4,
+   "n": 109,
+   "source": "109-name sector-constituent proxy (not the full S&P 500)",
+   "size_cut": false,
+   "read": "tailwind"
+  },
+  "conclusion": "1 entry-permitted card (WMB short 2-of-3); 7 near-misses building on watch."
+ },
+ "next48": {
+  "horizon": "2026-10-16",
+  "events": [],
+  "next_event": null,
+  "if_then": [],
+  "calendar_asof": "2026-01-15",
+  "conclusion": "No scheduled binary event in the next two sessions \u2014 the event block is clear."
+ },
+ "alerts": [
+  {
+   "rule": "dfii10_level",
+   "sessions": 30,
+   "repeat": true
+  },
+  {
+   "rule": "sector_dispersion",
+   "sessions": 13,
+   "repeat": true
+  }
+ ],
+ "data_health": [
+  {
+   "input": "FRED DFII10",
+   "asof": "2026-10-13",
+   "age_days": 1,
+   "status": "OK",
+   "note": ""
+  },
+  {
+   "input": "FRED DGS10",
+   "asof": "2026-10-13",
+   "age_days": 1,
+   "status": "OK",
+   "note": ""
+  },
+  {
+   "input": "FRED DGS2",
+   "asof": "2026-10-13",
+   "age_days": 1,
+   "status": "OK",
+   "note": ""
+  },
+  {
+   "input": "FRED T10YIE",
+   "asof": "2026-10-14",
+   "age_days": 0,
+   "status": "OK",
+   "note": ""
+  },
+  {
+   "input": "FRED BAMLH0A0HYM2",
+   "asof": "2026-10-13",
+   "age_days": 1,
+   "status": "OK",
+   "note": ""
+  },
+  {
+   "input": "FRED BAMLC0A0CM",
+   "asof": "2026-10-13",
+   "age_days": 1,
+   "status": "OK",
+   "note": ""
+  },
+  {
+   "input": "FRED DTWEXBGS",
+   "asof": "2026-10-09",
+   "age_days": 5,
+   "status": "OK",
+   "note": "weekly release (Mondays) \u2014 a week's lag is normal"
+  },
+  {
+   "input": "FRED VIXCLS",
+   "asof": "2026-10-14",
+   "age_days": 0,
+   "status": "OK",
+   "note": "FRED + yfinance ^VIX after 2026-10-13"
+  },
+  {
+   "input": "FRED DCOILWTICO",
+   "asof": "2026-10-14",
+   "age_days": 0,
+   "status": "OK",
+   "note": "FRED + yfinance CL=F after 2026-10-06"
+  },
+  {
+   "input": "Regime assessment",
+   "asof": "2026-10-14",
+   "age_days": 0,
+   "status": "OK",
+   "note": ""
+  },
+  {
+   "input": "Money Flow bridge",
+   "asof": "2026-10-15",
+   "age_days": -1,
+   "status": "OK",
+   "note": ""
+  },
+  {
+   "input": "Markets bridge",
+   "asof": "2026-10-15",
+   "age_days": -1,
+   "status": "OK",
+   "note": ""
+  },
+  {
+   "input": "Swing brief",
+   "asof": "2026-10-14",
+   "age_days": 0,
+   "status": "OK",
+   "note": ""
+  },
+  {
+   "input": "Position ledger",
+   "asof": "2026-07-26",
+   "age_days": 80,
+   "status": "UNUSED",
+   "note": "not tracking real positions \u2014 the model portfolio (section 8) is the reference"
+  },
+  {
+   "input": "Daily log row",
+   "asof": "2026-10-14",
+   "age_days": 0,
+   "status": "OK",
+   "note": ""
+  },
+  {
+   "input": "COT (freshest)",
+   "asof": "2026-10-06",
+   "age_days": 8,
+   "status": "OK",
+   "note": ""
+  },
+  {
+   "input": "Prices (yfinance)",
+   "asof": "2026-10-14",
+   "age_days": 0,
+   "status": "OK",
+   "note": "141 tickers"
+  },
+  {
+   "input": "Event calendar",
+   "asof": "2026-01-15",
+   "age_days": null,
+   "status": "OK",
+   "note": "hardcoded dates; re-verify every January"
+  }
+ ],
+ "errors": [],
+ "targets": {
+  "VGT": 17.0,
+  "SMH": 3.0,
+  "QQQ": 3.0,
+  "GLD": 10.0,
+  "SLV": 4.0,
+  "RING": 4.0,
+  "XLE": 5.0,
+  "PDBC": 3.0,
+  "SCHD": 13.5,
+  "XLV": 5.0,
+  "XLU": 3.0,
+  "SGOV": 8.5,
+  "USFR": 7.0,
+  "TLT": 7.0,
+  "KMLM": 7.0
+ },
+ "headline": [
+  "Biggest moves: Short real rate (EFFR \u2212 CPI YoY) -34bp to 0.14% (-9.6\u03c3); Nasdaq 100 (QQQ) -2.0% to 728.95 (-1.6\u03c3, 88th pctile). The regime changed to `transition_ambiguous` from `restrictive_tightening`.",
+  "Regime `transition_ambiguous` (session 1 \u2014 needs a second close); cross-asset majority CALM; nearest flip is HY OAS +1.34pp to `credit_stress` (~26 typical days).",
+  "Model portfolio: `transition_ambiguous`, drawdown -1.9%, 8 weight change(s) today. Swing: 1 entry-permitted card."
+ ],
+ "conclusions": {
+  "base_case": "Base case: `transition_ambiguous` holds. Cross-asset: CALM majority, dissent from rates, fx. Money is confirming only XLK, XLV, XLU.",
+  "what_would_change": [
+   "HY OAS 3.16pp \u2192 4.50pp flips to `credit_stress` (~26 typical days)",
+   "Short real rate 0.14pp \u2192 0.26pp flips to `restrictive_tightening` \u2014 \u22480.5 \u00d7 a 25bp policy move, or the CPI equivalent"
+  ],
+  "weekend": [
+   "Model portfolio changed today (KMLM -1.0, QQQ +1.0, RING -1.0, SCHD -1.0, SGOV -4.0, TLT +5.0, USFR -1.0, XLU +2.0) \u2014 execute at the weekend review if following it"
+  ]
+ }
+}
