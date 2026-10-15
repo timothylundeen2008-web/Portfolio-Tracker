@@ -1,15 +1,12 @@
 {
-  "published_at": "2026-10-14T11:59:27+00:00",
+  "published_at": "2026-10-15T00:42:51+00:00",
   "notes": "auto-published on Markets Dashboard render",
   "regime": {
-    "key": "restrictive_tightening",
-    "label": "Restrictive Tightening \u2014 real rates rising",
-    "transition_reason": null,
+    "key": "transition_ambiguous",
+    "label": "Transition \u2014 Ambiguous (short real rate at zero)",
+    "transition_reason": "band_ambiguous",
     "drivers": [
-      "Short real rate +0.48% (decisively positive, beyond \u00b10.25%) \u2014 policy is above inflation",
-      "Long real yield RISING +0.55pp over 3 months (threshold +0.20pp)",
-      "Dollar +3.0% over ~1 month \u2014 firm, so higher yields ARE attracting capital (ordinary tightening, not a credibility repricing)",
-      "HY OAS 3.11% \u2014 credit calm; tightening has not broken anything yet"
+      "Short real policy rate +0.14% sits INSIDE the \u00b10.25% transition band \u2014 within the noise of a single CPI print. The framework's primary gauge is not currently giving a directional reading, so no regime that depends on its sign can be confirmed."
     ]
   },
   "repression": {
@@ -33,18 +30,18 @@
   "regime_targets": {
     "VGT": 17.0,
     "SMH": 3.0,
-    "QQQ": 2.0,
+    "QQQ": 3.0,
     "GLD": 10.0,
     "SLV": 4.0,
-    "RING": 5.0,
+    "RING": 4.0,
     "XLE": 5.0,
     "PDBC": 3.0,
-    "SCHD": 14.5,
+    "SCHD": 13.5,
     "XLV": 5.0,
-    "XLU": 1.0,
-    "SGOV": 12.5,
-    "USFR": 8.0,
-    "TLT": 2.0,
-    "KMLM": 8.0
+    "XLU": 3.0,
+    "SGOV": 8.5,
+    "USFR": 7.0,
+    "TLT": 7.0,
+    "KMLM": 7.0
   }
 }
