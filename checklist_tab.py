@@ -1036,12 +1036,17 @@ def _render_log_tab():
             st.warning(f"**NOT durable — {stt['backend']}.** {stt['detail']}", icon="⚠️")
             with st.expander("How to make storage durable (2 minutes)"):
                 st.markdown(
-                    "1. Create a **fine-grained** GitHub PAT scoped to this repo only, "
-                    "with **Contents: read and write** (nothing else).\n"
+                    "1. Create a private **GitHub App** with **Contents: read and "
+                    "write** (nothing else), install it on this repo, and download "
+                    "its private key. Full steps: `GITHUB_APP_SETUP.md`.\n"
                     "2. Add to Streamlit secrets:\n"
-                    "```toml\nGITHUB_TOKEN = \"github_pat_...\"\n"
+                    "```toml\nGH_APP_ID = \"123456\"\n"
+                    "GH_APP_PRIVATE_KEY = \"\"\"\n-----BEGIN RSA PRIVATE KEY-----\n"
+                    "...\n-----END RSA PRIVATE KEY-----\n\"\"\"\n"
                     "GITHUB_REPO = \"you/all-weather-dashboard\"\n"
                     "GITHUB_BRANCH = \"main\"\n```\n"
+                    "   A fine-grained PAT in `GITHUB_TOKEN` still works as a "
+                    "fallback, but it expires.\n"
                     "3. Reboot the app, then run the storage self-test below.\n\n"
                     "The log then commits to your repo — durable, versioned, and "
                     "diffable, so you can see exactly what changed each week.")
