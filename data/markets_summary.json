@@ -1,5 +1,5 @@
 {
-  "published_at": "2026-10-15T03:37:44+00:00",
+  "published_at": "2026-10-16T11:16:32+00:00",
   "notes": "auto-published on Markets Dashboard render",
   "regime": {
     "key": "transition_ambiguous",
@@ -10,7 +10,7 @@
     ]
   },
   "repression": {
-    "score": 4,
+    "score": 3,
     "band": "Tightening cycle",
     "hollow": true,
     "top_weight": "0/4",
@@ -18,7 +18,7 @@
   },
   "growth": {
     "state": "NEUTRAL",
-    "score": 0,
+    "score": 1,
     "confirmed": true
   },
   "kmlm_stance": "INCREASE KMLM",
@@ -36,10 +36,10 @@
     "RING": 4.0,
     "XLE": 5.0,
     "PDBC": 3.0,
-    "SCHD": 13.5,
+    "SCHD": 14.0,
     "XLV": 5.0,
     "XLU": 3.0,
-    "SGOV": 8.5,
+    "SGOV": 8.0,
     "USFR": 7.0,
     "TLT": 7.0,
     "KMLM": 7.0
