@@ -41,3 +41,10 @@ date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_
 2026-10-15,BRK-B,M0 Rotation,long,2-of-3,533.55,525.35,525.68,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
 2026-10-15,KO,M0 Rotation,long,2-of-3,94.1,92.03,92.0,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
 2026-10-15,MDLZ,M0 Rotation,long,2-of-3,64.67,62.85,63.03,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-10-16,XLF,M0 Rotation,long,3-of-3,55.37,54.0,55.27,transition_ambiguous,True,
+2026-10-16,PG,M0 Rotation,long,3-of-3,159.95,155.84,157.08,transition_ambiguous,True,
+2026-10-16,XLP,M0 Rotation,long,3-of-3,88.48,86.17,86.68,transition_ambiguous,True,
+2026-10-16,MO,M0 Rotation,long,3-of-3,75.74,73.56,73.84,transition_ambiguous,True,
+2026-10-16,BRK-B,M0 Rotation,long,2-of-3,533.55,525.35,525.68,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-10-16,KO,M0 Rotation,long,2-of-3,94.1,92.03,92.0,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-10-16,MDLZ,M0 Rotation,long,2-of-3,64.67,62.85,63.03,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
