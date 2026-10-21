@@ -54,3 +54,6 @@ date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_
 2026-10-19,XLF,M0 Rotation,long,2-of-3,56.03,54.64,55.52,transition_ambiguous,True,
 2026-10-19,CL,M0 Rotation,long,2-of-3,94.12,91.68,94.11,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
 2026-10-19,MDLZ,M0 Rotation,long,2-of-3,64.4,62.53,63.91,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-10-20,AMZN,M0 Rotation,long,3-of-3,263.72,253.79,262.45,transition_ambiguous,True,
+2026-10-20,XLV,M0 Rotation,long,2-of-3,177.35,171.58,175.65,transition_ambiguous,True,
+2026-10-20,LLY,M0 Rotation,long,2-of-3,1259.75,1204.35,1240.34,transition_ambiguous,False,"risk budget $12.50 at this step/regime is below one share's risk ($55.40) — a single share breaches Progressive Exposure; the only expression is a 45-90 DTE call debit spread with premium <= $12, or skip"
