@@ -57,3 +57,11 @@ date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_
 2026-10-20,AMZN,M0 Rotation,long,3-of-3,263.72,253.79,262.45,transition_ambiguous,True,
 2026-10-20,XLV,M0 Rotation,long,2-of-3,177.35,171.58,175.65,transition_ambiguous,True,
 2026-10-20,LLY,M0 Rotation,long,2-of-3,1259.75,1204.35,1240.34,transition_ambiguous,False,"risk budget $12.50 at this step/regime is below one share's risk ($55.40) — a single share breaches Progressive Exposure; the only expression is a 45-90 DTE call debit spread with premium <= $12, or skip"
+2026-10-21,XLF,M0 Rotation,long,3-of-3,55.93,54.53,55.72,transition_ambiguous,True,
+2026-10-21,XLY,M0 Rotation,long,3-of-3,116.22,113.15,115.5,transition_ambiguous,True,
+2026-10-21,XLV,M0 Rotation,long,3-of-3,180.06,173.99,179.82,transition_ambiguous,True,
+2026-10-21,UNH,M0 Rotation,long,3-of-3,422.4,402.42,419.26,transition_ambiguous,True,
+2026-10-21,AMZN,M0 Rotation,long,2-of-3,265.34,255.57,262.63,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-10-21,ABT,M0 Rotation,long,2-of-3,105.62,101.74,102.45,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-10-21,JNJ,M0 Rotation,long,2-of-3,260.77,251.03,259.36,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-10-21,LLY,M0 Rotation,long,3-of-3,1311.75,1255.1,1283.66,transition_ambiguous,False,"risk budget $25.00 at this step/regime is below one share's risk ($56.65) — a single share breaches Progressive Exposure; the only expression is a 45-90 DTE call debit spread with premium <= $25, or skip"
