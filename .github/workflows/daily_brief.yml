@@ -89,7 +89,10 @@ jobs:
               dh = {x.get("input"): x for x in b.get("data_health", [])}
               sw = (dh.get("Swing brief") or {}).get("asof") or ""
               lg = (dh.get("Daily log row") or {}).get("asof") or ""
-              return sw >= d and lg == d and bool(b.get("model", {}).get("available"))
+              m = b.get("model", {}) or {}
+              # a brief whose model book is still waiting on this session's
+              # closes is NOT complete: the 10:15 PM fallback re-runs it
+              return sw >= d and lg == d and bool(m.get("available")) and not m.get("pending")
           done = complete()
           if event == "workflow_dispatch":
               ok, why = True, "manual dispatch"

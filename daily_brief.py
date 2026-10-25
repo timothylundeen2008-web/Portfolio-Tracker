@@ -91,6 +91,7 @@ FRED_SCORE = [
     ("WTI crude", "DCOILWTICO", "$", "index"),
 ]
 EXTRA_FRED = ["DGS30"]
+BENCH_TICKERS = ("SPY", "AGG")   # model-book benchmarks: SPY and a 60/40 (60% SPY / 40% AGG)
 FRESHER = {"VIXCLS": "^VIX", "DCOILWTICO": "CL=F"}      # yfinance splices for lagging FRED series
 FRED_MAX_AGE = {"DTWEXBGS": 10}                         # H.10 dollar index is published weekly
 PRICE_SCORE = [("S&P 500 (SPY)", "SPY"), ("Nasdaq 100 (QQQ)", "QQQ"),
@@ -274,7 +275,20 @@ def gather(today_et: Optional[datetime] = None, fred_key: str = "",
             flags = macro_flags.get_flags(fetch_fred=fetch_fred, api_key=fred_key)
             memo = _memo_prices(rc._inline_fetch_prices)
             ckw = macro_flags.classifier_kwargs(flags)
-            out = rc.full_assessment(fred_key, fetch_fred=fetch_fred, fetch_prices=memo, **ckw)
+            # v9: if FRED fails, the classifier HOLDS the last confirmed regime
+            # instead of falling through to `neutral`. Give it the prior
+            # session's logged regime explicitly (not today's row).
+            prior = None
+            try:
+                _lg = pd.read_csv(DAILY_CSV) if DAILY_CSV.exists() else pd.DataFrame()
+                if not _lg.empty and "regime" in _lg:
+                    _lg = _lg[_lg["et_date"].astype(str) < session.isoformat()].sort_values("et_date")
+                    _keys = [k for k in _lg["regime"].astype(str) if k in rc.REGIMES]
+                    prior = _keys[-1] if _keys else None
+            except Exception:
+                prior = None
+            out = rc.full_assessment(fred_key, fetch_fred=fetch_fred, fetch_prices=memo,
+                                     prior_regime=prior, **ckw)
             out["macro_flags"] = flags
             out["classifier_kwargs"] = ckw
             out["_fetch_prices"] = memo
@@ -321,7 +335,7 @@ def gather(today_et: Optional[datetime] = None, fred_key: str = "",
     except Exception:
         sleeves = set()
     tickers = sorted(set(universe) | set(comp) | set(ledger_tk) | {t for _, t in PRICE_SCORE}
-                     | set(FRESHER.values()) | sleeves)
+                     | set(FRESHER.values()) | sleeves | set(BENCH_TICKERS))
     inp["universe"] = universe
     try:
         inp["prices"] = (fetch_prices or _default_prices)(tickers)
@@ -615,8 +629,12 @@ def regime_section(inp: dict) -> dict:
         return out
     reg, sig = a["regime"], a["signals"]
     key = reg["key"]
+    failed = bool(reg.get("data_failure"))
     out.update(key=key, label=reg.get("label"), drivers=reg.get("drivers", []),
-               transition_reason=reg.get("transition_reason"), source="live (FRED)")
+               transition_reason=reg.get("transition_reason"),
+               source=("HELD — data failure (" + ", ".join(reg.get("missing_inputs") or []) + " missing)")
+               if failed else "live (FRED)",
+               data_failure=failed, held_from=reg.get("held_from"))
     # days in regime
     prior = []
     if log is not None and not log.empty and "regime" in log:
@@ -736,6 +754,12 @@ def regime_section(inp: dict) -> dict:
               + f") would make it `{near['to']}`.")
     if out["bridge_agrees"] is False:
         c += f" ⚠ The Markets bridge last published `{bridge_key}` — republish it from the Markets dashboard."
+    if failed:
+        c = (f"⚠ DATA FAILURE — Level-1 inputs missing ({', '.join(reg.get('missing_inputs') or [])}). "
+             + (f"Holding the last confirmed regime `{reg.get('held_from')}`; nothing here is new information "
+                "about the market, and no regime change can start today." if reg.get("held_from") else
+                "No prior regime on record — the `neutral` read is a placeholder. Do not act on it.")
+             + " " + c)
     out["conclusion"] = c
     return out
 
@@ -1149,6 +1173,9 @@ def model_section(inp: dict, rg: dict) -> dict:
         out["conclusion"] = f"Model book failed: {type(e).__name__}: {e}"
         return out
     sm = mbk.summary(book)
+    pending = mbk.pending_session(book, inp["session"])
+    out["pending"] = pending
+    out["benchmarks"] = _model_benchmarks(book, closes)
     gates = rg.get("gates_today") or {}
     try:
         import trend_filter as tf
@@ -1195,8 +1222,47 @@ def model_section(inp: dict, rg: dict) -> dict:
     if blocked:
         c += f"Adds waiting on the entry gate (parked in SGOV): {', '.join(blocked)}. "
     c += "No change today." if not sm["changes"] else f"{len(sm['changes'])} weight change(s) vs the prior session."
+    bm = out.get("benchmarks") or {}
+    if bm.get("model_pct") is not None and bm.get("spy_pct") is not None:
+        c += (f" Since {bm['since']}: model {bm['model_pct']:+.2f}% vs SPY {bm['spy_pct']:+.2f}%"
+              + (f" and 60/40 {bm['sixty_forty_pct']:+.2f}%" if bm.get("sixty_forty_pct") is not None else "")
+              + ".")
+    if pending:
+        c = (f"⏳ Closing prices for {inp['session']} were not published when this ran — the model book stands at "
+             f"{sm.get('date')} and books {inp['session']} on the next run (never as a 0% day). " + c)
+    if failed_regime := bool(((inp.get("assessment") or {}).get("regime") or {}).get("data_failure")):
+        c = "⚠ Regime HELD through a data failure — these weights are yesterday's call, not a new one. " + c
     out.update(available=True, summary=sm, rows=rows, actions=actions, weekend=weekend,
-               conclusion=c.strip(), _book=book, path=str(path))
+               conclusion=c.strip(), _book=book, path=str(path), regime_held=failed_regime)
+    return out
+
+
+def _model_benchmarks(book: pd.DataFrame, closes: dict) -> dict:
+    """Model NAV vs SPY and a daily-rebalanced 60/40 (SPY/AGG), over the book's
+    own dates. Display only — never a rule input."""
+    out = {"since": None, "model_pct": None, "spy_pct": None, "sixty_forty_pct": None}
+    try:
+        if book is None or book.empty:
+            return out
+        b = book.assign(date=pd.to_datetime(book["date"]).dt.normalize()).sort_values("date")
+        d0, d1 = b["date"].iloc[0], b["date"].iloc[-1]
+        out["since"] = d0.date().isoformat()
+        out["model_pct"] = round((float(b["nav"].iloc[-1]) / float(b["nav"].iloc[0]) - 1) * 100, 2)
+
+        def _s(t):
+            s = closes.get(t, pd.Series(dtype=float)).dropna()
+            if getattr(s.index, "tz", None) is not None:
+                s.index = s.index.tz_localize(None)
+            s.index = pd.to_datetime(s.index).normalize()
+            return s[(s.index >= d0) & (s.index <= d1)]
+        spy, agg = _s("SPY"), _s("AGG")
+        if len(spy) > 1 and spy.index[0] == d0:
+            out["spy_pct"] = round((float(spy.iloc[-1]) / float(spy.iloc[0]) - 1) * 100, 2)
+        if len(spy) > 1 and len(agg) > 1 and spy.index[0] == d0 and agg.index[0] == d0:
+            r = (0.6 * spy.pct_change() + 0.4 * agg.pct_change()).dropna()
+            out["sixty_forty_pct"] = round((float((1 + r).prod()) - 1) * 100, 2)
+    except Exception:
+        pass
     return out
 
 
@@ -1290,6 +1356,10 @@ def _if_then(ev: str, srr, flips: dict) -> str:
     if ev == "NFP":
         return ("Payrolls — strong: yields up." + lm_txt(+1) + " Weak: yields down." + lm_txt(-1)
                 + " Weak payrolls WITH HY widening opens the growth-scare path — watch the HY 2-week change.")
+    if ev == "GDP":
+        return ("GDP — a weak print with weak consumer data moves the growth composite toward CONTRACTING "
+                "(the growth_scare path needs price confirmation: cyclicals lagging defensives by 3pp+). "
+                "A strong print with hot core PCE (same morning) pushes DFII10 up." + lm_txt(+1))
     return f"{ev} — no pre-committed rule."
 
 
@@ -1336,7 +1406,21 @@ def data_health(inp: dict) -> list[dict]:
             note = (note + "; " if note else "") + "weekly release (Mondays) — a week's lag is normal"
         add(f"FRED {sid}", s.index[-1].date().isoformat() if len(s) else None, FRED_MAX_AGE.get(sid, 4), note)
     a = inp.get("assessment")
-    add("Regime assessment", today.isoformat() if a else None, 0, "" if a else "live assessment failed")
+    _reg = (a or {}).get("regime") or {}
+    if a and _reg.get("data_failure"):
+        out.append({"input": "Regime assessment", "asof": today.isoformat(), "age_days": 0, "status": "FAILED",
+                    "note": "core inputs missing — regime HELD from " + str(_reg.get("held_from") or "nothing (placeholder neutral)")})
+    else:
+        add("Regime assessment", today.isoformat() if a else None, 0, "" if a else "live assessment failed")
+    try:
+        import fred_client as _fc
+        _os_ = _fc.outage_status()
+        if _os_["down"] or _os_["consecutive_failures"]:
+            out.append({"input": "FRED connection", "asof": None, "age_days": None,
+                        "status": "DOWN" if _os_["down"] else "WARN",
+                        "note": f"{_os_['consecutive_failures']} consecutive series failed; {_os_['last_error']}"})
+    except Exception:
+        pass
     rot = inp.get("rotation") or {}
     add("Money Flow bridge", (rot.get("published_at") or "")[:10] or None, 1, ref=wall)
     mk = inp.get("markets") or {}
@@ -1366,10 +1450,17 @@ def data_health(inp: dict) -> list[dict]:
     if not px:
         out.append({"input": "Prices (yfinance)", "asof": None, "age_days": None, "status": "MISSING", "note": ""})
     else:
-        lasts = [df.index[-1] for df in px.values() if df is not None and not df.empty]
-        ref = max(lasts) if lasts else None
+        # v1.1: the session's bar must exist for the CALENDAR ticker (SPY), not
+        # for whichever ticker happens to be freshest. Before this, one fresh
+        # ticker made the row read OK while SPY was a session behind.
+        spy = _price_close(px, "SPY")
+        ref = spy.index[-1] if len(spy) else None
+        lasts = [pd.to_datetime(df.index[-1]).normalize() for df in px.values() if df is not None and not df.empty]
+        have = sum(1 for d in lasts if ref is not None and d >= pd.to_datetime(ref).normalize())
         add("Prices (yfinance)", pd.to_datetime(ref).date().isoformat() if ref is not None else None, 0,
-            f"{len(px)} tickers")
+            f"SPY calendar; {have}/{len(px)} tickers have that bar"
+            + ("" if ref is None or pd.to_datetime(ref).date() >= today else
+               " — this session's closes were NOT published when the brief ran"))
     if inp.get("calendar_asof"):
         out.append({"input": "Event calendar", "asof": inp["calendar_asof"], "age_days": None, "status": "OK",
                     "note": "hardcoded dates; re-verify every January"})
@@ -1449,6 +1540,7 @@ def headline(b: dict) -> list[str]:
               + (", CIRCUIT BREAKER ON" if sm.get("breaker") == "ON" else "")
               + f", drawdown {sm.get('drawdown_pct', 0):+.1f}%"
               + (f", {len(sm.get('changes') or [])} weight change(s) today" if sm.get("changes") else ", no change today")
+              + ("; this session's closes not yet published (books next run)" if md_.get("pending") else "")
               + ".")
     else:
         s3 = "Model portfolio unavailable."
@@ -1617,6 +1709,18 @@ def render_md(b: dict) -> str:
                  + f" · tracked since {sm['since']}"
                  + (f" ({sm['reconstructed_sessions']} sessions reconstructed from the daily log)"
                     if sm.get("reconstructed_sessions") else ""))
+        if md_.get("pending"):
+            L.append(f"- ⏳ **This session's closes were not published when the brief ran** — the book stands at "
+                     f"{sm.get('date')} and books the session on the next run. A day is never booked as 0%.")
+        if md_.get("regime_held"):
+            L.append("- ⚠ **Regime held through a data failure** — these weights repeat the last confirmed call.")
+        _bm = md_.get("benchmarks") or {}
+        if _bm.get("model_pct") is not None:
+            L.append(f"- Since {_bm['since']}: model **{_bm['model_pct']:+.2f}%** · SPY "
+                     + (f"{_bm['spy_pct']:+.2f}%" if _bm.get("spy_pct") is not None else "n/a")
+                     + " · 60/40 (SPY/AGG, daily rebalanced) "
+                     + (f"{_bm['sixty_forty_pct']:+.2f}%" if _bm.get("sixty_forty_pct") is not None else "n/a")
+                     + " _(before costs and taxes)_")
         L += ["", "| Sleeve | Should hold | Change today | Entry gate (adds) | Hold trend (200-day) "
                   "| 1M | 3M (vs SPY) | 12-1 |",
               "|---|---|---|---|---|---|---|---|"]
@@ -1764,6 +1868,8 @@ def selftest() -> dict:
                           dxy_20d_change_pct=1.0, stock_bond_corr_60d=0.48, asof=None,
                           cpi_yoy=3.4, cpi_3m_saar=0.2, cpi_mom_sa=0.4, eff_funds=3.88, ig_oas=0.9, dxy=120)
     import regime_classifier as rc
+    for _t in rc.BASE_WEIGHTS:           # every sleeve priced, as in production
+        prices.setdefault(_t, px(100))
     reg = rc.classify_regime(sig, fetch_prices=None, cape=40.0, top20_concentration_pct=49.0)
     assessment = {"signals": sig, "regime": reg, "repression": {"score": 3, "band": "Tightening cycle", "hollow": True},
                   "targets": {"VGT": 17.0, "TLT": 2.0, "SGOV": 11.0, "KMLM": 8.0},
@@ -1942,6 +2048,43 @@ def selftest() -> dict:
         if "failed" not in b3["regime"]["conclusion"] or not any("assessment failed" in e for e in b3["errors"]):
             f.append("a failed assessment must be named, not silently replaced")
         render_md(b3)
+
+        # ── v1.1 bulletproofing ──────────────────────────────────────────
+        # (a) session closes not published yet (prices end 9/25, session 9/28):
+        #     model book must read PENDING, prices row must say so, and the
+        #     session must not be booked
+        if not b2["model"].get("pending"):
+            f.append("a session without closes must leave the model book PENDING")
+        _pxrow = next((r for r in b2["data_health"] if r["input"] == "Prices (yfinance)"), {})
+        if _pxrow.get("status") != "STALE" or "NOT published" not in (_pxrow.get("note") or ""):
+            f.append(f"prices health must flag the missing session bar: {_pxrow}")
+        if "not published" not in render_md(b2):
+            f.append("the brief must say the session's closes were not published")
+        _bk = b2["model"].get("_book")
+        if _bk is not None and str(_bk["date"].max()) >= "2026-09-28":
+            f.append("the model book must not book a session with no closing bar")
+        # (b) FRED outage: the assessment HOLDS the prior regime and every
+        #     section says so
+        _h = rc.input_health(SimpleNamespace(short_real_rate=None, long_real_mom_3m=None, hy_oas=None))
+        held = dict(assessment, regime=rc.held_regime(_h, "transition_ambiguous"))
+        b4 = build(gather(today_et=now, fetch_fred=fetch_fred,
+                          fetch_prices=lambda tks: {t: prices[t] for t in tks if t in prices},
+                          assess=lambda: held, macro_lookup=lambda d: []))
+        if "HELD" not in str(b4["regime"].get("source")) or "DATA FAILURE" not in b4["regime"]["conclusion"]:
+            f.append(f"a held regime must be labelled in the regime section: {b4['regime'].get('source')}")
+        if not any(r["input"] == "Regime assessment" and r["status"] == "FAILED" for r in b4["data_health"]):
+            f.append("data health must show the regime assessment as FAILED during an outage")
+        if not b4["model"].get("regime_held"):
+            f.append("the model section must say its weights are a held call")
+        render_md(b4)
+        # (c) benchmarks present when SPY and AGG are priced
+        prices["AGG"] = px(100, 0.0001)
+        b5 = build(gather(today_et=now, fetch_fred=fetch_fred,
+                          fetch_prices=lambda tks: {t: prices[t] for t in tks if t in prices},
+                          assess=lambda: assessment, macro_lookup=lambda d: []))
+        _bm = b5["model"].get("benchmarks") or {}
+        if _bm.get("spy_pct") is None or _bm.get("sixty_forty_pct") is None:
+            f.append(f"model benchmarks (SPY, 60/40) must be computed when priced: {_bm}")
     finally:
         os.chdir(cwd)
     return {"ok": not f, "failures": f}

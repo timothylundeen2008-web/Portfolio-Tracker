@@ -36,6 +36,22 @@ PORTFOLIO-LEVEL CIRCUIT BREAKER
   Drawdown is measured on the book as actually held (breaker included),
   so a breaker that did its job lets drawdown recover naturally.
 
+PRICE INTEGRITY  (v1.1 — Oct 2026)
+  A session is booked only when its closing bars exist. Before v1.1 the
+  brief (which runs ~8:45-9:15 PM ET, often before Yahoo posts the day's
+  daily bar) booked the session anyway with a 0% return, and because the
+  next run measured from that row, every such day's return was lost for
+  good: NAV sat at 100.5459 for 10/15-10/20 and 100.9614 for 10/21-10/23.
+  Now:
+    * a session with no SPY bar yet is NOT booked; the next run books it
+    * a day where under COVERAGE_MIN of the held weight has a valid return
+      stops the walk there (deferred, never booked as zero)
+    * the last REMARK_WINDOW rows are re-marked every run from their own
+      stored weights, so any row booked on incomplete prices heals itself
+      once the closes arrive. Weights, regime and breaker state are the
+      record of what was decided and are never rewritten; only NAV, peak,
+      drawdown and warn are recomputed.
+
 PERSISTENCE
   data/model_book.csv, one row per session (idempotent per session). On the
   first run it is RECONSTRUCTED from logs/daily_log.csv (the regime each
@@ -63,6 +79,9 @@ RELEASE_CLOSES = 2
 BREAKER_SCALE = 0.5
 RISK_EXEMPT = {"SGOV", "USFR", "BIL", "SHV", "KMLM"}
 PARK = "SGOV"
+COVERAGE_MIN = 0.95     # share of held weight that must have a valid return to book a day
+REMARK_WINDOW = 30      # trailing rows re-marked from stored weights every run
+
 COLS = ["date", "regime", "nav", "peak", "drawdown_pct", "breaker", "release_count",
         "warn", "source", "weights"]
 
@@ -120,6 +139,61 @@ def _spy_above_50(closes: dict, d) -> Optional[bool]:
     return bool(s.iloc[-1] > s.tail(50).mean())
 
 
+def _book_return(closes: dict, weights: dict, d0, d1) -> tuple:
+    """(portfolio return, covered weight share) from d0 to d1 for `weights`.
+    Tickers with no bar on either date contribute nothing and lower coverage;
+    the caller decides whether the day is bookable."""
+    r, have, tot = 0.0, 0.0, 0.0
+    for t, w in weights.items():
+        w = float(w)
+        if w <= 0:
+            continue
+        tot += w
+        dr = _day_return(closes, t, d0, d1)
+        if dr is not None:
+            r += (w / 100.0) * dr
+            have += w
+    return r, (have / tot if tot else 1.0)
+
+
+def remark(book: pd.DataFrame, closes: dict, window: int = REMARK_WINDOW) -> pd.DataFrame:
+    """Recompute NAV / peak / drawdown / warn for the trailing `window` rows
+    from each row's STORED weights and the closes now available. Rows whose
+    returns still cannot be measured keep their recorded values. Idempotent."""
+    if book is None or len(book) < 2:
+        return book
+    b = book.copy().reset_index(drop=True)
+    start = max(1, len(b) - window)
+    for i in range(start, len(b)):
+        prev, cur = b.loc[i - 1], b.loc[i]
+        w_prev = json.loads(prev["weights"]) if isinstance(prev["weights"], str) else prev["weights"]
+        r, cov = _book_return(closes, w_prev, pd.Timestamp(prev["date"]), pd.Timestamp(cur["date"]))
+        if cov < COVERAGE_MIN:
+            # cannot measure this step: carry the recorded step return forward
+            # so later rows stay consistent with the anchor.
+            old_prev = float(book.loc[i - 1, "nav"]) if i - 1 < len(book) else float(prev["nav"])
+            step = (float(book.loc[i, "nav"]) / old_prev - 1) if old_prev else 0.0
+            nav = float(prev["nav"]) * (1 + step)
+        else:
+            nav = float(prev["nav"]) * (1 + r)
+        peak = max(float(prev["peak"]), nav)
+        dd = (nav / peak - 1) * 100
+        b.loc[i, "nav"] = round(nav, 4)
+        b.loc[i, "peak"] = round(peak, 4)
+        b.loc[i, "drawdown_pct"] = round(dd, 2)
+        b.loc[i, "warn"] = dd <= WARN_DD
+    return b
+
+
+def pending_session(book: pd.DataFrame, session) -> bool:
+    """True when the book has not yet booked `session` (its closes were not
+    published when the run happened). The brief reports this and the
+    fallback run re-tries."""
+    if book is None or book.empty:
+        return True
+    return str(pd.to_datetime(book["date"]).max().date()) < str(pd.Timestamp(session).date())
+
+
 # ── the engine ──────────────────────────────────────────────────────────────
 
 def advance(book: pd.DataFrame, session: date, regime_by_date: dict, prices: dict,
@@ -138,7 +212,8 @@ def advance(book: pd.DataFrame, session: date, regime_by_date: dict, prices: dic
     book = book.copy() if book is not None and not book.empty else pd.DataFrame(columns=COLS)
     if not book.empty:
         book["date"] = pd.to_datetime(book["date"]).dt.normalize()
-        book = book[book["date"] < sess].sort_values("date")
+        book = book[book["date"] < sess].sort_values("date").reset_index(drop=True)
+        book = remark(book, closes)
     rkeys = sorted((pd.Timestamp(k).normalize(), v) for k, v in regime_by_date.items())
 
     def regime_on(d):
@@ -150,13 +225,15 @@ def advance(book: pd.DataFrame, session: date, regime_by_date: dict, prices: dic
                 break
         return r
 
+    # v1.1: only sessions that HAVE a closing bar are bookable. If today's bar
+    # is not out yet, today is simply not booked; the next run books it.
     if book.empty:
         first = rkeys[0][0] if rkeys else sess
-        days = [d for d in cal if first <= d <= sess] or [sess]
+        days = [d for d in cal if first <= d <= sess]
         source = "reconstructed"
     else:
         last = book["date"].iloc[-1]
-        days = [d for d in cal if last < d <= sess] or ([sess] if sess > last else [])
+        days = [d for d in cal if last < d <= sess]
         source = "live"
     rows = book.to_dict("records")
     for d in days:
@@ -165,10 +242,9 @@ def advance(book: pd.DataFrame, session: date, regime_by_date: dict, prices: dic
         if rows:
             prev = rows[-1]
             w_prev = json.loads(prev["weights"]) if isinstance(prev["weights"], str) else prev["weights"]
-            r = 0.0
-            for t, w in w_prev.items():
-                dr = _day_return(closes, t, pd.Timestamp(prev["date"]), d)
-                r += (w / 100.0) * (dr or 0.0)
+            r, cov = _book_return(closes, w_prev, pd.Timestamp(prev["date"]), d)
+            if cov < COVERAGE_MIN:
+                break           # deferred: never book an unmeasured day as a 0% return
             nav = float(prev["nav"]) * (1 + r)
             peak = max(float(prev["peak"]), nav)
             state, rc = next_breaker(prev["breaker"], int(prev["release_count"]),
@@ -286,6 +362,33 @@ def selftest() -> dict:
     s = summary(live)
     if not s["available"] or not s["changes"] or s["regime"] != "credit_stress":
         f.append(f"summary wrong: {s}")
+
+    # ── v1.1 price integrity ─────────────────────────────────────────────
+    # (a) today's bar not published yet -> today is NOT booked, and is pending
+    late = nxt + pd.offsets.BDay(1)
+    stale = advance(live, late.date(), {}, p2, wf, "credit_stress")
+    if len(stale) != len(live) or not pending_session(stale, late.date()):
+        f.append("a session with no closing bar must not be booked (and must read pending)")
+    # (b) once the bar arrives, the day is booked with its REAL return
+    p3 = {k: pd.concat([v, pd.DataFrame({"Close": [v["Close"].iloc[-1] * 1.10]}, index=[late])])
+          for k, v in p2.items()}
+    w_last = json.loads(live["weights"].iloc[-1])
+    booked = advance(stale, late.date(), {}, p3, wf, "credit_stress")
+    want = float(live["nav"].iloc[-1]) * (1 + sum(w / 100 * 0.10 for w in w_last.values()))
+    if len(booked) != len(live) + 1 or abs(float(booked["nav"].iloc[-1]) - want) > 1e-3:
+        f.append(f"late bar must book the real return: {booked['nav'].iloc[-1]} vs {want:.4f}")
+    # (c) self-heal: a row booked at 0% while its closes were missing is re-marked
+    frozen = booked.copy()
+    frozen.loc[frozen.index[-1], "nav"] = frozen["nav"].iloc[-2]          # simulate the old bug
+    healed = remark(frozen.assign(date=pd.to_datetime(frozen["date"])),
+                    {t: _close(p3, t) for t in p3})
+    if abs(float(healed["nav"].iloc[-1]) - want) > 1e-3:
+        f.append(f"remark must heal a zero-return row: {healed['nav'].iloc[-1]} vs {want:.4f}")
+    # (d) coverage: if most of the held weight has no bar for a day, defer it
+    p4 = {k: v for k, v in p3.items() if k in ("SPY", "SGOV")}            # VGT + KMLM missing
+    deferred = advance(stale, late.date(), {}, p4, wf, "credit_stress")
+    if len(deferred) != len(stale):
+        f.append("a day with < COVERAGE_MIN of held weight measurable must be deferred, not booked")
     return {"ok": not f, "failures": f}
 
 
