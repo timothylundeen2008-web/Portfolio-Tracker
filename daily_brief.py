@@ -1467,6 +1467,60 @@ def data_health(inp: dict) -> list[dict]:
     return out
 
 
+# ── Signal scorecard (fix_status N4) ───────────────────────────────────────
+
+SWING_CARDS = Path("logs/swing/cards_history.csv")
+
+
+def signals_section(inp: dict, mdl: dict) -> dict:
+    """Derive today's signals (persisted by write()) and score the log so far.
+    Derivation is pure; writing happens only in write(), so a dry run or a
+    selftest never touches data/signal_outcomes.csv."""
+    out = {"available": False, "new": [], "scorecard": {}, "conclusion": ""}
+    try:
+        import signal_outcomes as so
+    except Exception as e:
+        out["conclusion"] = f"Signal log unavailable: {type(e).__name__}: {e}"
+        return out
+    d = inp["session"].isoformat()
+    try:
+        existing = so._load(str(Path(inp.get("data_dir") or "data") / "signal_outcomes.csv"))
+        book = mdl.get("_book")
+        try:
+            cards = pd.read_csv(SWING_CARDS) if SWING_CARDS.exists() else pd.DataFrame()
+        except Exception:
+            cards = pd.DataFrame()
+        rows = (so.from_daily_log(inp.get("daily_log"), d, book)
+                + so.from_swing_cards(cards, d, existing)
+                + so.from_rotation(inp.get("rotation") or {}, d, existing))
+        known = set(existing["signal_id"]) if not existing.empty else set()
+        out["new"] = rows
+        out["new_today"] = [r for r in rows if r["signal_id"] not in known]
+        closes = {t: _price_close(inp.get("prices") or {}, t) for t in (inp.get("prices") or {})}
+        fetch = os.environ.get("SIGNAL_FETCH", "1") != "0"
+        out["scorecard"] = so.scorecard(closes, str(Path(inp.get("data_dir") or "data") / "signal_outcomes.csv"),
+                                        fetch=fetch) if not existing.empty else {"coverage": so.coverage("/nonexistent"), "rates": {}}
+        out["available"] = True
+    except Exception as e:
+        out["conclusion"] = f"Signal scoring failed: {type(e).__name__}: {e}"
+        return out
+    cov = (out["scorecard"] or {}).get("coverage") or {}
+    nt = out["new_today"]
+    c = (f"{cov.get('signals', 0)} signals on record" + (f" since {cov['since']}" if cov.get("since") else "")
+         + f"; {len(nt)} new this run"
+         + (f" ({', '.join(sorted({r['signal_type'] for r in nt}))})" if nt else "") + ". ")
+    rates4 = (out["scorecard"].get("rates") or {}).get("4w") or []
+    scored = [r for r in rates4 if r.get("n")]
+    if not scored:
+        c += "Nothing has reached its 4-week horizon yet — no verdicts, by design."
+    else:
+        c += "4-week scores so far: " + "; ".join(
+            f"{r['signal_type']} n={r['n']} avg {r['avg_rel']:+.2f}pp" for r in scored[:5]) + "."
+        c += f" Hit rates appear only at {so.MIN_SAMPLE}+ scored signals."
+    out["conclusion"] = c
+    return out
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 #  Assembly
 # ═══════════════════════════════════════════════════════════════════════════
@@ -1485,10 +1539,12 @@ def build(inp: dict) -> dict:
     sw = swing_section(inp)
     nx = next48_section(inp, rg)
     al = alerts_section(inp)
+    sg = signals_section(inp, mdl)
     dh = data_health(inp)
     brief = {"session": inp["session"].isoformat(), "generated_et": mt.fmt_et(inp["now_et"]),
              "scoreboard": sb, "regime": rg, "cross_asset": xa, "rotation": ro, "flow": fl,
              "breadth": br, "model": mdl, "portfolio": pf, "swing": sw, "next48": nx, "alerts": al,
+             "signals": sg,
              "data_health": dh, "errors": inp.get("errors", []), "targets": targets}
     brief["headline"] = headline(brief)
     brief["conclusions"] = conclusions(brief)
@@ -1794,7 +1850,25 @@ def render_md(b: dict) -> str:
     L += ["- **Weekend review list:**", *([f"  - {x}" for x in cc["weekend"]] or ["  - nothing queued"])]
     L += ["", f"_Daily rule: {DAILY_RULE}_", ""]
 
-    L += ["## 12 · Data health", "| Input | As of | Age | Status | Note |", "|---|---|---|---|---|"]
+    sg = b.get("signals") or {}
+    L += ["## 12 · Signal scorecard — is the framework working?"]
+    if sg.get("conclusion"):
+        L.append(f"- {sg['conclusion']}")
+    for h in ("1w", "4w", "12w"):
+        rows_ = [r for r in ((sg.get("scorecard") or {}).get("rates") or {}).get(h, []) if r.get("logged")]
+        if not rows_:
+            continue
+        L += ["", f"**{h} horizon** (signed return vs SPY; portfolio signals vs their benchmark weights)",
+              "| Signal | Logged | Scored | Hit rate | Avg | Median | Verdict |", "|---|---|---|---|---|---|---|"]
+        for r in rows_:
+            _n = lambda v, sfx="pp": "—" if v is None or (isinstance(v, float) and math.isnan(v)) else f"{v:+.2f}{sfx}"
+            L.append(f"| {r['signal_type']} | {r['logged']} | {r['n']} | "
+                     f"{'—' if r.get('hit_rate') is None else str(r['hit_rate']) + '%'} | {_n(r.get('avg_rel'))} | "
+                     f"{_n(r.get('med_rel'))} | {r.get('verdict', '')} |")
+    L.append("_Signals are logged when they fire (the daily log and swing cards were written at the time, so "
+             "replaying them is not hindsight). Weekly portfolio snapshots overlap at 4w/12w — read early numbers "
+             "as direction, not proof._")
+    L += ["", "## 13 · Data health", "| Input | As of | Age | Status | Note |", "|---|---|---|---|---|"]
     for d in b["data_health"]:
         L.append(f"| {d['input']} | {d['asof'] or '—'} | {'' if d['age_days'] is None else str(d['age_days']) + 'd'} | "
                  f"{'✅' if d['status'] == 'OK' else 'ℹ️' if d['status'] == 'UNUSED' else '⚠'} {d['status']} | {d['note']} |")
@@ -1817,6 +1891,14 @@ def write(b: dict) -> dict:
     mp = SUMMARY_DIR / f"{b['session']}_brief.md"
     jp = STATE_DIR / f"{b['session']}_brief.json"
     mp.write_text(render_md(b), encoding="utf-8")
+    sg = b.get("signals") or {}
+    if sg.get("new"):
+        try:
+            import signal_outcomes as so
+            n = so.record_rows(sg["new"], str(Path(os.environ.get("DATA_DIR", "data")) / "signal_outcomes.csv"))
+            sg["recorded"] = n
+        except Exception as e:
+            b.setdefault("errors", []).append(f"signals not saved: {e}")
     md_ = b.get("model") or {}
     book = md_.pop("_book", None)
     if book is not None:
@@ -1913,6 +1995,7 @@ def selftest() -> dict:
                        "last_updated": "2026-07-26T00:00:00"}]).to_csv("data/positions.csv", index=False)
         prices["SGOV"] = px(100.4, 0.0001); prices["VGT"] = px(100)
         os.environ["DATA_DIR"] = "data"
+        os.environ["SIGNAL_FETCH"] = "0"          # never touch the network in a selftest
         import importlib, storage_backend, position_ledger
         importlib.reload(storage_backend); importlib.reload(position_ledger)
         now = datetime(2026, 9, 25, 20, 0)
@@ -2025,7 +2108,7 @@ def selftest() -> dict:
         nx = b["next48"]
         if nx["events"] or not nx["next_event"] or "NFP" not in nx["conclusion"]:
             f.append("no event in window must name the next one")
-        for sec in ("## 1 ·", "## 6 ·", "## 12 ·", "**Conclusion:**"):
+        for sec in ("## 1 ·", "## 6 ·", "## 12 ·", "## 13 ·", "**Conclusion:**"):
             if sec not in md:
                 f.append(f"render missing {sec}")
         if not Path(out["md"]).exists() or not Path(out["json"]).exists():
@@ -2077,6 +2160,18 @@ def selftest() -> dict:
         if not b4["model"].get("regime_held"):
             f.append("the model section must say its weights are a held call")
         render_md(b4)
+        # (d) signal log: derived in build, persisted only by write(), idempotent
+        if not b["signals"].get("available"):
+            f.append(f"signals section must build: {b['signals'].get('conclusion')}")
+        if "## 12 · Signal scorecard" not in md or "## 13 · Data health" not in md:
+            f.append("the brief must render the signal scorecard before data health")
+        if not os.path.exists("data/signal_outcomes.csv"):
+            f.append("write() must persist data/signal_outcomes.csv")
+        else:
+            _n0 = len(pd.read_csv("data/signal_outcomes.csv"))
+            write(build(inp))
+            if len(pd.read_csv("data/signal_outcomes.csv")) != _n0:
+                f.append("re-running the same session must not duplicate signals")
         # (c) benchmarks present when SPY and AGG are priced
         prices["AGG"] = px(100, 0.0001)
         b5 = build(gather(today_et=now, fetch_fred=fetch_fred,

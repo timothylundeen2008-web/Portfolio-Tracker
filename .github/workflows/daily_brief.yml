@@ -134,6 +134,7 @@ jobs:
           fi
           git add -A logs/summaries/*_brief.md logs/brief/ 2>/dev/null || true
           git add data/model_book.csv 2>/dev/null || true       # the model portfolio book (NAV, drawdown, breaker)
+          git add data/signal_outcomes.csv 2>/dev/null || true  # signal log: base rates for every rule (fix_status N4)
           if git diff --cached --quiet; then
             echo "No change to the brief."
           else
