@@ -1,5 +1,5 @@
 """
-event_calendar.py  (v1 — July 2026)   ── CLOSES GAP G5
+event_calendar.py  (v1.1 — Oct 2026: FOMC/CPI/PCE dates corrected, GDP added)   ── CLOSES GAP G5
 ──────────────────────────────────────────────────────────────────────────────
 Daily Step 8: "No NEW entries the day before a binary event for the affected
 sleeve; no short premium entered into earnings with elevated IVR."
@@ -12,7 +12,7 @@ WHY AUTOMATE SOMETHING YOU COULD LOOK UP
   handful of sessions per quarter when it matters most.
 
 WHAT IS SCHEDULED vs WHAT IS NOT
-  FOMC, CPI, PCE and payrolls dates are published in advance — they are
+  FOMC, CPI, PCE, GDP and payrolls dates are published in advance — they are
   hardcoded here, dated, and flagged for annual re-verification. Wrong dates
   would be worse than none, so the vintage is always displayed.
 
@@ -32,30 +32,45 @@ from datetime import date, datetime, timedelta
 
 import pandas as pd
 
-CALENDAR_ASOF = "2026-01-15"
+CALENDAR_ASOF = "2026-10-24"
 
-# FOMC decision days (second day of each two-day meeting)
+# FOMC decision days (second day of each two-day meeting).
+# v1.1 (2026-10-24): the last two 2026 dates were WRONG (11-04 / 12-16). The
+# Fed's calendar says Oct 27-28 and Dec 8-9, so no blackout fired before the
+# October meeting. Verified at federalreserve.gov/monetarypolicy/fomccalendars.htm.
 FOMC_2026 = ["2026-01-28", "2026-03-18", "2026-04-29", "2026-06-17",
-             "2026-07-29", "2026-09-16", "2026-11-04", "2026-12-16"]
+             "2026-07-29", "2026-09-16", "2026-10-28", "2026-12-09"]
+# 2027 per the same page ("each meeting date is tentative until confirmed at
+# the meeting immediately preceding it").
+FOMC_2027 = ["2027-01-27", "2027-03-17", "2027-04-28", "2027-06-09",
+             "2027-07-28", "2027-09-15", "2027-10-27", "2027-12-08"]
+FOMC_ALL = FOMC_2026 + FOMC_2027
 
 # CPI release days (BLS, ~8:30am ET)
 CPI_2026 = ["2026-01-13", "2026-02-11", "2026-03-11", "2026-04-10",
             "2026-05-12", "2026-06-10", "2026-07-14", "2026-08-12",
-            "2026-09-11", "2026-10-13", "2026-11-10", "2026-12-10"]
+            "2026-09-11", "2026-10-14", "2026-11-10", "2026-12-10"]   # Oct 14 per bls.gov/schedule/2026
 
 # PCE (BEA) and nonfarm payrolls (BLS, first Friday typically)
 PCE_2026 = ["2026-01-30", "2026-02-27", "2026-03-27", "2026-04-30",
             "2026-05-29", "2026-06-26", "2026-07-31", "2026-08-28",
-            "2026-09-25", "2026-10-30", "2026-11-25", "2026-12-23"]
+            "2026-09-25", "2026-10-29", "2026-11-25", "2026-12-23"]   # Oct 29 per bea.gov/news/schedule
 NFP_2026 = ["2026-01-09", "2026-02-06", "2026-03-06", "2026-04-03",
             "2026-05-08", "2026-06-05", "2026-07-02", "2026-08-07",
             "2026-09-04", "2026-10-02", "2026-11-06", "2026-12-04"]
+
+# GDP estimates (BEA, 8:30am ET) — added v1.1; previously untracked.
+# Advance / second / third, per bea.gov/news/schedule.
+GDP_2026 = ["2026-02-20", "2026-03-13", "2026-04-09", "2026-04-30",
+            "2026-05-28", "2026-06-25", "2026-07-30", "2026-08-26",
+            "2026-09-30", "2026-10-29", "2026-11-25", "2026-12-23"]
 
 EVENT_SLEEVES = {
     "FOMC": "ALL — especially USFR/SGOV (front end) and TLT (duration)",
     "CPI":  "ALL — moves the SHORT real rate, the regime's first input",
     "PCE":  "Rates-sensitive sleeves",
     "NFP":  "Rates-sensitive sleeves and growth",
+    "GDP":  "Growth sleeves and the growth axis of the regime read",
 }
 
 
@@ -73,8 +88,9 @@ def upcoming_macro(within_days: int = 7, today: date | None = None) -> list[dict
     """Scheduled macro events inside the window, nearest first."""
     t = today or date.today()
     events = []
-    for name, dates in (("FOMC", FOMC_2026), ("CPI", CPI_2026),
-                        ("PCE", PCE_2026), ("NFP", NFP_2026)):
+    for name, dates in (("FOMC", FOMC_ALL), ("CPI", CPI_2026),
+                        ("PCE", PCE_2026), ("NFP", NFP_2026),
+                        ("GDP", GDP_2026)):
         for d in _parse(dates):
             days = (d - t).days
             if 0 <= days <= within_days:

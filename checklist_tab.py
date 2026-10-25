@@ -82,11 +82,22 @@ LOG_PATH = os.environ.get("CHECKLIST_LOG", "data/checklist_log.csv")
 # FOMC meeting dates — VERIFY against federalreserve.gov each January and
 # update. Hardcoded because the schedule is published a year ahead; wrong
 # dates here are worse than none, so the UI states the source and vintage.
+# Oct 2026: the last two dates here were wrong (11-04 / 12-16 vs the Fed's
+# Oct 28 / Dec 9). event_calendar.py is now the single source; this literal is
+# only a fallback if that import fails, and is kept identical to it.
 FOMC_DATES_2026 = [
     "2026-01-28", "2026-03-18", "2026-04-29", "2026-06-17",
-    "2026-07-29", "2026-09-16", "2026-11-04", "2026-12-16",
+    "2026-07-29", "2026-09-16", "2026-10-28", "2026-12-09",
+    "2027-01-27", "2027-03-17", "2027-04-28", "2027-06-09",
+    "2027-07-28", "2027-09-15", "2027-10-27", "2027-12-08",
 ]
-FOMC_ASOF = "2026-01-15"
+FOMC_ASOF = "2026-10-24"
+try:
+    import event_calendar as _cal_src
+    FOMC_DATES_2026 = list(_cal_src.FOMC_ALL)
+    FOMC_ASOF = _cal_src.CALENDAR_ASOF
+except Exception:
+    pass
 
 
 # ─────────────────────────────────────────────────────────────────────────────
