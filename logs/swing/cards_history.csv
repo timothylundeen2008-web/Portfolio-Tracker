@@ -82,3 +82,7 @@ date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_
 2026-10-26,PG,M0 Rotation,long,3-of-3,161.6,156.77,159.92,transition_ambiguous,False,binary macro event within 48h: FOMC in 1d; PCE in 2d; GDP in 2d
 2026-10-26,XLP,M0 Rotation,long,2-of-3,88.77,86.0,87.96,transition_ambiguous,False,binary macro event within 48h: FOMC in 1d; PCE in 2d; GDP in 2d
 2026-10-26,JNJ,M0 Rotation,long,2-of-3,272.36,261.36,266.3,transition_ambiguous,False,binary macro event within 48h: FOMC in 1d; PCE in 2d; GDP in 2d
+2026-10-27,XLY,M0 Rotation,long,3-of-3,115.67,112.38,115.45,transition_ambiguous,False,binary macro event within 48h: FOMC in 0d; PCE in 1d; GDP in 1d
+2026-10-27,PG,M0 Rotation,long,3-of-3,159.53,154.75,159.23,transition_ambiguous,False,binary macro event within 48h: FOMC in 0d; PCE in 1d; GDP in 1d
+2026-10-27,XLP,M0 Rotation,long,2-of-3,87.62,84.8,87.15,transition_ambiguous,False,binary macro event within 48h: FOMC in 0d; PCE in 1d; GDP in 1d
+2026-10-27,JNJ,M0 Rotation,long,2-of-3,269.09,258.27,268.73,transition_ambiguous,False,binary macro event within 48h: FOMC in 0d; PCE in 1d; GDP in 1d
