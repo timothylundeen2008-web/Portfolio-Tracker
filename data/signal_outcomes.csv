@@ -75,3 +75,8 @@ signal_id,date,signal_type,subject,direction,price_at_signal,benchmark_at_signal
 2026-10-27_flow_divergence_IWO,2026-10-27,flow_divergence,IWO,long,,,"ACCUMULATION (price down, money in) · flow 0.6% AUM",,rotation
 2026-10-27_flow_divergence_KRE,2026-10-27,flow_divergence,KRE,short,,,"DISTRIBUTION (price up, money out) · flow -4.38% AUM",,rotation
 2026-10-27_flow_divergence_XLP,2026-10-27,flow_divergence,XLP,short,,,"DISTRIBUTION (price up, money out) · flow -0.74% AUM",,rotation
+2026-10-28_flow_divergence_IGV,2026-10-28,flow_divergence,IGV,short,,,"DISTRIBUTION (price up, money out) · flow -2.41% AUM",,rotation
+2026-10-28_flow_divergence_IWM,2026-10-28,flow_divergence,IWM,short,,,"DISTRIBUTION (price up, money out) · flow -1.59% AUM",,rotation
+2026-10-28_flow_divergence_PPH,2026-10-28,flow_divergence,PPH,short,,,"DISTRIBUTION (price up, money out) · flow -1.84% AUM",,rotation
+2026-10-28_flow_divergence_XTN,2026-10-28,flow_divergence,XTN,short,,,"DISTRIBUTION (price up, money out) · flow -3.19% AUM",,rotation
+2026-10-28_stealth_flag_XLV,2026-10-28,stealth_flag,XLV,long,,,Stealth · Leading · accum 28.47,,rotation
