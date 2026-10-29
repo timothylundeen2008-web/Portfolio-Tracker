@@ -1,5 +1,5 @@
 {
-  "published_at": "2026-10-28T22:49:53+00:00",
+  "published_at": "2026-10-29T01:31:42+00:00",
   "notes": "auto-published on Markets Dashboard render",
   "regime": {
     "key": "transition_ambiguous",
@@ -21,7 +21,7 @@
     "score": 1,
     "confirmed": true
   },
-  "kmlm_stance": "HOLD KMLM",
+  "kmlm_stance": "INCREASE KMLM",
   "tripwires": [],
   "rs_quartiles": {},
   "trend_scalars": {},
