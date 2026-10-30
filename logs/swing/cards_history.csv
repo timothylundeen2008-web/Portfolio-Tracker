@@ -92,3 +92,10 @@ date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_
 2026-10-28,SPGI,M0 Rotation,long,3-of-3,450.65,434.65,449.33,transition_ambiguous,False,binary macro event within 48h: PCE in 0d; GDP in 0d
 2026-10-28,JNJ,M0 Rotation,long,3-of-3,272.75,261.71,271.04,transition_ambiguous,False,binary macro event within 48h: PCE in 0d; GDP in 0d
 2026-10-28,XLP,M0 Rotation,long,2-of-3,87.08,84.43,86.84,transition_ambiguous,False,binary macro event within 48h: PCE in 0d; GDP in 0d
+2026-10-29,XLF,M0 Rotation,long,3-of-3,57.23,55.79,56.94,transition_ambiguous,True,
+2026-10-29,XLY,M0 Rotation,long,3-of-3,116.77,113.43,116.2,transition_ambiguous,True,
+2026-10-29,XLU,M0 Rotation,long,3-of-3,43.25,42.0,43.14,transition_ambiguous,True,
+2026-10-29,PG,M0 Rotation,long,3-of-3,160.95,156.22,160.59,transition_ambiguous,True,
+2026-10-29,XLP,M0 Rotation,long,3-of-3,88.25,85.48,88.18,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-10-29,XLK,M0 Rotation,long,2-of-3,189.34,180.87,188.74,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-10-29,AMD,M0 Rotation,long,3-of-3,575.1,532.45,566.42,transition_ambiguous,False,"risk budget $25.00 at this step/regime is below one share's risk ($42.65) — a single share breaches Progressive Exposure; the only expression is a 45-90 DTE call debit spread with premium <= $25, or skip"
