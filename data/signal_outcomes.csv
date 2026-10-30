@@ -80,3 +80,6 @@ signal_id,date,signal_type,subject,direction,price_at_signal,benchmark_at_signal
 2026-10-28_flow_divergence_PPH,2026-10-28,flow_divergence,PPH,short,,,"DISTRIBUTION (price up, money out) · flow -1.84% AUM",,rotation
 2026-10-28_flow_divergence_XTN,2026-10-28,flow_divergence,XTN,short,,,"DISTRIBUTION (price up, money out) · flow -3.19% AUM",,rotation
 2026-10-28_stealth_flag_XLV,2026-10-28,stealth_flag,XLV,long,,,Stealth · Leading · accum 28.47,,rotation
+2026-10-29_confluence_3of3_XLU,2026-10-29,confluence_3of3,XLU,long,43.14,,M0 Rotation · regime=transition_ambiguous,,swing_cards
+2026-10-29_flow_divergence_IAI,2026-10-29,flow_divergence,IAI,short,,,"DISTRIBUTION (price up, money out) · flow -3.42% AUM",,rotation
+2026-10-29_stealth_flag_XLU,2026-10-29,stealth_flag,XLU,long,,,Stealth · Improving · accum 50.3,,rotation
