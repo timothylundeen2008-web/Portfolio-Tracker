@@ -1,6 +1,18 @@
 """
-hedge_lab.py  (v1.1 — October 2026)
+hedge_lab.py  (v1.2 — October 2026)
 ───────────────────────────────────
+v1.2 (2026-10-31): CONVEXITY SLEEVE TEST. Two specs disagree: risk_policy.md
+  (PROPOSED) caps premium at 1% of NAV per YEAR; the built convexity_sleeve.py
+  + risk_budget.py spend 2.00/1.25/0.50/0% of NAV per QUARTER by VIX's
+  quartile in its own 1-year range. Both are tested (SLEEVES), each under the
+  current breaker (B0) and the tiered release (B3), to inform the B0-vs-B3
+  decision: does a sleeve close B3's dot-com gap without giving back its
+  return? Puts are priced with convexity_sleeve._bs_put_approx (copied here:
+  Black-Scholes, VIX as implied vol, the module's skew markup that errs
+  expensive) on SPY, rolled at 60 days left, harvested at 3x/5x/10x of cost
+  per the module's ladder, with OPTION_COST_PCT on every trade. No free
+  historical option chain exists, so every option value is a MODEL mark.
+
 v1.1 (2026-10-31): BREAKER RELEASE TEST. The v1 run showed the −8% circuit
   breaker, not the hedge sleeves, does most of the protecting, and that it
   latches: ON for 78% of the dot-com window and 27% of all sessions since
@@ -96,7 +108,7 @@ import pandas as pd
 
 import model_book as mb
 
-VERSION = "v1.1"
+VERSION = "v1.2"
 REGIME = "transition_ambiguous"
 HISTORY_START = "1999-01-01"
 
@@ -132,6 +144,25 @@ PROXIES = {
 }
 BENCH = {"SPY": ["SPY"], "AGG": ["AGG", "VBMFX"]}
 CASH_TICKER = "^IRX"
+VIX_TICKER = "^VIX"                         # v1.2: implied vol for pricing the convexity sleeve
+
+# ── convexity sleeve test (v1.2) — structure from Markets convexity_sleeve.py v1 ──
+OTM_PCT = 8.0                               # convexity_sleeve.OTM_TARGET_PCT
+SPREAD_SHORT_OTM_PCT = 20.0                 # convexity_sleeve.SPREAD_SHORT_OTM_PCT
+TENOR_DAYS = 135                            # convexity_sleeve.TENOR_DAYS_TARGET
+ROLL_AT_DAYS = 60                           # convexity_sleeve.ROLL_AT_DAYS
+HARVEST_LADDER = [(3.0, 0.25), (5.0, 0.25), (10.0, 0.30)]   # multiple of cost, share of the original position
+CONVEXITY_BY_QUARTILE = {1: 2.00, 2: 1.25, 3: 0.50, 4: 0.00}  # risk_budget.py, % of NAV per QUARTER
+VIX_RANK_LOOKBACK = 252
+OPTION_COST_PCT = 3.0                       # bid/ask + fees, % of premium, charged on every buy and sell
+DAYS_PER_ROLL = TENOR_DAYS - ROLL_AT_DAYS   # 75 calendar days between purchases
+SLEEVES = {
+    "none": None,
+    "C1":  {"label": "policy 1%/yr, 8% OTM puts", "mode": "fixed", "annual_pct": 1.0, "spread": False},
+    "C1s": {"label": "policy 1%/yr, 8%/20% put spread", "mode": "fixed", "annual_pct": 1.0, "spread": True},
+    "C2":  {"label": "designed: VIX-quartile schedule per quarter, 8% OTM puts", "mode": "quartile", "spread": False},
+}
+CONVEXITY_BREAKERS = ("B0", "B3")
 
 STRESS = [
     ("dotcom_2000", "2000-03-24", "2002-10-09", "Dot-com bust"),
@@ -167,7 +198,7 @@ VARIANT_LABEL = {"V0": "current book", "V1": "corr-gated TLT", "V2": "hedge tren
 # ── prices ──────────────────────────────────────────────────────────────────
 
 def all_tickers() -> list[str]:
-    s = {t for chain in PROXIES.values() for t in chain} | {t for c in BENCH.values() for t in c}
+    s = {t for chain in PROXIES.values() for t in chain} | {t for c in BENCH.values() for t in c} | {VIX_TICKER}
     return sorted(s)
 
 
@@ -557,6 +588,322 @@ def round_trips_keys(binfos: list) -> list:
     return [(i["key"],) for i in binfos if i["key"].endswith("_rt")]
 
 
+# ── convexity sleeve (v1.2) ─────────────────────────────────────────────────
+
+def bs_put(spot: float, strike: float, iv: float, days: float, r: float = 0.04) -> Optional[float]:
+    """Copy of Markets convexity_sleeve._bs_put_approx (v1): Black-Scholes put
+    with a crude skew markup (+1 vol point per 1% out of the money, capped at
+    12) so the estimate errs toward too expensive. At or past expiry returns
+    intrinsic value."""
+    try:
+        if spot <= 0 or strike <= 0:
+            return None
+        if days <= 0:
+            return max(strike - spot, 0.0)
+        if iv <= 0:
+            return None
+        t = days / 365.0
+        sigma = iv / 100.0
+        otm_pct = max(0.0, (spot - strike) / spot * 100)
+        sigma = sigma + min(otm_pct * 1.0, 12.0) / 100.0
+        d1 = (math.log(spot / strike) + (r + sigma ** 2 / 2) * t) / (sigma * math.sqrt(t))
+        d2 = d1 - sigma * math.sqrt(t)
+        ncdf = lambda x: 0.5 * (1 + math.erf(x / math.sqrt(2)))
+        return strike * math.exp(-r * t) * ncdf(-d2) - spot * ncdf(-d1)
+    except Exception:
+        return None
+
+
+def sleeve_market(closes: dict, cal: pd.DatetimeIndex) -> dict:
+    """SPY level, VIX, a cash rate and VIX's percentile rank in its own trailing
+    year, each on the trading calendar (value at d uses data up to d)."""
+    def on_cal(t):
+        s = closes.get(t)
+        if s is None or len(s) == 0:
+            return pd.Series(np.nan, index=cal)
+        return _norm(s).reindex(cal).ffill(limit=3)
+    vix = on_cal(VIX_TICKER)
+    rank = vix.rolling(VIX_RANK_LOOKBACK, min_periods=60).apply(
+        lambda h: float((h <= h[-1]).mean()) * 100.0, raw=True)
+    irx = on_cal(CASH_TICKER)
+    return {"spy": on_cal("SPY"), "vix": vix, "vix_rank": rank, "rate": (irx / 100.0).fillna(0.04)}
+
+
+def _quartile(rank: float) -> Optional[int]:
+    if rank != rank:
+        return None
+    return 1 if rank < 25 else 2 if rank < 50 else 3 if rank < 75 else 4
+
+
+def roll_budget_pct(cfg: dict, d, mkt: dict) -> float:
+    """% of NAV to spend at one purchase. Fixed mode spreads the annual budget
+    over purchases DAYS_PER_ROLL apart; quartile mode applies risk_budget's
+    per-quarter schedule pro rata (unranked VIX falls back to Q2, as there)."""
+    frac = DAYS_PER_ROLL / 365.0
+    if cfg["mode"] == "fixed":
+        return cfg["annual_pct"] * frac
+    q = _quartile(float(mkt["vix_rank"].get(d, np.nan))) or 2
+    return CONVEXITY_BY_QUARTILE[q] * DAYS_PER_ROLL / (365.0 / 4)
+
+
+def unit_value(tr: dict, d, mkt: dict) -> float:
+    """Model mark of one unit of the tranche at d's close."""
+    s, v, r = float(mkt["spy"].get(d, np.nan)), float(mkt["vix"].get(d, np.nan)), float(mkt["rate"].get(d, 0.04))
+    if s != s:
+        return tr["last_value"]
+    if v != v:
+        v = tr["last_iv"]
+    left = (tr["expiry"] - d).days
+    p = bs_put(s, tr["k1"], v, left, r) or 0.0
+    if tr.get("k2"):
+        p -= bs_put(s, tr["k2"], v, left, r) or 0.0
+        p = min(max(p, 0.0), tr["k1"] - tr["k2"])
+    tr["last_value"], tr["last_iv"] = p, v
+    return p
+
+
+def simulate_book(days: pd.DatetimeIndex, rets: pd.DataFrame, base: dict, rule: str, sig: dict,
+                  mkt: Optional[dict] = None, sleeve: Optional[dict] = None,
+                  spy_close: Optional[pd.Series] = None, cost_bps: float = COST_BPS) -> pd.DataFrame:
+    """The book (core sleeves, daily rebalanced) plus an optional convexity
+    sleeve, under breaker rule B0 (production) or B1-B4. With sleeve=None this
+    reproduces simulate() for B0 and simulate_release() for B1-B4 exactly
+    (asserted in the selftest). The breaker sees the TOTAL book (core +
+    options), as the model book measures drawdown on what is actually held.
+    Option trades happen at d's close: premium comes out of the core, harvest
+    and roll proceeds go back into it and are rebalanced to target weights."""
+    spy_closes = {"SPY": spy_close} if spy_close is not None else {}
+    group = {s: ("growth" if s in GROWTH else "core") for s in base}
+    risk = {s for s, w in base.items() if w > 0 and s not in mb.RISK_EXEMPT}
+    on = {"growth": False, "core": False}
+    rc_g = {"growth": 0, "core": 0}
+    pending: set = set()
+    state, rc = "OFF", 0
+    rows, prev, peak, ref_peak, trips = [], None, mb.START_NAV, mb.START_NAV, 0
+    core = gross = mb.START_NAV
+    tr = None
+    paid = harvested = 0.0
+    n_harvest = n_buys = 0
+    oc = OPTION_COST_PCT / 100.0
+    for d in days:
+        sval = 0.0
+        if prev is not None:
+            r = 0.0
+            for t, wt in prev["w"].items():
+                if wt <= 0:
+                    continue
+                x = rets.at[d, t] if t in rets.columns else np.nan
+                if x == x:
+                    r += wt / 100.0 * float(x)
+            core = core * (1 + r)
+            gross = gross * (1 + r)
+            if tr is not None:
+                sval = tr["units"] * unit_value(tr, d, mkt)
+        total = core + sval
+        # ── breaker state at d's close (on the total book) ──
+        if rule == "B0":
+            if prev is not None:
+                peak = max(peak, total)
+                state, rc = mb.next_breaker(state, rc, (total / peak - 1) * 100,
+                                            mb._spy_above_50(spy_closes, d) if spy_closes else None)
+        else:
+            ref_peak = max(ref_peak, total)
+            dd_ref = (total / ref_peak - 1) * 100
+            if prev is not None:
+                if not any(on.values()):
+                    if dd_ref <= mb.TRIGGER_DD:
+                        on = {"growth": True, "core": True}
+                        rc_g = {"growth": 0, "core": 0}
+                        pending = set()
+                        trips += 1
+                else:
+                    for g in ("growth", "core"):
+                        if not on[g]:
+                            continue
+                        rc_g[g] = rc_g[g] + 1 if _release_ok(rule, g, d, sig) else 0
+                        if rc_g[g] >= mb.RELEASE_CLOSES:
+                            on[g], rc_g[g] = False, 0
+                            if rule == "B4":
+                                pending |= {s for s in risk if group[s] == g}
+                    if not any(on.values()):
+                        ref_peak = total
+            if rule == "B4" and pending:
+                pending = {s for s in pending
+                           if not bool(sig["above200"].get(s, pd.Series(dtype=bool)).get(d, False))}
+            state = "ON" if any(on.values()) else "OFF"
+        # ── convexity sleeve trades at d's close ──
+        if sleeve is not None:
+            if tr is not None:
+                vpu = tr["last_value"] if prev is not None else unit_value(tr, d, mkt)
+                for i, (mult, share) in enumerate(HARVEST_LADDER):
+                    if i not in tr["done"] and vpu >= mult * tr["cost"] and tr["units"] > 0:
+                        sell = min(tr["units0"] * share, tr["units"])
+                        core += sell * vpu * (1 - oc)
+                        harvested += sell * vpu * (1 - oc)
+                        tr["units"] -= sell
+                        tr["done"].add(i)
+                        n_harvest += 1
+                if (tr["expiry"] - d).days <= ROLL_AT_DAYS:
+                    core += tr["units"] * vpu * (1 - oc)
+                    harvested += tr["units"] * vpu * (1 - oc)
+                    tr = None
+            if tr is None:
+                s_now, v_now = float(mkt["spy"].get(d, np.nan)), float(mkt["vix"].get(d, np.nan))
+                budget = (core) * roll_budget_pct(sleeve, d, mkt) / 100.0
+                if budget > 0 and s_now == s_now and v_now == v_now:
+                    k1 = s_now * (1 - OTM_PCT / 100.0)
+                    k2 = s_now * (1 - SPREAD_SHORT_OTM_PCT / 100.0) if sleeve.get("spread") else None
+                    tr = {"k1": k1, "k2": k2, "expiry": d + pd.Timedelta(days=TENOR_DAYS),
+                          "last_value": 0.0, "last_iv": v_now, "done": set()}
+                    price = unit_value(tr, d, mkt)
+                    if price > 0:
+                        cost = price * (1 + oc)
+                        tr.update(units=budget / cost, units0=budget / cost, cost=cost)
+                        core -= budget
+                        paid += budget
+                        n_buys += 1
+                    else:
+                        tr = None
+            sval = tr["units"] * tr["last_value"] if tr is not None else 0.0
+        # ── core weights held into d+1 ──
+        b = dict(base)
+        if rule == "B0":
+            w = mb.apply_breaker(b, REGIME) if state == "ON" else b
+            w = {k: float(v) for k, v in w.items()}
+        else:
+            w, freed = {}, 0.0
+            for s, wt in b.items():
+                wt = float(wt)
+                half = s in risk and (on[group[s]] or s in pending)
+                w[s] = wt * mb.BREAKER_SCALE if half else wt
+                freed += wt - w[s]
+            w[PARK] = w.get(PARK, 0.0) + freed
+        turn = 0.0
+        if prev is not None:
+            keys = set(w) | set(prev["w"])
+            turn = sum(abs(w.get(k, 0.0) - prev["w"].get(k, 0.0)) for k in keys) / 2.0
+            core *= 1 - turn / 100.0 * cost_bps / 1e4
+        total = core + sval
+        if rule == "B0":
+            peak = max(peak, total)
+        rows.append({"date": d, "nav": total, "core": core, "sleeve": sval, "gross": gross, "w": w,
+                     "turnover": turn, "state": state, "pending": len(pending), "trips": trips,
+                     "paid": paid, "harvested": harvested, "n_harvest": n_harvest, "n_buys": n_buys})
+        prev = rows[-1]
+    out = pd.DataFrame(rows).set_index("date")
+    if rule == "B0":
+        on_ = out["state"] == "ON"
+        out["trips"] = (on_ & ~on_.shift(1, fill_value=False)).cumsum()
+    return out
+
+
+def run_convexity_window(key, start, end, label, base, rets, sig, mkt, spy_close):
+    cal = rets.index
+    days = cal[(cal >= pd.Timestamp(start)) & (cal <= (pd.Timestamp(end) if end else cal[-1]))]
+    if len(days) < 2:
+        return [], {"key": key, "label": label, "error": "no sessions in range"}
+    rows = []
+    yrs = max((days[-1] - days[0]).days / 365.25, 1e-9)
+    for b in CONVEXITY_BREAKERS:
+        for c, cfg in SLEEVES.items():
+            sim = simulate_book(days, rets, base, b, sig, mkt, cfg, spy_close)
+            m = metrics(sim["nav"], sim["turnover"])
+            avg_nav = float(sim["nav"].mean())
+            m.update({"window": key, "breaker": b, "sleeve": c,
+                      "breaker_on_pct": round(float((sim["state"] == "ON").mean() * 100), 1),
+                      "trips": int(sim["trips"].iloc[-1]),
+                      "premium_pct_yr": float(sim["paid"].iloc[-1] / avg_nav * 100 / yrs) if cfg else 0.0,
+                      "premium_total_pct": float(sim["paid"].iloc[-1] / mb.START_NAV * 100) if cfg else 0.0,
+                      "returned_total_pct": float(sim["harvested"].iloc[-1] / mb.START_NAV * 100) if cfg else 0.0,
+                      "harvests": int(sim["n_harvest"].iloc[-1]),
+                      "start": days[0].date().isoformat(), "end": days[-1].date().isoformat()})
+            rows.append(m)
+    vix_ok = float(mkt["vix"].reindex(days).notna().mean() * 100)
+    return rows, {"key": key, "label": label, "start": days[0].date().isoformat(),
+                  "end": days[-1].date().isoformat(), "vix_coverage_pct": round(vix_ok, 1)}
+
+
+def convexity_verdicts(cres: pd.DataFrame, cinfos: list, binfos: list) -> list[str]:
+    low = {i["key"] for i in binfos if i.get("low_coverage")}
+    keys = [i["key"] for i in cinfos if i["key"] != FULL[0] and i["key"] not in low and not i.get("error")]
+
+    def val(w, b, c, col):
+        x = cres[(cres["window"] == w) & (cres["breaker"] == b) & (cres["sleeve"] == c)][col]
+        return float(x.iloc[0]) if len(x) and x.iloc[0] == x.iloc[0] else None
+
+    out = []
+    c0 = val(FULL[0], "B0", "none", "cagr_pct")
+    for b in CONVEXITY_BREAKERS:
+        for c in SLEEVES:
+            if b == "B0" and c == "none":
+                continue
+            cb = val(FULL[0], b, c, "cagr_pct")
+            deeper = [(val(w, "B0", "none", "max_dd_pct") - val(w, b, c, "max_dd_pct"), w) for w in keys
+                      if val(w, b, c, "max_dd_pct") is not None and val(w, "B0", "none", "max_dd_pct") is not None]
+            worst = max(deeper) if deeper else (0.0, "")
+            gain = (cb - c0) if (cb is not None and c0 is not None) else None
+            earns = gain is not None and gain >= BREAKER_BAR_CAGR and worst[0] <= BREAKER_BAR_DD
+            prem = val(FULL[0], b, c, "premium_pct_yr")
+            parts = [f"**{b} + {c}** ({BREAKER_SHORT[b]}{'' if c == 'none' else ', ' + SLEEVES[c]['label']}):",
+                     f"full history {abs(gain):.2f} pts/yr {'more' if gain >= 0 else 'less'} return than B0 alone"
+                     if gain is not None else ""]
+            if prem:
+                parts.append(f"(premium {prem:.2f}% of NAV/yr)")
+            if deeper:
+                parts.append(f"· worst window {worst[0]:.1f} pts deeper than B0 alone ({worst[1]})" if worst[0] > 0
+                             else f"· never deeper than B0 alone across {len(deeper)} windows")
+            parts.append(f"→ **{'EARNS A PLACE' if earns else 'does not meet the bar'}**")
+            out.append(" ".join(p for p in parts if p) + ".")
+    # the specific question: does a sleeve close B3's dot-com gap?
+    g = []
+    for c in SLEEVES:
+        a, z = val("dotcom_2000_rt", "B3", c, "max_dd_pct"), val("dotcom_2000_rt", "B0", "none", "max_dd_pct")
+        if a is not None and z is not None:
+            g.append(f"{c} {a:.1f}%")
+    if g:
+        out.append(f"Dot-com round trip, B3 max drawdown by sleeve: {' · '.join(g)} "
+                   f"(B0 alone {val('dotcom_2000_rt', 'B0', 'none', 'max_dd_pct'):.1f}%).")
+    out.append(f"Same bar as the breaker test, fixed before the run, measured against B0 with no sleeve: "
+               f"at least +{BREAKER_BAR_CAGR:.2f} pts/yr over the full history AND no stress or round-trip "
+               f"window more than {BREAKER_BAR_DD:.0f} pt deeper.")
+    return out
+
+
+def render_convexity(cres: pd.DataFrame, cinfos: list, binfos: list) -> list[str]:
+    L = ["## Convexity sleeve test (v1.2)",
+         f"Puts on SPY, {OTM_PCT:.0f}% out of the money, {TENOR_DAYS} days to expiry, rolled at {ROLL_AT_DAYS} days left "
+         f"(a purchase every {DAYS_PER_ROLL} days), sold 25% / 25% / 30% at 3× / 5× / 10× cost, the rest held to the roll. "
+         f"Premium comes out of the book; proceeds go back in at target weights. {OPTION_COST_PCT:.0f}% trading cost "
+         "on every option buy and sell. **Every option value is a model mark** (convexity_sleeve's Black-Scholes "
+         "with VIX and its skew markup); there is no free historical option chain to check it against.", "",
+         "| Sleeve | Budget and structure |", "|---|---|",
+         "| none | No options |",
+         *[f"| {c} | {cfg['label']} |" for c, cfg in SLEEVES.items() if cfg], "",
+         "The policy (`risk_policy.md`, PROPOSED) caps premium at 1% of NAV per year; the built module "
+         "(`risk_budget.py`) spends up to 2% per quarter. Both are tested because they disagree.", "",
+         "### Verdict", *[f"- {x}" for x in convexity_verdicts(cres, cinfos, binfos)], ""]
+    order = [FULL[0]] + [k for (k,) in round_trips_keys(cinfos)] + [s[0] for s in STRESS]
+    for key in order:
+        info = next((i for i in cinfos if i["key"] == key), None)
+        if not info:
+            continue
+        L.append(f"### {info.get('label', key)} ({info.get('start', '?')} → {info.get('end', '?')})")
+        if info.get("error"):
+            L += [f"- ⚠ {info['error']}", ""]
+            continue
+        if info.get("vix_coverage_pct", 100) < 99:
+            L.append(f"⚠ VIX available on {info['vix_coverage_pct']}% of sessions")
+        L += ["| Breaker + sleeve | Return | CAGR | Max DD | Worst 20d | Premium/yr | Paid | Returned | Harvests | Breaker on |",
+              "|---|---|---|---|---|---|---|---|---|---|"]
+        for _, r in cres[cres["window"] == key].iterrows():
+            L.append(f"| {r['breaker']} + {r['sleeve']} | {_f(r.get('total_return_pct'))} | {_f(r.get('cagr_pct'))} | "
+                     f"{_f(r.get('max_dd_pct'))} | {_f(r.get('worst_20d_pct'))} | {_f(r.get('premium_pct_yr'), 2)} | "
+                     f"{_f(r.get('premium_total_pct'), 1)} | {_f(r.get('returned_total_pct'), 1)} | "
+                     f"{int(r['harvests'])} | {_f(r.get('breaker_on_pct'), 0)} |")
+        L.append("")
+    return L
+
+
 def bench_nav(days: pd.DatetimeIndex, rets: pd.DataFrame, mix: dict) -> pd.Series:
     r = sum(rets[t].reindex(days).fillna(0.0) * (w / 100.0) for t, w in mix.items())
     r.iloc[0] = 0.0
@@ -729,7 +1076,8 @@ def _f(x, nd=1, pct=True, sign=False):
 
 
 def render(res: pd.DataFrame, infos: list, base: dict, inc: dict, missing: list, asof: str,
-           bres: Optional[pd.DataFrame] = None, binfos: Optional[list] = None) -> str:
+           bres: Optional[pd.DataFrame] = None, binfos: Optional[list] = None,
+           cres: Optional[pd.DataFrame] = None, cinfos: Optional[list] = None) -> str:
     L = [f"# Hedge lab — {asof}",
          f"*{VERSION} · real prices (dividend-adjusted, Yahoo) · book = `{REGIME}` targets from "
          f"regime_classifier · −8% breaker simulated · costs {COST_BPS:.0f} bps per unit of turnover. "
@@ -751,6 +1099,8 @@ def render(res: pd.DataFrame, infos: list, base: dict, inc: dict, missing: list,
 
     if bres is not None and binfos:
         L += render_breakers(bres, binfos)
+    if cres is not None and cinfos:
+        L += render_convexity(cres, cinfos, binfos or [])
 
     L += ["## Hedge sleeve rules (v1, unchanged)",
           "| Code | Rule |", "|---|---|",
@@ -793,6 +1143,9 @@ def render(res: pd.DataFrame, infos: list, base: dict, inc: dict, missing: list,
         L += ["## Data health", f"- Tickers Yahoo returned nothing for: {', '.join(missing)}. "
               "Any sleeve relying on them falls to the next ticker in its chain; see data/hedge_lab/coverage.csv.", ""]
     L += ["## Known limits",
+          "- Convexity sleeve: option values are model marks (Black-Scholes, VIX as implied vol, the module's skew "
+          "markup, 3% trading cost), on SPY's dividend-adjusted price. Real puts in a crash can fill worse or "
+          "better; treat sleeve results as direction and size of effect, not a quote.",
           "- KMLM runs on AQMIX from 2010 and T-bill cash before that, which understates the 2008 hedge in "
           "every variant equally.",
           "- The entry gate is not simulated (in this regime it moves only SCHD +1, XLV +1, KMLM +3 vs base).",
@@ -829,10 +1182,17 @@ def build(closes: dict, book_path: Path = mb.BOOK_FILE, base: Optional[dict] = N
     for key, s, e, label in [FULL] + round_trips(cal) + STRESS:
         r, i = run_breaker_window(key, s, e, label, base, rets, srcs, sig, spy)
         brows += r; binfos.append(i)
+    # v1.2: convexity sleeve test, under B0 and B3, same windows
+    mkt = sleeve_market(closes, cal)
+    crows, cinfos = [], []
+    for key, s, e, label in [FULL] + round_trips(cal) + STRESS:
+        r, i = run_convexity_window(key, s, e, label, base, rets, sig, mkt, spy)
+        crows += r; cinfos.append(i)
     missing = [t for t in all_tickers() if t not in closes]
     return {"results": res, "coverage": pd.DataFrame(cov_rows), "infos": infos, "inception": inc,
             "base": base, "missing": missing, "signals": sig, "rets": rets,
-            "breakers": pd.DataFrame(brows), "breaker_infos": binfos}
+            "breakers": pd.DataFrame(brows), "breaker_infos": binfos,
+            "convexity": pd.DataFrame(crows), "convexity_infos": cinfos, "market": mkt}
 
 
 def write(out: dict, asof: str) -> dict:
@@ -845,8 +1205,12 @@ def write(out: dict, asof: str) -> dict:
     if b is not None and not b.empty:
         bn = b.select_dtypes("number").columns
         b.assign(**{c: b[c].round(4) for c in bn}).to_csv(OUT_DIR / "breaker_results.csv", index=False)
+    cx = out.get("convexity")
+    if cx is not None and not cx.empty:
+        cn = cx.select_dtypes("number").columns
+        cx.assign(**{c: cx[c].round(4) for c in cn}).to_csv(OUT_DIR / "convexity_results.csv", index=False)
     md = render(out["results"], out["infos"], out["base"], out["inception"], out["missing"], asof,
-                out.get("breakers"), out.get("breaker_infos"))
+                out.get("breakers"), out.get("breaker_infos"), cx, out.get("convexity_infos"))
     p = LOG_DIR / f"{asof}_report.md"
     p.write_text(md)
     return {"report": str(p), "results": str(OUT_DIR / "results.csv")}
@@ -893,6 +1257,7 @@ def selftest() -> dict:
     for t in ["XLK", "QQQ", "SI=F", "GDX", "XLE", "DBC", "DVY", "XLV", "XLU", "AQMIX", "VBMFX", "SOXX"]:
         closes[t] = path(0.0002, 0.01)
     closes["^IRX"] = pd.Series(4.0, index=cal)
+    closes["^VIX"] = pd.Series(np.clip(18 + np.cumsum(rng.normal(0, 0.6, n)) * 0.05, 9, 80), index=cal)
     for t in ["VGT", "SMH", "SLV", "RING", "PDBC", "SCHD", "SGOV", "USFR", "KMLM", "BIL", "AGG"]:
         closes[t] = path(0.0002, 0.01, start_i=n - 900)
     base = {"VGT": 17.0, "SMH": 3.0, "QQQ": 3.0, "GLD": 10.0, "SLV": 4.0, "RING": 4.0, "XLE": 5.0,
@@ -1126,6 +1491,139 @@ def selftest() -> dict:
         b0 = bres[(bres["window"] == FULL[0]) & (bres["breaker"] == "B0")]["total_return_pct"].iloc[0]
         if abs(v0 - b0) > 1e-9:
             f.append(f"B0 must equal V0 over the full history: {b0} vs {v0}")
+
+        # ── v1.2 convexity sleeve ──
+        # C1. pricing identical to Markets convexity_sleeve._bs_put_approx (values recorded from the module)
+        ref = [((100, 92, 20, 135, 0.04), 2.835016760347333), ((100, 80, 20, 135, 0.04), 0.9222614629830659),
+               ((100, 92, 45, 60, 0.02), 4.70514666281165), ((70, 92, 60, 100, 0.01), 24.439285547898216),
+               ((100, 92, 12, 10, 0.05), 0.005269386664160547)]
+        for a, want in ref:
+            got = bs_put(*a)
+            if got is None or abs(got - want) > 1e-12:
+                f.append(f"bs_put{a} = {got}, convexity_sleeve gives {want}")
+        if bs_put(80, 92, 30, 0) != 12.0 or bs_put(100, 92, 30, -5) != 0.0:
+            f.append("bs_put at or past expiry must be intrinsic value")
+
+        # C2. with no sleeve, simulate_book reproduces the existing engines exactly
+        fdays = cal[-1500:]
+        sb0 = simulate_book(fdays, rets, base, "B0", sig, None, None, closes["SPY"])
+        s00 = simulate(fdays, rets, lambda d: dict(base), closes["SPY"])
+        if float((sb0["nav"] - s00["nav"]).abs().max()) > 1e-9:
+            f.append("simulate_book B0 without a sleeve must equal simulate()")
+        sb3 = simulate_book(fdays, rets, base, "B3", sig, None, None, closes["SPY"])
+        s33 = simulate_release(fdays, rets, base, "B3", sig)
+        if float((sb3["nav"] - s33["nav"]).abs().max()) > 1e-9:
+            f.append("simulate_book B3 without a sleeve must equal simulate_release()")
+
+        # hand-made market: 3 calm years, then a 35% crash over 10 sessions with VIX 15 -> 60
+        hd = pd.bdate_range("2010-01-04", periods=900)
+        spy_h = pd.Series(100.0, index=hd) * np.exp(np.linspace(0, 0.15, len(hd)))
+        vix_h = pd.Series(15.0, index=hd)
+        cr = 780
+        spy_h.iloc[cr:cr + 10] = spy_h.iloc[cr - 1] * np.linspace(0.965, 0.65, 10)
+        spy_h.iloc[cr + 10:] = spy_h.iloc[cr - 1] * 0.65
+        vix_h.iloc[cr:] = np.linspace(25, 60, 10).tolist() + [60.0] * (len(hd) - cr - 10)
+        rank_h = vix_h.rolling(VIX_RANK_LOOKBACK, min_periods=60).apply(
+            lambda h: float((h <= h[-1]).mean()) * 100.0, raw=True)
+        mkt_h = {"spy": spy_h, "vix": vix_h, "vix_rank": rank_h, "rate": pd.Series(0.03, index=hd)}
+        hr = pd.DataFrame(0.0, index=hd, columns=list(base))
+        for _s in base:
+            if _s not in mb.RISK_EXEMPT:
+                hr[_s] = spy_h.pct_change().fillna(0.0).to_numpy()
+        hsig = {"spy200": pd.Series(False, index=hd), "qqq200": pd.Series(False, index=hd),
+                "above200": {s: pd.Series(False, index=hd) for s in base}}
+
+        # C3. the policy sleeve spends ~1% of NAV a year in a calm market, buying every 75 days
+        calm = hd[:cr]
+        c1 = simulate_book(calm, hr, base, "B0", hsig, mkt_h, SLEEVES["C1"], spy_h)
+        yrs = (calm[-1] - calm[0]).days / 365.25
+        spend = c1["paid"].iloc[-1] / c1["nav"].mean() * 100 / yrs
+        if not 0.9 <= spend <= 1.15:
+            f.append(f"C1 must spend about 1% of NAV a year in a calm market: {spend:.3f}%")
+        expect_buys = int((calm[-1] - calm[0]).days // DAYS_PER_ROLL) + 1
+        if abs(int(c1["n_buys"].iloc[-1]) - expect_buys) > 1:
+            f.append(f"C1 must buy every {DAYS_PER_ROLL} days: {int(c1['n_buys'].iloc[-1])} buys vs ~{expect_buys}")
+        none_calm = simulate_book(calm, hr, base, "B0", hsig, mkt_h, None, spy_h)
+        if not c1["nav"].iloc[-1] < none_calm["nav"].iloc[-1]:
+            f.append("in a calm market the sleeve must cost money")
+
+        # C4. the designed schedule: cheap VIX buys the most, expensive VIX buys nothing
+        q_mkt = {"vix_rank": pd.Series([10.0, 40.0, 60.0, 90.0], index=hd[:4])}
+        got_q = [round(roll_budget_pct(SLEEVES["C2"], hd[i], q_mkt), 6) for i in range(4)]
+        want_q = [round(CONVEXITY_BY_QUARTILE[q] * DAYS_PER_ROLL / (365.0 / 4), 6) for q in (1, 2, 3, 4)]
+        if got_q != want_q:
+            f.append(f"C2 budget by VIX quartile wrong: {got_q} vs {want_q}")
+
+        # C5. in the crash the puts pay: harvests fire, and the book falls less than without them
+        c1c = simulate_book(hd, hr, base, "B0", hsig, mkt_h, SLEEVES["C1"], spy_h)
+        nc = simulate_book(hd, hr, base, "B0", hsig, mkt_h, None, spy_h)
+        if int(c1c["n_harvest"].iloc[-1]) < 1:
+            f.append("a 35% crash with VIX at 60 must trigger at least the first harvest")
+        dd_with = float((c1c["nav"] / c1c["nav"].cummax() - 1).min())
+        dd_without = float((nc["nav"] / nc["nav"].cummax() - 1).min())
+        if not dd_with > dd_without:
+            f.append(f"the sleeve must reduce the crash drawdown: {dd_with:.4f} vs {dd_without:.4f}")
+
+        # C6. a put spread's value never exceeds its width
+        trs = {"k1": 92.0, "k2": 80.0, "expiry": hd[0] + pd.Timedelta(days=100), "last_value": 0.0, "last_iv": 60.0}
+        crash_mkt = {"spy": pd.Series(50.0, index=hd), "vix": pd.Series(80.0, index=hd), "rate": pd.Series(0.03, index=hd)}
+        if unit_value(trs, hd[0], crash_mkt) > 12.0 + 1e-9:
+            f.append("a put spread must cap at its width")
+
+        # C7. no lookahead: changing SPY and VIX after day k leaves the sleeve and book unchanged up to k
+        kk = cr - 5
+        spy_alt, vix_alt = spy_h.copy(), vix_h.copy()
+        spy_alt.iloc[kk + 1:] *= 0.5
+        vix_alt.iloc[kk + 1:] = 70.0
+        mkt_alt = {"spy": spy_alt, "vix": vix_alt, "rate": mkt_h["rate"],
+                   "vix_rank": vix_alt.rolling(VIX_RANK_LOOKBACK, min_periods=60).apply(
+                       lambda h: float((h <= h[-1]).mean()) * 100.0, raw=True)}
+        hr_alt = hr.copy()
+        for _s in base:
+            if _s not in mb.RISK_EXEMPT:
+                hr_alt[_s] = spy_alt.pct_change().fillna(0.0).to_numpy()
+        # C1 (fixed budget), so options are held whatever VIX does; C2 buys nothing when VIX is flat
+        a1 = simulate_book(hd, hr, base, "B0", hsig, mkt_h, SLEEVES["C1"], spy_h)
+        a2 = simulate_book(hd, hr_alt, base, "B0", hsig, mkt_alt, SLEEVES["C1"], spy_alt)
+        if not a1["sleeve"].iloc[kk] > 0:
+            f.append("lookahead test is too weak: no options held on day k")
+        if float((a1["nav"].iloc[:kk + 1] - a2["nav"].iloc[:kk + 1]).abs().max()) > 1e-9:
+            f.append("lookahead: sleeve or book value up to day k changed when later SPY/VIX changed")
+        if float((a1["nav"].iloc[kk + 1:] - a2["nav"].iloc[kk + 1:]).abs().max()) < 1e-6:
+            f.append("lookahead test is too weak: the perturbation changed nothing after day k")
+
+        # C9. sleeve_market (SPY, VIX, VIX rank, rate from real closes) uses nothing after day d
+        km = len(cal) - 400
+        alt_m = {t: s.copy() for t, s in closes.items()}
+        for t in ("SPY", "^VIX", "^IRX"):
+            s_ = alt_m[t]
+            mm_ = s_.index > cal[km]
+            s_[mm_] = s_[mm_].to_numpy() * 2.5
+        m1, m2 = sleeve_market(closes, cal), sleeve_market(alt_m, cal)
+        upto_m = cal[:km + 1]
+        for nm in ("spy", "vix", "vix_rank", "rate"):
+            x1, x2 = m1[nm].loc[upto_m].fillna(-1), m2[nm].loc[upto_m].fillna(-1)
+            if not np.allclose(x1.to_numpy(), x2.to_numpy()):
+                f.append(f"lookahead: sleeve_market {nm} up to day k changed when later prices changed")
+        if np.allclose(m1["vix_rank"].loc[cal[km + 1:km + 30]].fillna(-1).to_numpy(),
+                       m2["vix_rank"].loc[cal[km + 1:km + 30]].fillna(-1).to_numpy()):
+            f.append("sleeve_market lookahead test is too weak: VIX rank did not change after day k")
+
+        # C8. the full run covers every breaker x sleeve combination, and the report shows it
+        cxr = out["convexity"]
+        combos = set(zip(cxr["breaker"], cxr["sleeve"]))
+        want_c = {(b_, c_) for b_ in CONVEXITY_BREAKERS for c_ in SLEEVES}
+        if combos != want_c:
+            f.append(f"convexity results must cover {sorted(want_c)}: {sorted(combos)}")
+        md_c = render(res, out["infos"], base, inc, out["missing"], "2026-10-31", bres, binfos,
+                      cxr, out["convexity_infos"])
+        for s in ("## Convexity sleeve test", "model mark", "Dot-com round trip, B3 max drawdown by sleeve"):
+            if s not in md_c:
+                f.append(f"convexity report missing: {s}")
+        # B0 + none in the convexity test must equal B0 in the breaker test
+        x0 = cxr[(cxr["window"] == FULL[0]) & (cxr["breaker"] == "B0") & (cxr["sleeve"] == "none")]["total_return_pct"].iloc[0]
+        if abs(x0 - b0) > 1e-9:
+            f.append(f"B0 + no sleeve must equal B0 in the breaker test: {x0} vs {b0}")
     finally:
         os.chdir(cwd)
     return {"ok": not f, "failures": f}
