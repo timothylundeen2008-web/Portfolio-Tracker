@@ -1,6 +1,19 @@
 """
-hedge_lab.py  (v1 — October 2026)
-─────────────────────────────────
+hedge_lab.py  (v1.1 — October 2026)
+───────────────────────────────────
+v1.1 (2026-10-31): BREAKER RELEASE TEST. The v1 run showed the −8% circuit
+  breaker, not the hedge sleeves, does most of the protecting, and that it
+  latches: ON for 78% of the dot-com window and 27% of all sessions since
+  2005, because release needs the book back above −5% while running at half
+  risk. v1.1 tests five release rules on today's book (B0 = production; see
+  BREAKER_RULES) over the stress windows, new ROUND-TRIP windows (peak to one
+  year after the trough: stress windows end at the trough, where no release
+  rule can act), and the full history. Any rule that releases on market trend
+  re-measures the next trip from the release point; without that, a release
+  while the book is still more than 8% below its old peak would re-trip the
+  next day. The bar is fixed before the run (BREAKER_BAR_*). The v1 hedge
+  sleeve tests are unchanged.
+
 Real-price test bench for hedge rules. Answers one question with actual
 history instead of opinion: "if the model book had followed rule X, what
 would it have gained or lost in the episodes that matter, and what would the
@@ -83,7 +96,7 @@ import pandas as pd
 
 import model_book as mb
 
-VERSION = "v1"
+VERSION = "v1.1"
 REGIME = "transition_ambiguous"
 HISTORY_START = "1999-01-01"
 
@@ -128,6 +141,24 @@ STRESS = [
     ("carry_2024",  "2024-07-16", "2024-08-05", "Yen-carry unwind (liquidity flush)"),
 ]
 FULL = ("full_2005", "2005-01-03", None, "Full history: the cost of each rule in normal markets")
+ROUND_TRIP_SESSIONS = 252                  # round-trip window = peak to one year after the trough
+
+# ── breaker release test (v1.1) ──
+GROWTH = ("VGT", "SMH", "QQQ")             # sleeves that move with QQQ; every other risk sleeve is "core"
+RELEASE_MA = 200
+BREAKERS = ("B0", "B1", "B2", "B3", "B4")
+BREAKER_RULES = {
+    "B0": "Current: book back above −5% and SPY above its 50-day",
+    "B1": "SPY above its 200-day",
+    "B2": "SPY and QQQ both above their 200-days",
+    "B3": "Tiered: growth sleeves (VGT, SMH, QQQ) return when QQQ is above its 200-day; every other risk sleeve when SPY is",
+    "B4": "B3, and each sleeve gets its weight back only when its own price is above its 200-day (until then that half waits in SGOV)",
+}
+BREAKER_SHORT = {"B0": "current", "B1": "SPY 200-day", "B2": "SPY and QQQ 200-day",
+                 "B3": "tiered by sleeve", "B4": "tiered + own trend"}
+BREAKER_BAR_CAGR = 0.25                   # must add at least this many pts/yr over the full history ...
+BREAKER_BAR_DD = 1.0                       # ... and never deepen max drawdown by more than this in any stress or round-trip window
+
 VARIANTS = ("V0", "V1", "V2", "V3")
 VARIANT_LABEL = {"V0": "current book", "V1": "corr-gated TLT", "V2": "hedge trend rule",
                  "V3": "V1 + V2", "SPY": "", "6040": "60/40"}
@@ -310,6 +341,222 @@ def simulate(days: pd.DatetimeIndex, rets: pd.DataFrame, weights_on: Callable,
     return out
 
 
+# ── breaker release rules (v1.1) ────────────────────────────────────────────
+
+def release_signals(closes: dict, cal: pd.DatetimeIndex, rets: pd.DataFrame) -> dict:
+    """Trend states at each close (value at d uses data up to and including d):
+    SPY and QQQ above their 200-day, and each sleeve's own (spliced) price above
+    its 200-day. Missing data reads as NOT above, which keeps the breaker on."""
+    def above(s):
+        if s is None or len(s) == 0:
+            return pd.Series(False, index=cal)
+        x = _norm(s).reindex(cal).ffill(limit=3)
+        ma = x.rolling(RELEASE_MA, min_periods=RELEASE_MA).mean()
+        return (x > ma).fillna(False).astype(bool)
+    lvl = (1 + rets.fillna(0.0)).cumprod()
+    own = {}
+    for s in rets.columns:
+        ma = lvl[s].rolling(RELEASE_MA, min_periods=RELEASE_MA).mean()
+        own[s] = ((lvl[s] > ma) & rets[s].notna()).fillna(False).astype(bool)
+    return {"spy200": above(closes.get("SPY")), "qqq200": above(closes.get("QQQ")), "above200": own}
+
+
+def _release_ok(rule: str, group: str, d, sig: dict) -> bool:
+    spy = bool(sig["spy200"].get(d, False))
+    qqq = bool(sig["qqq200"].get(d, False))
+    if rule == "B1":
+        return spy
+    if rule == "B2":
+        return spy and qqq
+    return qqq if group == "growth" else spy          # B3, B4
+
+
+def simulate_release(days: pd.DatetimeIndex, rets: pd.DataFrame, base: dict, rule: str,
+                     sig: dict, cost_bps: float = COST_BPS) -> pd.DataFrame:
+    """Same NAV accounting and −8% trip as simulate(), with release rule B1-B4.
+    Groups: 'growth' (GROWTH) and 'core' (every other non-exempt sleeve). The
+    trip halves both groups. Each group releases after RELEASE_CLOSES
+    consecutive closes of its condition. When no group is on, the drawdown
+    reference resets to the NAV at that close, so the next trip is measured
+    from the release point. B4 also holds each released sleeve at half until
+    its own price closes above its 200-day."""
+    group = {s: ("growth" if s in GROWTH else "core") for s in base}
+    risk = {s for s, w in base.items() if w > 0 and s not in mb.RISK_EXEMPT}
+    on = {"growth": False, "core": False}
+    rc = {"growth": 0, "core": 0}
+    pending: set = set()
+    rows, prev, ref_peak, trips = [], None, mb.START_NAV, 0
+    for d in days:
+        if prev is None:
+            nav = gross = mb.START_NAV
+            cov = 1.0
+        else:
+            r, have, tot = 0.0, 0.0, 0.0
+            for t, wt in prev["w"].items():
+                if wt <= 0:
+                    continue
+                tot += wt
+                x = rets.at[d, t] if t in rets.columns else np.nan
+                if x == x:
+                    r += wt / 100.0 * float(x)
+                    have += wt
+            cov = have / tot if tot else 1.0
+            nav = prev["nav"] * (1 + r)
+            gross = prev["gross"] * (1 + r)
+        ref_peak = max(ref_peak, nav)
+        dd_ref = (nav / ref_peak - 1) * 100
+        if prev is not None:
+            if not any(on.values()):
+                if dd_ref <= mb.TRIGGER_DD:
+                    on = {"growth": True, "core": True}
+                    rc = {"growth": 0, "core": 0}
+                    pending = set()
+                    trips += 1
+            else:
+                for g in ("growth", "core"):
+                    if not on[g]:
+                        continue
+                    rc[g] = rc[g] + 1 if _release_ok(rule, g, d, sig) else 0
+                    if rc[g] >= mb.RELEASE_CLOSES:
+                        on[g], rc[g] = False, 0
+                        if rule == "B4":
+                            pending |= {s for s in risk if group[s] == g}
+                if not any(on.values()):
+                    ref_peak = nav                      # the next trip is measured from here
+        if rule == "B4" and pending:
+            pending = {s for s in pending if not bool(sig["above200"].get(s, pd.Series(dtype=bool)).get(d, False))}
+        w, freed = {}, 0.0
+        for s, wt in base.items():
+            wt = float(wt)
+            half = s in risk and (on[group[s]] or s in pending)
+            w[s] = wt * mb.BREAKER_SCALE if half else wt
+            freed += wt - w[s]
+        w[PARK] = w.get(PARK, 0.0) + freed
+        turn = 0.0
+        if prev is not None:
+            keys = set(w) | set(prev["w"])
+            turn = sum(abs(w.get(k, 0.0) - prev["w"].get(k, 0.0)) for k in keys) / 2.0
+            nav *= 1 - turn / 100.0 * cost_bps / 1e4
+        rows.append({"date": d, "nav": nav, "gross": gross, "w": w, "turnover": turn, "coverage": cov,
+                     "state": "ON" if any(on.values()) else "OFF", "pending": len(pending),
+                     "growth_on": on["growth"], "core_on": on["core"], "trips": trips})
+        prev = rows[-1]
+    return pd.DataFrame(rows).set_index("date")
+
+
+def run_breaker_window(key, start, end, label, base, rets, srcs, sig, spy_close):
+    cal = rets.index
+    days = cal[(cal >= pd.Timestamp(start)) & (cal <= (pd.Timestamp(end) if end else cal[-1]))]
+    if len(days) < 2:
+        return [], {"key": key, "label": label, "error": "no sessions in range"}
+    cov, _ = coverage_for(days, base, srcs)
+    rows = []
+    for b in BREAKERS:
+        if b == "B0":
+            sim = simulate(days, rets, lambda d: dict(base), spy_close)
+            on = sim["state"] == "ON"
+            trips = int((on & ~on.shift(1, fill_value=False)).sum())
+            pend = 0
+        else:
+            sim = simulate_release(days, rets, base, b, sig)
+            on = sim["state"] == "ON"
+            trips = int(sim["trips"].iloc[-1])
+            pend = int((sim["pending"] > 0).sum())
+        m = metrics(sim["nav"], sim["turnover"])
+        m.update({"window": key, "breaker": b, "breaker_days": int(on.sum()),
+                  "breaker_on_pct": round(float(on.mean() * 100), 1), "trips": trips, "gated_days": pend,
+                  "start": days[0].date().isoformat(), "end": days[-1].date().isoformat()})
+        rows.append(m)
+    return rows, {"key": key, "label": label, "start": days[0].date().isoformat(),
+                  "end": days[-1].date().isoformat(), "coverage": cov,
+                  "low_coverage": cov["none"] > LOW_COVERAGE_PCT}
+
+
+def round_trips(cal: pd.DatetimeIndex) -> list:
+    out = []
+    for key, s, e, label in STRESS:
+        later = cal[cal >= pd.Timestamp(e)]
+        if not len(later):
+            continue
+        i = cal.get_loc(later[0])
+        end = cal[min(i + ROUND_TRIP_SESSIONS, len(cal) - 1)]
+        out.append((f"{key}_rt", s, end.date().isoformat(), f"{label}: peak to one year after the trough"))
+    return out
+
+
+def breaker_verdicts(bres: pd.DataFrame, binfos: list) -> list[str]:
+    keys = [i["key"] for i in binfos
+            if i["key"] != FULL[0] and not i.get("low_coverage") and not i.get("error")]
+
+    def val(w, b, col):
+        x = bres[(bres["window"] == w) & (bres["breaker"] == b)][col]
+        return float(x.iloc[0]) if len(x) and x.iloc[0] == x.iloc[0] else None
+
+    out = []
+    c0 = val(FULL[0], "B0", "cagr_pct")
+    t0, p0 = val(FULL[0], "B0", "trips"), val(FULL[0], "B0", "breaker_on_pct")
+    for b in BREAKERS[1:]:
+        cb = val(FULL[0], b, "cagr_pct")
+        deeper = []
+        for w in keys:
+            a, z = val(w, b, "max_dd_pct"), val(w, "B0", "max_dd_pct")
+            if a is not None and z is not None:
+                deeper.append((z - a, w))       # positive = deeper than B0
+        worst = max(deeper) if deeper else (0.0, "")
+        gain = (cb - c0) if (cb is not None and c0 is not None) else None
+        earns = gain is not None and gain >= BREAKER_BAR_CAGR and worst[0] <= BREAKER_BAR_DD
+        parts = [f"**{b} ({BREAKER_SHORT[b]})**:"]
+        if gain is not None:
+            parts.append(f"full history {abs(gain):.2f} pts/yr {'more' if gain >= 0 else 'less'} return than B0")
+        if deeper:
+            if worst[0] > 0:
+                parts.append(f"· worst window {worst[0]:.1f} pts deeper drawdown than B0 ({worst[1]})")
+            else:
+                parts.append(f"· never deeper drawdown than B0 across {len(deeper)} windows")
+        tb, pb = val(FULL[0], b, "trips"), val(FULL[0], b, "breaker_on_pct")
+        if tb is not None and t0 is not None:
+            parts.append(f"· trips {int(tb)} (B0 {int(t0)}) · breaker on {pb:.0f}% of sessions (B0 {p0:.0f}%)")
+        parts.append(f"→ **{'EARNS A PLACE' if earns else 'does not meet the bar'}**")
+        out.append(" ".join(parts) + ".")
+    out.append(f"The bar, fixed before the run: at least +{BREAKER_BAR_CAGR:.2f} pts/yr over the full history "
+               f"AND no stress or round-trip window more than {BREAKER_BAR_DD:.0f} pt deeper than B0. "
+               "Five rules were set in advance; tuning thresholds until one passes would fit the past, not the future.")
+    return out
+
+
+def render_breakers(bres: pd.DataFrame, binfos: list) -> list[str]:
+    L = ["## Breaker release test (v1.1)",
+         "All rules trip the same way (book down 8% → every risk sleeve halved, freed weight to SGOV; "
+         "SGOV, USFR, KMLM exempt). They differ only in how the book gets its risk back. "
+         "B1–B4 measure the next trip from the release point.", "",
+         "| Rule | Release (2 consecutive closes) |", "|---|---|",
+         *[f"| {b} | {BREAKER_RULES[b]} |" for b in BREAKERS], "",
+         "### Verdict", *[f"- {x}" for x in breaker_verdicts(bres, binfos)], ""]
+    order = [FULL[0]] + [k for k, *_ in round_trips_keys(binfos)] + [s[0] for s in STRESS]
+    for key in order:
+        info = next((i for i in binfos if i["key"] == key), None)
+        if not info:
+            continue
+        L.append(f"### {info.get('label', key)} ({info.get('start', '?')} → {info.get('end', '?')})")
+        if info.get("error"):
+            L += [f"- ⚠ {info['error']}", ""]
+            continue
+        if info.get("low_coverage"):
+            L.append("⚠ **LOW COVERAGE** — excluded from the verdict")
+        L += ["| Rule | Return | CAGR | Max DD | Worst 20d | Breaker on | Trips | Waiting on own trend (days) | Cost |",
+              "|---|---|---|---|---|---|---|---|---|"]
+        for _, r in bres[bres["window"] == key].iterrows():
+            L.append(f"| {r['breaker']} | {_f(r.get('total_return_pct'))} | {_f(r.get('cagr_pct'))} | "
+                     f"{_f(r.get('max_dd_pct'))} | {_f(r.get('worst_20d_pct'))} | {_f(r.get('breaker_on_pct'), 0)} | "
+                     f"{int(r['trips'])} | {int(r['gated_days'])} | {_f(r.get('cost_pct'), 2)} |")
+        L.append("")
+    return L
+
+
+def round_trips_keys(binfos: list) -> list:
+    return [(i["key"],) for i in binfos if i["key"].endswith("_rt")]
+
+
 def bench_nav(days: pd.DatetimeIndex, rets: pd.DataFrame, mix: dict) -> pd.Series:
     r = sum(rets[t].reindex(days).fillna(0.0) * (w / 100.0) for t, w in mix.items())
     r.iloc[0] = 0.0
@@ -481,20 +728,13 @@ def _f(x, nd=1, pct=True, sign=False):
     return s + ("%" if pct else "")
 
 
-def render(res: pd.DataFrame, infos: list, base: dict, inc: dict, missing: list, asof: str) -> str:
+def render(res: pd.DataFrame, infos: list, base: dict, inc: dict, missing: list, asof: str,
+           bres: Optional[pd.DataFrame] = None, binfos: Optional[list] = None) -> str:
     L = [f"# Hedge lab — {asof}",
          f"*{VERSION} · real prices (dividend-adjusted, Yahoo) · book = `{REGIME}` targets from "
          f"regime_classifier · −8% breaker simulated · costs {COST_BPS:.0f} bps per unit of turnover. "
          f"Desk research, not personalized advice.*", "",
-         "## Variants",
-         "| Code | Rule |", "|---|---|",
-         "| V0 | Current book, unchanged |",
-         f"| V1 | TLT → SGOV while TLT's {CORR_WINDOW}-day correlation with SPY is positive |",
-         f"| V2 | GLD, SLV, RING, TLT each halved (→ SGOV) while below a falling {TREND_MA}-day average |",
-         "| V3 | V1 then V2 |", "",
          "Book weights: " + ", ".join(f"{k} {v:g}" for k, v in base.items()), ""]
-    L += ["## Verdict", *[f"- {x}" for x in verdicts(res, infos)], ""]
-
     if inc:
         L += ["## Accuracy check — replay of the model book since inception"]
         if inc.get("error"):
@@ -509,6 +749,17 @@ def render(res: pd.DataFrame, infos: list, base: dict, inc: dict, missing: list,
                          "the results below until it is explained.")
         L.append("")
 
+    if bres is not None and binfos:
+        L += render_breakers(bres, binfos)
+
+    L += ["## Hedge sleeve rules (v1, unchanged)",
+          "| Code | Rule |", "|---|---|",
+          "| V0 | Current book, unchanged |",
+          f"| V1 | TLT → SGOV while TLT's {CORR_WINDOW}-day correlation with SPY is positive |",
+          f"| V2 | GLD, SLV, RING, TLT each halved (→ SGOV) while below a falling {TREND_MA}-day average |",
+          "| V3 | V1 then V2 |", "",
+          "### Verdict", *[f"- {x}" for x in verdicts(res, infos)], ""]
+
     order = [s[0] for s in STRESS] + [FULL[0], "inception"]
     cols = ["variant", "total_return_pct", "cagr_pct", "max_dd_pct", "worst_day_pct", "worst_20d_pct",
             "vol_ann_pct", "switch_days", "cost_pct", "breaker_days"]
@@ -518,7 +769,7 @@ def render(res: pd.DataFrame, infos: list, base: dict, inc: dict, missing: list,
             info = inc or None
         if not info:
             continue
-        L.append(f"## {info.get('label', key)} ({info.get('start', '?')} → {info.get('end', '?')})")
+        L.append(f"### {info.get('label', key)} ({info.get('start', '?')} → {info.get('end', '?')})")
         if info.get("error"):
             L += [f"- ⚠ {info['error']}", ""]
             continue
@@ -572,9 +823,16 @@ def build(closes: dict, book_path: Path = mb.BOOK_FILE, base: Optional[dict] = N
     inc_rows, inc = run_inception(Path(book_path), rets, sig, bench_rets)
     rows += inc_rows
     res = pd.DataFrame(rows)
+    # v1.1: breaker release test over the full history, round trips and stress windows
+    sig.update(release_signals(closes, cal, rets))
+    brows, binfos = [], []
+    for key, s, e, label in [FULL] + round_trips(cal) + STRESS:
+        r, i = run_breaker_window(key, s, e, label, base, rets, srcs, sig, spy)
+        brows += r; binfos.append(i)
     missing = [t for t in all_tickers() if t not in closes]
     return {"results": res, "coverage": pd.DataFrame(cov_rows), "infos": infos, "inception": inc,
-            "base": base, "missing": missing, "signals": sig, "rets": rets}
+            "base": base, "missing": missing, "signals": sig, "rets": rets,
+            "breakers": pd.DataFrame(brows), "breaker_infos": binfos}
 
 
 def write(out: dict, asof: str) -> dict:
@@ -583,7 +841,12 @@ def write(out: dict, asof: str) -> dict:
     num = out["results"].select_dtypes("number").columns
     out["results"].assign(**{c: out["results"][c].round(4) for c in num}).to_csv(OUT_DIR / "results.csv", index=False)
     out["coverage"].to_csv(OUT_DIR / "coverage.csv", index=False)
-    md = render(out["results"], out["infos"], out["base"], out["inception"], out["missing"], asof)
+    b = out.get("breakers")
+    if b is not None and not b.empty:
+        bn = b.select_dtypes("number").columns
+        b.assign(**{c: b[c].round(4) for c in bn}).to_csv(OUT_DIR / "breaker_results.csv", index=False)
+    md = render(out["results"], out["infos"], out["base"], out["inception"], out["missing"], asof,
+                out.get("breakers"), out.get("breaker_infos"))
     p = LOG_DIR / f"{asof}_report.md"
     p.write_text(md)
     return {"report": str(p), "results": str(OUT_DIR / "results.csv")}
@@ -701,6 +964,33 @@ def selftest() -> dict:
         c1, c2 = sig["corr"].loc[upto], sig2["corr"].loc[upto]
         if not np.allclose(c1.fillna(0).to_numpy(), c2.fillna(0).to_numpy()):
             f.append("lookahead: TLT correlation up to day k changed when later prices changed")
+        # v1.1: the same for the breaker release signals (SPY/QQQ and each sleeve vs its 200-day)
+        #     Pushed both down (x0.3) and up (x3) so a one-day peek flips whichever
+        #     state the series was in; each index and sleeve must flip at least once.
+        rs1 = release_signals(closes, cal, rets)
+        after = cal[k + 1:k + 5]
+        flipped = {n: False for n in ("spy200", "qqq200")}
+        flipped_own = False
+        for fac in (0.3, 3.0):
+            alt_r = {t: s.copy() for t, s in closes.items()}
+            for t in alt_r:
+                s = alt_r[t]
+                m = s.index > cal[k]
+                if m.sum():
+                    s[m] = s[m].to_numpy() * fac
+            r3, _ = splice(alt_r, PROXIES, cal)
+            rs2 = release_signals(alt_r, cal, r3)
+            for n in flipped:
+                flipped[n] |= bool((rs1[n].loc[after] != rs2[n].loc[after]).any())
+                if not rs1[n].loc[upto].equals(rs2[n].loc[upto]):
+                    f.append(f"lookahead: {n} up to day k changed when later prices changed (x{fac})")
+            for s in base:
+                flipped_own |= bool((rs1["above200"][s].loc[after] != rs2["above200"][s].loc[after]).any())
+                if not rs1["above200"][s].loc[upto].equals(rs2["above200"][s].loc[upto]):
+                    f.append(f"lookahead: {s} own-trend signal up to day k changed when later prices changed (x{fac})")
+                    break
+        if not all(flipped.values()) or not flipped_own:
+            f.append(f"release-signal lookahead test is too weak: flips after day k {flipped}, own {flipped_own}")
 
         # 12. timing: weights chosen on day d earn day d+1's return, never day d's
         tdays = cal[-6:]
@@ -761,7 +1051,7 @@ def selftest() -> dict:
 
         # 10. report renders with every section
         md = render(res, out["infos"], base, inc, out["missing"], "2026-10-31")
-        for s in ("## Verdict", "## Accuracy check", "Dot-com bust", "Full history", "## Known limits"):
+        for s in ("### Verdict", "## Accuracy check", "Dot-com bust", "Full history", "## Known limits"):
             if s not in md:
                 f.append(f"report missing: {s}")
         # 11. a LOW COVERAGE window is labelled and dropped from the verdict counts
@@ -772,6 +1062,70 @@ def selftest() -> dict:
             f.append("a low-coverage window must be labelled and named as excluded")
         if f"of {n_ok - 1} stress windows" not in " ".join(verdicts(res, lo)):
             f.append("a low-coverage window must be excluded from the verdict counts")
+
+        # ── v1.1 breaker release rules, on a hand-made crash with known answers ──
+        # day 2: every risk sleeve −30% (book ≈ −23%) → trip at day 2's close.
+        # QQQ above its 200-day from day 4, SPY from day 6; GLD's own trend from day 9.
+        bd = cal[-14:]
+        br = pd.DataFrame(0.0, index=bd, columns=list(base))
+        risk_s = [s for s in base if s not in mb.RISK_EXEMPT]
+        br.loc[bd[2], risk_s] = -0.30
+
+        def bsig(qqq_from=4, spy_from=6, gld_from=9):
+            mk = lambda k: pd.Series([i >= k for i in range(len(bd))], index=bd)
+            own = {s: pd.Series(True, index=bd) for s in base}
+            own["GLD"] = mk(gld_from)
+            return {"spy200": mk(spy_from), "qqq200": mk(qqq_from), "above200": own}
+
+        def wt(sim, i, s):
+            return round(sim["w"].iloc[i][s], 6)
+
+        s1 = simulate_release(bd, br, base, "B1", bsig(), cost_bps=0.0)
+        if s1["state"].iloc[2] != "ON" or wt(s1, 2, "VGT") != 8.5:
+            f.append(f"B1: a −23% day must trip the breaker and halve VGT: {s1['state'].iloc[2]}, {wt(s1, 2, 'VGT')}")
+        if s1["state"].iloc[6] != "ON" or s1["state"].iloc[7] != "OFF" or wt(s1, 7, "VGT") != 17.0:
+            f.append("B1: must release on the 2nd consecutive close with SPY above its 200-day (day 7), not before")
+        if (s1["state"].iloc[8:] == "ON").any() or int(s1["trips"].iloc[-1]) != 1:
+            f.append("B1: after release the next trip must be measured from the release point (no instant re-trip)")
+        if abs(sum(s1["w"].iloc[3].values()) - 100.0) > 1e-9:
+            f.append("breaker weights must still sum to 100")
+
+        s2 = simulate_release(bd, br, base, "B2", bsig(qqq_from=99), cost_bps=0.0)
+        if (s2["state"].iloc[3:] != "ON").any():
+            f.append("B2: must stay on while QQQ is below its 200-day, even with SPY above")
+
+        s3 = simulate_release(bd, br, base, "B3", bsig(), cost_bps=0.0)
+        if not (wt(s3, 5, "VGT") == 17.0 and wt(s3, 5, "SCHD") == 7.0):
+            f.append(f"B3: growth back on day 5 (QQQ) while core still halved: VGT {wt(s3, 5, 'VGT')}, SCHD {wt(s3, 5, 'SCHD')}")
+        if not (wt(s3, 7, "SCHD") == 14.0 and wt(s3, 7, "GLD") == 10.0):
+            f.append("B3: core back on day 7 (SPY)")
+
+        s4 = simulate_release(bd, br, base, "B4", bsig(), cost_bps=0.0)
+        if not (wt(s4, 7, "SCHD") == 14.0 and wt(s4, 7, "GLD") == 5.0 and wt(s4, 9, "GLD") == 10.0):
+            f.append(f"B4: GLD must wait for its own 200-day (day 9): day7 {wt(s4, 7, 'GLD')}, day9 {wt(s4, 9, 'GLD')}")
+        if s4["state"].iloc[8] != "OFF" or int(s4["pending"].iloc[8]) != 1:
+            f.append("B4: the breaker is off once both groups release; GLD alone is still waiting")
+
+        br2 = br.copy()
+        br2.loc[bd[10], risk_s] = -0.30
+        s5 = simulate_release(bd, br2, base, "B1", bsig(), cost_bps=0.0)
+        if int(s5["trips"].iloc[-1]) != 2 or s5["state"].iloc[10] != "ON":
+            f.append("a fresh −8% fall after a release must trip the breaker again")
+
+        bres, binfos = out["breakers"], out["breaker_infos"]
+        if set(bres["breaker"]) != set(BREAKERS):
+            f.append(f"breaker results must cover {BREAKERS}: {sorted(set(bres['breaker']))}")
+        if not any(i["key"].endswith("_rt") for i in binfos):
+            f.append("round-trip windows missing")
+        md_b = render(res, out["infos"], base, inc, out["missing"], "2026-10-31", bres, binfos)
+        for s in ("## Breaker release test", "The bar, fixed before the run", "one year after the trough"):
+            if s not in md_b:
+                f.append(f"breaker report missing: {s}")
+        # B0 in the breaker test must be the same simulation as V0 in the v1 tables
+        v0 = res[(res["window"] == FULL[0]) & (res["variant"] == "V0")]["total_return_pct"].iloc[0]
+        b0 = bres[(bres["window"] == FULL[0]) & (bres["breaker"] == "B0")]["total_return_pct"].iloc[0]
+        if abs(v0 - b0) > 1e-9:
+            f.append(f"B0 must equal V0 over the full history: {b0} vs {v0}")
     finally:
         os.chdir(cwd)
     return {"ok": not f, "failures": f}
