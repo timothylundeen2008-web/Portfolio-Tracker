@@ -1,0 +1,64 @@
+# Hedge Lab — real-price test bench for hedge rules (hedge_lab.py).
+# Manual only: Actions tab → "Hedge Lab" → Run workflow.
+# Runs the offline selftest first and stops if it fails, so a broken harness
+# can never commit a report. Commits data/hedge_lab/ and logs/hedge_lab/.
+name: Hedge Lab
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: hedge-lab
+  cancel-in-progress: false
+
+jobs:
+  lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Selftest (offline)
+        run: |
+          python - <<'PY'
+          import json, sys
+          import hedge_lab
+          r = hedge_lab.selftest()
+          print(json.dumps(r, indent=2))
+          sys.exit(0 if r["ok"] else 1)
+          PY
+
+      - name: Run the hedge lab
+        run: python hedge_lab.py
+
+      - name: Commit results
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/hedge_lab/ logs/hedge_lab/ 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No change."
+          else
+            git commit -m "hedge lab: report $(date -u +%Y-%m-%d)"
+            git pull --rebase --autostash origin main || true
+            git push
+          fi
+
+      - name: Publish to the run page
+        run: |
+          LATEST=$(ls -t logs/hedge_lab/*_report.md 2>/dev/null | head -1)
+          if [ -n "$LATEST" ]; then cat "$LATEST" >> "$GITHUB_STEP_SUMMARY"; fi
