@@ -1,6 +1,16 @@
 """
-risk_budget.py  (v1 — July 2026)
-================================
+risk_budget.py  (v1.1 — October 2026)
+=====================================
+v1.1 (2026-10-31): CONVEXITY NOT FUNDED (policy switch CONVEXITY_FUNDED).
+  Decided 2026-10-31 after the Portfolio-Tracker hedge lab (v1.2-v1.3, real
+  prices 2005-2026, today's book): the schedule below (~4.1% of NAV/yr on
+  average) bought the most protection but cost ~0.6 pts/yr; a 1%/yr sleeve
+  helped only at the exact −8% breaker trip line and lost return at −7% and
+  −9%. convexity_budget() now returns 0% with that reason, and still reports
+  what the schedule WOULD spend (designed_pct) for reference. Setting
+  CONVEXITY_FUNDED = True restores v1 behaviour exactly (selftest).
+  This file is shared byte-identical with Portfolio-Tracker/risk_budget.py.
+
 Position sizing and hedge budgeting CONDITIONED ON MARKET STATE, not fixed.
 
 WHY NOT A FIXED VOL TARGET
@@ -105,6 +115,16 @@ CONFIDENCE_TIERS = [
 
 # Convexity budget as % of NAV, by VIX quartile within its own 1-year range.
 CONVEXITY_BY_QUARTILE = {1: 2.00, 2: 1.25, 3: 0.50, 4: 0.00}
+
+# Policy switch (v1.1). False = the sleeve is not funded: every budget is 0%.
+CONVEXITY_FUNDED = False
+CONVEXITY_DECISION = (
+    "Not funded — policy decision 2026-10-31. Hedge lab on real prices "
+    "2005-2026 (today's book): this schedule (~4.1% of NAV/yr on average) "
+    "cut max drawdown from −20% to −15% but cost ~0.6 pts/yr; a 1%/yr sleeve "
+    "only helped at the exact −8% breaker trip line and lost return at −7% "
+    "and −9%. The −8% circuit breaker, not options, is the book's crash "
+    "control. Revisit with new evidence (e.g. real option-price history).")
 
 # Sizing scalar bounds. Uncapped vol-targeting levers you into a low-vol melt-up
 # and is the mechanism behind most vol-target blowups.
@@ -328,9 +348,14 @@ def convexity_budget(vq: dict, regime_key: str = "",
         detail = f"{vq['detail']} -> {pct:.2f}% of NAV ({rationale})."
 
     out = {"pct_of_nav": pct, "quartile": q, "regime": regime_key,
-           "detail": detail}
+           "detail": detail, "funded": True,
+           "designed_pct": pct, "designed_detail": detail}
+    if not CONVEXITY_FUNDED:
+        out.update(pct_of_nav=0.0, funded=False,
+                   detail=(f"{CONVEXITY_DECISION} (The designed schedule would "
+                           f"spend {pct:.2f}% of NAV now: {detail})"))
     if nav:
-        out["dollar_budget"] = round(nav * pct / 100.0, 2)
+        out["dollar_budget"] = round(nav * out["pct_of_nav"] / 100.0, 2)
     return out
 
 
@@ -370,7 +395,8 @@ def budget(regime_key: str,
             f"· vol target {vt['target_vol_pct']:.1f}% "
             f"· risk scalar {scal['scalar']:.2f}"
             f"{'' if scal['available'] else ' (held, realized vol unknown)'} "
-            f"· convexity {cvx['pct_of_nav']:.2f}% of NAV"
+            + (f"· convexity {cvx['pct_of_nav']:.2f}% of NAV" if cvx.get("funded", True)
+               else f"· convexity not funded (designed schedule {cvx['designed_pct']:.2f}%)")
         ),
     }
 
@@ -403,6 +429,36 @@ def selftest() -> dict:
     if today["confidence"]["tier"] not in ("LOW", "DEGRADED"):
         failures.append(f"Today's confidence tier was "
                         f"{today['confidence']['tier']}, expected LOW/DEGRADED")
+
+    # v1.1: the funding switch. Not funded -> 0% everywhere, the designed
+    # figure still reported; funded -> exactly the v1 schedule.
+    global CONVEXITY_FUNDED
+    saved = CONVEXITY_FUNDED
+    try:
+        for funded in (False, True):
+            CONVEXITY_FUNDED = funded
+            for q in (1, 2, 3, 4):
+                vq = {"available": True, "quartile": q, "detail": f"Q{q}"}
+                for reg in ("transition_ambiguous", "liquidity_crisis"):
+                    c = convexity_budget(vq, reg, nav=100_000)
+                    v1 = 0.0 if reg == "liquidity_crisis" else CONVEXITY_BY_QUARTILE[q]
+                    want = v1 if funded else 0.0
+                    if c["pct_of_nav"] != want or c["dollar_budget"] != round(1000 * want, 2):
+                        failures.append(f"funded={funded} Q{q} {reg}: {c['pct_of_nav']} vs {want}")
+                    if c["designed_pct"] != v1 or c["funded"] is not funded:
+                        failures.append(f"designed figure / flag wrong at funded={funded} Q{q} {reg}")
+                    if not funded and "Not funded" not in c["detail"]:
+                        failures.append("not-funded detail must state the decision")
+            c = convexity_budget({"available": False, "detail": "no VIX"}, "", nav=100_000)
+            if c["pct_of_nav"] != (CONVEXITY_BY_QUARTILE[2] if funded else 0.0):
+                failures.append(f"unavailable-rank fallback wrong at funded={funded}")
+        CONVEXITY_FUNDED = False
+        s = budget("transition_ambiguous", vix_now=18.0,
+                   vix_history=pd.Series(np.linspace(12, 30, 250)))["summary"]
+        if "convexity not funded" not in s:
+            failures.append(f"summary must say not funded: {s}")
+    finally:
+        CONVEXITY_FUNDED = saved
     return {"ok": not failures, "failures": failures,
             "today": today["summary"], "clean_goldilocks": clean["summary"],
             "today_convexity": today["convexity"]["detail"]}
