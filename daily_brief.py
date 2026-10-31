@@ -1,6 +1,10 @@
 """
-daily_brief.py  (v1 — September 2026)
+daily_brief.py  (v1.1 — October 2026)
 ─────────────────────────────────────
+v1.1 (2026-10-31): section 4 prints each cross-asset lane's full "why" note.
+  v1 cut it at 160 characters, which dropped the rates lane's term-premium
+  diagnosis mid-sentence. Selftest now asserts the full note is rendered.
+
 ONE consolidated daily brief that reads every layer of the system and says
 what the readings mean TOGETHER. Replaces reading three logs side by side.
 
@@ -1712,7 +1716,11 @@ def render_md(b: dict) -> str:
     if xa.get("available"):
         L += ["| Lane | Vote | Reading | Why |", "|---|---|---|---|"]
         for k, v in xa.get("lanes", {}).items():
-            L.append(f"| {k} | {v.get('state')} | {v.get('reading')} | {str(v.get('note', ''))[:160]} |")
+            # Full note, never truncated: the "why" is the evidence for the vote.
+            # (v1.1, 2026-10-31: a [:160] cut dropped the term-premium diagnosis
+            # mid-sentence.) Pipes are escaped so a note cannot break the table.
+            note = str(v.get('note', '')).replace("|", "\\|").replace("\n", " ")
+            L.append(f"| {k} | {v.get('state')} | {v.get('reading')} | {note} |")
     L += ["", f"**Conclusion:** {xa['conclusion']}", ""]
 
     ro = b["rotation"]
@@ -2005,6 +2013,11 @@ def selftest() -> dict:
         b = build(inp)
         md = render_md(b)
         out = write(b)
+        # v1.1: every cross-asset "why" must reach the markdown in full (v1 cut at 160 chars)
+        for _lane, _v in (b["cross_asset"].get("lanes") or {}).items():
+            _note = str(_v.get("note", "")).replace("|", "\\|").replace("\n", " ")
+            if _note and _note not in md:
+                f.append(f"cross-asset {_lane} note truncated or missing in the markdown ({len(_note)} chars)")
         if not b["regime"].get("plans") or "Contingency" not in md or "Pending until" not in md:
             f.append(f"regime section must carry the gated contingency plan: {b['regime'].get('plan_error')}")
         if "Credit cycle:" not in md or not (b["regime"].get("credit_cycle") or {}).get("state"):
