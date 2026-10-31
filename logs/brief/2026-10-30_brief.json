@@ -1,6 +1,6 @@
 {
  "session": "2026-10-30",
- "generated_et": "Oct 30, 2026 09:48 PM EDT",
+ "generated_et": "Oct 31, 2026 06:13 PM EDT",
  "scoreboard": {
   "rows": [
    {
@@ -149,17 +149,17 @@
    },
    {
     "name": "WTI crude",
-    "value": 102.94999694824219,
+    "value": 104.12000274658203,
     "unit": "$",
     "kind": "index",
-    "d1": 0.9313695571001812,
-    "d5": -6.170254330803693,
-    "d20": 5.16906420292389,
-    "d1_txt": "+0.9%",
-    "d5_txt": "-6.2%",
-    "d20_txt": "+5.2%",
-    "pctile_1y": 88.0,
-    "z1d": 0.3,
+    "d1": 2.078434065276502,
+    "d5": -5.103898335233293,
+    "d20": 6.364289249751787,
+    "d1_txt": "+2.1%",
+    "d5_txt": "-5.1%",
+    "d20_txt": "+6.4%",
+    "pctile_1y": 91.0,
+    "z1d": 0.6,
     "asof": "2026-10-30",
     "source": "FRED DCOILWTICO"
    },
@@ -426,6 +426,64 @@
   ],
   "conclusion": "Unusual moves today: IG OAS +3bp (+2.9\u03c3); Nasdaq 100 (QQQ) -3.5% (-2.8\u03c3); HY OAS +12bp (+2.3\u03c3). Everything else moved inside its normal daily range. At a 1-year extreme: HY OAS (95th pctile), IG OAS (96th pctile), Gold (GLD) (0th pctile)."
  },
+ "market_read": {
+  "items": [
+   {
+    "topic": "What moved long yields",
+    "verdict": "Over 20 days, long yields FELL on real yields \u2014 discount-rate pressure on long-duration assets is easing",
+    "evidence": [
+     "10Y 4.98% (FRED, 2026-10-29): 20-day -31bp = real -30bp + breakeven -1bp",
+     "Last FRED session: -7bp = real -4bp + breakeven -3bp",
+     "Growth vs value (VUG/VTV) -11.1% over 20 days",
+     "\u26a0 Growth is lagging value even though real yields fell, so the drag on growth is coming from something other than rates (check earnings and company news), not from the discount rate"
+    ],
+    "rule": "Breakeven = 10Y nominal \u2212 10Y real (DFII10) on the same date, so the parts add up exactly. A part drives the 20-day move when it supplies at least two-thirds of it; a 20-day move under 5bp is noise. (Section 4's rates lane uses 3-month momentum, so the two can point different ways over different horizons.)",
+    "changes_if": "Breakevens supplying two-thirds of the 20-day move would make it an inflation story.",
+    "driver": "real"
+   },
+   {
+    "topic": "Concentrated or broad",
+    "verdict": "Megacap-led decline: the cap-weighted index fell more than the average stock",
+    "evidence": [
+     "SPY -1.8% \u00b7 equal-weight RSP -0.8% \u00b7 Nasdaq-100 QQQ -3.5% (2026-10-30)",
+     "66% of the 109-name proxy universe above its 50-day",
+     "Equal vs cap weight over 20 days +6.0% (participation broadening)"
+    ],
+    "rule": "A down day is megacap-led when equal-weight (RSP) beats cap-weight (SPY) by 0.5pp or more, and broad when most names are below their 50-day. Index days under \u00b10.5% are quiet.",
+    "changes_if": "Equal-weight falling as much as cap-weight, or under half of names above their 50-day, would make it a broad sell-off.",
+    "kind": "megacap_down"
+   },
+   {
+    "topic": "De-risking or rotation",
+    "verdict": "Liquidity de-risking: stocks AND gold were sold while Treasuries were bought \u2014 investors raising cash",
+    "evidence": [
+     "SPY -1.8% \u00b7 gold (GLD) -3.5% \u00b7 long Treasuries (TLT) +0.4% \u00b7 VIX 19.4 (+2.2) (2026-10-30)",
+     "HY OAS 3.26% (+12bp) (FRED print dated 2026-10-29, one session behind prices)"
+    ],
+    "rule": "A risk day is an index move of \u00b11.0% or more. De-risking = stocks AND gold both down 1.0%+ with long Treasuries up; flight to quality = stocks down, Treasuries up, gold holding; stocks and Treasuries down together = a rates or inflation scare.",
+    "changes_if": "Credit joining (HY OAS widening) would turn this from de-risking into stress; see the next read for the distance.",
+    "kind": "liquidity"
+   },
+   {
+    "topic": "Distance to stress",
+    "verdict": "Calm, but close: vol is about 1 typical day from its WATCH line",
+    "evidence": [
+     "Credit: HY OAS 3.26% (FRED, 2026-10-29) \u2014 CALM; WATCH above 3.50% is 24bp away (about 5 typical days); 2-week change +3bp (WATCH above +50bp)",
+     "Vol: VIX 19.4 \u2014 CALM; WATCH at 21 is 1.6 points away (about 1 typical day)",
+     "Regime: nearest flip is HY OAS 3.26 \u2192 4.50pp \u2192 `credit_stress` (about 24 typical days)"
+    ],
+    "rule": "Lines are the cross-asset lanes' own thresholds: credit WATCH above 3.50% HY OAS or a 2-week widening above +50bp, STRESS above 5.00%; vol WATCH at VIX 21, STRESS at 30. A typical day is one standard deviation of that series' daily change over the past year; within 3 typical days counts as close.",
+    "changes_if": "Crossing either WATCH line flips that lane's vote, and with it the brief's cross-asset majority.",
+    "states": {
+     "credit": "CALM",
+     "vol": "CALM"
+    }
+   }
+  ],
+  "dates_note": "Prices as of 2026-10-30; FRED rates and credit as of 2026-10-29 (FRED runs one session behind prices).",
+  "price_asof": "2026-10-30",
+  "fred_asof": "2026-10-29"
+ },
  "regime": {
   "available": true,
   "conclusion": "`transition_ambiguous` \u2014 Transition \u2014 Ambiguous (short real rate at zero). 8 consecutive sessions under this regime. Nearest flip: HY OAS 3.26pp \u2192 4.50pp (+1.24pp, ~24 typical days) would make it `credit_stress`.",
@@ -469,10 +527,10 @@
   ],
   "flip_error": null,
   "guards": [
-   "cape: 40.13 (live, as of 2026-10-30)",
-   "top20 concentration pct: 48.76 (live, as of 2026-10-30) \u2014 top 20 SPY weights summed",
+   "cape: 40.13 (live, as of 2026-10-31)",
+   "top20 concentration pct: 48.76 (live, as of 2026-10-31) \u2014 top 20 SPY weights summed",
    "fed bs expanding: False (live, as of 2026-10-28) \u2014 flat / neutral: 4-wk avg +0.7B/wk, 13-wk avg +0.6B/wk",
-   "deficit gt 5pct gdp: True (manual, as of 2026-08-13, 78d old)"
+   "deficit gt 5pct gdp: True (manual, as of 2026-08-13, 79d old)"
   ],
   "guard_warnings": [],
   "repression": {
@@ -1711,8 +1769,8 @@
  "portfolio": {
   "available": false,
   "active": false,
-  "ledger_age_days": 96,
-  "conclusion": "Ledger last touched 96 days ago \u2014 not tracking real positions, so it is not used. The model portfolio (section 8) is what you SHOULD hold."
+  "ledger_age_days": 97,
+  "conclusion": "Ledger last touched 97 days ago \u2014 not tracking real positions, so it is not used. The model portfolio (section 8) is what you SHOULD hold."
  },
  "swing": {
   "available": true,
@@ -2877,7 +2935,7 @@
   "next_event": {
    "event": "NFP",
    "date": "2026-11-06",
-   "days_away": 7,
+   "days_away": 6,
    "affects": "Rates-sensitive sleeves and growth",
    "blackout": false
   },
@@ -2885,7 +2943,7 @@
    "Payrolls \u2014 strong: yields up. Weak: yields down. Weak payrolls WITH HY widening opens the growth-scare path \u2014 watch the HY 2-week change."
   ],
   "calendar_asof": "2026-10-24",
-  "conclusion": "No scheduled binary event in the next two sessions \u2014 the event block is clear. Next: NFP on 2026-11-06 (7 days)."
+  "conclusion": "No scheduled binary event in the next two sessions \u2014 the event block is clear. Next: NFP on 2026-11-06 (6 days)."
  },
  "alerts": [
   {
@@ -3517,30 +3575,31 @@
   ],
   "scorecard": {
    "coverage": {
-    "signals": 84,
+    "signals": 94,
     "by_type": {
      "confluence_2of3": 10,
-     "confluence_3of3": 16,
-     "flow_divergence": 37,
+     "confluence_3of3": 20,
+     "flow_divergence": 41,
      "gold_gate_fail": 1,
      "gold_gate_pass": 1,
      "regime_transition": 2,
-     "regime_weekly": 11,
-     "stealth_flag": 6
+     "regime_weekly": 12,
+     "stealth_flag": 7
     },
     "types_ready": [
+     "confluence_3of3",
      "flow_divergence"
     ],
     "weeks_of_history": 11.1,
     "since": "2026-08-14",
     "ready": true,
-    "message": "1 signal type(s) have 20+ observations. Overlapping horizons are correlated \u2014 treat early readings as directional."
+    "message": "2 signal type(s) have 20+ observations. Overlapping horizons are correlated \u2014 treat early readings as directional."
    },
    "rates": {
     "1w": [
      {
       "signal_type": "confluence_3of3",
-      "logged": 16,
+      "logged": 20,
       "n": 15,
       "hit_rate": null,
       "avg_rel": 1.56,
@@ -3549,7 +3608,7 @@
      },
      {
       "signal_type": "regime_weekly",
-      "logged": 11,
+      "logged": 12,
       "n": 11,
       "hit_rate": null,
       "avg_rel": 0.11,
@@ -3594,27 +3653,27 @@
      },
      {
       "signal_type": "flow_divergence",
-      "logged": 37,
+      "logged": 41,
       "n": 0,
       "hit_rate": null,
       "avg_rel": NaN,
       "med_rel": NaN,
-      "verdict": "WAITING \u2014 37 logged, none past the 1w horizon yet"
+      "verdict": "WAITING \u2014 41 logged, none past the 1w horizon yet"
      },
      {
       "signal_type": "stealth_flag",
-      "logged": 6,
+      "logged": 7,
       "n": 0,
       "hit_rate": null,
       "avg_rel": NaN,
       "med_rel": NaN,
-      "verdict": "WAITING \u2014 6 logged, none past the 1w horizon yet"
+      "verdict": "WAITING \u2014 7 logged, none past the 1w horizon yet"
      }
     ],
     "4w": [
      {
       "signal_type": "regime_weekly",
-      "logged": 11,
+      "logged": 12,
       "n": 7,
       "hit_rate": null,
       "avg_rel": 0.35,
@@ -3632,7 +3691,7 @@
      },
      {
       "signal_type": "confluence_3of3",
-      "logged": 16,
+      "logged": 20,
       "n": 2,
       "hit_rate": null,
       "avg_rel": -1.82,
@@ -3668,50 +3727,50 @@
      },
      {
       "signal_type": "flow_divergence",
-      "logged": 37,
+      "logged": 41,
       "n": 0,
       "hit_rate": null,
       "avg_rel": NaN,
       "med_rel": NaN,
-      "verdict": "WAITING \u2014 37 logged, none past the 4w horizon yet"
+      "verdict": "WAITING \u2014 41 logged, none past the 4w horizon yet"
      },
      {
       "signal_type": "stealth_flag",
-      "logged": 6,
+      "logged": 7,
       "n": 0,
       "hit_rate": null,
       "avg_rel": NaN,
       "med_rel": NaN,
-      "verdict": "WAITING \u2014 6 logged, none past the 4w horizon yet"
+      "verdict": "WAITING \u2014 7 logged, none past the 4w horizon yet"
      }
     ],
     "12w": [
      {
       "signal_type": "flow_divergence",
-      "logged": 37,
+      "logged": 41,
       "n": 0,
       "hit_rate": null,
       "avg_rel": null,
       "med_rel": null,
-      "verdict": "WAITING \u2014 37 logged, none past the 12w horizon yet"
+      "verdict": "WAITING \u2014 41 logged, none past the 12w horizon yet"
      },
      {
       "signal_type": "confluence_3of3",
-      "logged": 16,
+      "logged": 20,
       "n": 0,
       "hit_rate": null,
       "avg_rel": null,
       "med_rel": null,
-      "verdict": "WAITING \u2014 16 logged, none past the 12w horizon yet"
+      "verdict": "WAITING \u2014 20 logged, none past the 12w horizon yet"
      },
      {
       "signal_type": "regime_weekly",
-      "logged": 11,
+      "logged": 12,
       "n": 0,
       "hit_rate": null,
       "avg_rel": null,
       "med_rel": null,
-      "verdict": "WAITING \u2014 11 logged, none past the 12w horizon yet"
+      "verdict": "WAITING \u2014 12 logged, none past the 12w horizon yet"
      },
      {
       "signal_type": "confluence_2of3",
@@ -3724,12 +3783,12 @@
      },
      {
       "signal_type": "stealth_flag",
-      "logged": 6,
+      "logged": 7,
       "n": 0,
       "hit_rate": null,
       "avg_rel": null,
       "med_rel": null,
-      "verdict": "WAITING \u2014 6 logged, none past the 12w horizon yet"
+      "verdict": "WAITING \u2014 7 logged, none past the 12w horizon yet"
      },
      {
       "signal_type": "regime_transition",
@@ -3761,130 +3820,9 @@
     ]
    }
   },
-  "conclusion": "84 signals on record since 2026-08-14; 10 new this run (confluence_3of3, flow_divergence, regime_weekly, stealth_flag). 4-week scores so far: regime_weekly n=7 avg +0.35pp; confluence_2of3 n=3 avg -2.49pp; confluence_3of3 n=2 avg -1.82pp; regime_transition n=1 avg -0.36pp; gold_gate_fail n=1 avg +5.94pp. Hit rates appear only at 20+ scored signals.",
-  "new_today": [
-   {
-    "signal_id": "2026-10-30_regime_weekly_PORT",
-    "date": "2026-10-30",
-    "signal_type": "regime_weekly",
-    "subject": "PORT",
-    "direction": "long",
-    "price_at_signal": null,
-    "benchmark_at_signal": null,
-    "context": "regime=transition_ambiguous",
-    "notes": "{\"weights\": {\"VGT\": 17.0, \"SMH\": 3.0, \"QQQ\": 3.0, \"GLD\": 10.0, \"SLV\": 4.0, \"RING\": 4.0, \"XLE\": 5.0, \"PDBC\": 3.0, \"SCHD\": 14.0, \"XLV\": 5.0, \"XLU\": 3.0, \"SGOV\": 8.0, \"USFR\": 7.0, \"TLT\": 7.0, \"KMLM\": 7.0}, \"bench_weights\": {\"VGT\": 20, \"SMH\": 4, \"QQQ\": 4, \"GLD\": 12, \"SLV\": 5, \"RING\": 5, \"XLE\": 5, \"PDBC\": 3, \"SCHD\": 13, \"XLV\": 4, \"XLU\": 3, \"SGOV\": 5, \"USFR\": 3, \"TLT\": 10, \"KMLM\": 4}, \"bench\": \"BASE\"}",
-    "source": "daily_log"
-   },
-   {
-    "signal_id": "2026-10-30_confluence_3of3_DUK",
-    "date": "2026-10-30",
-    "signal_type": "confluence_3of3",
-    "subject": "DUK",
-    "direction": "long",
-    "price_at_signal": 127.39,
-    "benchmark_at_signal": null,
-    "context": "M0 Rotation \u00b7 regime=transition_ambiguous",
-    "notes": "",
-    "source": "swing_cards"
-   },
-   {
-    "signal_id": "2026-10-30_confluence_3of3_SPG",
-    "date": "2026-10-30",
-    "signal_type": "confluence_3of3",
-    "subject": "SPG",
-    "direction": "long",
-    "price_at_signal": 217.75,
-    "benchmark_at_signal": null,
-    "context": "M0 Rotation \u00b7 regime=transition_ambiguous",
-    "notes": "",
-    "source": "swing_cards"
-   },
-   {
-    "signal_id": "2026-10-30_confluence_3of3_XLF",
-    "date": "2026-10-30",
-    "signal_type": "confluence_3of3",
-    "subject": "XLF",
-    "direction": "long",
-    "price_at_signal": 56.51,
-    "benchmark_at_signal": null,
-    "context": "M0 Rotation \u00b7 regime=transition_ambiguous",
-    "notes": "",
-    "source": "swing_cards"
-   },
-   {
-    "signal_id": "2026-10-30_confluence_3of3_XEL",
-    "date": "2026-10-30",
-    "signal_type": "confluence_3of3",
-    "subject": "XEL",
-    "direction": "long",
-    "price_at_signal": 79.82,
-    "benchmark_at_signal": null,
-    "context": "M0 Rotation \u00b7 regime=transition_ambiguous",
-    "notes": "",
-    "source": "swing_cards"
-   },
-   {
-    "signal_id": "2026-10-30_stealth_flag_XLE",
-    "date": "2026-10-30",
-    "signal_type": "stealth_flag",
-    "subject": "XLE",
-    "direction": "long",
-    "price_at_signal": null,
-    "benchmark_at_signal": null,
-    "context": "Stealth \u00b7 Weakening \u00b7 accum 55.64",
-    "notes": "",
-    "source": "rotation"
-   },
-   {
-    "signal_id": "2026-10-30_flow_divergence_MDY",
-    "date": "2026-10-30",
-    "signal_type": "flow_divergence",
-    "subject": "MDY",
-    "direction": "long",
-    "price_at_signal": null,
-    "benchmark_at_signal": null,
-    "context": "ACCUMULATION (price down, money in) \u00b7 flow 0.45% AUM",
-    "notes": "",
-    "source": "rotation"
-   },
-   {
-    "signal_id": "2026-10-30_flow_divergence_ITA",
-    "date": "2026-10-30",
-    "signal_type": "flow_divergence",
-    "subject": "ITA",
-    "direction": "short",
-    "price_at_signal": null,
-    "benchmark_at_signal": null,
-    "context": "DISTRIBUTION (price up, money out) \u00b7 flow -0.34% AUM",
-    "notes": "",
-    "source": "rotation"
-   },
-   {
-    "signal_id": "2026-10-30_flow_divergence_TLT",
-    "date": "2026-10-30",
-    "signal_type": "flow_divergence",
-    "subject": "TLT",
-    "direction": "short",
-    "price_at_signal": null,
-    "benchmark_at_signal": null,
-    "context": "DISTRIBUTION (price up, money out) \u00b7 flow -1.33% AUM",
-    "notes": "",
-    "source": "rotation"
-   },
-   {
-    "signal_id": "2026-10-30_flow_divergence_INDA",
-    "date": "2026-10-30",
-    "signal_type": "flow_divergence",
-    "subject": "INDA",
-    "direction": "short",
-    "price_at_signal": null,
-    "benchmark_at_signal": null,
-    "context": "DISTRIBUTION (price up, money out) \u00b7 flow -1.42% AUM",
-    "notes": "",
-    "source": "rotation"
-   }
-  ],
-  "recorded": 10
+  "conclusion": "94 signals on record since 2026-08-14; 0 new this run. 4-week scores so far: regime_weekly n=7 avg +0.35pp; confluence_2of3 n=3 avg -2.49pp; confluence_3of3 n=2 avg -1.82pp; regime_transition n=1 avg -0.36pp; gold_gate_fail n=1 avg +5.94pp. Hit rates appear only at 20+ scored signals.",
+  "new_today": [],
+  "recorded": 0
  },
  "data_health": [
   {
@@ -3960,14 +3898,14 @@
   {
    "input": "Money Flow bridge",
    "asof": "2026-10-31",
-   "age_days": -1,
+   "age_days": 0,
    "status": "OK",
    "note": ""
   },
   {
    "input": "Markets bridge",
    "asof": "2026-10-30",
-   "age_days": 0,
+   "age_days": 1,
    "status": "OK",
    "note": ""
   },
@@ -3981,7 +3919,7 @@
   {
    "input": "Position ledger",
    "asof": "2026-07-26",
-   "age_days": 96,
+   "age_days": 97,
    "status": "UNUSED",
    "note": "not tracking real positions \u2014 the model portfolio (section 8) is the reference"
   },
