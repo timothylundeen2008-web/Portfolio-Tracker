@@ -83,3 +83,13 @@ signal_id,date,signal_type,subject,direction,price_at_signal,benchmark_at_signal
 2026-10-29_confluence_3of3_XLU,2026-10-29,confluence_3of3,XLU,long,43.14,,M0 Rotation · regime=transition_ambiguous,,swing_cards
 2026-10-29_flow_divergence_IAI,2026-10-29,flow_divergence,IAI,short,,,"DISTRIBUTION (price up, money out) · flow -3.42% AUM",,rotation
 2026-10-29_stealth_flag_XLU,2026-10-29,stealth_flag,XLU,long,,,Stealth · Improving · accum 50.3,,rotation
+2026-10-30_confluence_3of3_DUK,2026-10-30,confluence_3of3,DUK,long,127.39,,M0 Rotation · regime=transition_ambiguous,,swing_cards
+2026-10-30_confluence_3of3_SPG,2026-10-30,confluence_3of3,SPG,long,217.75,,M0 Rotation · regime=transition_ambiguous,,swing_cards
+2026-10-30_confluence_3of3_XEL,2026-10-30,confluence_3of3,XEL,long,79.82,,M0 Rotation · regime=transition_ambiguous,,swing_cards
+2026-10-30_confluence_3of3_XLF,2026-10-30,confluence_3of3,XLF,long,56.51,,M0 Rotation · regime=transition_ambiguous,,swing_cards
+2026-10-30_flow_divergence_INDA,2026-10-30,flow_divergence,INDA,short,,,"DISTRIBUTION (price up, money out) · flow -1.42% AUM",,rotation
+2026-10-30_flow_divergence_ITA,2026-10-30,flow_divergence,ITA,short,,,"DISTRIBUTION (price up, money out) · flow -0.34% AUM",,rotation
+2026-10-30_flow_divergence_MDY,2026-10-30,flow_divergence,MDY,long,,,"ACCUMULATION (price down, money in) · flow 0.45% AUM",,rotation
+2026-10-30_flow_divergence_TLT,2026-10-30,flow_divergence,TLT,short,,,"DISTRIBUTION (price up, money out) · flow -1.33% AUM",,rotation
+2026-10-30_regime_weekly_PORT,2026-10-30,regime_weekly,PORT,long,,,regime=transition_ambiguous,"{""weights"": {""VGT"": 17.0, ""SMH"": 3.0, ""QQQ"": 3.0, ""GLD"": 10.0, ""SLV"": 4.0, ""RING"": 4.0, ""XLE"": 5.0, ""PDBC"": 3.0, ""SCHD"": 14.0, ""XLV"": 5.0, ""XLU"": 3.0, ""SGOV"": 8.0, ""USFR"": 7.0, ""TLT"": 7.0, ""KMLM"": 7.0}, ""bench_weights"": {""VGT"": 20, ""SMH"": 4, ""QQQ"": 4, ""GLD"": 12, ""SLV"": 5, ""RING"": 5, ""XLE"": 5, ""PDBC"": 3, ""SCHD"": 13, ""XLV"": 4, ""XLU"": 3, ""SGOV"": 5, ""USFR"": 3, ""TLT"": 10, ""KMLM"": 4}, ""bench"": ""BASE""}",daily_log
+2026-10-30_stealth_flag_XLE,2026-10-30,stealth_flag,XLE,long,,,Stealth · Weakening · accum 55.64,,rotation
