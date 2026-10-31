@@ -1,6 +1,16 @@
 """
-hedge_lab.py  (v1.2 — October 2026)
+hedge_lab.py  (v1.3 — October 2026)
 ───────────────────────────────────
+v1.3 (2026-10-31): TRIP-LINE ROBUSTNESS. v1.2 found B0 + C1 (current breaker
+  plus 1%/yr puts) the only option to meet the bar, but its edge comes from
+  small option gains keeping the book above a fixed −8% trip line, which can
+  be a knife-edge effect. v1.3 reruns B0, B0 + C1 and B3 with the trip line at
+  −7%, −8% and −9% (TRIP_LINES), release rule unchanged. Fixed before the run:
+  B0 + C1 is ROBUST only if, at every trip line, it beats B0 at the same line
+  by at least BREAKER_BAR_CAGR pts/yr with no window more than BREAKER_BAR_DD
+  pt deeper. This checks the same rule at nearby settings; it is not a search
+  for a better setting.
+
 v1.2 (2026-10-31): CONVEXITY SLEEVE TEST. Two specs disagree: risk_policy.md
   (PROPOSED) caps premium at 1% of NAV per YEAR; the built convexity_sleeve.py
   + risk_budget.py spend 2.00/1.25/0.50/0% of NAV per QUARTER by VIX's
@@ -108,7 +118,7 @@ import pandas as pd
 
 import model_book as mb
 
-VERSION = "v1.2"
+VERSION = "v1.3"
 REGIME = "transition_ambiguous"
 HISTORY_START = "1999-01-01"
 
@@ -163,6 +173,10 @@ SLEEVES = {
     "C2":  {"label": "designed: VIX-quartile schedule per quarter, 8% OTM puts", "mode": "quartile", "spread": False},
 }
 CONVEXITY_BREAKERS = ("B0", "B3")
+
+# ── trip-line robustness (v1.3) ──
+TRIP_LINES = (-7.0, -8.0, -9.0)             # production is mb.TRIGGER_DD (−8); the release rule is unchanged
+TRIP_COMBOS = (("B0", "none"), ("B0", "C1"), ("B3", "none"))
 
 STRESS = [
     ("dotcom_2000", "2000-03-24", "2002-10-09", "Dot-com bust"),
@@ -662,16 +676,32 @@ def unit_value(tr: dict, d, mkt: dict) -> float:
     return p
 
 
+def next_breaker_at(state: str, release_count: int, dd: float, spy_above_50: Optional[bool],
+                    trigger: float) -> tuple:
+    """model_book.next_breaker with the trip line as a parameter (v1.3). The
+    release rule is unchanged: drawdown above mb.RELEASE_DD and SPY above its
+    50-day on mb.RELEASE_CLOSES consecutive closes. At trigger == mb.TRIGGER_DD
+    it returns exactly what model_book.next_breaker returns (selftest)."""
+    if state != "ON":
+        return ("ON", 0) if dd <= trigger else ("OFF", 0)
+    ok = dd > mb.RELEASE_DD and bool(spy_above_50)
+    rc = release_count + 1 if ok else 0
+    return ("OFF", 0) if rc >= mb.RELEASE_CLOSES else ("ON", rc)
+
+
 def simulate_book(days: pd.DatetimeIndex, rets: pd.DataFrame, base: dict, rule: str, sig: dict,
                   mkt: Optional[dict] = None, sleeve: Optional[dict] = None,
-                  spy_close: Optional[pd.Series] = None, cost_bps: float = COST_BPS) -> pd.DataFrame:
+                  spy_close: Optional[pd.Series] = None, cost_bps: float = COST_BPS,
+                  trigger: Optional[float] = None) -> pd.DataFrame:
     """The book (core sleeves, daily rebalanced) plus an optional convexity
     sleeve, under breaker rule B0 (production) or B1-B4. With sleeve=None this
     reproduces simulate() for B0 and simulate_release() for B1-B4 exactly
     (asserted in the selftest). The breaker sees the TOTAL book (core +
     options), as the model book measures drawdown on what is actually held.
     Option trades happen at d's close: premium comes out of the core, harvest
-    and roll proceeds go back into it and are rebalanced to target weights."""
+    and roll proceeds go back into it and are rebalanced to target weights.
+    trigger (v1.3): the trip line in % (default mb.TRIGGER_DD, production)."""
+    trip = mb.TRIGGER_DD if trigger is None else float(trigger)
     spy_closes = {"SPY": spy_close} if spy_close is not None else {}
     group = {s: ("growth" if s in GROWTH else "core") for s in base}
     risk = {s for s, w in base.items() if w > 0 and s not in mb.RISK_EXEMPT}
@@ -704,14 +734,17 @@ def simulate_book(days: pd.DatetimeIndex, rets: pd.DataFrame, base: dict, rule: 
         if rule == "B0":
             if prev is not None:
                 peak = max(peak, total)
-                state, rc = mb.next_breaker(state, rc, (total / peak - 1) * 100,
-                                            mb._spy_above_50(spy_closes, d) if spy_closes else None)
+                spy50 = mb._spy_above_50(spy_closes, d) if spy_closes else None
+                if trip == mb.TRIGGER_DD:       # production: model_book's own function
+                    state, rc = mb.next_breaker(state, rc, (total / peak - 1) * 100, spy50)
+                else:
+                    state, rc = next_breaker_at(state, rc, (total / peak - 1) * 100, spy50, trip)
         else:
             ref_peak = max(ref_peak, total)
             dd_ref = (total / ref_peak - 1) * 100
             if prev is not None:
                 if not any(on.values()):
-                    if dd_ref <= mb.TRIGGER_DD:
+                    if dd_ref <= trip:
                         on = {"growth": True, "core": True}
                         rc_g = {"growth": 0, "core": 0}
                         pending = set()
@@ -867,6 +900,86 @@ def convexity_verdicts(cres: pd.DataFrame, cinfos: list, binfos: list) -> list[s
                f"at least +{BREAKER_BAR_CAGR:.2f} pts/yr over the full history AND no stress or round-trip "
                f"window more than {BREAKER_BAR_DD:.0f} pt deeper.")
     return out
+
+
+# ── trip-line robustness (v1.3) ─────────────────────────────────────────────
+
+def run_trip_window(key, start, end, label, base, rets, sig, mkt, spy_close):
+    cal = rets.index
+    days = cal[(cal >= pd.Timestamp(start)) & (cal <= (pd.Timestamp(end) if end else cal[-1]))]
+    if len(days) < 2:
+        return [], {"key": key, "label": label, "error": "no sessions in range"}
+    rows = []
+    for t in TRIP_LINES:
+        for b, c in TRIP_COMBOS:
+            sim = simulate_book(days, rets, base, b, sig, mkt, SLEEVES[c], spy_close, trigger=t)
+            m = metrics(sim["nav"], sim["turnover"])
+            m.update({"window": key, "trip": t, "breaker": b, "sleeve": c,
+                      "breaker_on_pct": round(float((sim["state"] == "ON").mean() * 100), 1),
+                      "trips": int(sim["trips"].iloc[-1]),
+                      "start": days[0].date().isoformat(), "end": days[-1].date().isoformat()})
+            rows.append(m)
+    return rows, {"key": key, "label": label, "start": days[0].date().isoformat(),
+                  "end": days[-1].date().isoformat()}
+
+
+def trip_verdicts(tres: pd.DataFrame, tinfos: list, binfos: list) -> tuple:
+    """(lines, robust: bool). B0 + C1 vs B0 at the SAME trip line, at every line."""
+    low = {i["key"] for i in binfos if i.get("low_coverage")}
+    keys = [i["key"] for i in tinfos if i["key"] != FULL[0] and i["key"] not in low and not i.get("error")]
+
+    def val(w, t, b, c, col):
+        x = tres[(tres["window"] == w) & (tres["trip"] == t) & (tres["breaker"] == b) & (tres["sleeve"] == c)][col]
+        return float(x.iloc[0]) if len(x) and x.iloc[0] == x.iloc[0] else None
+
+    out, passes = [], []
+    for t in TRIP_LINES:
+        a, z = val(FULL[0], t, "B0", "C1", "cagr_pct"), val(FULL[0], t, "B0", "none", "cagr_pct")
+        gain = (a - z) if (a is not None and z is not None) else None
+        deeper = [(val(w, t, "B0", "none", "max_dd_pct") - val(w, t, "B0", "C1", "max_dd_pct"), w) for w in keys
+                  if val(w, t, "B0", "C1", "max_dd_pct") is not None and val(w, t, "B0", "none", "max_dd_pct") is not None]
+        worst = max(deeper) if deeper else (0.0, "")
+        ok = gain is not None and gain >= BREAKER_BAR_CAGR and worst[0] <= BREAKER_BAR_DD
+        passes.append(ok)
+        tb0, tc1 = val(FULL[0], t, "B0", "none", "trips"), val(FULL[0], t, "B0", "C1", "trips")
+        line = [f"**Trip line {t:.0f}%**: B0 + C1 {abs(gain):.2f} pts/yr {'more' if gain >= 0 else 'less'} than B0"
+                if gain is not None else f"**Trip line {t:.0f}%**: n/a"]
+        if deeper:
+            line.append(f"· worst window {worst[0]:.1f} pts deeper ({worst[1]})" if worst[0] > 0
+                        else f"· never deeper across {len(deeper)} windows")
+        if tb0 is not None and tc1 is not None:
+            line.append(f"· trips {int(tc1)} vs {int(tb0)}")
+        line.append(f"→ **{'pass' if ok else 'FAIL'}**")
+        out.append(" ".join(line) + ".")
+    robust = bool(passes) and all(passes)
+    out.insert(0, f"**{'ROBUST' if robust else 'NOT ROBUST'}**: B0 + C1 "
+                  f"{'meets' if robust else 'does not meet'} the bar at every trip line tested "
+                  f"({', '.join(f'{t:.0f}%' for t in TRIP_LINES)}).")
+    out.append(f"Fixed before the run: at each trip line, B0 + C1 must beat B0 at the same line by at least "
+               f"+{BREAKER_BAR_CAGR:.2f} pts/yr over the full history with no stress or round-trip window more than "
+               f"{BREAKER_BAR_DD:.0f} pt deeper. The release rule (above −5% and SPY above its 50-day) is unchanged.")
+    return out, robust
+
+
+def render_trips(tres: pd.DataFrame, tinfos: list, binfos: list) -> list[str]:
+    lines, _ = trip_verdicts(tres, tinfos, binfos)
+    L = ["## Trip-line robustness (v1.3)",
+         "Does B0 + C1's edge depend on the trip line being exactly −8%? Same rules, trip line moved to −7% and −9%.", "",
+         "### Verdict", *[f"- {x}" for x in lines], ""]
+    order = [FULL[0]] + [k for (k,) in round_trips_keys(tinfos)] + [s[0] for s in STRESS]
+    for key in order:
+        info = next((i for i in tinfos if i["key"] == key), None)
+        if not info or info.get("error"):
+            continue
+        L += [f"### {info.get('label', key)} ({info.get('start', '?')} → {info.get('end', '?')})",
+              "| Trip line | Rule | Return | CAGR | Max DD | Worst 20d | Breaker on | Trips |",
+              "|---|---|---|---|---|---|---|---|"]
+        for _, r in tres[tres["window"] == key].iterrows():
+            L.append(f"| {r['trip']:.0f}% | {r['breaker']} + {r['sleeve']} | {_f(r.get('total_return_pct'))} | "
+                     f"{_f(r.get('cagr_pct'))} | {_f(r.get('max_dd_pct'))} | {_f(r.get('worst_20d_pct'))} | "
+                     f"{_f(r.get('breaker_on_pct'), 0)} | {int(r['trips'])} |")
+        L.append("")
+    return L
 
 
 def render_convexity(cres: pd.DataFrame, cinfos: list, binfos: list) -> list[str]:
@@ -1077,7 +1190,8 @@ def _f(x, nd=1, pct=True, sign=False):
 
 def render(res: pd.DataFrame, infos: list, base: dict, inc: dict, missing: list, asof: str,
            bres: Optional[pd.DataFrame] = None, binfos: Optional[list] = None,
-           cres: Optional[pd.DataFrame] = None, cinfos: Optional[list] = None) -> str:
+           cres: Optional[pd.DataFrame] = None, cinfos: Optional[list] = None,
+           tres: Optional[pd.DataFrame] = None, tinfos: Optional[list] = None) -> str:
     L = [f"# Hedge lab — {asof}",
          f"*{VERSION} · real prices (dividend-adjusted, Yahoo) · book = `{REGIME}` targets from "
          f"regime_classifier · −8% breaker simulated · costs {COST_BPS:.0f} bps per unit of turnover. "
@@ -1097,6 +1211,8 @@ def render(res: pd.DataFrame, infos: list, base: dict, inc: dict, missing: list,
                          "the results below until it is explained.")
         L.append("")
 
+    if tres is not None and tinfos:
+        L += render_trips(tres, tinfos, binfos or [])
     if bres is not None and binfos:
         L += render_breakers(bres, binfos)
     if cres is not None and cinfos:
@@ -1188,11 +1304,17 @@ def build(closes: dict, book_path: Path = mb.BOOK_FILE, base: Optional[dict] = N
     for key, s, e, label in [FULL] + round_trips(cal) + STRESS:
         r, i = run_convexity_window(key, s, e, label, base, rets, sig, mkt, spy)
         crows += r; cinfos.append(i)
+    # v1.3: trip-line robustness
+    trows, tinfos = [], []
+    for key, s, e, label in [FULL] + round_trips(cal) + STRESS:
+        r, i = run_trip_window(key, s, e, label, base, rets, sig, mkt, spy)
+        trows += r; tinfos.append(i)
     missing = [t for t in all_tickers() if t not in closes]
     return {"results": res, "coverage": pd.DataFrame(cov_rows), "infos": infos, "inception": inc,
             "base": base, "missing": missing, "signals": sig, "rets": rets,
             "breakers": pd.DataFrame(brows), "breaker_infos": binfos,
-            "convexity": pd.DataFrame(crows), "convexity_infos": cinfos, "market": mkt}
+            "convexity": pd.DataFrame(crows), "convexity_infos": cinfos, "market": mkt,
+            "trips": pd.DataFrame(trows), "trip_infos": tinfos}
 
 
 def write(out: dict, asof: str) -> dict:
@@ -1209,8 +1331,13 @@ def write(out: dict, asof: str) -> dict:
     if cx is not None and not cx.empty:
         cn = cx.select_dtypes("number").columns
         cx.assign(**{c: cx[c].round(4) for c in cn}).to_csv(OUT_DIR / "convexity_results.csv", index=False)
+    tx = out.get("trips")
+    if tx is not None and not tx.empty:
+        tn = tx.select_dtypes("number").columns
+        tx.assign(**{c: tx[c].round(4) for c in tn}).to_csv(OUT_DIR / "trip_results.csv", index=False)
     md = render(out["results"], out["infos"], out["base"], out["inception"], out["missing"], asof,
-                out.get("breakers"), out.get("breaker_infos"), cx, out.get("convexity_infos"))
+                out.get("breakers"), out.get("breaker_infos"), cx, out.get("convexity_infos"),
+                tx, out.get("trip_infos"))
     p = LOG_DIR / f"{asof}_report.md"
     p.write_text(md)
     return {"report": str(p), "results": str(OUT_DIR / "results.csv")}
@@ -1624,6 +1751,62 @@ def selftest() -> dict:
         x0 = cxr[(cxr["window"] == FULL[0]) & (cxr["breaker"] == "B0") & (cxr["sleeve"] == "none")]["total_return_pct"].iloc[0]
         if abs(x0 - b0) > 1e-9:
             f.append(f"B0 + no sleeve must equal B0 in the breaker test: {x0} vs {b0}")
+
+        # ── v1.3 trip-line robustness ──
+        # T1. next_breaker_at is model_book.next_breaker at the production line, over a grid of states
+        for st_ in ("OFF", "ON"):
+            for rc_ in (0, 1):
+                for dd_ in (-12.0, -9.0, -8.0, -7.99, -6.0, -5.0, -4.99, 0.0):
+                    for spy_ in (True, False, None):
+                        if next_breaker_at(st_, rc_, dd_, spy_, mb.TRIGGER_DD) != mb.next_breaker(st_, rc_, dd_, spy_):
+                            f.append(f"next_breaker_at differs from model_book at {st_, rc_, dd_, spy_}")
+        # T2. an explicit −8 trip line reproduces the default (production) path exactly, with and without a sleeve
+        for c_ in ("none", "C1"):
+            d1 = simulate_book(fdays, rets, base, "B0", sig, out["market"], SLEEVES[c_], closes["SPY"])
+            d2 = simulate_book(fdays, rets, base, "B0", sig, out["market"], SLEEVES[c_], closes["SPY"], trigger=-8.0)
+            if float((d1["nav"] - d2["nav"]).abs().max()) > 1e-9:
+                f.append(f"trigger=-8 must equal the production path ({c_})")
+        # T3. the trip line actually moves: a fall to about −8.5% trips at −7 and −8 but not at −9
+        td = cal[-30:]
+        tr_r = pd.DataFrame(0.0, index=td, columns=list(base))
+        rs_ = [s for s in base if s not in mb.RISK_EXEMPT]
+        tr_r.loc[td[3], rs_] = -0.085 / (sum(base[s] for s in rs_) / 100.0)
+        tsig = {"spy200": pd.Series(False, index=td), "qqq200": pd.Series(False, index=td),
+                "above200": {s: pd.Series(False, index=td) for s in base}}
+        st_by = {t_: simulate_book(td, tr_r, base, "B0", tsig, None, None, closes["SPY"], trigger=t_)
+                 for t_ in TRIP_LINES}
+        got_t = {t_: bool((st_by[t_]["state"] == "ON").any()) for t_ in TRIP_LINES}
+        if got_t != {-7.0: True, -8.0: True, -9.0: False}:
+            f.append(f"an ~8.5% fall must trip at −7 and −8 but not −9: {got_t}")
+        st3 = {t_: bool((simulate_book(td, tr_r, base, "B3", tsig, None, None, closes["SPY"], trigger=t_)["state"] == "ON").any())
+               for t_ in TRIP_LINES}
+        if st3 != {-7.0: True, -8.0: True, -9.0: False}:
+            f.append(f"B3 must honour the trip line too: {st3}")
+        # T4. results cover every trip line x combination; the −8 rows equal the convexity test; report renders
+        tx_ = out["trips"]
+        if set(zip(tx_["trip"], tx_["breaker"], tx_["sleeve"])) != {(t_, b_, c_) for t_ in TRIP_LINES for b_, c_ in TRIP_COMBOS}:
+            f.append("trip results must cover every trip line x combination")
+        for b_, c_ in TRIP_COMBOS:
+            a_ = tx_[(tx_["window"] == FULL[0]) & (tx_["trip"] == -8.0) & (tx_["breaker"] == b_) & (tx_["sleeve"] == c_)]["total_return_pct"].iloc[0]
+            z_ = cxr[(cxr["window"] == FULL[0]) & (cxr["breaker"] == b_) & (cxr["sleeve"] == c_)]["total_return_pct"].iloc[0]
+            if abs(a_ - z_) > 1e-9:
+                f.append(f"trip −8 {b_}+{c_} must equal the convexity test: {a_} vs {z_}")
+        md_t = render(res, out["infos"], base, inc, out["missing"], "2026-10-31", bres, binfos,
+                      cxr, out["convexity_infos"], tx_, out["trip_infos"])
+        for s in ("## Trip-line robustness", "ROBUST", "Trip line -9%"):
+            if s not in md_t:
+                f.append(f"trip report missing: {s}")
+        # T5. the verdict logic: ROBUST only when every line passes
+        fake = tx_.copy()
+        sel = (fake["window"] == FULL[0]) & (fake["breaker"] == "B0") & (fake["sleeve"] == "C1")
+        fake.loc[sel, "cagr_pct"] = fake.loc[sel, "trip"].map(lambda t_: 99.0)
+        fake_dd = fake["window"] != FULL[0]
+        fake.loc[fake_dd & (fake["sleeve"] == "C1"), "max_dd_pct"] = fake.loc[fake_dd & (fake["sleeve"] == "C1"), "max_dd_pct"] * 0 + 0.0
+        if not trip_verdicts(fake, out["trip_infos"], binfos)[1]:
+            f.append("verdict must be ROBUST when every trip line passes")
+        fake.loc[sel & (fake["trip"] == -9.0), "cagr_pct"] = -99.0
+        if trip_verdicts(fake, out["trip_infos"], binfos)[1]:
+            f.append("verdict must be NOT ROBUST when any trip line fails")
     finally:
         os.chdir(cwd)
     return {"ok": not f, "failures": f}
