@@ -1,6 +1,15 @@
 """
-daily_brief.py  (v1.1 — October 2026)
+daily_brief.py  (v1.2 — October 2026)
 ─────────────────────────────────────
+v1.2 (2026-10-31): section 1A "Market read". Four diagnoses, each printed as
+  verdict / evidence (numbers with their dates) / the rule applied / what
+  would change it: what moved long yields (10Y split exactly into real +
+  breakeven), concentrated or broad (cap vs equal weight vs Nasdaq-100,
+  breadth), de-risking or rotation (stocks, gold, Treasuries, VIX, credit),
+  and distance to stress (credit and VIX vs the cross-asset lanes' own lines,
+  in typical days). Built only from data the brief already gathers.
+  Thresholds are named READ_* / LANE_*; the selftest asserts the LANE_* lines
+  match cross_asset.py.
 v1.1 (2026-10-31): section 4 prints each cross-asset lane's full "why" note.
   v1 cut it at 160 characters, which dropped the rates lane's term-premium
   diagnosis mid-sentence. Selftest now asserts the full note is rendered.
@@ -976,6 +985,270 @@ def breadth_section(inp: dict) -> dict:
     return out
 
 
+# ── Market read (v1.2): verdict / evidence / rule / what would change it ──
+# Every verdict below is a rule applied to numbers the brief already holds.
+# Thresholds are named here so the rule text printed in the brief and the
+# code that applies it cannot drift apart.
+READ_RATE_NOISE_BP = 5.0     # a 20-day move in the 10Y smaller than this is noise
+READ_RATE_SHARE = 2 / 3      # a component "drives" the move when it supplies at least this share
+READ_DAY_MOVE = 0.5          # % — an index day smaller than this is quiet
+READ_BIG_DAY = 1.0           # % — a risk-on / risk-off day for the cross-asset read
+READ_CONC_GAP = 0.5          # pp — equal-weight vs cap-weight gap that marks a concentrated day
+READ_GROWTH_TILT = 1.0       # % — growth-vs-value 20-day move that counts as a tilt
+READ_NEAR_DAYS = 3.0         # within this many typical days of a WATCH line = "close" (a move seen a few times a year)
+# The cross-asset lanes' own lines (cross_asset.credit_lane / vol_lane); the
+# selftest asserts these match, so a change there cannot silently desync here.
+LANE_HY_WATCH, LANE_HY_STRESS, LANE_HY_MOM = 3.5, 5.0, 0.5
+LANE_VIX_WATCH, LANE_VIX_STRESS = 21.0, 30.0
+
+
+def _ret1(prices: dict, tk: str) -> tuple:
+    """(last-session % change, as-of date) from adjusted closes, or (None, None)."""
+    s = _price_close(prices, tk)
+    if len(s) < 2 or not float(s.iloc[-2]):
+        return None, None
+    return float(s.iloc[-1] / s.iloc[-2] - 1) * 100, pd.to_datetime(s.index[-1]).date().isoformat()
+
+
+def _rate_split(fred: dict, n: int) -> Optional[dict]:
+    """10Y change over n sessions split into real (DFII10) + breakeven, on the
+    two series' common dates, so nominal = real + breakeven exactly."""
+    n10, r10 = fred.get("DGS10"), fred.get("DFII10")
+    if n10 is None or r10 is None or not len(n10) or not len(r10):
+        return None
+    c = pd.concat([n10.rename("n"), r10.rename("r")], axis=1).dropna()
+    if len(c) <= n:
+        return None
+    nom = float(c["n"].iloc[-1] - c["n"].iloc[-1 - n])
+    real = float(c["r"].iloc[-1] - c["r"].iloc[-1 - n])
+    return {"nom_bp": nom * 100, "real_bp": real * 100, "be_bp": (nom - real) * 100,
+            "level": float(c["n"].iloc[-1]), "real_level": float(c["r"].iloc[-1]),
+            "asof": pd.to_datetime(c.index[-1]).date().isoformat()}
+
+
+def read_rates(s20: Optional[dict], s1: Optional[dict], growth_r20: Optional[float]) -> dict:
+    topic = "What moved long yields"
+    rule = (f"Breakeven = 10Y nominal − 10Y real (DFII10) on the same date, so the parts add up exactly. "
+            f"A part drives the 20-day move when it supplies at least two-thirds of it; a 20-day move under "
+            f"{READ_RATE_NOISE_BP:.0f}bp is noise. (Section 4's rates lane uses 3-month momentum, so the two can "
+            f"point different ways over different horizons.)")
+    if not s20:
+        return {"topic": topic, "verdict": "unavailable — 10Y or DFII10 history missing", "evidence": [],
+                "rule": rule, "changes_if": "Restoring the FRED DGS10 and DFII10 series.", "driver": None}
+    nom, real, be = s20["nom_bp"], s20["real_bp"], s20["be_bp"]
+    ev = [f"10Y {s20['level']:.2f}% (FRED, {s20['asof']}): 20-day {nom:+.0f}bp = real {real:+.0f}bp + breakeven {be:+.0f}bp"]
+    if s1:
+        ev.append(f"Last FRED session: {s1['nom_bp']:+.0f}bp = real {s1['real_bp']:+.0f}bp + breakeven {s1['be_bp']:+.0f}bp")
+    if abs(nom) < READ_RATE_NOISE_BP:
+        driver, verdict = None, f"Long yields little changed over 20 days ({nom:+.0f}bp)"
+        changes = f"A 20-day move of {READ_RATE_NOISE_BP:.0f}bp or more in either direction."
+    else:
+        up = nom > 0
+        if real / nom >= READ_RATE_SHARE:
+            driver = "real"
+            verdict = ("Over 20 days, long yields ROSE on real yields, not inflation expectations — a discount-rate squeeze on "
+                       "long-duration assets (growth, tech, long bonds)" if up else
+                       "Over 20 days, long yields FELL on real yields — discount-rate pressure on long-duration assets is easing")
+            changes = "Breakevens supplying two-thirds of the 20-day move would make it an inflation story."
+        elif be / nom >= READ_RATE_SHARE:
+            driver = "breakeven"
+            verdict = ("Over 20 days, long yields ROSE on inflation expectations — favours real assets over long bonds and growth"
+                       if up else "Over 20 days, long yields FELL on lower inflation expectations — a disinflation or growth-worry signal")
+            changes = "Real yields supplying two-thirds of the 20-day move would make it a discount-rate story."
+        else:
+            driver = "both"
+            verdict = f"Over 20 days, long yields {'ROSE' if up else 'FELL'} on both real yields and inflation expectations"
+            changes = "Either part supplying two-thirds of the 20-day move."
+        if growth_r20 is not None:
+            ev.append(f"Growth vs value (VUG/VTV) {growth_r20:+.1f}% over 20 days")
+            if driver == "real" and not up and growth_r20 <= -READ_GROWTH_TILT:
+                ev.append("⚠ Growth is lagging value even though real yields fell, so the drag on growth is coming from "
+                          "something other than rates (check earnings and company news), not from the discount rate")
+            elif driver == "real" and up and growth_r20 <= -READ_GROWTH_TILT:
+                ev.append("Consistent: growth lagging value, as rising real yields would predict")
+            elif driver == "real" and not up and growth_r20 >= READ_GROWTH_TILT:
+                ev.append("Consistent: growth leading value, as falling real yields would predict")
+    return {"topic": topic, "verdict": verdict, "evidence": ev, "rule": rule, "changes_if": changes, "driver": driver}
+
+
+def read_breadth(spy1, rsp1, qqq1, p50, ecw20, asof) -> dict:
+    topic = "Concentrated or broad"
+    rule = (f"A down day is megacap-led when equal-weight (RSP) beats cap-weight (SPY) by {READ_CONC_GAP}pp or more, "
+            f"and broad when most names are below their 50-day. Index days under ±{READ_DAY_MOVE}% are quiet.")
+    if spy1 is None or rsp1 is None:
+        return {"topic": topic, "verdict": "unavailable — SPY or RSP prices missing", "evidence": [], "rule": rule,
+                "changes_if": "Restoring SPY and RSP prices.", "kind": None}
+    gap = rsp1 - spy1
+    ev = [f"SPY {spy1:+.1f}% · equal-weight RSP {rsp1:+.1f}%"
+          + (f" · Nasdaq-100 QQQ {qqq1:+.1f}%" if qqq1 is not None else "") + f" ({asof})"]
+    if p50 is not None:
+        ev.append(f"{p50:.0f}% of the 109-name proxy universe above its 50-day")
+    if ecw20 is not None:
+        ev.append(f"Equal vs cap weight over 20 days {ecw20:+.1f}% "
+                  f"({'participation broadening' if ecw20 > 1 else 'leadership narrowing' if ecw20 < -1 else 'no clear trend'})")
+    if spy1 <= -READ_DAY_MOVE:
+        if gap >= READ_CONC_GAP:
+            kind, verdict = "megacap_down", "Megacap-led decline: the cap-weighted index fell more than the average stock"
+            changes = "Equal-weight falling as much as cap-weight, or under half of names above their 50-day, would make it a broad sell-off."
+        elif p50 is not None and p50 < 50:
+            kind, verdict = "broad_selloff", "Broad sell-off: the average stock fell with the index and most names are below their 50-day"
+            changes = f"Equal-weight holding up by {READ_CONC_GAP}pp or more would narrow it to the megacaps."
+        else:
+            kind, verdict = "broad_down", "Broad decline, but most names are still above their 50-day"
+            changes = "Under half of names above their 50-day would make it a broad sell-off."
+    elif spy1 >= READ_DAY_MOVE:
+        if -gap >= READ_CONC_GAP:
+            kind, verdict = "narrow_up", "Narrow rally: carried by the megacaps, the average stock lagged"
+            changes = "Equal-weight keeping pace with cap-weight would make it a broad rally."
+        else:
+            kind, verdict = "broad_up", "Broad rally: the average stock kept pace with the index"
+            changes = f"Equal-weight lagging by {READ_CONC_GAP}pp or more would make it megacap-led."
+    else:
+        kind, verdict = "quiet", f"Quiet index day ({spy1:+.1f}%)"
+        if qqq1 is not None and abs(qqq1 - rsp1) >= 2 * READ_CONC_GAP:
+            verdict += f", with a split underneath (Nasdaq-100 {qqq1:+.1f}% vs equal-weight {rsp1:+.1f}%)"
+        changes = f"An index move of ±{READ_DAY_MOVE}% or more."
+    return {"topic": topic, "verdict": verdict, "evidence": ev, "rule": rule, "changes_if": changes, "kind": kind}
+
+
+def read_cross(spy1, gld1, tlt1, vix, vix_d, hy, hy_d, hy_asof, asof) -> dict:
+    topic = "De-risking or rotation"
+    rule = (f"A risk day is an index move of ±{READ_BIG_DAY}% or more. De-risking = stocks AND gold both down "
+            f"{READ_BIG_DAY}%+ with long Treasuries up; flight to quality = stocks down, Treasuries up, gold holding; "
+            f"stocks and Treasuries down together = a rates or inflation scare.")
+    if spy1 is None or tlt1 is None:
+        return {"topic": topic, "verdict": "unavailable — SPY or TLT prices missing", "evidence": [], "rule": rule,
+                "changes_if": "Restoring SPY and TLT prices.", "kind": None}
+    ev = [f"SPY {spy1:+.1f}%" + (f" · gold (GLD) {gld1:+.1f}%" if gld1 is not None else "")
+          + f" · long Treasuries (TLT) {tlt1:+.1f}%"
+          + (f" · VIX {vix:.1f} ({vix_d:+.1f})" if vix is not None and vix_d is not None else "") + f" ({asof})"]
+    if hy is not None:
+        ev.append(f"HY OAS {hy:.2f}%" + (f" ({hy_d:+.0f}bp)" if hy_d is not None else "")
+                  + f" (FRED print dated {hy_asof}, one session behind prices)")
+    g = gld1 if gld1 is not None else 0.0
+    if spy1 <= -READ_BIG_DAY:
+        if tlt1 > 0 and g <= -READ_BIG_DAY:
+            kind, verdict = "liquidity", "Liquidity de-risking: stocks AND gold were sold while Treasuries were bought — investors raising cash"
+        elif tlt1 > 0:
+            kind, verdict = "flight", "Flight to quality: stocks down, Treasuries up, gold holding"
+        else:
+            kind, verdict = "rates_scare", "Rates or inflation scare: stocks and long Treasuries fell together"
+        changes = "Credit joining (HY OAS widening) would turn this from de-risking into stress; see the next read for the distance."
+    elif spy1 >= READ_BIG_DAY:
+        kind, verdict = (("risk_on", "Risk-on: stocks bought, long Treasuries sold") if tlt1 < 0
+                         else ("relief", "Relief rally: stocks and long Treasuries up together (falling-rate relief)"))
+        changes = f"An index day of −{READ_BIG_DAY}% or worse."
+    else:
+        kind, verdict = "none", f"No cross-asset risk event: the index moved less than ±{READ_BIG_DAY}% ({spy1:+.1f}%)"
+        changes = f"An index move of ±{READ_BIG_DAY}% or more."
+    return {"topic": topic, "verdict": verdict, "evidence": ev, "rule": rule, "changes_if": changes, "kind": kind}
+
+
+def _tdays(x: float) -> str:
+    return f"about {x:.0f} typical day{'s' if round(x) != 1 else ''}"
+
+
+def read_stress(hy, hy_mom, hy_sd, hy_asof, vix, vix_sd, flips) -> dict:
+    topic = "Distance to stress"
+    rule = (f"Lines are the cross-asset lanes' own thresholds: credit WATCH above {LANE_HY_WATCH:.2f}% HY OAS or a "
+            f"2-week widening above +{LANE_HY_MOM * 100:.0f}bp, STRESS above {LANE_HY_STRESS:.2f}%; vol WATCH at VIX "
+            f"{LANE_VIX_WATCH:.0f}, STRESS at {LANE_VIX_STRESS:.0f}. A typical day is one standard deviation of that "
+            f"series' daily change over the past year; within {READ_NEAR_DAYS:.0f} typical days counts as close.")
+    ev, states, near = [], {}, []
+    if hy is not None:
+        if hy > LANE_HY_STRESS:
+            states["credit"] = "STRESS"
+        elif hy > LANE_HY_WATCH or (hy_mom or 0) > LANE_HY_MOM:
+            states["credit"] = "WATCH"
+        else:
+            states["credit"] = "CALM"
+            dist = LANE_HY_WATCH - hy
+            days = dist / hy_sd if hy_sd else None
+            if days is not None and days <= READ_NEAR_DAYS:
+                near.append(("credit", days))
+        e = f"Credit: HY OAS {hy:.2f}% (FRED, {hy_asof}) — {states['credit']}"
+        if states["credit"] == "CALM":
+            e += f"; WATCH above {LANE_HY_WATCH:.2f}% is {(LANE_HY_WATCH - hy) * 100:.0f}bp away"
+            if hy_sd:
+                e += f" ({_tdays((LANE_HY_WATCH - hy) / hy_sd)})"
+        if hy_mom is not None:
+            e += f"; 2-week change {hy_mom * 100:+.0f}bp (WATCH above +{LANE_HY_MOM * 100:.0f}bp)"
+        ev.append(e)
+    if vix is not None:
+        if vix >= LANE_VIX_STRESS:
+            states["vol"] = "STRESS"
+        elif vix >= LANE_VIX_WATCH:
+            states["vol"] = "WATCH"
+        else:
+            states["vol"] = "CALM"
+            days = (LANE_VIX_WATCH - vix) / vix_sd if vix_sd else None
+            if days is not None and days <= READ_NEAR_DAYS:
+                near.append(("vol", days))
+        e = f"Vol: VIX {vix:.1f} — {states['vol']}"
+        if states["vol"] == "CALM":
+            e += f"; WATCH at {LANE_VIX_WATCH:.0f} is {LANE_VIX_WATCH - vix:.1f} points away"
+            if vix_sd:
+                e += f" ({_tdays((LANE_VIX_WATCH - vix) / vix_sd)})"
+        ev.append(e)
+    for fl in (flips or [])[:1]:
+        td = fl.get("typical_days")
+        ev.append(f"Regime: nearest flip is {fl.get('label')} {_fmt(fl.get('now'), 2)} → {_fmt(fl.get('at'), 2)}"
+                  f"{fl.get('unit', '')} → `{fl.get('to')}`" + (f" ({_tdays(td)})" if td is not None else ""))
+    if not states:
+        return {"topic": topic, "verdict": "unavailable — HY OAS and VIX missing", "evidence": ev, "rule": rule,
+                "changes_if": "Restoring HY OAS and VIX.", "states": states}
+    hot = [k for k, v in states.items() if v == "STRESS"]
+    warm = [k for k, v in states.items() if v == "WATCH"]
+    if hot:
+        verdict = f"STRESS in {', '.join(hot)}"
+        changes = "The lane falling back below its STRESS line."
+    elif warm:
+        verdict = f"WATCH in {', '.join(warm)}: risk is being repriced"
+        changes = "The lane falling back inside its CALM range, or credit crossing its STRESS line."
+    elif near:
+        near.sort(key=lambda x: x[1])
+        verdict = "Calm, but close: " + " and ".join(
+            f"{k} is {_tdays(d_)}" for k, d_ in near) + \
+            f" from {'its' if len(near) == 1 else 'their'} WATCH line{'s' if len(near) > 1 else ''}"
+        changes = "Crossing either WATCH line flips that lane's vote, and with it the brief's cross-asset majority."
+    else:
+        verdict = "Calm, with room: neither credit nor vol is near its WATCH line"
+        changes = f"Either line coming within {READ_NEAR_DAYS:.0f} typical days."
+    return {"topic": topic, "verdict": verdict, "evidence": ev, "rule": rule, "changes_if": changes, "states": states}
+
+
+def market_read_section(inp: dict, ctx: dict) -> dict:
+    """Four diagnoses from data the brief already holds. ctx carries the
+    already-built breadth, rotation (compass) and regime (flips) sections."""
+    prices, fred = inp.get("prices") or {}, inp.get("fred") or {}
+    spy1, asof = _ret1(prices, "SPY")
+    rsp1, _ = _ret1(prices, "RSP")
+    qqq1, _ = _ret1(prices, "QQQ")
+    gld1, _ = _ret1(prices, "GLD")
+    tlt1, _ = _ret1(prices, "TLT")
+    comp = {c["name"]: c.get("r20") for c in ((ctx.get("rotation") or {}).get("compass") or [])}
+    br = ctx.get("breadth") or {}
+    vix_s = fred.get("VIXCLS", pd.Series(dtype=float))
+    vix = _f(vix_s.iloc[-1]) if len(vix_s) else None
+    vix_d = _f(vix_s.iloc[-1] - vix_s.iloc[-2]) if len(vix_s) > 1 else None
+    vix_sd = _f(vix_s.diff().dropna().iloc[-252:].std()) if len(vix_s) > 41 else None
+    hy_s = fred.get("BAMLH0A0HYM2", pd.Series(dtype=float))
+    hy = _f(hy_s.iloc[-1]) if len(hy_s) else None
+    hy_d = _f((hy_s.iloc[-1] - hy_s.iloc[-2]) * 100) if len(hy_s) > 1 else None
+    hy_mom = _f(hy_s.iloc[-1] - hy_s.iloc[-11]) if len(hy_s) > 10 else None
+    hy_sd = _f(hy_s.diff().dropna().iloc[-252:].std()) if len(hy_s) > 41 else None
+    hy_asof = pd.to_datetime(hy_s.index[-1]).date().isoformat() if len(hy_s) else None
+    s20, s1 = _rate_split(fred, 20), _rate_split(fred, 1)
+    items = [read_rates(s20, s1, comp.get("Growth vs value")),
+             read_breadth(spy1, rsp1, qqq1, br.get("pct_above_50"), comp.get("Equal vs cap weight"), asof),
+             read_cross(spy1, gld1, tlt1, vix, vix_d, hy, hy_d, hy_asof, asof),
+             read_stress(hy, hy_mom, hy_sd, hy_asof, vix, vix_sd, (ctx.get("regime") or {}).get("flips"))]
+    fred_asof = s20["asof"] if s20 else hy_asof
+    note = (f"Prices as of {asof or 'n/a'}; FRED rates and credit as of {fred_asof or 'n/a'}"
+            + (" (FRED runs one session behind prices)." if asof and fred_asof and fred_asof < asof else "."))
+    return {"items": items, "dates_note": note, "price_asof": asof, "fred_asof": fred_asof}
+
+
 # ── Portfolio ──────────────────────────────────────────────────────────────
 
 _INV_RULES = [
@@ -1537,6 +1810,7 @@ def build(inp: dict) -> dict:
     ro = rotation_section(inp)
     fl = flow_section(inp)
     br = breadth_section(inp)
+    mr = market_read_section(inp, {"breadth": br, "rotation": ro, "regime": rg})
     targets = a.get("targets") or (inp.get("markets") or {}).get("regime_targets") or {}
     pf = portfolio_section(inp, targets, rg.get("key"))
     mdl = model_section(inp, rg)
@@ -1546,7 +1820,7 @@ def build(inp: dict) -> dict:
     sg = signals_section(inp, mdl)
     dh = data_health(inp)
     brief = {"session": inp["session"].isoformat(), "generated_et": mt.fmt_et(inp["now_et"]),
-             "scoreboard": sb, "regime": rg, "cross_asset": xa, "rotation": ro, "flow": fl,
+             "scoreboard": sb, "market_read": mr, "regime": rg, "cross_asset": xa, "rotation": ro, "flow": fl,
              "breadth": br, "model": mdl, "portfolio": pf, "swing": sw, "next48": nx, "alerts": al,
              "signals": sg,
              "data_health": dh, "errors": inp.get("errors", []), "targets": targets}
@@ -1654,6 +1928,15 @@ def render_md(b: dict) -> str:
          f"*Generated {b['generated_et']} · every number computed from data; every interpretive line is a rule "
          f"applied to it. Desk research, not personalized advice.*", ""]
     L += ["## 1 · Headline", *[f"{s}" for s in b["headline"]], ""]
+
+    mr = b.get("market_read") or {}
+    if mr.get("items"):
+        L += ["## 1A · Market read — what the data says, and why",
+              f"*{mr.get('dates_note', '')} Each verdict is a rule applied to the numbers listed under it.*", ""]
+        for it in mr["items"]:
+            L.append(f"**{it['topic']}: {it['verdict']}**")
+            L += [f"- {e}" for e in it.get("evidence", [])]
+            L += [f"- *Rule:* {it['rule']}", f"- *Would change if:* {it['changes_if']}", ""]
 
     sb = b["scoreboard"]
     L += ["## 2 · Scoreboard", "| Metric | Value | Δ1d | Δ5d | Δ20d | 1-yr pctile | Today in σ | As of |",
@@ -2013,6 +2296,92 @@ def selftest() -> dict:
         b = build(inp)
         md = render_md(b)
         out = write(b)
+        # v1.2: Market read — each rule on hand-set numbers, thresholds vs cross_asset, rendering
+        sp = lambda nom, real, lvl=4.98: {"nom_bp": nom, "real_bp": real, "be_bp": nom - real, "level": lvl,
+                                          "real_level": 2.6, "asof": "2026-10-29"}
+        r_ = read_rates(sp(30, 28), sp(5, 4), None)
+        if r_["driver"] != "real" or "ROSE on real yields" not in r_["verdict"]:
+            f.append(f"read_rates: +30 = real +28 must be a real-yield rise: {r_['verdict']}")
+        if "20-day +30bp = real +28bp + breakeven +2bp" not in r_["evidence"][0]:
+            f.append(f"read_rates evidence must show the split that adds up: {r_['evidence'][0]}")
+        r_ = read_rates(sp(30, 5), None, None)
+        if r_["driver"] != "breakeven" or "inflation expectations" not in r_["verdict"]:
+            f.append(f"read_rates: +30 = breakeven +25 must be an inflation rise: {r_['verdict']}")
+        r_ = read_rates(sp(-31, -30), None, -11.1)
+        if r_["driver"] != "real" or "FELL on real yields" not in r_["verdict"] or \
+                not any("something other than rates" in e for e in r_["evidence"]):
+            f.append("read_rates: real-yield fall with growth lagging must flag a non-rate drag on growth")
+        r_ = read_rates(sp(18, 9), None, None)
+        if r_["driver"] != "both":
+            f.append(f"read_rates: an even split must read as both: {r_['driver']}")
+        if read_rates(sp(3, 3), None, None)["driver"] is not None:
+            f.append("read_rates: a move under the noise line must read as little changed")
+        b_ = read_breadth(-1.8, -0.8, -3.5, 66.0, 6.0, "2026-10-30")
+        if b_["kind"] != "megacap_down":
+            f.append(f"read_breadth: SPY −1.8 / RSP −0.8 must be megacap-led: {b_['kind']}")
+        for args, want in (((-1.5, -1.6, -1.4, 40.0, -2.0, "d"), "broad_selloff"),
+                           ((-1.5, -1.6, -1.4, 70.0, -2.0, "d"), "broad_down"),
+                           ((1.0, 0.2, 1.8, 60.0, -1.0, "d"), "narrow_up"),
+                           ((1.0, 0.9, 1.1, 60.0, 1.0, "d"), "broad_up"),
+                           ((0.1, 0.0, 0.2, 60.0, 0.0, "d"), "quiet")):
+            if read_breadth(*args)["kind"] != want:
+                f.append(f"read_breadth{args} must be {want}: {read_breadth(*args)['kind']}")
+        for args, want in (((-1.8, -3.5, 0.4), "liquidity"), ((-1.5, 0.5, 0.8), "flight"),
+                           ((-1.5, 0.0, -1.0), "rates_scare"), ((1.2, 0.3, -0.5), "risk_on"),
+                           ((1.2, 0.3, 0.6), "relief"), ((0.3, -0.2, 0.1), "none")):
+            got_k = read_cross(*args, 19.4, 2.2, 3.26, 12.0, "2026-10-29", "2026-10-30")["kind"]
+            if got_k != want:
+                f.append(f"read_cross{args} must be {want}: {got_k}")
+        s_ = read_stress(3.26, 0.03, 0.05, "2026-10-29", 19.4, 1.5, [])
+        if s_["verdict"] != "Calm, but close: vol is about 1 typical day from its WATCH line":
+            f.append(f"read_stress: VIX 19.4 (1.5-pt typical day) is ~1 day from WATCH, HY ~5 is not close: {s_['verdict']}")
+        s_ = read_stress(3.40, 0.03, 0.05, "2026-10-29", 19.4, 1.5, [])
+        if s_["verdict"] != "Calm, but close: vol is about 1 typical day and credit is about 2 typical days from their WATCH lines":
+            f.append(f"read_stress: both lanes close must both be named, nearest first: {s_['verdict']}")
+        if not read_stress(2.8, 0.0, 0.05, "d", 14.0, 1.5, [])["verdict"].startswith("Calm, with room"):
+            f.append("read_stress: HY 2.8 / VIX 14 must be calm with room")
+        if not read_stress(3.6, 0.0, 0.05, "d", 14.0, 1.5, [])["verdict"].startswith("WATCH in credit"):
+            f.append("read_stress: HY 3.6 must be WATCH")
+        if not read_stress(3.0, 0.0, 0.05, "d", 31.0, 1.5, [])["verdict"].startswith("STRESS in vol"):
+            f.append("read_stress: VIX 31 must be STRESS")
+        # the lines must be the cross-asset lanes' own lines, so the two cannot disagree
+        import cross_asset as _ca
+        for hy_, mom_ in ((3.49, 0.0), (3.51, 0.0), (3.0, 0.51), (3.0, 0.49), (5.01, 0.0), (4.9, 0.0)):
+            lane = _ca.credit_lane(hy_, mom_)["state"]
+            mine = read_stress(hy_, mom_, 0.05, "d", None, None, [])["states"]["credit"]
+            if lane != mine:
+                f.append(f"credit line out of sync with cross_asset at HY {hy_}, 2wk {mom_}: {mine} vs {lane}")
+        for v_ in (20.99, 21.0, 29.99, 30.0, 12.0):
+            lane = _ca.vol_lane(v_)["state"]
+            mine = read_stress(None, None, None, "d", v_, 1.5, [])["states"]["vol"]
+            if lane != mine:
+                f.append(f"vol line out of sync with cross_asset at VIX {v_}: {mine} vs {lane}")
+        # the section is built and rendered, every item with its evidence, rule and flip condition
+        mr_ = b.get("market_read") or {}
+        if len(mr_.get("items", [])) != 4 or "## 1A · Market read" not in md:
+            f.append("Market read section missing from the brief")
+        for it in mr_.get("items", []):
+            if f"**{it['topic']}: {it['verdict']}**" not in md or f"*Rule:* {it['rule']}" not in md \
+                    or f"*Would change if:* {it['changes_if']}" not in md:
+                f.append(f"Market read item not rendered in full: {it['topic']}")
+        if "## 1A · Market read" in md and md.index("## 1A · Market read") > md.index("## 2 · Scoreboard"):
+            f.append("Market read must sit between the headline and the scoreboard")
+        # _rate_split on real series: common dates only, and nominal = real + breakeven exactly
+        _d = pd.bdate_range("2026-09-01", periods=30)
+        _n10 = pd.Series(np.linspace(4.60, 4.98, 30), index=_d)
+        _r10 = pd.Series(np.linspace(2.40, 2.63, 30), index=_d).drop(_d[-1])      # DFII10 one day short
+        _sp = _rate_split({"DGS10": _n10, "DFII10": _r10}, 20)
+        _c = pd.concat([_n10, _r10], axis=1).dropna()
+        _want_nom = (_c.iloc[-1, 0] - _c.iloc[-21, 0]) * 100
+        _want_real = (_c.iloc[-1, 1] - _c.iloc[-21, 1]) * 100
+        if not _sp or _sp["asof"] != _d[-2].date().isoformat():
+            f.append(f"_rate_split must use the last COMMON date: {_sp and _sp['asof']}")
+        elif abs(_sp["nom_bp"] - _want_nom) > 1e-9 or abs(_sp["real_bp"] - _want_real) > 1e-9 \
+                or abs(_sp["nom_bp"] - _sp["real_bp"] - _sp["be_bp"]) > 1e-9:
+            f.append(f"_rate_split must give nominal = real + breakeven on common dates: {_sp}")
+        if _rate_split({"DGS10": _n10}, 20) is not None or _rate_split({"DGS10": _n10, "DFII10": _r10}, 40) is not None:
+            f.append("_rate_split must return None when a series or enough history is missing")
+
         # v1.1: every cross-asset "why" must reach the markdown in full (v1 cut at 160 chars)
         for _lane, _v in (b["cross_asset"].get("lanes") or {}).items():
             _note = str(_v.get("note", "")).replace("|", "\\|").replace("\n", " ")
