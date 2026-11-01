@@ -1,6 +1,15 @@
 """
-daily_brief.py  (v1.4 — November 2026)
+daily_brief.py  (v1.5 — November 2026)
 ─────────────────────────────────────
+v1.5 (2026-11-01): section 7 gains two tables.
+  * Breadth trend: % of the constituent proxy above its 50- and 200-day, and
+    52-week highs minus lows, today and 5 / 20 / 60 sessions ago, each from
+    closes up to that session. A 10-point move in 20 sessions is a trend; a
+    falling trend under a rising SPY is flagged as narrowing.
+  * Top-10 contribution: SPY's 10 largest holdings (State Street daily file),
+    their 1- and 20-day returns and points contributed, with the rest of the
+    index's return backed out. Verdict: carried by the top 10 / in line /
+    leaders lagging, by their share of the move versus their weight.
 v1.4 (2026-11-01): section 6A carries the Flow Map v1.2 verdict as published:
   firm or BORDERLINE (within one typical day of the ±0.25% line), the
   recommended steps for the model portfolio and the swing book, and a regime
@@ -277,7 +286,7 @@ def _memo_prices(fetch: Callable) -> Callable:
 def gather(today_et: Optional[datetime] = None, fred_key: str = "",
            fetch_fred: Optional[Callable] = None, fetch_prices: Optional[Callable] = None,
            assess: Optional[Callable] = None, macro_lookup: Optional[Callable] = None,
-           data_dir: Optional[str] = None) -> dict:
+           data_dir: Optional[str] = None, fetch_holdings: Optional[Callable] = None) -> dict:
     """Collect every input. Failures are recorded, never raised."""
     now = today_et or mt.now_et()
     session = mt.last_trading_day(now.date())
@@ -364,8 +373,14 @@ def gather(today_et: Optional[datetime] = None, fred_key: str = "",
         sleeves = set(_rc.BASE_WEIGHTS)
     except Exception:
         sleeves = set()
+    inp["spy_holdings"], inp["spy_holdings_error"] = [], None
+    try:
+        inp["spy_holdings"] = (fetch_holdings or _holdings_default)() or []
+    except Exception as e:
+        inp["spy_holdings_error"] = f"{type(e).__name__}: {str(e)[:120]}"
     tickers = sorted(set(universe) | set(comp) | set(ledger_tk) | {t for _, t in PRICE_SCORE}
-                     | set(FRESHER.values()) | sleeves | set(BENCH_TICKERS))
+                     | set(FRESHER.values()) | sleeves | set(BENCH_TICKERS)
+                     | {t for t, _ in inp["spy_holdings"]})
     inp["universe"] = universe
     try:
         inp["prices"] = (fetch_prices or _default_prices)(tickers)
@@ -1072,6 +1087,16 @@ def breadth_section(inp: dict) -> dict:
     spy20 = float(spy.iloc[-1] / spy.iloc[-21] - 1) * 100 if len(spy) > 21 else None
     rsp20 = float(rsp.iloc[-1] / rsp.iloc[-21] - 1) * 100 if len(rsp) > 21 else None
     out["spy_20d"], out["rsp_20d"] = spy20, rsp20
+    try:
+        out["trend"] = breadth_trend(prices, uni)
+    except Exception as e:
+        out["trend"] = {"available": False, "reason": f"{type(e).__name__}: {e}"}
+    try:
+        out["top10"] = top10_contribution(prices, inp.get("spy_holdings") or [])
+    except Exception as e:
+        out["top10"] = {"available": False, "reason": f"{type(e).__name__}: {e}"}
+    if inp.get("spy_holdings_error") and not out["top10"].get("available"):
+        out["top10"]["reason"] = f"SPY holdings file failed: {inp['spy_holdings_error']}"
     if p50 is None:
         out["conclusion"] = "Breadth unavailable — constituent prices did not load."
         return out
@@ -1089,6 +1114,176 @@ def breadth_section(inp: dict) -> dict:
     else:
         c += "Participation is mixed."
     out["conclusion"] = c
+    return out
+
+
+# ── v1.5: top-10 contribution and breadth trend (section 7) ──────────────────
+# Top 10: how much of SPY's move came from its 10 largest holdings, and what
+# the other ~490 names did. Weights come from State Street's daily SPY
+# holdings file (the same file macro_flags reads for top-20 concentration).
+# Start-of-window weights are backed out exactly for a buy-and-hold window:
+#   w0_i = w_now_i x (1 + R_spy) / (1 + r_i)
+# contribution_i = w0_i x r_i (points of SPY return); the rest of the index
+# returned (R_spy - sum contributions) / (1 - sum w0).
+TOP_N = 10
+CONC_TOP_HEAVY = 1.5      # top-10 share of SPY's move / their weight share at or above this = carried by the top 10
+CONC_BROAD = 0.67         # at or below this = the top 10 lagged the rest of the index
+CONC_MIN_MOVE = 0.5       # % — a SPY move smaller than this is too small to split into shares
+TOP_MIN_COVER = 0.90      # share of the top-10 weight that must be priced, or the split is not reported
+# Breadth trend: % of the constituent proxy above its 50-day, as a series.
+BREADTH_TREND_PTS = 10.0  # pp change over 20 sessions that counts as a trend (~11 names on a 109-name universe)
+BREADTH_LOOKBACK = 60     # sessions of history shown
+_TICKER_RE = None
+
+
+def spy_top_holdings(raw: bytes, n: int = TOP_N) -> list:
+    """[(yfinance ticker, weight %)] for the n largest SPY holdings, from an
+    SSGA daily-holdings workbook. Raises ValueError on an unrecognised layout."""
+    import io, re
+    grid = pd.read_excel(io.BytesIO(raw), header=None)
+    hdr = None
+    for i in range(min(len(grid), 40)):
+        cells = [str(c).strip().lower() for c in grid.iloc[i].tolist()]
+        if "weight" in cells and "ticker" in cells:
+            hdr = i
+            break
+    if hdr is None:
+        raise ValueError("no header row with 'Weight' and 'Ticker' in the first 40 rows")
+    df = grid.iloc[hdr + 1:].copy()
+    df.columns = [str(c).strip().lower() for c in grid.iloc[hdr].tolist()]
+    df["weight"] = pd.to_numeric(df["weight"], errors="coerce")
+    df["ticker"] = df["ticker"].astype(str).str.strip().str.upper()
+    df = df[df["weight"] > 0]
+    if len(df) < 100:
+        raise ValueError(f"only {len(df)} weighted holdings parsed — not the full SPY basket")
+    if df["weight"].sum() < 1.5:                     # fractions, not percent
+        df["weight"] = df["weight"] * 100
+    ok = df["ticker"].str.match(r"^[A-Z]{1,5}([.\-/][A-Z]{1,2})?$")
+    df = df[ok].sort_values("weight", ascending=False).head(n)
+    return [(re.sub(r"[./]", "-", t), round(float(w), 4)) for t, w in zip(df["ticker"], df["weight"])]
+
+
+def _holdings_default() -> list:
+    import macro_flags as _mf
+    return spy_top_holdings(_mf._get(_mf.SPY_HOLDINGS_URL).content)
+
+
+def top10_contribution(prices: dict, holdings: list, windows=(1, 5, 20)) -> dict:
+    out = {"available": False, "rows": [], "windows": {}, "holdings_n": len(holdings or [])}
+    spy = _price_close(prices, "SPY")
+    if not holdings or len(spy) < max(windows) + 1:
+        out["reason"] = "SPY holdings unavailable" if not holdings else "SPY price history too short"
+        return out
+    total_w = sum(w for _, w in holdings)
+    closes = {t: _price_close(prices, t) for t, _ in holdings}
+    priced = [(t, w) for t, w in holdings if len(closes[t]) > max(windows)]
+    out["missing"] = [t for t, _ in holdings if len(closes[t]) <= max(windows)]
+    out["cover"] = sum(w for _, w in priced) / total_w if total_w else 0.0
+    out["weight_now"] = round(total_w, 2)
+    out["asof"] = spy.index[-1].date().isoformat()
+    if out["cover"] < TOP_MIN_COVER:
+        out["reason"] = (f"only {out['cover']:.0%} of the top-{len(holdings)} weight is priced "
+                         f"(missing {', '.join(out['missing'])})")
+        return out
+    for t, w in priced:
+        c = closes[t]
+        out["rows"].append({"ticker": t, "weight": w,
+                            **{f"r{n}": float(c.iloc[-1] / c.iloc[-1 - n] - 1) * 100 for n in windows}})
+    for n in windows:
+        R = float(spy.iloc[-1] / spy.iloc[-1 - n] - 1)
+        contrib = w0_sum = 0.0
+        for row in out["rows"]:
+            r = row[f"r{n}"] / 100
+            w0 = row["weight"] / 100 * (1 + R) / (1 + r)
+            row[f"c{n}"] = w0 * r * 100               # points of SPY return
+            contrib += row[f"c{n}"]; w0_sum += w0
+        rest = (R * 100 - contrib) / (1 - w0_sum) if w0_sum < 1 else None
+        share = contrib / (R * 100) if abs(R * 100) >= CONC_MIN_MOVE else None
+        ratio = share / w0_sum if share is not None and w0_sum else None
+        out["windows"][n] = {"spy": R * 100, "top_contrib": contrib, "top_w0": w0_sum * 100, "rest": rest,
+                             "share": share, "ratio": ratio}
+    w = out["windows"][max(windows)]
+    n = max(windows)
+    rule = (f"Weights: State Street's daily SPY holdings file. Start-of-window weights are backed out for a "
+            f"buy-and-hold window (w0 = w_now x (1+R_SPY)/(1+r)); contribution = w0 x r. The top {len(out['rows'])} "
+            f"carry the move when their share of SPY's {n}-day return is at least {CONC_TOP_HEAVY}x their weight; "
+            f"they lag when it is {CONC_BROAD}x or less. SPY moves under {CONC_MIN_MOVE}% are not split.")
+    k = len(out["rows"])
+    if w["share"] is None:
+        verdict = (f"Over {n} days SPY moved {w['spy']:+.2f}%, too little to split: the top {k} contributed "
+                   f"{w['top_contrib']:+.2f} points and the other names returned {w['rest']:+.2f}%")
+        kind = "small_move"
+    else:
+        kind = ("top_heavy" if w["ratio"] >= CONC_TOP_HEAVY else "leaders_lag" if w["ratio"] <= CONC_BROAD
+                else "in_line")
+        lead = {"top_heavy": f"Carried by the top {k}", "leaders_lag": f"The top {k} lagged",
+                "in_line": f"The top {k} moved in line with their weight"}[kind]
+        verdict = (f"{lead}: over {n} days SPY {w['spy']:+.2f}%, of which the top {k} ({w['top_w0']:.1f}% of the "
+                   f"index) supplied {w['top_contrib']:+.2f} points ({w['share']:.0%} of the move, "
+                   f"{w['ratio']:.1f}x their weight); the other names returned {w['rest']:+.2f}%")
+        if (w["spy"] > 0) != (w["rest"] > 0):
+            verdict += " — the rest of the index moved the OTHER way"
+    out.update(available=True, kind=kind, verdict=verdict, rule=rule,
+               changes_if=f"The top {k}'s share of the {n}-day move crossing {CONC_TOP_HEAVY}x or {CONC_BROAD}x their weight.")
+    out["rows"].sort(key=lambda r: -abs(r[f"c{n}"]))
+    return out
+
+
+def breadth_trend(prices: dict, universe: list, lookback: int = BREADTH_LOOKBACK) -> dict:
+    """% of the constituent proxy above its 50-day and 200-day, and 52-week
+    highs minus lows, for each of the last `lookback` sessions. Each session
+    uses only closes up to that session."""
+    out = {"available": False}
+    spy = _price_close(prices, "SPY")
+    cols = {t: _price_close(prices, t) for t in universe}
+    cols = {t: s for t, s in cols.items() if len(s) >= 50}
+    if len(spy) < lookback + 21 or len(cols) < 20:
+        out["reason"] = "not enough constituent history"
+        return out
+    cal = spy.index[-(lookback + 260):]
+    px = pd.DataFrame({t: s.reindex(cal) for t, s in cols.items()})
+    ma50, ma200 = px.rolling(50, min_periods=50).mean(), px.rolling(200, min_periods=200).mean()
+    hi, lo = px.rolling(252, min_periods=252).max(), px.rolling(252, min_periods=252).min()
+    has = px.notna()
+    p50 = ((px > ma50) & ma50.notna() & has).sum(1) / (ma50.notna() & has).sum(1).replace(0, np.nan) * 100
+    p200 = ((px > ma200) & ma200.notna() & has).sum(1) / (ma200.notna() & has).sum(1).replace(0, np.nan) * 100
+    hl = ((px >= hi) & hi.notna()).sum(1) - ((px <= lo) & lo.notna()).sum(1)
+    hl = hl.where(hi.notna().sum(1) > 0)
+    ser = pd.DataFrame({"p50": p50, "p200": p200, "hl": hl}).iloc[-lookback:]
+    pts = {}
+    for lab, k in (("today", 1), ("5d", 6), ("20d", 21), ("60d", lookback)):
+        if len(ser) >= k:
+            r = ser.iloc[-k]
+            pts[lab] = {"date": ser.index[-k].date().isoformat(),
+                        **{c: (None if pd.isna(r[c]) else round(float(r[c]), 1)) for c in ("p50", "p200", "hl")}}
+    if pts.get("today", {}).get("p50") is None:
+        out["reason"] = "latest session has no 50-day reading"
+        return out
+    d20 = None if pts.get("20d", {}).get("p50") is None else pts["today"]["p50"] - pts["20d"]["p50"]
+    spy20 = float(spy.iloc[-1] / spy.iloc[-21] - 1) * 100
+    trend = ("improving" if d20 is not None and d20 >= BREADTH_TREND_PTS else
+             "deteriorating" if d20 is not None and d20 <= -BREADTH_TREND_PTS else "flat")
+    if trend == "deteriorating" and spy20 > 0:
+        verdict = (f"Narrowing: SPY is up {spy20:+.1f}% over 20 sessions while the share of names above their "
+                   f"50-day fell {d20:+.0f} points to {pts['today']['p50']:.0f}% — fewer stocks are carrying the index")
+    elif trend == "improving" and spy20 < 0:
+        verdict = (f"Broadening under a falling index: SPY {spy20:+.1f}% over 20 sessions, yet the share above the "
+                   f"50-day rose {d20:+.0f} points to {pts['today']['p50']:.0f}%")
+    elif d20 is None:
+        verdict = f"Breadth: {pts['today']['p50']:.0f}% above the 50-day; not enough history for a 20-session trend"
+    elif trend == "flat":
+        verdict = (f"Breadth flat: {pts['today']['p50']:.0f}% above the 50-day, {d20:+.0f} points over 20 sessions "
+                   f"(SPY {spy20:+.1f}%)")
+    else:
+        verdict = (f"Breadth {trend} with the index: {pts['today']['p50']:.0f}% above the 50-day, {d20:+.0f} points "
+                   f"over 20 sessions (SPY {spy20:+.1f}%)")
+    rule = (f"Share of the {len(cols)}-name constituent proxy closing above its 50-day average, each session from "
+            f"closes up to that session. A change of {BREADTH_TREND_PTS:.0f} points or more over 20 sessions "
+            f"(about {BREADTH_TREND_PTS / 100 * len(cols):.0f} names) is a trend; a falling trend under a rising SPY is "
+            f"narrowing. Proxy, not the full S&P 500.")
+    out.update(available=True, points=pts, d20=d20, spy20=spy20, trend=trend, verdict=verdict, rule=rule,
+               n=len(cols), series=[{"date": d.date().isoformat(), "p50": None if pd.isna(v) else round(float(v), 1)}
+                                    for d, v in ser["p50"].items()])
     return out
 
 
@@ -1807,6 +2002,12 @@ def data_health(inp: dict) -> list[dict]:
         pass
     rot = inp.get("rotation") or {}
     add("Money Flow bridge", (rot.get("published_at") or "")[:10] or None, 1, ref=wall)
+    if inp.get("spy_holdings"):
+        out.append({"input": "SPY holdings (top 10)", "asof": today.isoformat(), "age_days": 0, "status": "OK",
+                    "note": f"{len(inp['spy_holdings'])} largest weights, State Street daily file"})
+    else:
+        out.append({"input": "SPY holdings (top 10)", "asof": None, "age_days": None, "status": "MISSING",
+                    "note": inp.get("spy_holdings_error") or "not fetched — blocks the top-10 contribution table"})
     fm_ = inp.get("flow_map") or {}
     add("Flow map summary", (fm_.get("published_at") or "")[:10] or None, 1, ref=wall,
         note="" if fm_ else "not published yet (Money_Flow publish v1.1)")
@@ -2186,6 +2387,36 @@ def render_md(b: dict) -> str:
           f"· 52-wk highs/lows: {br.get('new_highs', 'n/a')}/{br.get('new_lows', 'n/a')} · universe: {br.get('universe')}",
           f"- SPY 20d {_fmt(br.get('spy_20d'), 1, '%', True)} vs RSP (equal weight) 20d {_fmt(br.get('rsp_20d'), 1, '%', True)}",
           "", f"**Conclusion:** {br['conclusion']}", ""]
+    bt = br.get("trend") or {}
+    if bt.get("available"):
+        pts = bt["points"]
+        labs = [(k, h) for k, h in (("today", "Today"), ("5d", "5 sessions ago"), ("20d", "20 sessions ago"),
+                                    ("60d", f"{BREADTH_LOOKBACK} sessions ago")) if k in pts]
+        L += ["**Breadth trend**", "", "| | " + " | ".join(f"{h} ({pts[k]['date'][5:]})" for k, h in labs) + " |",
+              "|---|" + "---|" * len(labs)]
+        for c, name, suf in (("p50", "% above 50-day", "%"), ("p200", "% above 200-day", "%"),
+                             ("hl", "52-wk highs minus lows", "")):
+            L.append(f"| {name} | " + " | ".join(
+                "n/a" if pts[k][c] is None else (f"{pts[k][c]:.0f}{suf}" if suf else f"{pts[k][c]:+.0f}") for k, _ in labs) + " |")
+        L += ["", f"**{bt['verdict']}**", f"- *Rule:* {bt['rule']}", ""]
+    else:
+        L += [f"*Breadth trend unavailable: {bt.get('reason', 'no data')}.*", ""]
+    tt = br.get("top10") or {}
+    if tt.get("available"):
+        k = len(tt["rows"])
+        L += [f"**Top-{k} contribution** *(SPY holdings weights; prices through {tt['asof']})*", "",
+              "| Holding | Weight | 1-day | 20-day | 20-day contribution |", "|---|---|---|---|---|"]
+        for r in tt["rows"]:
+            L.append(f"| {r['ticker']} | {r['weight']:.2f}% | {r['r1']:+.2f}% | {r['r20']:+.2f}% | {r['c20']:+.2f} pts |")
+        w1, w20 = tt["windows"][1], tt["windows"][20]
+        L.append(f"| **Top {k} together** | {tt['weight_now']:.1f}% | {w1['top_contrib']:+.2f} pts | | "
+                 f"**{w20['top_contrib']:+.2f} pts** |")
+        L.append(f"| **Rest of the index** | {100 - tt['weight_now']:.1f}% | {_fmt(w1['rest'], 2, '%', True)} | "
+                 f"{_fmt(w20['rest'], 2, '%', True)} | {w20['spy'] - w20['top_contrib']:+.2f} pts |")
+        L.append(f"| **SPY** | 100% | {w1['spy']:+.2f}% | {w20['spy']:+.2f}% | {w20['spy']:+.2f} pts |")
+        L += ["", f"**{tt['verdict']}**", f"- *Rule:* {tt['rule']}", f"- *Would change if:* {tt['changes_if']}", ""]
+    else:
+        L += [f"*Top-10 contribution unavailable: {tt.get('reason', 'no data')}.*", ""]
 
     pf = b["portfolio"]
     md_ = b.get("model") or {}
@@ -2434,7 +2665,7 @@ def selftest() -> dict:
         import importlib, storage_backend, position_ledger
         importlib.reload(storage_backend); importlib.reload(position_ledger)
         now = datetime(2026, 9, 25, 20, 0)
-        inp = gather(today_et=now, fetch_fred=fetch_fred, fetch_prices=lambda tks: {t: prices[t] for t in tks if t in prices},
+        inp = gather(today_et=now, fetch_fred=fetch_fred, fetch_holdings=lambda: [("NVDA", 7.5), ("AAPL", 6.8)], fetch_prices=lambda tks: {t: prices[t] for t in tks if t in prices},
                      assess=lambda: assessment, macro_lookup=lambda d: [
                          {"event": "NFP", "date": "2026-10-02", "days_away": 7, "affects": "rates", "blackout": False}])
         b = build(inp)
@@ -2584,6 +2815,83 @@ def selftest() -> dict:
             f.append("6A summary without a verdict must not render as available")
         if _usd(-592e6) != "−$592M" or _usd(3.26e9) != "+$3.26B" or _usd(None) != "n/a" or _usd(float("nan")) != "n/a":
             f.append(f"_usd formatting: {_usd(-592e6)} {_usd(3.26e9)} {_usd(None)} {_usd(float('nan'))}")
+
+        # v1.5: SPY holdings parser, top-10 contribution maths, breadth trend
+        import io as _io
+        _rows = [["SPDR S&P 500 ETF Trust", None, None, None], ["Holdings: As of 30-Oct-2026", None, None, None],
+                 [None, None, None, None], ["Name", "Ticker", "Identifier", "Weight"],
+                 ["US DOLLAR", "CASH_USD", "X", 9.0], ["NVIDIA", "NVDA", "A", 7.9], ["APPLE", "AAPL", "B", 6.9],
+                 ["BERKSHIRE B", "BRK.B", "C", 1.7]]
+        _rows += [[f"N{i}", f"T{chr(65 + i % 26)}{chr(65 + i // 26 % 26)}", "Z", 0.15] for i in range(500)]
+        _buf = _io.BytesIO(); pd.DataFrame(_rows).to_excel(_buf, header=False, index=False)
+        _h = spy_top_holdings(_buf.getvalue(), n=3)
+        if _h != [("NVDA", 7.9), ("AAPL", 6.9), ("BRK-B", 1.7)]:
+            f.append(f"spy_top_holdings: top 3 by weight, cash row excluded, BRK.B -> BRK-B: {_h}")
+        _frac = [r if i < 4 else [r[0], r[1], r[2], r[3] / 100] for i, r in enumerate(_rows)]
+        _buf2 = _io.BytesIO(); pd.DataFrame(_frac).to_excel(_buf2, header=False, index=False)
+        if spy_top_holdings(_buf2.getvalue(), n=1) != [("NVDA", 7.9)]:
+            f.append("spy_top_holdings must read weights given as fractions as percent")
+        try:
+            _bad = _io.BytesIO(); pd.DataFrame([["Name", "Weight"], ["a", 1]]).to_excel(_bad, header=False, index=False)
+            spy_top_holdings(_bad.getvalue()); f.append("a holdings file without a Ticker column must raise")
+        except ValueError:
+            pass
+        # contribution: A is 30% of the index at the start, +10% over 20 days; the rest +1% -> SPY +3.7%
+        _cal = pd.bdate_range(end="2026-10-30", periods=30)
+        _a = pd.Series(np.r_[np.full(9, 100.0), np.linspace(100, 110, 21)], index=_cal)
+        _rest = pd.Series(np.r_[np.full(9, 100.0), np.linspace(100, 101, 21)], index=_cal)
+        _spy = 100 * (0.3 * _a / 100 + 0.7 * _rest / 100)
+        _px = {"SPY": pd.DataFrame({"Close": _spy}), "A": pd.DataFrame({"Close": _a})}
+        _wn = 0.3 * 1.10 / 1.037 * 100
+        _t = top10_contribution(_px, [("A", _wn)])
+        _w = (_t.get("windows") or {}).get(20) or {}
+        if not _t.get("available") or abs(_w["top_contrib"] - 3.0) > 1e-6 or abs(_w["rest"] - 1.0) > 1e-6 \
+                or abs(_w["top_w0"] - 30.0) > 1e-6 or _t["kind"] != "top_heavy" \
+                or abs(_w["ratio"] - (3.0 / 3.7) / 0.30) > 1e-6:
+            f.append(f"top10_contribution: A supplies 3.00 pts of SPY +3.70%, the rest +1.00%, start weight 30%, "
+                     f"top-heavy (ratio 2.7): {_w} {_t.get('kind')}")
+        if top10_contribution(_px, [("A", _wn), ("MISSING", 40.0)]).get("available"):
+            f.append("top10_contribution must refuse when under 90% of the top weight is priced")
+        _flat = {"SPY": pd.DataFrame({"Close": pd.Series(np.r_[np.full(9, 100.0), np.linspace(100, 100.3, 21)],
+                                                         index=_cal)}), "A": _px["A"]}
+        if top10_contribution(_flat, [("A", 30.0)]).get("kind") != "small_move":
+            f.append("a SPY move under the minimum must not be split into shares")
+        # breadth trend: 40 names; 30 trend up throughout, 10 roll over in the last 20 sessions -> narrowing
+        _cal2 = pd.bdate_range(end="2026-10-30", periods=400)
+        _pxb = {"SPY": pd.DataFrame({"Close": pd.Series(np.linspace(100, 130, 400), index=_cal2)})}
+        for i_ in range(40):
+            base_ = np.linspace(50, 80, 400)
+            if i_ >= 26:          # 14 names fall hard over the last 15 sessions (inside the 20-session window)
+                base_[-15:] = np.linspace(base_[-16], base_[-16] * 0.7, 15)
+            _pxb[f"U{i_}"] = pd.DataFrame({"Close": pd.Series(base_, index=_cal2)})
+        _uni = [f"U{i_}" for i_ in range(40)]
+        _bt = breadth_trend(_pxb, _uni)
+        if not _bt.get("available") or _bt["trend"] != "deteriorating" or not _bt["verdict"].startswith("Narrowing"):
+            f.append(f"breadth_trend: names rolling over under a rising SPY must read narrowing: {_bt.get('verdict')}")
+        _gap = dict(_pxb); _gap.update({t: pd.DataFrame({"Close": _pxb[t]["Close"].iloc[:-1]}) for t in _uni})
+        if breadth_trend(_gap, _uni).get("available"):
+            f.append("breadth_trend must refuse (not crash) when the latest session has no constituent closes")
+        _bs = breadth_section({"prices": _pxb, "universe": _uni})
+        if _bt.get("available") and abs(_bt["points"]["today"]["p50"] - _bs["pct_above_50"]) > 0.05:
+            f.append(f"breadth_trend today must equal section 7's % above 50-day: {_bt['points']['today']['p50']} vs {_bs['pct_above_50']}")
+        _early = {t: pd.DataFrame({"Close": d["Close"].iloc[:-21]}) for t, d in _pxb.items()}
+        _bt_e = breadth_trend(_early, _uni)
+        if _bt.get("available") and _bt_e.get("available") and \
+                abs(_bt["points"]["20d"]["p50"] - _bt_e["points"]["today"]["p50"]) > 0.05:
+            f.append("breadth_trend must be point in time: the value 20 sessions ago equals a run cut off there")
+        # rendering and data health
+        sec7 = md.split("## 7 · Breadth")[1].split("## 8")[0]
+        if "**Top-2 contribution**" not in sec7 or "| **Rest of the index** |" not in sec7 or "| NVDA |" not in sec7:
+            f.append("section 7 must render the top-holdings contribution table")
+        if "Breadth trend unavailable" not in sec7:
+            f.append("with a 4-name universe the breadth trend must say it is unavailable, and why")
+        _dh5 = {r["input"]: r for r in b["data_health"]}
+        if (_dh5.get("SPY holdings (top 10)") or {}).get("status") != "OK":
+            f.append("data health must show the SPY holdings row")
+        _bf = build(dict(inp, spy_holdings=[], spy_holdings_error="ProxyError: blocked"))
+        if "SPY holdings file failed: ProxyError" not in render_md(_bf) or \
+                {r["input"]: r for r in _bf["data_health"]}["SPY holdings (top 10)"]["status"] != "MISSING":
+            f.append("a failed holdings fetch must be named in section 7 and in data health")
 
         # v1.4: flow verdict state, steps, regime cross-check, scoring hook
         from swing_desk import REGIME_DIRECTION as _RD
