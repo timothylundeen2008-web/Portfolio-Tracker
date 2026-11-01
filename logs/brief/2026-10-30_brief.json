@@ -1,6 +1,6 @@
 {
  "session": "2026-10-30",
- "generated_et": "Nov 01, 2026 02:28 PM EST",
+ "generated_et": "Nov 01, 2026 04:13 PM EST",
  "scoreboard": {
   "rows": [
    {
@@ -786,7 +786,7 @@
  },
  "rotation": {
   "available": true,
-  "published_at": "2026-11-01T12:43:11+00:00",
+  "published_at": "2026-11-01T20:53:45+00:00",
   "sectors": [
    {
     "ticker": "XLV",
@@ -825,16 +825,6 @@
     "direction": "Bottoming",
     "accumulation": 48.69,
     "stealth": true,
-    "prior_quadrant": "Improving",
-    "agree": true
-   },
-   {
-    "ticker": "XLF",
-    "sector": "Financial",
-    "quadrant": "Improving",
-    "direction": "Bottoming",
-    "accumulation": 43.27,
-    "stealth": false,
     "prior_quadrant": "Improving",
     "agree": true
    },
@@ -892,7 +882,7 @@
     "ticker": "XLRE",
     "sector": "Real Estate",
     "quadrant": "Lagging",
-    "direction": "Topping",
+    "direction": "Strengthening",
     "accumulation": -0.41,
     "stealth": false,
     "prior_quadrant": "Improving",
@@ -991,8 +981,7 @@
     "XLV",
     "XLK",
     "XLU",
-    "XLY",
-    "XLF"
+    "XLY"
    ],
    "price_only": [
     "XLC"
@@ -1001,15 +990,15 @@
     "XLRE"
    ]
   },
-  "conclusion": "Confirmed leadership in XLV, XLK, XLU, XLY, XLF (price and money agree). XLC is rotating in on price with negative accumulation \u2014 a bounce without sponsorship, not a rotation. Counter-clockwise moves today: XLRE Improving \u2192 Lagging (counter-clockwise: the prior phase is reversing)."
+  "conclusion": "Confirmed leadership in XLV, XLK, XLU, XLY (price and money agree). XLC is rotating in on price with negative accumulation \u2014 a bounce without sponsorship, not a rotation. Counter-clockwise moves today: XLRE Improving \u2192 Lagging (counter-clockwise: the prior phase is reversing)."
  },
  "flow": {
   "available": true,
   "confirmed": [
    {
-    "ticker": "XHB",
-    "price_chg_pct": 4.65,
-    "net_flow_pct_aum": 17.71,
+    "ticker": "XOP",
+    "price_chg_pct": 8.25,
+    "net_flow_pct_aum": 10.93,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
@@ -1017,23 +1006,15 @@
    {
     "ticker": "KMLM",
     "price_chg_pct": -0.9,
-    "net_flow_pct_aum": 9.15,
+    "net_flow_pct_aum": 9.97,
     "verdict": "ACCUMULATION (price down, money in)",
     "divergence": true,
     "measurable": true
    },
    {
-    "ticker": "XOP",
-    "price_chg_pct": 8.25,
-    "net_flow_pct_aum": 9.15,
-    "verdict": "CONFIRMED UPTREND",
-    "divergence": false,
-    "measurable": true
-   },
-   {
     "ticker": "LQD",
     "price_chg_pct": 1.9,
-    "net_flow_pct_aum": 7.95,
+    "net_flow_pct_aum": 8.81,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
@@ -1041,23 +1022,15 @@
    {
     "ticker": "USFR",
     "price_chg_pct": 0.06,
-    "net_flow_pct_aum": 6.47,
+    "net_flow_pct_aum": 6.93,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
    },
    {
-    "ticker": "SOXX",
-    "price_chg_pct": -16.89,
-    "net_flow_pct_aum": 6.08,
-    "verdict": "ACCUMULATION (price down, money in)",
-    "divergence": true,
-    "measurable": true
-   },
-   {
     "ticker": "HYG",
     "price_chg_pct": -0.01,
-    "net_flow_pct_aum": 6.06,
+    "net_flow_pct_aum": 6.45,
     "verdict": "ACCUMULATION (price down, money in)",
     "divergence": true,
     "measurable": true
@@ -1065,7 +1038,15 @@
    {
     "ticker": "EWJ",
     "price_chg_pct": -4.66,
-    "net_flow_pct_aum": 5.49,
+    "net_flow_pct_aum": 5.53,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true,
+    "measurable": true
+   },
+   {
+    "ticker": "SOXX",
+    "price_chg_pct": -16.89,
+    "net_flow_pct_aum": 5.41,
     "verdict": "ACCUMULATION (price down, money in)",
     "divergence": true,
     "measurable": true
@@ -1073,7 +1054,7 @@
    {
     "ticker": "XBI",
     "price_chg_pct": 2.14,
-    "net_flow_pct_aum": 4.33,
+    "net_flow_pct_aum": 4.63,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
@@ -1081,23 +1062,15 @@
    {
     "ticker": "IBB",
     "price_chg_pct": 3.11,
-    "net_flow_pct_aum": 4.15,
+    "net_flow_pct_aum": 4.48,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
    },
    {
-    "ticker": "SMH",
-    "price_chg_pct": -12.91,
-    "net_flow_pct_aum": 3.88,
-    "verdict": "ACCUMULATION (price down, money in)",
-    "divergence": true,
-    "measurable": true
-   },
-   {
     "ticker": "KRE",
     "price_chg_pct": 4.16,
-    "net_flow_pct_aum": 3.83,
+    "net_flow_pct_aum": 4.17,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
@@ -1105,23 +1078,15 @@
    {
     "ticker": "XLE",
     "price_chg_pct": 9.66,
-    "net_flow_pct_aum": 3.54,
+    "net_flow_pct_aum": 4.04,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
    },
    {
-    "ticker": "XLC",
-    "price_chg_pct": -7.94,
-    "net_flow_pct_aum": 3.54,
-    "verdict": "ACCUMULATION (price down, money in)",
-    "divergence": true,
-    "measurable": true
-   },
-   {
     "ticker": "HACK",
     "price_chg_pct": 3.05,
-    "net_flow_pct_aum": 3.5,
+    "net_flow_pct_aum": 3.73,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
@@ -1129,7 +1094,31 @@
    {
     "ticker": "XLI",
     "price_chg_pct": 0.88,
-    "net_flow_pct_aum": 3.49,
+    "net_flow_pct_aum": 3.65,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false,
+    "measurable": true
+   },
+   {
+    "ticker": "SMH",
+    "price_chg_pct": -12.91,
+    "net_flow_pct_aum": 3.52,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true,
+    "measurable": true
+   },
+   {
+    "ticker": "XLC",
+    "price_chg_pct": -7.94,
+    "net_flow_pct_aum": 3.37,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true,
+    "measurable": true
+   },
+   {
+    "ticker": "XHB",
+    "price_chg_pct": 4.65,
+    "net_flow_pct_aum": 3.37,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
@@ -1137,7 +1126,7 @@
    {
     "ticker": "EMB",
     "price_chg_pct": 0.96,
-    "net_flow_pct_aum": 2.4,
+    "net_flow_pct_aum": 2.48,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
@@ -1145,7 +1134,23 @@
    {
     "ticker": "PAVE",
     "price_chg_pct": 2.14,
-    "net_flow_pct_aum": 2.35,
+    "net_flow_pct_aum": 2.46,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false,
+    "measurable": true
+   },
+   {
+    "ticker": "XLV",
+    "price_chg_pct": 10.82,
+    "net_flow_pct_aum": 2.46,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false,
+    "measurable": true
+   },
+   {
+    "ticker": "XLP",
+    "price_chg_pct": 9.73,
+    "net_flow_pct_aum": 2.36,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
@@ -1159,25 +1164,9 @@
     "measurable": true
    },
    {
-    "ticker": "XLV",
-    "price_chg_pct": 10.82,
-    "net_flow_pct_aum": 2.17,
-    "verdict": "CONFIRMED UPTREND",
-    "divergence": false,
-    "measurable": true
-   },
-   {
-    "ticker": "XLP",
-    "price_chg_pct": 9.73,
-    "net_flow_pct_aum": 2.1,
-    "verdict": "CONFIRMED UPTREND",
-    "divergence": false,
-    "measurable": true
-   },
-   {
     "ticker": "SCHD",
     "price_chg_pct": 9.39,
-    "net_flow_pct_aum": 1.75,
+    "net_flow_pct_aum": 1.94,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
@@ -1185,7 +1174,7 @@
    {
     "ticker": "RING",
     "price_chg_pct": -13.56,
-    "net_flow_pct_aum": 1.61,
+    "net_flow_pct_aum": 1.41,
     "verdict": "ACCUMULATION (price down, money in)",
     "divergence": true,
     "measurable": true
@@ -1193,15 +1182,7 @@
    {
     "ticker": "XLK",
     "price_chg_pct": -4.61,
-    "net_flow_pct_aum": 1.41,
-    "verdict": "ACCUMULATION (price down, money in)",
-    "divergence": true,
-    "measurable": true
-   },
-   {
-    "ticker": "SLV",
-    "price_chg_pct": -18.35,
-    "net_flow_pct_aum": 1.21,
+    "net_flow_pct_aum": 1.36,
     "verdict": "ACCUMULATION (price down, money in)",
     "divergence": true,
     "measurable": true
@@ -1209,15 +1190,23 @@
    {
     "ticker": "XLRE",
     "price_chg_pct": 5.84,
-    "net_flow_pct_aum": 1.08,
+    "net_flow_pct_aum": 1.16,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
    },
    {
+    "ticker": "SLV",
+    "price_chg_pct": -18.35,
+    "net_flow_pct_aum": 1.0,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true,
+    "measurable": true
+   },
+   {
     "ticker": "TLT",
     "price_chg_pct": 4.08,
-    "net_flow_pct_aum": 0.58,
+    "net_flow_pct_aum": 0.61,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
@@ -1225,7 +1214,7 @@
    {
     "ticker": "MDY",
     "price_chg_pct": -0.13,
-    "net_flow_pct_aum": 0.45,
+    "net_flow_pct_aum": 0.46,
     "verdict": "ACCUMULATION (price down, money in)",
     "divergence": true,
     "measurable": true
@@ -1233,7 +1222,7 @@
    {
     "ticker": "PDBC",
     "price_chg_pct": 5.34,
-    "net_flow_pct_aum": 0.34,
+    "net_flow_pct_aum": 0.36,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
@@ -1241,7 +1230,7 @@
    {
     "ticker": "XLU",
     "price_chg_pct": 8.76,
-    "net_flow_pct_aum": 0.31,
+    "net_flow_pct_aum": 0.34,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
@@ -1249,7 +1238,7 @@
    {
     "ticker": "OIH",
     "price_chg_pct": 8.97,
-    "net_flow_pct_aum": 0.14,
+    "net_flow_pct_aum": 0.16,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
@@ -1257,10 +1246,18 @@
    {
     "ticker": "QQQ",
     "price_chg_pct": -6.23,
-    "net_flow_pct_aum": 0.08,
+    "net_flow_pct_aum": 0.07,
     "verdict": "ACCUMULATION (price down, money in)",
     "divergence": true,
     "measurable": true
+   },
+   {
+    "ticker": "GLD",
+    "price_chg_pct": -6.04,
+    "net_flow_pct_aum": 0.0,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false,
+    "measurable": false
    },
    {
     "ticker": "TIP",
@@ -1289,15 +1286,7 @@
    {
     "ticker": "XLF",
     "price_chg_pct": 6.49,
-    "net_flow_pct_aum": -0.3,
-    "verdict": "DISTRIBUTION (price up, money out)",
-    "divergence": true,
-    "measurable": true
-   },
-   {
-    "ticker": "XTN",
-    "price_chg_pct": 0.12,
-    "net_flow_pct_aum": -0.46,
+    "net_flow_pct_aum": -0.32,
     "verdict": "DISTRIBUTION (price up, money out)",
     "divergence": true,
     "measurable": true
@@ -1305,7 +1294,7 @@
    {
     "ticker": "XLY",
     "price_chg_pct": 6.75,
-    "net_flow_pct_aum": -0.51,
+    "net_flow_pct_aum": -0.54,
     "verdict": "DISTRIBUTION (price up, money out)",
     "divergence": true,
     "measurable": true
@@ -1313,7 +1302,7 @@
    {
     "ticker": "IWO",
     "price_chg_pct": -1.31,
-    "net_flow_pct_aum": -0.57,
+    "net_flow_pct_aum": -0.56,
     "verdict": "CONFIRMED DOWNTREND",
     "divergence": false,
     "measurable": true
@@ -1321,7 +1310,7 @@
    {
     "ticker": "XLB",
     "price_chg_pct": 8.18,
-    "net_flow_pct_aum": -0.58,
+    "net_flow_pct_aum": -0.63,
     "verdict": "DISTRIBUTION (price up, money out)",
     "divergence": true,
     "measurable": true
@@ -1329,7 +1318,7 @@
    {
     "ticker": "AMLP",
     "price_chg_pct": 3.27,
-    "net_flow_pct_aum": -0.84,
+    "net_flow_pct_aum": -0.86,
     "verdict": "DISTRIBUTION (price up, money out)",
     "divergence": true,
     "measurable": true
@@ -1345,7 +1334,7 @@
    {
     "ticker": "KBE",
     "price_chg_pct": 4.47,
-    "net_flow_pct_aum": -1.46,
+    "net_flow_pct_aum": -1.5,
     "verdict": "DISTRIBUTION (price up, money out)",
     "divergence": true,
     "measurable": true
@@ -1353,7 +1342,7 @@
    {
     "ticker": "IHI",
     "price_chg_pct": 5.39,
-    "net_flow_pct_aum": -1.51,
+    "net_flow_pct_aum": -1.57,
     "verdict": "DISTRIBUTION (price up, money out)",
     "divergence": true,
     "measurable": true
@@ -1361,7 +1350,7 @@
    {
     "ticker": "IWM",
     "price_chg_pct": 0.21,
-    "net_flow_pct_aum": -2.1,
+    "net_flow_pct_aum": -2.06,
     "verdict": "DISTRIBUTION (price up, money out)",
     "divergence": true,
     "measurable": true
@@ -1369,7 +1358,15 @@
    {
     "ticker": "PPH",
     "price_chg_pct": 7.41,
-    "net_flow_pct_aum": -2.27,
+    "net_flow_pct_aum": -2.38,
+    "verdict": "DISTRIBUTION (price up, money out)",
+    "divergence": true,
+    "measurable": true
+   },
+   {
+    "ticker": "XRT",
+    "price_chg_pct": 7.69,
+    "net_flow_pct_aum": -3.31,
     "verdict": "DISTRIBUTION (price up, money out)",
     "divergence": true,
     "measurable": true
@@ -1377,15 +1374,15 @@
    {
     "ticker": "IAI",
     "price_chg_pct": -0.07,
-    "net_flow_pct_aum": -3.46,
+    "net_flow_pct_aum": -3.34,
     "verdict": "CONFIRMED DOWNTREND",
     "divergence": false,
     "measurable": true
    },
    {
-    "ticker": "XRT",
-    "price_chg_pct": 7.69,
-    "net_flow_pct_aum": -22.42,
+    "ticker": "XTN",
+    "price_chg_pct": 0.12,
+    "net_flow_pct_aum": -26.73,
     "verdict": "DISTRIBUTION (price up, money out)",
     "divergence": true,
     "measurable": true
@@ -1396,7 +1393,6 @@
    "EEM",
    "EFA",
    "FXI",
-   "GLD",
    "INDA",
    "PBJ",
    "SGOV",
@@ -1469,13 +1465,13 @@
     "flag": "COHORT DIVERGENCE (noncomm 10 vs comm 88)"
    }
   ],
-  "conclusion": "48 of 58 ETFs pass the integrity test (20-session window). Inflows >1% of AUM: XHB, KMLM, XOP, LQD, USFR, SOXX. Outflows >1%: SPY, KBE, IHI, IWM, PPH, IAI. Price down / money in (possible stealth accumulation): KMLM, SOXX, HYG, EWJ, SMH, XLC \u2014 a watch signal only until price structure confirms. Crowded COT positioning: UST10Y (asset_mgr crowded LONG (100th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 100 vs lev_fund 42)); UST30Y (asset_mgr crowded SHORT (0th pctile) \u00b7 lev_fund crowded LONG (100th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 0 vs lev_fund 100)); UST2Y (lev_fund crowded LONG (94th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 25 vs lev_fund 94))."
+  "conclusion": "49 of 58 ETFs pass the integrity test (20-session window). Inflows >1% of AUM: XOP, KMLM, LQD, USFR, HYG, EWJ. Outflows >1%: SPY, KBE, IHI, IWM, PPH, XRT. Price down / money in (possible stealth accumulation): KMLM, HYG, EWJ, SOXX, SMH, XLC \u2014 a watch signal only until price structure confirms. Crowded COT positioning: UST10Y (asset_mgr crowded LONG (100th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 100 vs lev_fund 42)); UST30Y (asset_mgr crowded SHORT (0th pctile) \u00b7 lev_fund crowded LONG (100th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 0 vs lev_fund 100)); UST2Y (lev_fund crowded LONG (94th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 25 vs lev_fund 94))."
  },
  "flow_map": {
   "available": true,
   "stale": false,
-  "age_hours": 6.8,
-  "published_at": "2026-11-01T12:42:52+00:00",
+  "age_hours": 0.3,
+  "published_at": "2026-11-01T20:53:32+00:00",
   "data_through": "2026-10-30",
   "window": 20,
   "measured": 48,
@@ -1483,8 +1479,8 @@
   "rows": [
    {
     "asset_class": "US equity",
-    "flow_usd": 4405125684.184994,
-    "pct_aum": 0.20535355482312975,
+    "flow_usd": 4178775266.164994,
+    "pct_aum": 0.19480178710785553,
     "direction": "flat",
     "measured": 37,
     "total": 39,
@@ -1557,8 +1553,8 @@
    },
    {
     "asset_class": "Alternatives",
-    "flow_usd": 54492000.0,
-    "pct_aum": 9.965672818248821,
+    "flow_usd": 54492061.4,
+    "pct_aum": 9.965684047278971,
     "direction": "in",
     "measured": 1,
     "total": 1,
@@ -1567,18 +1563,18 @@
    }
   ],
   "kind": "stocks_flat",
-  "verdict": "Borderline \u2014 no material net move in stocks: stocks +$4.41B (+0.21% of measured assets); Treasuries + cash +$1.64B (+2.07%). The stock reading is 0.04 points from the +0.25% line, under one typical day (0.46): not a signal",
+  "verdict": "Borderline \u2014 no material net move in stocks: stocks +$4.18B (+0.19% of measured assets); Treasuries + cash +$1.64B (+2.07%). The stock reading is 0.06 points from the +0.25% line, under one typical day (0.46): not a signal",
   "evidence": [
-   "US equity: +$4.41B (+0.21%, flat) \u2014 37 of 39 funds; not measured: PBJ, VGT",
+   "US equity: +$4.18B (+0.19%, flat) \u2014 37 of 39 funds; not measured: PBJ, VGT",
    "International equity: +$1.28B (+5.53%, in) \u2014 1 of 5 funds; not measured: EEM, EFA, FXI, INDA \u2014 THIN: under half its funds measured, so this reading rests on one fund, is indicative only, and is left out of the verdict",
    "Treasuries: +$267M (+0.45%, in) \u2014 2 of 2 funds",
    "Credit: +$3.82B (+6.69%, in) \u2014 3 of 3 funds",
    "Cash-like: +$1.38B (+6.93%, in) \u2014 1 of 2 funds; not measured: SGOV",
    "Gold & commodities: +$362M (+0.90%, in) \u2014 3 of 6 funds; not measured: DBA, GLD, USO",
    "Alternatives: +$54M (+9.97%, in) \u2014 1 of 1 funds",
-   "With the thin class included the stock reading would be +0.26% (in)",
-   "Sensitivity: stocks without the hedging vehicles (HYG, IWM, KBE, KRE, QQQ, SMH, SPY, XBI, XHB, XOP, XRT) +1.80% (in) \u2014 DISAGREES",
-   "Stock reading, last 5 sessions: 10-26 +0.29%, 10-27 +0.48%, 10-28 +0.28%, 10-29 +0.33%, 10-30 +0.21%; typical day 0.46 points; 0.1 typical days from the line",
+   "With the thin class included the stock reading would be +0.25% (in)",
+   "Sensitivity: stocks without the hedging vehicles (HYG, IWM, KBE, KRE, QQQ, SMH, SPY, XBI, XHB, XOP, XRT) +1.79% (in) \u2014 DISAGREES",
+   "Stock reading, last 5 sessions: 10-26 +0.28%, 10-27 +0.47%, 10-28 +0.27%, 10-29 +0.32%, 10-30 +0.19%; typical day 0.46 points; 0.1 typical days from the line",
    "Within stocks: out of Broad US market (\u2212$10.10B), Small & mid caps (\u2212$1.55B); into Tech & growth (+$7.53B), Defensives (+$3.47B), Energy & materials (+$1.87B)",
    "\u2020 SPY, SMH are among the largest moves and are hedging vehicles: share counts also move with short selling and market-maker hedging, not only investor money"
   ],
@@ -1589,7 +1585,7 @@
    "EEM": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 19 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
    "EFA": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 16 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
    "FXI": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 5 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
-   "GLD": "not verified \u2014 thirdparty_stockanalysis: shares never changed",
+   "GLD": "building history \u2014 0 of 20 sessions measured (needs 16)",
    "INDA": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 6 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
    "PBJ": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 8 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
    "SGOV": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 5 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
@@ -1602,9 +1598,9 @@
   "steps": [
    "Model portfolio: treat Level 2 as unconfirmed. Hold the regime's weights; make no add or cut justified by market-wide flow (checklist v4 Step 5: flow never overrides the regime).",
    "Swing book: market-wide flow cannot serve as the Tier A confirmation leg today. Score each candidate's Tier A leg on its own fund's creations.",
-   "Resolves when the stock reading closes above +0.71% (firm in: about +$10.91B more net creations) or below -0.71% (firm out: about \u2212$19.72B); today +0.21%. With a typical day (0.46) wider than half the gap between the lines, no reading counts as a firm 'no move'.",
+   "Resolves when the stock reading closes above +0.71% (firm in: about +$11.10B more net creations) or below -0.71% (firm out: about \u2212$19.46B); today +0.19%. With a typical day (0.46) wider than half the gap between the lines, no reading counts as a firm 'no move'.",
    "Re-check after the next poll (7 sessions at borderline so far). Log the day's reading; do not act on it.",
-   "Lower confidence: without the hedging vehicles the stock reading is +1.80% (in), against +0.21% (flat) with them. Their share counts also move with short selling.",
+   "Lower confidence: without the hedging vehicles the stock reading is +1.79% (in), against +0.19% (flat) with them. Their share counts also move with short selling.",
    "Readmission would change the reading: not measured in stocks or safety: EEM, EFA, FXI, INDA, PBJ, SGOV, VGT."
   ],
   "regime_check": "Borderline flow neither confirms nor contradicts `transition_ambiguous`."
@@ -2031,7 +2027,7 @@
    "weight_now": 37.35,
    "asof": "2026-10-30",
    "kind": "top_heavy",
-   "verdict": "Carried by the top 10: over 20 days SPY -1.81%, of which the top 10 (38.8% of the index) supplied -2.12 points (117% of the move, 3.0x their weight); the other names returned +0.51% \u2014 the rest of the index moved the OTHER way",
+   "verdict": "Driven by the top 10: over 20 days SPY -1.81%, of which the top 10 (38.8% of the index) supplied -2.12 points (117% of the move, 3.0x their weight); the other names returned +0.51% \u2014 the rest of the index moved the OTHER way",
    "rule": "Weights: State Street's daily SPY holdings file. Start-of-window weights are backed out for a buy-and-hold window (w0 = w_now x (1+R_SPY)/(1+r)); contribution = w0 x r. The top 10 carry the move when their share of SPY's 20-day return is at least 1.5x their weight; they lag when it is 0.67x or less. SPY moves under 0.5% are not split.",
    "changes_if": "The top 10's share of the 20-day move crossing 1.5x or 0.67x their weight."
   },
@@ -3440,7 +3436,17 @@
  },
  "next48": {
   "horizon": "2026-11-03",
-  "events": [],
+  "events": [
+   {
+    "event": "ELECTION",
+    "date": "2026-11-03",
+    "days_away": 2,
+    "label": "US midterm election",
+    "affects": "ALL \u2014 results arrive after the close, so the next session can gap through stops",
+    "blackout": true,
+    "computed": true
+   }
+  ],
   "next_event": {
    "event": "NFP",
    "date": "2026-11-06",
@@ -3449,10 +3455,10 @@
    "blackout": false
   },
   "if_then": [
-   "Payrolls \u2014 strong: yields up. Weak: yields down. Weak payrolls WITH HY widening opens the growth-scare path \u2014 watch the HY 2-week change."
+   "Election \u2014 results arrive after the close, so the next session can gap through stops; that is why it is a blackout. It changes no regime input on the day; any effect reaches the regime through long real yields (the fiscal path), so watch DFII10 over the following sessions."
   ],
-  "calendar_asof": "2026-10-24",
-  "conclusion": "No scheduled binary event in the next two sessions \u2014 the event block is clear. Next: NFP on 2026-11-06 (5 days)."
+  "calendar_asof": "2026-11-01",
+  "conclusion": "Binary event inside the window: ELECTION 2026-11-03. No new entries in the affected sleeves until it prints."
  },
  "alerts": [
   {
@@ -4065,7 +4071,7 @@
     "direction": "long",
     "price_at_signal": null,
     "benchmark_at_signal": null,
-    "context": "ACCUMULATION (price down, money in) \u00b7 flow 0.45% AUM",
+    "context": "ACCUMULATION (price down, money in) \u00b7 flow 0.46% AUM",
     "notes": "",
     "source": "rotation"
    },
@@ -4469,10 +4475,10 @@
   },
   {
    "input": "Event calendar",
-   "asof": "2026-10-24",
+   "asof": "2026-11-01",
    "age_days": null,
    "status": "OK",
-   "note": "hardcoded dates; re-verify every January"
+   "note": "all typed schedules run through at least 2027-12-03; elections computed"
   }
  ],
  "errors": [],
@@ -4499,7 +4505,7 @@
   "Model portfolio: `transition_ambiguous`, drawdown -3.3%, no change today. Swing: 4 entry-permitted cards."
  ],
  "conclusions": {
-  "base_case": "Base case: `transition_ambiguous` holds. Cross-asset: CALM majority, dissent from rates, fx. Money is confirming only XLV, XLK, XLU, XLY, XLF.",
+  "base_case": "Base case: `transition_ambiguous` holds. Cross-asset: CALM majority, dissent from rates, fx. Money is confirming only XLV, XLK, XLU, XLY.",
   "what_would_change": [
    "HY OAS 3.26pp \u2192 4.50pp flips to `credit_stress` (~24 typical days)",
    "Short real rate 0.14pp \u2192 0.26pp flips to `restrictive_tightening` \u2014 \u22480.5 \u00d7 a 25bp policy move, or the CPI equivalent"
