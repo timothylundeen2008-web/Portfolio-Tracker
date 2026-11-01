@@ -1,6 +1,10 @@
 """
-daily_brief.py  (v1.5.1 — November 2026)
+daily_brief.py  (v1.5.2 — November 2026)
 ─────────────────────────────────────
+v1.5.2 (2026-11-01, N23): the "Event calendar" data-health row reports
+  event_calendar.coverage() (OK / WARN 45 days before a typed schedule runs
+  out / STALE) instead of a fixed OK, and US elections (computed by the
+  calendar) get a pre-committed line in "Next 48 hours".
 v1.5.1 (2026-11-01, N32): the top-10 verdict says "Driven by the top 10"
   (was "Carried by", which read oddly for a decline).
 v1.5 (2026-11-01): section 7 gains two tables.
@@ -408,8 +412,9 @@ def gather(today_et: Optional[datetime] = None, fred_key: str = "",
         import event_calendar as ec
         inp["events"] = (macro_lookup or (lambda d: ec.upcoming_macro(d, today=now.date())))(10)
         inp["calendar_asof"] = getattr(ec, "CALENDAR_ASOF", None)
+        inp["calendar_coverage"] = ec.coverage(now.date()) if hasattr(ec, "coverage") else None
     except Exception as e:
-        inp["events"] = []; inp["calendar_asof"] = None
+        inp["events"] = []; inp["calendar_asof"] = None; inp["calendar_coverage"] = None
         errors.append(f"event calendar: {e}")
     return inp
 
@@ -1941,6 +1946,10 @@ def _if_then(ev: str, srr, flips: dict) -> str:
         return ("GDP — a weak print with weak consumer data moves the growth composite toward CONTRACTING "
                 "(the growth_scare path needs price confirmation: cyclicals lagging defensives by 3pp+). "
                 "A strong print with hot core PCE (same morning) pushes DFII10 up." + lm_txt(+1))
+    if ev == "ELECTION":
+        return ("Election — results arrive after the close, so the next session can gap through stops; that is why "
+                "it is a blackout. It changes no regime input on the day; any effect reaches the regime through "
+                "long real yields (the fiscal path), so watch DFII10 over the following sessions." + lm_txt(+1))
     return f"{ev} — no pre-committed rule."
 
 
@@ -2052,8 +2061,10 @@ def data_health(inp: dict) -> list[dict]:
             + ("" if ref is None or pd.to_datetime(ref).date() >= today else
                " — this session's closes were NOT published when the brief ran"))
     if inp.get("calendar_asof"):
-        out.append({"input": "Event calendar", "asof": inp["calendar_asof"], "age_days": None, "status": "OK",
-                    "note": "hardcoded dates; re-verify every January"})
+        cov = inp.get("calendar_coverage") or {}
+        out.append({"input": "Event calendar", "asof": inp["calendar_asof"], "age_days": None,
+                    "status": cov.get("status") or "UNKNOWN",
+                    "note": cov.get("note") or "coverage check unavailable (event_calendar older than v1.2)"})
     return out
 
 
@@ -2817,6 +2828,24 @@ def selftest() -> dict:
             f.append("6A summary without a verdict must not render as available")
         if _usd(-592e6) != "−$592M" or _usd(3.26e9) != "+$3.26B" or _usd(None) != "n/a" or _usd(float("nan")) != "n/a":
             f.append(f"_usd formatting: {_usd(-592e6)} {_usd(3.26e9)} {_usd(None)} {_usd(float('nan'))}")
+
+        # v1.5.2 (N23): calendar coverage in data health; elections get a pre-committed line
+        _dhc = {r["input"]: r for r in b["data_health"]}.get("Event calendar") or {}
+        if _dhc.get("status") not in ("OK", "WARN", "STALE"):
+            f.append(f"the Event calendar row must report coverage status, not a fixed OK: {_dhc}")
+        _bst = build(dict(inp, calendar_coverage={"status": "STALE", "note": "CPI has no date ahead — add the next year"}))
+        _rst = {r["input"]: r for r in _bst["data_health"]}.get("Event calendar") or {}
+        if _rst.get("status") != "STALE" or "CPI has no date ahead" not in _rst.get("note", ""):
+            f.append(f"a calendar with an expired schedule must show STALE with the reason: {_rst}")
+        if "no pre-committed rule" in _if_then("ELECTION", 0.1, {}) or "gap" not in _if_then("ELECTION", 0.1, {}):
+            f.append("an election must have its own pre-committed line")
+        import event_calendar as _ec
+        _el = [e for e in _ec.upcoming_macro(10, today=date(2026, 11, 1)) if e["event"] == "ELECTION"]
+        _nx = next48_section(dict(inp, events=_el, now_et=datetime(2026, 11, 1, 20, 0), session=date(2026, 10, 30)),
+                             b["regime"])
+        if not any(e["event"] == "ELECTION" for e in _nx.get("events", [])) or \
+                not any(l.startswith("Election") for l in _nx.get("if_then", [])):
+            f.append(f"the 11/3 election must sit inside next-48 on 11/1 with its pre-committed line: {_nx}")
 
         # v1.5: SPY holdings parser, top-10 contribution maths, breadth trend
         import io as _io
