@@ -1,6 +1,6 @@
 {
  "session": "2026-10-30",
- "generated_et": "Nov 01, 2026 04:45 PM EST",
+ "generated_et": "Nov 01, 2026 05:12 PM EST",
  "scoreboard": {
   "rows": [
    {
@@ -149,19 +149,19 @@
    },
    {
     "name": "WTI crude",
-    "value": 104.06525917805743,
+    "value": 104.06527421640796,
     "unit": "$",
     "kind": "index",
-    "d1": 2.0126230104574816,
-    "d5": -5.153792218321696,
-    "d20": 6.308365694205165,
+    "d1": 2.008694460197158,
+    "d5": 0.7700954770922364,
+    "d20": 14.219376050124266,
     "d1_txt": "+2.0%",
-    "d5_txt": "-5.2%",
-    "d20_txt": "+6.3%",
-    "pctile_1y": 91.0,
-    "z1d": 0.5,
+    "d5_txt": "+0.8%",
+    "d20_txt": "+14.2%",
+    "pctile_1y": 96.0,
+    "z1d": 0.6,
     "asof": "2026-10-30",
-    "source": "FRED DCOILWTICO"
+    "source": "WTI (NYMEX front-month settle)"
    },
    {
     "name": "S&P 500 (SPY)",
@@ -408,6 +408,22 @@
     "source": "FRED BAMLC0A0CM"
    },
    {
+    "name": "WTI crude",
+    "value": 104.06527421640796,
+    "unit": "$",
+    "kind": "index",
+    "d1": 2.008694460197158,
+    "d5": 0.7700954770922364,
+    "d20": 14.219376050124266,
+    "d1_txt": "+2.0%",
+    "d5_txt": "+0.8%",
+    "d20_txt": "+14.2%",
+    "pctile_1y": 96.0,
+    "z1d": 0.6,
+    "asof": "2026-10-30",
+    "source": "WTI (NYMEX front-month settle)"
+   },
+   {
     "name": "Gold (GLD)",
     "value": 355.7799987792969,
     "unit": "$",
@@ -424,7 +440,7 @@
     "source": "yfinance"
    }
   ],
-  "conclusion": "Unusual moves today: IG OAS +3bp (+2.9\u03c3); Nasdaq 100 (QQQ) -3.5% (-2.8\u03c3); HY OAS +12bp (+2.3\u03c3). Everything else moved inside its normal daily range. At a 1-year extreme: HY OAS (95th pctile), IG OAS (96th pctile), Gold (GLD) (0th pctile)."
+  "conclusion": "Unusual moves today: IG OAS +3bp (+2.9\u03c3); Nasdaq 100 (QQQ) -3.5% (-2.8\u03c3); HY OAS +12bp (+2.3\u03c3). Everything else moved inside its normal daily range. At a 1-year extreme: HY OAS (95th pctile), IG OAS (96th pctile), WTI crude (96th pctile), Gold (GLD) (0th pctile)."
  },
  "market_read": {
   "items": [
@@ -1470,7 +1486,7 @@
  "flow_map": {
   "available": true,
   "stale": false,
-  "age_hours": 0.9,
+  "age_hours": 1.3,
   "published_at": "2026-11-01T20:53:32+00:00",
   "data_through": "2026-10-30",
   "window": 20,
@@ -4397,11 +4413,11 @@
    "note": "FRED + yfinance ^VIX after 2026-10-29"
   },
   {
-   "input": "FRED DCOILWTICO",
+   "input": "WTI (NYMEX front-month settle)",
    "asof": "2026-10-30",
    "age_days": 0,
    "status": "OK",
-   "note": "FRED + NYMEX settle rebuilt from CL=F 1-min bars (VWAP 14:28\u201314:30 ET) after 2026-10-27; vs FRED on 1 shared day(s): max gap $3.50"
+   "note": "one series of front-month settles: Yahoo CL=F daily for completed sessions, latest 4 rebuilt from 1-min bars (VWAP 14:28\u201314:30 ET); method check \u2014 Yahoo daily vs rebuilt on 3 earlier session(s): max $0.03; FRED spot minus settle on 2026-10-27: +3.50 (market spread, not an error); front-month expiry 2026-10-20 (Nov 2026 contract) inside the 20-day window \u2014 changes spanning it include the roll"
   },
   {
    "input": "Regime assessment",
@@ -4471,7 +4487,7 @@
    "asof": "2026-10-30",
    "age_days": 0,
    "status": "OK",
-   "note": "SPY calendar; 142/142 tickers have that bar"
+   "note": "SPY calendar; 143/143 tickers have that bar"
   },
   {
    "input": "Event calendar",
