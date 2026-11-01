@@ -1,6 +1,14 @@
 """
-daily_brief.py  (v1.5.2 — November 2026)
+daily_brief.py  (v1.5.3 — November 2026)
 ─────────────────────────────────────
+v1.5.3 (2026-11-01, fix_status N29): WTI after FRED's last date is the
+  NYMEX settlement, rebuilt from Yahoo 1-minute CL=F bars as the volume-
+  weighted price from 2:28 to 2:30pm ET (how NYMEX settles WTI), for sessions
+  whose 2:30pm has passed. The daily CL=F "close" it replaces is the last
+  trade (to 5pm, and a partial next-day bar after the 6pm reopen): 10/30
+  printed 102.95 against a 104.12 settle. With no minute bars, nothing is
+  spliced and FRED's own last value shows with its real age. Each run notes
+  the rebuilt settle's gap to FRED on days both exist.
 v1.5.2 (2026-11-01, N23): the "Event calendar" data-health row reports
   event_calendar.coverage() (OK / WARN 45 days before a typed schedule runs
   out / STALE) instead of a fixed OK, and US elections (computed by the
@@ -136,7 +144,10 @@ FRED_SCORE = [
 ]
 EXTRA_FRED = ["DGS30"]
 BENCH_TICKERS = ("SPY", "AGG")   # model-book benchmarks: SPY and a 60/40 (60% SPY / 40% AGG)
-FRESHER = {"VIXCLS": "^VIX", "DCOILWTICO": "CL=F"}      # yfinance splices for lagging FRED series
+FRESHER = {"VIXCLS": "^VIX"}                           # yfinance close splices for lagging FRED series
+# v1.5.3 (N29): WTI is spliced from the rebuilt NYMEX settle, never the daily CL=F last trade
+OIL_SID, OIL_TICKER = "DCOILWTICO", "CL=F"
+SETTLE_START, SETTLE_END = (14, 28), (14, 30)           # NYMEX WTI settlement window, ET (VWAP)
 FRED_MAX_AGE = {"DTWEXBGS": 10}                         # H.10 dollar index is published weekly
 PRICE_SCORE = [("S&P 500 (SPY)", "SPY"), ("Nasdaq 100 (QQQ)", "QQQ"),
                ("Gold (GLD)", "GLD"), ("Long Treasuries (TLT)", "TLT")]
@@ -278,6 +289,59 @@ def _default_prices(tickers: list[str], period: str = "2y") -> dict:
     return swing_agent._default_fetch(tickers, period=period)
 
 
+def _intraday_default(ticker: str) -> pd.DataFrame:
+    import yfinance as yf
+    return yf.download(ticker, period="5d", interval="1m", auto_adjust=False, progress=False, prepost=True)
+
+
+def settle_series(bars: Optional[pd.DataFrame], now_et) -> pd.Series:
+    """Daily WTI settlement rebuilt from 1-minute bars: volume-weighted close
+    of the bars stamped 14:28 and 14:29 ET (covering 14:28:00-14:30:00), one
+    value per session whose 14:30 has passed. Empty when the bars are missing,
+    so the caller never falls back to an after-hours last trade."""
+    if bars is None or getattr(bars, "empty", True):
+        return pd.Series(dtype=float)
+    df = bars.copy()
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0)
+    if "Close" not in df.columns:
+        return pd.Series(dtype=float)
+    idx = pd.DatetimeIndex(df.index)
+    idx = idx.tz_localize("UTC") if idx.tz is None else idx
+    df.index = idx.tz_convert("America/New_York")
+    now = pd.Timestamp(now_et)
+    now = now.tz_localize("America/New_York") if now.tzinfo is None else now.tz_convert("America/New_York")
+    t = df.index.hour * 60 + df.index.minute
+    lo, hi = SETTLE_START[0] * 60 + SETTLE_START[1], SETTLE_END[0] * 60 + SETTLE_END[1]
+    win = df[(t >= lo) & (t < hi)]
+    out = {}
+    for day, g in win.groupby(win.index.date):
+        if now < pd.Timestamp(day).tz_localize("America/New_York") + pd.Timedelta(minutes=hi):
+            continue
+        c = pd.to_numeric(g["Close"], errors="coerce")
+        v = pd.to_numeric(g["Volume"], errors="coerce") if "Volume" in g.columns else pd.Series(np.nan, index=g.index)
+        ok = c.notna()
+        if not ok.any():
+            continue
+        vv = v[ok].fillna(0)
+        out[pd.Timestamp(day)] = float((c[ok] * vv).sum() / vv.sum()) if vv.sum() > 0 else float(c[ok].mean())
+    return pd.Series(out, dtype=float).sort_index()
+
+
+def settle_vs_fred(settle: pd.Series, fred: pd.Series) -> Optional[dict]:
+    """Gap between the rebuilt settle and FRED's WTI on the days both exist
+    (FRED's DCOILWTICO is EIA's Cushing spot, which tracks the settle)."""
+    if settle is None or fred is None or not len(settle) or not len(fred):
+        return None
+    f = fred.copy()
+    f.index = pd.to_datetime(f.index).normalize()
+    both = pd.concat([settle, f], axis=1, join="inner").dropna()
+    if both.empty:
+        return None
+    d = (both.iloc[:, 0] - both.iloc[:, 1]).abs()
+    return {"n": int(len(d)), "max_abs": float(d.max()), "mean_abs": float(d.mean())}
+
+
 def _memo_prices(fetch: Callable) -> Callable:
     cache: dict = {}
 
@@ -292,7 +356,8 @@ def _memo_prices(fetch: Callable) -> Callable:
 def gather(today_et: Optional[datetime] = None, fred_key: str = "",
            fetch_fred: Optional[Callable] = None, fetch_prices: Optional[Callable] = None,
            assess: Optional[Callable] = None, macro_lookup: Optional[Callable] = None,
-           data_dir: Optional[str] = None, fetch_holdings: Optional[Callable] = None) -> dict:
+           data_dir: Optional[str] = None, fetch_holdings: Optional[Callable] = None,
+           fetch_intraday: Optional[Callable] = None) -> dict:
     """Collect every input. Failures are recorded, never raised."""
     now = today_et or mt.now_et()
     session = mt.last_trading_day(now.date())
@@ -402,6 +467,25 @@ def gather(today_et: Optional[datetime] = None, fred_key: str = "",
             tail = ys[ys.index > fs.index[-1]] if len(fs) else ys
             hist[sid] = pd.concat([fs, tail]).sort_index()
             inp["fred_src"][sid] = f"FRED + yfinance {yf_tk} after {fs.index[-1].date() if len(fs) else 'n/a'}"
+    # v1.5.3 (N29): oil after FRED's last date = the rebuilt NYMEX settle, never the after-hours last trade
+    try:
+        fs = hist.get(OIL_SID, pd.Series(dtype=float))
+        bars = (fetch_intraday or _intraday_default)(OIL_TICKER)
+        st_ = settle_series(bars, now)
+        if len(st_):
+            last_f = fs.index[-1] if len(fs) else None
+            tail = st_[st_.index > last_f] if last_f is not None else st_
+            gap = settle_vs_fred(st_, fs)
+            note = ("FRED + NYMEX settle rebuilt from CL=F 1-min bars (VWAP 14:28–14:30 ET)"
+                    + (f" after {last_f.date()}" if last_f is not None else "")
+                    + (f"; vs FRED on {gap['n']} shared day(s): max gap ${gap['max_abs']:.2f}" if gap else ""))
+            if len(tail):
+                hist[OIL_SID] = pd.concat([fs, tail]).sort_index()
+            inp["fred_src"][OIL_SID] = note
+        else:
+            inp["fred_src"][OIL_SID] = "FRED only — no settlement-window bars, so no after-hours print is used"
+    except Exception as e:
+        inp["fred_src"][OIL_SID] = f"FRED only — settle rebuild failed ({type(e).__name__})"
     missing = [t for t in tickers if t not in inp["prices"]]
     if missing:
         errors.append(f"prices missing for {len(missing)} of {len(tickers)} tickers"
@@ -2614,6 +2698,7 @@ def selftest() -> dict:
             "DGS30": walk(4.6, 0.05)}
     fred["DFII10"].iloc[-1] = fred["DFII10"].iloc[-2] + 0.20        # a 5σ day
     fred["VIXCLS"] = fred["VIXCLS"].iloc[:-2]                        # FRED lags the market
+    fred["DCOILWTICO"] = fred["DCOILWTICO"].iloc[:-2]                # ... and so does FRED's WTI
     fetch_fred = lambda sid, key="", start="": fred.get(sid, pd.Series(dtype=float))
 
     def px(v0, drift=0.0005):
@@ -2623,6 +2708,7 @@ def selftest() -> dict:
     prices = {t: px(100) for t in tickers}
     prices["TLT"] = px(100, drift=-0.001)
     prices["^VIX"] = px(16, drift=0.0)
+    prices["CL=F"] = pd.DataFrame({"Open": 69.0, "High": 69.0, "Low": 69.0, "Close": 69.0, "Volume": 1e6}, index=idx)  # after-hours last trade
 
     sig = SimpleNamespace(short_real_rate=0.48, long_real_yield=2.85, long_real_mom_3m=0.66, breakeven_10y=2.3,
                           hy_oas=2.8, hy_oas_mom_2w=0.1, spread_2s10s=0.3, spread_2s10s_mom_3m=0.0,
@@ -2678,7 +2764,17 @@ def selftest() -> dict:
         import importlib, storage_backend, position_ledger
         importlib.reload(storage_backend); importlib.reload(position_ledger)
         now = datetime(2026, 9, 25, 20, 0)
-        inp = gather(today_et=now, fetch_fred=fetch_fred, fetch_holdings=lambda: [("NVDA", 7.5), ("AAPL", 6.8)], fetch_prices=lambda tks: {t: prices[t] for t in tks if t in prices},
+        def _mbars(_t):                     # 1-min CL=F bars for the last 3 sessions, around the settle window
+            rows_ = []
+            for d_ in pd.bdate_range(end="2026-09-25", periods=3):
+                for hh, mm, px_, vol in ((14, 27, 70.0, 100), (14, 28, 71.0, 300), (14, 29, 72.0, 100),
+                                         (14, 30, 75.0, 100), (16, 59, 69.0, 50)):
+                    rows_.append((pd.Timestamp(d_.date()).replace(hour=hh, minute=mm).tz_localize("America/New_York"),
+                                  px_, vol))
+            return pd.DataFrame({"Close": [r[1] for r in rows_], "Volume": [r[2] for r in rows_]},
+                                index=pd.DatetimeIndex([r[0] for r in rows_]))
+        inp = gather(today_et=now, fetch_fred=fetch_fred, fetch_holdings=lambda: [("NVDA", 7.5), ("AAPL", 6.8)],
+                     fetch_intraday=_mbars, fetch_prices=lambda tks: {t: prices[t] for t in tks if t in prices},
                      assess=lambda: assessment, macro_lookup=lambda d: [
                          {"event": "NFP", "date": "2026-10-02", "days_away": 7, "affects": "rates", "blackout": False}])
         b = build(inp)
@@ -2828,6 +2924,34 @@ def selftest() -> dict:
             f.append("6A summary without a verdict must not render as available")
         if _usd(-592e6) != "−$592M" or _usd(3.26e9) != "+$3.26B" or _usd(None) != "n/a" or _usd(float("nan")) != "n/a":
             f.append(f"_usd formatting: {_usd(-592e6)} {_usd(3.26e9)} {_usd(None)} {_usd(float('nan'))}")
+
+        # v1.5.3 (N29): WTI after FRED = rebuilt NYMEX settle, never the after-hours last trade
+        _st = settle_series(_mbars("CL=F"), datetime(2026, 9, 25, 20, 0))
+        if len(_st) != 3 or abs(_st.iloc[-1] - (71.0 * 300 + 72.0 * 100) / 400) > 1e-9:
+            f.append(f"settle = volume-weighted close of the 14:28 and 14:29 bars only (71.25), one per session: {_st.to_dict()}")
+        if len(settle_series(_mbars("CL=F"), datetime(2026, 9, 25, 14, 29))) != 2:
+            f.append("a session whose 14:30 ET has not passed must not produce a settle")
+        _utc = _mbars("CL=F"); _utc.index = _utc.index.tz_convert("UTC")
+        if not settle_series(_utc, datetime(2026, 9, 25, 20, 0)).equals(_st):
+            f.append("bars stamped in UTC must give the same settle (times compared in New York time)")
+        if len(settle_series(pd.DataFrame(), datetime(2026, 9, 25, 20, 0))) or len(settle_series(None, datetime(2026, 9, 25, 20))):
+            f.append("no bars -> no settle (never a fallback)")
+        _oil = inp["fred"]["DCOILWTICO"]
+        if "NYMEX settle" not in (inp.get("fred_src") or {}).get("DCOILWTICO", "") or abs(float(_oil.iloc[-1]) - 71.25) > 1e-9:
+            f.append(f"oil after FRED's last date must be the rebuilt settle (71.25), labelled: "
+                     f"{(inp.get('fred_src') or {}).get('DCOILWTICO')} {float(_oil.iloc[-1])}")
+        _i2 = gather(today_et=now, fetch_fred=fetch_fred, fetch_holdings=lambda: [], fetch_intraday=lambda t: pd.DataFrame(),
+                     fetch_prices=lambda tks: {t: prices[t] for t in tks if t in prices}, assess=lambda: assessment,
+                     macro_lookup=lambda d: [])
+        if len(inp["fred"]["DCOILWTICO"]) != len(fred["DCOILWTICO"]) + 2:
+            f.append("exactly the two sessions after FRED's last date must be spliced from the settle")
+        if not (_i2.get("fred_src") or {}).get("DCOILWTICO", "").startswith("FRED only") or \
+                not _i2["fred"]["DCOILWTICO"].index[-1] == fred["DCOILWTICO"].index[-1]:
+            f.append("without settlement bars, oil must stay FRED-only (no after-hours splice)")
+        _g = settle_vs_fred(pd.Series([71.0, 72.0], index=pd.to_datetime(["2026-09-24", "2026-09-25"])),
+                            pd.Series([70.5, 73.0], index=pd.to_datetime(["2026-09-24", "2026-09-25"])))
+        if not _g or _g["n"] != 2 or abs(_g["max_abs"] - 1.0) > 1e-9:
+            f.append(f"settle_vs_fred: max gap over shared days: {_g}")
 
         # v1.5.2 (N23): calendar coverage in data health; elections get a pre-committed line
         _dhc = {r["input"]: r for r in b["data_health"]}.get("Event calendar") or {}
