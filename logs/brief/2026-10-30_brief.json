@@ -1,6 +1,6 @@
 {
  "session": "2026-10-30",
- "generated_et": "Nov 01, 2026 04:13 PM EST",
+ "generated_et": "Nov 01, 2026 04:40 PM EST",
  "scoreboard": {
   "rows": [
    {
@@ -1470,7 +1470,7 @@
  "flow_map": {
   "available": true,
   "stale": false,
-  "age_hours": 0.3,
+  "age_hours": 0.8,
   "published_at": "2026-11-01T20:53:32+00:00",
   "data_through": "2026-10-30",
   "window": 20,
