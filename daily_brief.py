@@ -1,6 +1,8 @@
 """
-daily_brief.py  (v1.5 — November 2026)
+daily_brief.py  (v1.5.1 — November 2026)
 ─────────────────────────────────────
+v1.5.1 (2026-11-01, N32): the top-10 verdict says "Driven by the top 10"
+  (was "Carried by", which read oddly for a decline).
 v1.5 (2026-11-01): section 7 gains two tables.
   * Breadth trend: % of the constituent proxy above its 50- and 200-day, and
     52-week highs minus lows, today and 5 / 20 / 60 sessions ago, each from
@@ -1216,7 +1218,7 @@ def top10_contribution(prices: dict, holdings: list, windows=(1, 5, 20)) -> dict
     else:
         kind = ("top_heavy" if w["ratio"] >= CONC_TOP_HEAVY else "leaders_lag" if w["ratio"] <= CONC_BROAD
                 else "in_line")
-        lead = {"top_heavy": f"Carried by the top {k}", "leaders_lag": f"The top {k} lagged",
+        lead = {"top_heavy": f"Driven by the top {k}", "leaders_lag": f"The top {k} lagged",
                 "in_line": f"The top {k} moved in line with their weight"}[kind]
         verdict = (f"{lead}: over {n} days SPY {w['spy']:+.2f}%, of which the top {k} ({w['top_w0']:.1f}% of the "
                    f"index) supplied {w['top_contrib']:+.2f} points ({w['share']:.0%} of the move, "
@@ -2850,6 +2852,8 @@ def selftest() -> dict:
                 or abs(_w["ratio"] - (3.0 / 3.7) / 0.30) > 1e-6:
             f.append(f"top10_contribution: A supplies 3.00 pts of SPY +3.70%, the rest +1.00%, start weight 30%, "
                      f"top-heavy (ratio 2.7): {_w} {_t.get('kind')}")
+        if not _t.get("verdict", "").startswith("Driven by the top 1"):
+            f.append(f"top-heavy verdict must read 'Driven by the top N': {_t.get('verdict')}")
         if top10_contribution(_px, [("A", _wn), ("MISSING", 40.0)]).get("available"):
             f.append("top10_contribution must refuse when under 90% of the top weight is priced")
         _flat = {"SPY": pd.DataFrame({"Close": pd.Series(np.r_[np.full(9, 100.0), np.linspace(100, 100.3, 21)],
