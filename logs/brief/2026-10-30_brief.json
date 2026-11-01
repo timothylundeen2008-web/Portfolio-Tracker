@@ -1,6 +1,6 @@
 {
  "session": "2026-10-30",
- "generated_et": "Nov 01, 2026 04:40 PM EST",
+ "generated_et": "Nov 01, 2026 04:45 PM EST",
  "scoreboard": {
   "rows": [
    {
@@ -149,17 +149,17 @@
    },
    {
     "name": "WTI crude",
-    "value": 104.12000274658203,
+    "value": 104.06525917805743,
     "unit": "$",
     "kind": "index",
-    "d1": 2.078434065276502,
-    "d5": -5.103898335233293,
-    "d20": 6.364289249751787,
-    "d1_txt": "+2.1%",
-    "d5_txt": "-5.1%",
-    "d20_txt": "+6.4%",
+    "d1": 2.0126230104574816,
+    "d5": -5.153792218321696,
+    "d20": 6.308365694205165,
+    "d1_txt": "+2.0%",
+    "d5_txt": "-5.2%",
+    "d20_txt": "+6.3%",
     "pctile_1y": 91.0,
-    "z1d": 0.6,
+    "z1d": 0.5,
     "asof": "2026-10-30",
     "source": "FRED DCOILWTICO"
    },
@@ -1470,7 +1470,7 @@
  "flow_map": {
   "available": true,
   "stale": false,
-  "age_hours": 0.8,
+  "age_hours": 0.9,
   "published_at": "2026-11-01T20:53:32+00:00",
   "data_through": "2026-10-30",
   "window": 20,
@@ -4401,7 +4401,7 @@
    "asof": "2026-10-30",
    "age_days": 0,
    "status": "OK",
-   "note": "FRED + yfinance CL=F after 2026-10-27"
+   "note": "FRED + NYMEX settle rebuilt from CL=F 1-min bars (VWAP 14:28\u201314:30 ET) after 2026-10-27; vs FRED on 1 shared day(s): max gap $3.50"
   },
   {
    "input": "Regime assessment",
@@ -4471,7 +4471,7 @@
    "asof": "2026-10-30",
    "age_days": 0,
    "status": "OK",
-   "note": "SPY calendar; 143/143 tickers have that bar"
+   "note": "SPY calendar; 142/142 tickers have that bar"
   },
   {
    "input": "Event calendar",
