@@ -1,6 +1,13 @@
 """
-daily_brief.py  (v1.3 — October 2026)
+daily_brief.py  (v1.4 — November 2026)
 ─────────────────────────────────────
+v1.4 (2026-11-01): section 6A carries the Flow Map v1.2 verdict as published:
+  firm or BORDERLINE (within one typical day of the ±0.25% line), the
+  recommended steps for the model portfolio and the swing book, and a regime
+  cross-check (does flow confirm, contradict, or say nothing about the
+  regime's tilt, taken from swing_desk.REGIME_DIRECTION). A firm flow call is
+  logged to signal_outcomes (flow_into_stocks / flow_out_of_stocks) so it is
+  scored; borderline days are not signals.
 v1.3 (2026-10-31): section 6A "Where the money went". Reads
   flow_map_summary.json (published by Money_Flow publish_to_checklist v1.1):
   20-session net ETF creations minus redemptions by asset class, trusted
@@ -933,7 +940,45 @@ def _hours_since(iso: Optional[str], now) -> Optional[float]:
         return None
 
 
-def flow_map_section(inp: dict) -> dict:
+FLOW_INTO = ("new_money", "into_stocks")
+FLOW_OUT = ("out_of_stocks", "leaving_both")
+
+
+def regime_tilt(key: Optional[str]) -> Optional[str]:
+    """risk-on / risk-off / none, from the swing desk's books-open table:
+    long-only regimes lean risk-on, short-only lean risk-off, both = no tilt."""
+    try:
+        from swing_desk import REGIME_DIRECTION
+    except Exception:
+        return None
+    if not key or key not in REGIME_DIRECTION:
+        return None
+    return {"long": "risk-on", "short": "risk-off"}.get(REGIME_DIRECTION[key][0], "none")
+
+
+def flow_regime_check(state: Optional[str], key: Optional[str]) -> str:
+    """Does market-wide flow confirm the regime's tilt? Checklist v4 Step 5:
+    flow never overrides the regime; a contradiction is logged and watched."""
+    tilt = regime_tilt(key)
+    if state in (None, "unavailable"):
+        return "Flow is unavailable, so Level 2 cannot confirm or contradict the regime (a data gap, not a signal)."
+    if state == "borderline":
+        return f"Borderline flow neither confirms nor contradicts `{key}`."
+    if tilt is None:
+        return f"Regime `{key}` has no tilt on record; flow is context only."
+    side = "into" if state in FLOW_INTO else "out" if state in FLOW_OUT else None
+    move = {"into": "into stocks", "out": "out of stocks"}.get(side)
+    if side is None:
+        return f"No market-wide flow signal; `{key}` stands on Level 1 alone."
+    if tilt == "none":
+        return (f"`{key}` has no directional tilt (swing books both ways), so money moving {move} is "
+                f"context, not confirmation.")
+    agrees = (side == "into") == (tilt == "risk-on")
+    return (f"Money moving {move} {'CONFIRMS' if agrees else 'CONTRADICTS'} `{key}`'s {tilt} tilt."
+            + ("" if agrees else " Log the contradiction and watch it; flow does not override the regime (Step 5)."))
+
+
+def flow_map_section(inp: dict, regime_key: Optional[str] = None) -> dict:
     """6A: where the money went, by asset class (Money_Flow flow_map_summary.json).
     Shown as published; this module does not recompute or re-judge it."""
     s = inp.get("flow_map") or {}
@@ -954,7 +999,10 @@ def flow_map_section(inp: dict) -> dict:
             "measured": cov.get("measured"), "total": cov.get("total"), "rows": rows,
             "kind": v.get("kind"), "verdict": v.get("verdict"), "evidence": list(v.get("evidence") or []),
             "rule": v.get("rule", ""), "changes_if": v.get("changes_if", ""),
-            "excluded": s.get("excluded") or {}}
+            "excluded": s.get("excluded") or {},
+            "state": v.get("state"), "borderline": v.get("borderline"),
+            "sessions_in_state": v.get("sessions_in_state"), "steps": list(v.get("steps") or []),
+            "regime_check": flow_regime_check(v.get("state"), regime_key) if v.get("state") else None}
 
 
 def _usd(x) -> str:
@@ -1831,7 +1879,11 @@ def signals_section(inp: dict, mdl: dict) -> dict:
             cards = pd.DataFrame()
         rows = (so.from_daily_log(inp.get("daily_log"), d, book)
                 + so.from_swing_cards(cards, d, existing)
-                + so.from_rotation(inp.get("rotation") or {}, d, existing))
+                + so.from_rotation(inp.get("rotation") or {}, d, existing)
+                + (so.from_flow_map(inp.get("flow_map") or {}, existing,
+                                    stale=(_hours_since((inp.get("flow_map") or {}).get("published_at"), inp["now_et"])
+                                           or 1e9) > FLOW_MAP_MAX_AGE_H)
+                   if hasattr(so, "from_flow_map") else []))
         known = set(existing["signal_id"]) if not existing.empty else set()
         out["new"] = rows
         out["new_today"] = [r for r in rows if r["signal_id"] not in known]
@@ -1871,7 +1923,7 @@ def build(inp: dict) -> dict:
     xa = cross_asset_section(inp, rg.get("key"))
     ro = rotation_section(inp)
     fl = flow_section(inp)
-    fm = flow_map_section(inp)
+    fm = flow_map_section(inp, rg.get("key"))
     br = breadth_section(inp)
     mr = market_read_section(inp, {"breadth": br, "rotation": ro, "regime": rg})
     targets = a.get("targets") or (inp.get("markets") or {}).get("regime_targets") or {}
@@ -2120,6 +2172,13 @@ def render_md(b: dict) -> str:
         L += ["", f"**Verdict: {fm['verdict']}**"]
         L += [f"- {str(e).replace(chr(10), ' ')}" for e in fm["evidence"]]
         L += [f"- *Rule:* {fm['rule']}", f"- *Would change if:* {fm['changes_if']}", ""]
+        if fm.get("steps"):
+            L.append("**What to do with it**" + (" *(stale summary: last known reading, re-check before acting)*"
+                                                if fm.get("stale") else ""))
+            L += [f"{i}. {x}" for i, x in enumerate(fm["steps"], 1)]
+            L.append("")
+        if fm.get("regime_check"):
+            L += [f"**Regime cross-check:** {fm['regime_check']}", ""]
 
     br = b["breadth"]
     L += ["## 7 · Breadth & internals",
@@ -2525,6 +2584,47 @@ def selftest() -> dict:
             f.append("6A summary without a verdict must not render as available")
         if _usd(-592e6) != "−$592M" or _usd(3.26e9) != "+$3.26B" or _usd(None) != "n/a" or _usd(float("nan")) != "n/a":
             f.append(f"_usd formatting: {_usd(-592e6)} {_usd(3.26e9)} {_usd(None)} {_usd(float('nan'))}")
+
+        # v1.4: flow verdict state, steps, regime cross-check, scoring hook
+        from swing_desk import REGIME_DIRECTION as _RD
+        if any(regime_tilt(k_) not in ("risk-on", "risk-off", "none") for k_ in _RD):
+            f.append("regime_tilt must classify every swing_desk regime")
+        if "Money moving into stocks CONFIRMS" not in flow_regime_check("new_money", "goldilocks") or \
+                "money moving out of stocks is context" not in flow_regime_check("out_of_stocks", "neutral"):
+            f.append("regime check wording: 'Money moving into stocks' / 'out of stocks'")
+        for st_, key_, want in (("new_money", "goldilocks", "CONFIRMS"), ("into_stocks", "growth_scare", "CONTRADICTS"),
+                                ("out_of_stocks", "goldilocks", "CONTRADICTS"), ("leaving_both", "liquidity_crisis", "CONFIRMS"),
+                                ("new_money", "transition_ambiguous", "context, not confirmation"),
+                                ("borderline", "goldilocks", "neither confirms nor contradicts"),
+                                ("stocks_flat", "goldilocks", "No market-wide flow signal"),
+                                ("unavailable", "goldilocks", "a data gap, not a signal")):
+            if want not in flow_regime_check(st_, key_):
+                f.append(f"flow_regime_check({st_}, {key_}) must say '{want}': {flow_regime_check(st_, key_)}")
+        _v12 = dict(_fms["verdict"], state="borderline", borderline=True, sessions_in_state=3, prev_state="borderline",
+                    steps=["Model portfolio: treat Level 2 as unconfirmed.", "Resolves when the stock reading closes above +0.71%."],
+                    record={"date": "2026-09-25", "stocks_pct": 0.21, "margin_days": 0.1})
+        b3 = build(dict(inp, flow_map=dict(_fms, verdict=_v12)))
+        md3 = render_md(b3)
+        sec3 = md3.split("## 6A")[1].split("## 7")[0]
+        if "**What to do with it**" not in sec3 or "1. Model portfolio: treat Level 2 as unconfirmed." not in sec3 \
+                or "2. Resolves when the stock reading closes above +0.71%." not in sec3:
+            f.append("6A must render the recommended steps, numbered, in order")
+        if "**Regime cross-check:** Borderline flow neither confirms nor contradicts" not in sec3:
+            f.append(f"6A must render the regime cross-check: {b3['flow_map'].get('regime_check')}")
+        if "What to do with it" in md1.split("## 6A")[1].split("## 7")[0]:
+            f.append("a v1.1 summary (no steps) must render without a steps block")
+        if any(r["signal_type"].startswith("flow_") for r in b3["signals"].get("new", [])):
+            f.append("a borderline flow verdict must never become a scored signal")
+        _firm = dict(_v12, state="new_money", borderline=False, prev_state="borderline")
+        b4 = build(dict(inp, flow_map=dict(_fms, verdict=_firm)))
+        fs4 = [r for r in b4["signals"].get("new", []) if r["signal_type"] == "flow_into_stocks"]
+        if len(fs4) != 1 or fs4[0]["date"] != "2026-09-28":
+            f.append(f"a fresh firm new_money must log one flow_into_stocks dated the next session: {fs4}")
+        b5 = build(dict(inp, flow_map=dict(_fms, verdict=_firm, published_at="2026-09-23T22:00:00+00:00")))
+        if any(r["signal_type"].startswith("flow_") for r in b5["signals"].get("new", [])):
+            f.append("a stale flow summary must never be logged as a signal")
+        if "CONFIRMS" in (b4["flow_map"].get("regime_check") or "") and regime_tilt(b4["regime"].get("key")) != "risk-on":
+            f.append("regime cross-check must use the brief's own regime key")
 
         # v1.1: every cross-asset "why" must reach the markdown in full (v1 cut at 160 chars)
         for _lane, _v in (b["cross_asset"].get("lanes") or {}).items():

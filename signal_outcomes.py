@@ -1,6 +1,16 @@
 """
-signal_outcomes.py  (v2 — October 2026: wired into the daily brief)
+signal_outcomes.py  (v3 — November 2026)
 ──────────────────────────────────────────────────────────────────────────────
+v3 (2026-11-01): logs the Flow Map's market-wide verdict (Money_Flow
+  flow_map v1.2, read from flow_map_summary.json) as a scored portfolio
+  signal, only when it turns FIRM:
+    flow_into_stocks    state enters new_money / into_stocks   SPY vs SGOV
+    flow_out_of_stocks  state enters out_of_stocks / leaving_both  SGOV vs SPY
+  Borderline days are never signals (the history file keeps them). The
+  signal is dated the first trading session AFTER the data date, because the
+  poll runs after the close: scoring from the data date's own close would
+  credit a price nobody could have traded at. Stale summaries are not logged.
+
 DOES THIS FRAMEWORK ACTUALLY WORK?
 
 Every other module analyzes the present. This one measures whether past
@@ -72,6 +82,7 @@ SIGNAL_TYPES = [
     "hy_crisis_override",
     "confluence_3of3", "confluence_2of3",
     "stealth_flag", "flow_divergence",
+    "flow_into_stocks", "flow_out_of_stocks",
     "regime_call",                       # v1 name, kept so old rows still score
 ]
 
@@ -284,6 +295,50 @@ def from_rotation(rot: dict, d: str, existing: pd.DataFrame = None) -> list[dict
     return rows
 
 
+FLOW_INTO = ("new_money", "into_stocks")
+FLOW_OUT = ("out_of_stocks", "leaving_both")
+FLOW_STOCK, FLOW_SAFE = "SPY", "SGOV"          # same proxies as flow_map.STOCK_PROXY / SAFETY_PROXY
+
+
+def _next_session(d: str) -> str:
+    try:
+        import market_time as _mt
+        x = pd.Timestamp(d).date() + pd.Timedelta(days=1)
+        for _ in range(10):
+            if _mt.is_trading_day(x):
+                return x.isoformat()
+            x += pd.Timedelta(days=1)
+    except Exception:
+        pass
+    return (pd.Timestamp(d) + pd.offsets.BDay(1)).strftime("%Y-%m-%d")
+
+
+def from_flow_map(summary: dict, existing: pd.DataFrame = None, stale: bool = False) -> list[dict]:
+    """A firm market-wide flow call, logged on the session it first turns firm.
+    `summary` is flow_map_summary.json; nothing is logged from a stale one."""
+    v = (summary or {}).get("verdict") or {}
+    rec = v.get("record") or {}
+    state, prev, d0 = v.get("state"), v.get("prev_state"), rec.get("date")
+    if stale or not d0 or v.get("borderline") is not False:
+        return []
+    if state in FLOW_INTO and prev not in FLOW_INTO:
+        typ, w, b = "flow_into_stocks", {FLOW_STOCK: 100}, {FLOW_SAFE: 100}
+    elif state in FLOW_OUT and prev not in FLOW_OUT:
+        typ, w, b = "flow_out_of_stocks", {FLOW_SAFE: 100}, {FLOW_STOCK: 100}
+    else:
+        return []
+    d = _next_session(d0)
+    if _recent(existing, [], typ, "PORT", d):
+        return []
+    ctx = (f"{state} (was {prev}) · stocks {rec.get('stocks_pct', 0):+.2f}% · {rec.get('margin_days', 0):.1f} "
+           f"typical days past the line · data {d0}")
+    return [_row(d, typ, "PORT", "long", ctx,
+                 {"weights": w, "bench_weights": b, "bench": next(iter(b)), "data_date": d0,
+                  "record": {k: rec.get(k) for k in ("stocks_pct", "stocks_ex_hedge_pct", "safety_pct",
+                                                     "typical_day", "margin_days", "hedge_agrees")}},
+                 source="flow_map")]
+
+
 # ── Evaluation ────────────────────────────────────────────────────────────────
 
 def _norm(s) -> pd.Series:
@@ -487,6 +542,40 @@ def selftest() -> dict:
         f.append("an outage row must never produce a signal")
     if not [r for r in rows if r["signal_type"] == "regime_weekly"]:
         f.append("Friday portfolio snapshots must be logged")
+    # v3: flow verdicts — logged only on the first FIRM day of a state, dated the next session
+    fm = lambda state, prev, bl, d0="2026-10-30": {"verdict": {"state": state, "prev_state": prev, "borderline": bl,
+                                                               "record": {"date": d0, "stocks_pct": 0.9, "margin_days": 1.4}}}
+    r_in = from_flow_map(fm("new_money", "borderline", False))
+    if len(r_in) != 1 or r_in[0]["signal_type"] != "flow_into_stocks" or r_in[0]["date"] != "2026-11-02" \
+            or json.loads(r_in[0]["notes"])["weights"] != {"SPY": 100} or json.loads(r_in[0]["notes"])["bench_weights"] != {"SGOV": 100}:
+        f.append(f"firm new_money after borderline: one flow_into_stocks, SPY vs SGOV, dated Mon 11/02: {r_in}")
+    r_out = from_flow_map(fm("leaving_both", "stocks_flat", False))
+    if len(r_out) != 1 or r_out[0]["signal_type"] != "flow_out_of_stocks" \
+            or json.loads(r_out[0]["notes"])["weights"] != {"SGOV": 100}:
+        f.append(f"firm leaving_both: one flow_out_of_stocks, SGOV vs SPY: {r_out}")
+    for args, why in ((("borderline", "new_money", True), "borderline"), (("new_money", "new_money", False), "no change"),
+                      (("into_stocks", "new_money", False), "same side"), (("stocks_flat", "borderline", False), "flat"),
+                      (("new_money", "borderline", None), "noise unknown")):
+        if from_flow_map(fm(*args)):
+            f.append(f"no flow signal on {why}: {args}")
+    if from_flow_map(fm("new_money", "borderline", False), stale=True):
+        f.append("a stale flow summary must never be logged")
+    ex = pd.DataFrame([r_in[0]])
+    if from_flow_map(fm("new_money", "borderline", False, d0="2026-11-04"), existing=ex):
+        f.append("a repeat flow_into_stocks within the dedupe window must be suppressed")
+    if _next_session("2026-11-25") != "2026-11-27":
+        f.append(f"next session after Wed 11/25 must skip Thanksgiving: {_next_session('2026-11-25')}")
+    ev_ = None
+    try:
+        tmpf = os.path.join(tempfile.mkdtemp(), "so.csv")
+        record_rows(r_in, tmpf)
+        cl_ = {"SPY": pd.Series(np.linspace(100, 110, 90), index=pd.bdate_range("2026-10-01", periods=90)),
+               "SGOV": pd.Series(np.full(90, 100.0), index=pd.bdate_range("2026-10-01", periods=90))}
+        ev_ = evaluate(closes=cl_, path=tmpf, fetch=False)
+        if not (ev_["rel_4w"].iloc[0] or 0) > 0:
+            f.append(f"flow_into_stocks must score SPY minus SGOV (positive when stocks win): {ev_.to_dict('records')}")
+    except Exception as e:
+        f.append(f"flow signal scoring raised: {e}")
     # outage row 'neutral' between two restrictive rows must not create transitions
     if [r for r in rows if r["signal_type"] == "regime_transition" and "neutral" in r["context"]]:
         f.append("a data-failure regime must not create a transition")
