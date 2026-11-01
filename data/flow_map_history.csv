@@ -1,0 +1,2 @@
+date,published_at,measured,total,stocks_pct,stocks_all_pct,stocks_ex_hedge_pct,safety_pct,stocks_flow_usd,safety_flow_usd,typical_day,line,distance_pts,margin_days,kind,borderline,state,sessions_in_state,prev_state,thin_classes,hedge_agrees
+2026-10-30,2026-11-01T12:42:52+00:00,48,58,0.20535355482312975,0.26220405888214976,1.8041542062795637,2.067943168475465,4405125684.184994,1644243779.0,0.464133268728701,0.25,0.04464644517687025,0.09619315870021668,stocks_flat,True,borderline,7,borderline,International equity,False
