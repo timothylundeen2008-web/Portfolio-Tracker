@@ -1,6 +1,6 @@
 {
  "session": "2026-10-30",
- "generated_et": "Nov 01, 2026 07:02 AM EST",
+ "generated_et": "Nov 01, 2026 08:00 AM EST",
  "scoreboard": {
   "rows": [
    {
@@ -786,7 +786,7 @@
  },
  "rotation": {
   "available": true,
-  "published_at": "2026-11-01T11:57:55+00:00",
+  "published_at": "2026-11-01T12:43:11+00:00",
   "sectors": [
    {
     "ticker": "XLV",
@@ -1474,8 +1474,8 @@
  "flow_map": {
   "available": true,
   "stale": false,
-  "age_hours": 0.1,
-  "published_at": "2026-11-01T11:57:38+00:00",
+  "age_hours": 0.3,
+  "published_at": "2026-11-01T12:42:52+00:00",
   "data_through": "2026-10-30",
   "window": 20,
   "measured": 48,
@@ -1566,21 +1566,24 @@
     "thin": false
    }
   ],
-  "kind": "new_money",
-  "verdict": "New money, not a move out of stocks: stocks +$5.69B (+0.26% of measured assets); Treasuries + cash +$1.64B (+2.07%)",
+  "kind": "stocks_flat",
+  "verdict": "Borderline \u2014 no material net move in stocks: stocks +$4.41B (+0.21% of measured assets); Treasuries + cash +$1.64B (+2.07%). The stock reading is 0.04 points from the +0.25% line, under one typical day (0.46): not a signal",
   "evidence": [
    "US equity: +$4.41B (+0.21%, flat) \u2014 37 of 39 funds; not measured: PBJ, VGT",
-   "International equity: +$1.28B (+5.53%, in) \u2014 1 of 5 funds; not measured: EEM, EFA, FXI, INDA \u2014 THIN: under half its funds measured, so this reading rests on one fund and is indicative only",
+   "International equity: +$1.28B (+5.53%, in) \u2014 1 of 5 funds; not measured: EEM, EFA, FXI, INDA \u2014 THIN: under half its funds measured, so this reading rests on one fund, is indicative only, and is left out of the verdict",
    "Treasuries: +$267M (+0.45%, in) \u2014 2 of 2 funds",
    "Credit: +$3.82B (+6.69%, in) \u2014 3 of 3 funds",
    "Cash-like: +$1.38B (+6.93%, in) \u2014 1 of 2 funds; not measured: SGOV",
    "Gold & commodities: +$362M (+0.90%, in) \u2014 3 of 6 funds; not measured: DBA, GLD, USO",
    "Alternatives: +$54M (+9.97%, in) \u2014 1 of 1 funds",
+   "With the thin class included the stock reading would be +0.26% (in)",
+   "Sensitivity: stocks without the hedging vehicles (HYG, IWM, KBE, KRE, QQQ, SMH, SPY, XBI, XHB, XOP, XRT) +1.80% (in) \u2014 DISAGREES",
+   "Stock reading, last 5 sessions: 10-26 +0.29%, 10-27 +0.48%, 10-28 +0.28%, 10-29 +0.33%, 10-30 +0.21%; typical day 0.46 points; 0.1 typical days from the line",
    "Within stocks: out of Broad US market (\u2212$10.10B), Small & mid caps (\u2212$1.55B); into Tech & growth (+$7.53B), Defensives (+$3.47B), Energy & materials (+$1.87B)",
    "\u2020 SPY, SMH are among the largest moves and are hedging vehicles: share counts also move with short selling and market-maker hedging, not only investor money"
   ],
-  "rule": "Net 20-session ETF creations minus redemptions, from trusted share counts only (integrity test passed and at least 80% of sessions measured). A bucket counts as in or out when its net flow is at least 0.25% of its measured assets. Stocks = US + international equity; safety = Treasuries + cash-like. ETF data shows where money left and where it arrived, not which dollar went where.",
-  "changes_if": "Stock funds net outflow of 0.25% or more of their assets.",
+  "rule": "Net 20-session ETF creations minus redemptions, from trusted share counts only (integrity test passed and at least 80% of sessions measured). A bucket counts as in or out when its net flow is at least 0.25% of its measured assets. Stocks = US + international equity; safety = Treasuries + cash-like; a class with under 50% of its funds measured is shown but left out of the verdict. A reading within 1 typical day of the \u00b10.25% line is borderline (a typical day = one standard deviation of the reading's daily change over the last 20 sessions, each recomputed as of that day). ETF data shows where money left and where it arrived, not which dollar went where.",
+  "changes_if": "The stock reading moving more than one typical day (0.46 points) past the +0.25% line.",
   "excluded": {
    "DBA": "not verified \u2014 thirdparty_stockanalysis: shares never changed",
    "EEM": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 19 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
@@ -1592,7 +1595,19 @@
    "SGOV": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 5 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
    "USO": "not verified \u2014 thirdparty_stockanalysis: shares never changed",
    "VGT": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 7 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again"
-  }
+  },
+  "state": "borderline",
+  "borderline": true,
+  "sessions_in_state": 7,
+  "steps": [
+   "Model portfolio: treat Level 2 as unconfirmed. Hold the regime's weights; make no add or cut justified by market-wide flow (checklist v4 Step 5: flow never overrides the regime).",
+   "Swing book: market-wide flow cannot serve as the Tier A confirmation leg today. Score each candidate's Tier A leg on its own fund's creations.",
+   "Resolves when the stock reading closes above +0.71% (firm in: about +$10.91B more net creations) or below -0.71% (firm out: about \u2212$19.72B); today +0.21%. With a typical day (0.46) wider than half the gap between the lines, no reading counts as a firm 'no move'.",
+   "Re-check after the next poll (7 sessions at borderline so far). Log the day's reading; do not act on it.",
+   "Lower confidence: without the hedging vehicles the stock reading is +1.80% (in), against +0.21% (flat) with them. Their share counts also move with short selling.",
+   "Readmission would change the reading: not measured in stocks or safety: EEM, EFA, FXI, INDA, PBJ, SGOV, VGT."
+  ],
+  "regime_check": "Borderline flow neither confirms nor contradicts `transition_ambiguous`."
  },
  "breadth": {
   "pct_above_50": 66.1,
