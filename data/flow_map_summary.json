@@ -1,5 +1,5 @@
 {
-  "published_at": "2026-11-01T12:42:52+00:00",
+  "published_at": "2026-11-01T20:02:29+00:00",
   "window": 20,
   "data_through": "2026-10-30",
   "coverage": {
@@ -9,9 +9,9 @@
   "asset_classes": [
     {
       "asset_class": "US equity",
-      "flow_usd": 4405125684.184994,
+      "flow_usd": 4178775266.164994,
       "aum": 2145142161273.5713,
-      "pct_aum": 0.20535355482312975,
+      "pct_aum": 0.19480178710785553,
       "measured": 37,
       "total": 39,
       "missing": [
@@ -121,6 +121,16 @@
       "tickers": "IWM, IWO, MDY"
     },
     {
+      "group": "Consumer cyclical",
+      "asset_class": "US equity",
+      "risk": "risk-on",
+      "flow_usd": -78995535.9,
+      "pct_aum": -0.3432897935940032,
+      "measured": 3,
+      "total": 3,
+      "tickers": "XLY, XRT, XHB"
+    },
+    {
       "group": "Financials",
       "asset_class": "US equity",
       "risk": "risk-on",
@@ -149,16 +159,6 @@
       "measured": 1,
       "total": 1,
       "tickers": "KMLM"
-    },
-    {
-      "group": "Consumer cyclical",
-      "asset_class": "US equity",
-      "risk": "risk-on",
-      "flow_usd": 69049628.99999999,
-      "pct_aum": 0.30006800532576033,
-      "measured": 3,
-      "total": 3,
-      "tickers": "XLY, XRT, XHB"
     },
     {
       "group": "Real estate",
@@ -221,6 +221,16 @@
       "tickers": "EWJ"
     },
     {
+      "group": "Industrials",
+      "asset_class": "US equity",
+      "risk": "risk-on",
+      "flow_usd": 1314601095.7400002,
+      "pct_aum": 2.3499021206419153,
+      "measured": 4,
+      "total": 4,
+      "tickers": "XTN, ITA, PAVE, XLI"
+    },
+    {
       "group": "Cash-like",
       "asset_class": "Cash-like",
       "risk": "risk-off",
@@ -239,16 +249,6 @@
       "measured": 2,
       "total": 2,
       "tickers": "EMB, HYG"
-    },
-    {
-      "group": "Industrials",
-      "asset_class": "US equity",
-      "risk": "risk-on",
-      "flow_usd": 1392906348.8600001,
-      "pct_aum": 2.4898758974479573,
-      "measured": 4,
-      "total": 4,
-      "tickers": "ITA, XTN, PAVE, XLI"
     },
     {
       "group": "Energy & materials",
@@ -292,24 +292,24 @@
     }
   ],
   "risk_split": {
-    "risk-on": 3512383586.034995,
+    "risk-on": 3286033168.0149946,
     "risk-off": 5451024489.549999,
     "neutral": 2604744309.6
   },
   "verdict": {
     "kind": "stocks_flat",
-    "verdict": "Borderline \u2014 no material net move in stocks: stocks +$4.41B (+0.21% of measured assets); Treasuries + cash +$1.64B (+2.07%). The stock reading is 0.04 points from the +0.25% line, under one typical day (0.46): not a signal",
+    "verdict": "Borderline \u2014 no material net move in stocks: stocks +$4.18B (+0.19% of measured assets); Treasuries + cash +$1.64B (+2.07%). The stock reading is 0.06 points from the +0.25% line, under one typical day (0.46): not a signal",
     "evidence": [
-      "US equity: +$4.41B (+0.21%, flat) \u2014 37 of 39 funds; not measured: PBJ, VGT",
+      "US equity: +$4.18B (+0.19%, flat) \u2014 37 of 39 funds; not measured: PBJ, VGT",
       "International equity: +$1.28B (+5.53%, in) \u2014 1 of 5 funds; not measured: EEM, EFA, FXI, INDA \u2014 THIN: under half its funds measured, so this reading rests on one fund, is indicative only, and is left out of the verdict",
       "Treasuries: +$267M (+0.45%, in) \u2014 2 of 2 funds",
       "Credit: +$3.82B (+6.69%, in) \u2014 3 of 3 funds",
       "Cash-like: +$1.38B (+6.93%, in) \u2014 1 of 2 funds; not measured: SGOV",
       "Gold & commodities: +$362M (+0.90%, in) \u2014 3 of 6 funds; not measured: DBA, GLD, USO",
       "Alternatives: +$54M (+9.97%, in) \u2014 1 of 1 funds",
-      "With the thin class included the stock reading would be +0.26% (in)",
-      "Sensitivity: stocks without the hedging vehicles (HYG, IWM, KBE, KRE, QQQ, SMH, SPY, XBI, XHB, XOP, XRT) +1.80% (in) \u2014 DISAGREES",
-      "Stock reading, last 5 sessions: 10-26 +0.29%, 10-27 +0.48%, 10-28 +0.28%, 10-29 +0.33%, 10-30 +0.21%; typical day 0.46 points; 0.1 typical days from the line",
+      "With the thin class included the stock reading would be +0.25% (in)",
+      "Sensitivity: stocks without the hedging vehicles (HYG, IWM, KBE, KRE, QQQ, SMH, SPY, XBI, XHB, XOP, XRT) +1.79% (in) \u2014 DISAGREES",
+      "Stock reading, last 5 sessions: 10-26 +0.28%, 10-27 +0.47%, 10-28 +0.27%, 10-29 +0.32%, 10-30 +0.19%; typical day 0.46 points; 0.1 typical days from the line",
       "Within stocks: out of Broad US market (\u2212$10.10B), Small & mid caps (\u2212$1.55B); into Tech & growth (+$7.53B), Defensives (+$3.47B), Energy & materials (+$1.87B)",
       "\u2020 SPY, SMH are among the largest moves and are hedging vehicles: share counts also move with short selling and market-maker hedging, not only investor money"
     ],
@@ -322,26 +322,26 @@
     "steps": [
       "Model portfolio: treat Level 2 as unconfirmed. Hold the regime's weights; make no add or cut justified by market-wide flow (checklist v4 Step 5: flow never overrides the regime).",
       "Swing book: market-wide flow cannot serve as the Tier A confirmation leg today. Score each candidate's Tier A leg on its own fund's creations.",
-      "Resolves when the stock reading closes above +0.71% (firm in: about +$10.91B more net creations) or below -0.71% (firm out: about \u2212$19.72B); today +0.21%. With a typical day (0.46) wider than half the gap between the lines, no reading counts as a firm 'no move'.",
+      "Resolves when the stock reading closes above +0.71% (firm in: about +$11.10B more net creations) or below -0.71% (firm out: about \u2212$19.46B); today +0.19%. With a typical day (0.46) wider than half the gap between the lines, no reading counts as a firm 'no move'.",
       "Re-check after the next poll (7 sessions at borderline so far). Log the day's reading; do not act on it.",
-      "Lower confidence: without the hedging vehicles the stock reading is +1.80% (in), against +0.21% (flat) with them. Their share counts also move with short selling.",
+      "Lower confidence: without the hedging vehicles the stock reading is +1.79% (in), against +0.19% (flat) with them. Their share counts also move with short selling.",
       "Readmission would change the reading: not measured in stocks or safety: EEM, EFA, FXI, INDA, PBJ, SGOV, VGT."
     ],
     "record": {
       "date": "2026-10-30",
-      "published_at": "2026-11-01T12:42:52+00:00",
+      "published_at": "2026-11-01T20:02:29+00:00",
       "measured": 48,
       "total": 58,
-      "stocks_pct": 0.20535355482312975,
-      "stocks_all_pct": 0.26220405888214976,
-      "stocks_ex_hedge_pct": 1.8041542062795637,
+      "stocks_pct": 0.19480178710785553,
+      "stocks_all_pct": 0.25176503743054207,
+      "stocks_ex_hedge_pct": 1.792310718658347,
       "safety_pct": 2.067943168475465,
-      "stocks_flow_usd": 4405125684.184994,
+      "stocks_flow_usd": 4178775266.164994,
       "safety_flow_usd": 1644243779.0,
-      "typical_day": 0.464133268728701,
+      "typical_day": 0.462395648470789,
       "line": 0.25,
-      "distance_pts": 0.04464644517687025,
-      "margin_days": 0.09619315870021668,
+      "distance_pts": 0.055198212892144466,
+      "margin_days": 0.11937442117955292,
       "kind": "stocks_flat",
       "borderline": true,
       "state": "borderline",
@@ -353,61 +353,61 @@
     "history": [
       {
         "date": "2026-10-02",
-        "stocks": -0.008473939766488713,
+        "stocks": -0.002066624279903168,
         "safety": null,
         "kind": "unavailable"
       },
       {
         "date": "2026-10-05",
-        "stocks": 0.028726849093211677,
+        "stocks": 0.022624153304437122,
         "safety": null,
         "kind": "unavailable"
       },
       {
         "date": "2026-10-06",
-        "stocks": -0.0038257621842807915,
+        "stocks": -0.009967571402471813,
         "safety": null,
         "kind": "unavailable"
       },
       {
         "date": "2026-10-07",
-        "stocks": 0.3568698037810099,
+        "stocks": 0.35070060968019795,
         "safety": null,
         "kind": "unavailable"
       },
       {
         "date": "2026-10-08",
-        "stocks": 0.2968143955631824,
+        "stocks": 0.2906072281704539,
         "safety": null,
         "kind": "unavailable"
       },
       {
         "date": "2026-10-09",
-        "stocks": 0.13679454192282572,
+        "stocks": 0.13947941554846213,
         "safety": null,
         "kind": "unavailable"
       },
       {
         "date": "2026-10-12",
-        "stocks": 0.41677384825215086,
+        "stocks": 0.4194798769963861,
         "safety": null,
         "kind": "unavailable"
       },
       {
         "date": "2026-10-13",
-        "stocks": 0.8429532962795219,
+        "stocks": 0.8409502755388711,
         "safety": null,
         "kind": "unavailable"
       },
       {
         "date": "2026-10-14",
-        "stocks": 1.413840372351996,
+        "stocks": 1.4053863967391955,
         "safety": null,
         "kind": "unavailable"
       },
       {
         "date": "2026-10-15",
-        "stocks": 2.570520933145055,
+        "stocks": 2.5621105382430316,
         "safety": null,
         "kind": "unavailable"
       },
@@ -419,61 +419,61 @@
       },
       {
         "date": "2026-10-19",
-        "stocks": 2.4688162580183213,
+        "stocks": 2.444239595697502,
         "safety": null,
         "kind": "unavailable"
       },
       {
         "date": "2026-10-20",
-        "stocks": 1.7820197153489339,
+        "stocks": 1.7638560143579,
         "safety": null,
         "kind": "unavailable"
       },
       {
         "date": "2026-10-21",
-        "stocks": 1.001035755220917,
+        "stocks": 0.9921465239860406,
         "safety": 3.820163233437214,
         "kind": "new_money"
       },
       {
         "date": "2026-10-22",
-        "stocks": 0.2810197854681924,
+        "stocks": 0.27218392746483383,
         "safety": 4.344393786451834,
         "kind": "new_money"
       },
       {
         "date": "2026-10-23",
-        "stocks": 0.6751626891384306,
+        "stocks": 0.6662751199843443,
         "safety": 5.015509258893944,
         "kind": "new_money"
       },
       {
         "date": "2026-10-26",
-        "stocks": 0.2908001239224211,
+        "stocks": 0.2818778527196752,
         "safety": 4.925609497527037,
         "kind": "new_money"
       },
       {
         "date": "2026-10-27",
-        "stocks": 0.4758850641096245,
+        "stocks": 0.4660544777326964,
         "safety": 4.319378094460583,
         "kind": "new_money"
       },
       {
         "date": "2026-10-28",
-        "stocks": 0.2772049518521616,
+        "stocks": 0.26672389480955,
         "safety": 4.339041101485966,
         "kind": "new_money"
       },
       {
         "date": "2026-10-29",
-        "stocks": 0.3255981274821112,
+        "stocks": 0.3150109094305394,
         "safety": 4.206954231446808,
         "kind": "new_money"
       },
       {
         "date": "2026-10-30",
-        "stocks": 0.20535355482312975,
+        "stocks": 0.19480178710785553,
         "safety": 2.067943168475465,
         "kind": "stocks_flat"
       }
