@@ -1,5 +1,5 @@
 {
-  "published_at": "2026-11-01T20:02:29+00:00",
+  "published_at": "2026-11-01T20:53:32+00:00",
   "window": 20,
   "data_through": "2026-10-30",
   "coverage": {
@@ -89,9 +89,9 @@
     },
     {
       "asset_class": "Alternatives",
-      "flow_usd": 54492000.0,
+      "flow_usd": 54492061.4,
       "aum": 546797000.0,
-      "pct_aum": 9.965672818248821,
+      "pct_aum": 9.965684047278971,
       "measured": 1,
       "total": 1,
       "missing": [],
@@ -154,8 +154,8 @@
       "group": "Trend / managed futures",
       "asset_class": "Alternatives",
       "risk": "neutral",
-      "flow_usd": 54492000.0,
-      "pct_aum": 9.965672818248821,
+      "flow_usd": 54492061.4,
+      "pct_aum": 9.965684047278971,
       "measured": 1,
       "total": 1,
       "tickers": "KMLM"
@@ -294,7 +294,7 @@
   "risk_split": {
     "risk-on": 3286033168.0149946,
     "risk-off": 5451024489.549999,
-    "neutral": 2604744309.6
+    "neutral": 2604744371.0
   },
   "verdict": {
     "kind": "stocks_flat",
@@ -329,7 +329,7 @@
     ],
     "record": {
       "date": "2026-10-30",
-      "published_at": "2026-11-01T20:02:29+00:00",
+      "published_at": "2026-11-01T20:53:32+00:00",
       "measured": 48,
       "total": 58,
       "stocks_pct": 0.19480178710785553,
@@ -484,7 +484,7 @@
     "EEM": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 19 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
     "EFA": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 16 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
     "FXI": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 5 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
-    "GLD": "not verified \u2014 thirdparty_stockanalysis: shares never changed",
+    "GLD": "building history \u2014 0 of 20 sessions measured (needs 16)",
     "INDA": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 6 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
     "PBJ": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 8 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
     "SGOV": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 5 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
