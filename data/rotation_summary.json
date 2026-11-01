@@ -1,7 +1,7 @@
 {
-  "published_at": "2026-11-01T11:16:04+00:00",
-  "notes": "published by publish_to_checklist.py; etf_flow coverage: 90d history, ready=True",
-  "cot_schema_ok": false,
+  "published_at": "2026-11-01T11:57:55+00:00",
+  "notes": "published by publish_to_checklist.py; etf_flow coverage: 88d history, ready=True",
+  "cot_schema_ok": true,
   "sectors": [
     {
       "ticker": "XLI",
@@ -179,6 +179,14 @@
       "measurable": true
     },
     {
+      "ticker": "KMLM",
+      "price_chg_pct": -0.9,
+      "net_flow_pct_aum": 9.15,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true,
+      "measurable": true
+    },
+    {
       "ticker": "XOP",
       "price_chg_pct": 8.25,
       "net_flow_pct_aum": 9.15,
@@ -187,43 +195,43 @@
       "measurable": true
     },
     {
-      "ticker": "KMLM",
-      "price_chg_pct": -0.97,
-      "net_flow_pct_aum": 9.15,
-      "verdict": "ACCUMULATION (price down, money in)",
-      "divergence": true,
-      "measurable": true
-    },
-    {
-      "ticker": "SOXX",
-      "price_chg_pct": -18.17,
-      "net_flow_pct_aum": 7.25,
-      "verdict": "ACCUMULATION (price down, money in)",
-      "divergence": true,
+      "ticker": "LQD",
+      "price_chg_pct": 1.9,
+      "net_flow_pct_aum": 7.95,
+      "verdict": "CONFIRMED UPTREND",
+      "divergence": false,
       "measurable": true
     },
     {
       "ticker": "USFR",
-      "price_chg_pct": 0.04,
-      "net_flow_pct_aum": 6.64,
+      "price_chg_pct": 0.06,
+      "net_flow_pct_aum": 6.47,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false,
+      "measurable": true
+    },
+    {
+      "ticker": "SOXX",
+      "price_chg_pct": -16.89,
+      "net_flow_pct_aum": 6.08,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true,
       "measurable": true
     },
     {
       "ticker": "HYG",
-      "price_chg_pct": 0.66,
+      "price_chg_pct": -0.01,
       "net_flow_pct_aum": 6.06,
-      "verdict": "CONFIRMED UPTREND",
-      "divergence": false,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true,
       "measurable": true
     },
     {
-      "ticker": "LQD",
-      "price_chg_pct": 2.14,
-      "net_flow_pct_aum": 5.85,
-      "verdict": "CONFIRMED UPTREND",
-      "divergence": false,
+      "ticker": "EWJ",
+      "price_chg_pct": -4.66,
+      "net_flow_pct_aum": 5.49,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true,
       "measurable": true
     },
     {
@@ -235,9 +243,17 @@
       "measurable": true
     },
     {
-      "ticker": "EWJ",
-      "price_chg_pct": -4.79,
-      "net_flow_pct_aum": 3.92,
+      "ticker": "IBB",
+      "price_chg_pct": 3.11,
+      "net_flow_pct_aum": 4.15,
+      "verdict": "CONFIRMED UPTREND",
+      "divergence": false,
+      "measurable": true
+    },
+    {
+      "ticker": "SMH",
+      "price_chg_pct": -12.91,
+      "net_flow_pct_aum": 3.88,
       "verdict": "ACCUMULATION (price down, money in)",
       "divergence": true,
       "measurable": true
@@ -248,14 +264,6 @@
       "net_flow_pct_aum": 3.83,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false,
-      "measurable": true
-    },
-    {
-      "ticker": "SMH",
-      "price_chg_pct": -14.06,
-      "net_flow_pct_aum": 3.66,
-      "verdict": "ACCUMULATION (price down, money in)",
-      "divergence": true,
       "measurable": true
     },
     {
@@ -276,7 +284,7 @@
     },
     {
       "ticker": "HACK",
-      "price_chg_pct": 2.39,
+      "price_chg_pct": 3.05,
       "net_flow_pct_aum": 3.5,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false,
@@ -292,15 +300,23 @@
     },
     {
       "ticker": "EMB",
-      "price_chg_pct": 2.06,
+      "price_chg_pct": 0.96,
       "net_flow_pct_aum": 2.4,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false,
       "measurable": true
     },
     {
+      "ticker": "PAVE",
+      "price_chg_pct": 2.14,
+      "net_flow_pct_aum": 2.35,
+      "verdict": "CONFIRMED UPTREND",
+      "divergence": false,
+      "measurable": true
+    },
+    {
       "ticker": "SKYY",
-      "price_chg_pct": -4.15,
+      "price_chg_pct": -2.43,
       "net_flow_pct_aum": 2.28,
       "verdict": "ACCUMULATION (price down, money in)",
       "divergence": true,
@@ -331,16 +347,8 @@
       "measurable": true
     },
     {
-      "ticker": "PAVE",
-      "price_chg_pct": 1.0,
-      "net_flow_pct_aum": 1.67,
-      "verdict": "CONFIRMED UPTREND",
-      "divergence": false,
-      "measurable": true
-    },
-    {
       "ticker": "RING",
-      "price_chg_pct": -12.27,
+      "price_chg_pct": -13.56,
       "net_flow_pct_aum": 1.61,
       "verdict": "ACCUMULATION (price down, money in)",
       "divergence": true,
@@ -355,6 +363,14 @@
       "measurable": true
     },
     {
+      "ticker": "SLV",
+      "price_chg_pct": -18.35,
+      "net_flow_pct_aum": 1.21,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true,
+      "measurable": true
+    },
+    {
       "ticker": "XLRE",
       "price_chg_pct": 5.84,
       "net_flow_pct_aum": 1.08,
@@ -363,11 +379,11 @@
       "measurable": true
     },
     {
-      "ticker": "SLV",
-      "price_chg_pct": -17.54,
-      "net_flow_pct_aum": 1.07,
-      "verdict": "ACCUMULATION (price down, money in)",
-      "divergence": true,
+      "ticker": "TLT",
+      "price_chg_pct": 4.08,
+      "net_flow_pct_aum": 0.58,
+      "verdict": "CONFIRMED UPTREND",
+      "divergence": false,
       "measurable": true
     },
     {
@@ -379,16 +395,8 @@
       "measurable": true
     },
     {
-      "ticker": "IGV",
-      "price_chg_pct": -3.51,
-      "net_flow_pct_aum": 0.44,
-      "verdict": "ACCUMULATION (price down, money in)",
-      "divergence": true,
-      "measurable": true
-    },
-    {
       "ticker": "PDBC",
-      "price_chg_pct": 4.36,
+      "price_chg_pct": 5.34,
       "net_flow_pct_aum": 0.34,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false,
@@ -403,26 +411,42 @@
       "measurable": true
     },
     {
-      "ticker": "TIP",
-      "price_chg_pct": 2.34,
-      "net_flow_pct_aum": 0.22,
+      "ticker": "OIH",
+      "price_chg_pct": 8.97,
+      "net_flow_pct_aum": 0.14,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false,
       "measurable": true
     },
     {
-      "ticker": "IWO",
-      "price_chg_pct": -1.49,
-      "net_flow_pct_aum": 0.2,
+      "ticker": "QQQ",
+      "price_chg_pct": -6.23,
+      "net_flow_pct_aum": 0.08,
       "verdict": "ACCUMULATION (price down, money in)",
       "divergence": true,
       "measurable": true
     },
     {
-      "ticker": "OIH",
-      "price_chg_pct": 8.11,
-      "net_flow_pct_aum": 0.14,
-      "verdict": "CONFIRMED UPTREND",
+      "ticker": "TIP",
+      "price_chg_pct": 2.57,
+      "net_flow_pct_aum": -0.07,
+      "verdict": "DISTRIBUTION (price up, money out)",
+      "divergence": true,
+      "measurable": true
+    },
+    {
+      "ticker": "ITA",
+      "price_chg_pct": 0.17,
+      "net_flow_pct_aum": -0.27,
+      "verdict": "DISTRIBUTION (price up, money out)",
+      "divergence": true,
+      "measurable": true
+    },
+    {
+      "ticker": "IGV",
+      "price_chg_pct": -0.82,
+      "net_flow_pct_aum": -0.3,
+      "verdict": "CONFIRMED DOWNTREND",
       "divergence": false,
       "measurable": true
     },
@@ -430,30 +454,6 @@
       "ticker": "XLF",
       "price_chg_pct": 6.49,
       "net_flow_pct_aum": -0.3,
-      "verdict": "DISTRIBUTION (price up, money out)",
-      "divergence": true,
-      "measurable": true
-    },
-    {
-      "ticker": "ITA",
-      "price_chg_pct": 0.82,
-      "net_flow_pct_aum": -0.35,
-      "verdict": "DISTRIBUTION (price up, money out)",
-      "divergence": true,
-      "measurable": true
-    },
-    {
-      "ticker": "QQQ",
-      "price_chg_pct": -6.64,
-      "net_flow_pct_aum": -0.42,
-      "verdict": "CONFIRMED DOWNTREND",
-      "divergence": false,
-      "measurable": true
-    },
-    {
-      "ticker": "IBB",
-      "price_chg_pct": 5.68,
-      "net_flow_pct_aum": -0.42,
       "verdict": "DISTRIBUTION (price up, money out)",
       "divergence": true,
       "measurable": true
@@ -475,11 +475,11 @@
       "measurable": true
     },
     {
-      "ticker": "IHI",
-      "price_chg_pct": 7.86,
-      "net_flow_pct_aum": -0.54,
-      "verdict": "DISTRIBUTION (price up, money out)",
-      "divergence": true,
+      "ticker": "IWO",
+      "price_chg_pct": -1.31,
+      "net_flow_pct_aum": -0.57,
+      "verdict": "CONFIRMED DOWNTREND",
+      "divergence": false,
       "measurable": true
     },
     {
@@ -492,8 +492,8 @@
     },
     {
       "ticker": "AMLP",
-      "price_chg_pct": 3.26,
-      "net_flow_pct_aum": -0.7,
+      "price_chg_pct": 3.27,
+      "net_flow_pct_aum": -0.84,
       "verdict": "DISTRIBUTION (price up, money out)",
       "divergence": true,
       "measurable": true
@@ -515,17 +515,9 @@
       "measurable": true
     },
     {
-      "ticker": "PPH",
-      "price_chg_pct": 10.33,
-      "net_flow_pct_aum": -1.79,
-      "verdict": "DISTRIBUTION (price up, money out)",
-      "divergence": true,
-      "measurable": true
-    },
-    {
-      "ticker": "TLT",
-      "price_chg_pct": 5.1,
-      "net_flow_pct_aum": -2.11,
+      "ticker": "IHI",
+      "price_chg_pct": 5.39,
+      "net_flow_pct_aum": -1.51,
       "verdict": "DISTRIBUTION (price up, money out)",
       "divergence": true,
       "measurable": true
@@ -533,9 +525,25 @@
     {
       "ticker": "IWM",
       "price_chg_pct": 0.21,
-      "net_flow_pct_aum": -3.44,
+      "net_flow_pct_aum": -2.1,
       "verdict": "DISTRIBUTION (price up, money out)",
       "divergence": true,
+      "measurable": true
+    },
+    {
+      "ticker": "PPH",
+      "price_chg_pct": 7.41,
+      "net_flow_pct_aum": -2.27,
+      "verdict": "DISTRIBUTION (price up, money out)",
+      "divergence": true,
+      "measurable": true
+    },
+    {
+      "ticker": "IAI",
+      "price_chg_pct": -0.07,
+      "net_flow_pct_aum": -3.46,
+      "verdict": "CONFIRMED DOWNTREND",
+      "divergence": false,
       "measurable": true
     },
     {
@@ -548,7 +556,7 @@
     },
     {
       "ticker": "DBA",
-      "price_chg_pct": -4.23,
+      "price_chg_pct": -4.33,
       "net_flow_pct_aum": NaN,
       "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares never changed",
       "divergence": false,
@@ -556,71 +564,63 @@
     },
     {
       "ticker": "EEM",
-      "price_chg_pct": -9.22,
+      "price_chg_pct": -8.83,
       "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 20 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 19 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
       "divergence": false,
       "measurable": false
     },
     {
       "ticker": "EFA",
-      "price_chg_pct": 0.45,
+      "price_chg_pct": -0.51,
       "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 17 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 16 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
       "divergence": false,
       "measurable": false
     },
     {
       "ticker": "FXI",
-      "price_chg_pct": -3.34,
-      "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 6 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
-      "divergence": false,
-      "measurable": false
-    },
-    {
-      "ticker": "GLD",
-      "price_chg_pct": -6.33,
-      "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares never changed",
-      "divergence": false,
-      "measurable": false
-    },
-    {
-      "ticker": "IAI",
-      "price_chg_pct": 0.81,
+      "price_chg_pct": -3.29,
       "net_flow_pct_aum": NaN,
       "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 5 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
       "divergence": false,
       "measurable": false
     },
     {
+      "ticker": "GLD",
+      "price_chg_pct": -6.04,
+      "net_flow_pct_aum": NaN,
+      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares never changed",
+      "divergence": false,
+      "measurable": false
+    },
+    {
       "ticker": "INDA",
-      "price_chg_pct": 2.6,
-      "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 7 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
-      "divergence": false,
-      "measurable": false
-    },
-    {
-      "ticker": "PBJ",
-      "price_chg_pct": 6.07,
-      "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 9 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
-      "divergence": false,
-      "measurable": false
-    },
-    {
-      "ticker": "SGOV",
-      "price_chg_pct": 0.05,
+      "price_chg_pct": 1.62,
       "net_flow_pct_aum": NaN,
       "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 6 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
       "divergence": false,
       "measurable": false
     },
     {
+      "ticker": "PBJ",
+      "price_chg_pct": 6.71,
+      "net_flow_pct_aum": NaN,
+      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 8 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+      "divergence": false,
+      "measurable": false
+    },
+    {
+      "ticker": "SGOV",
+      "price_chg_pct": 0.07,
+      "net_flow_pct_aum": NaN,
+      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 5 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+      "divergence": false,
+      "measurable": false
+    },
+    {
       "ticker": "USO",
-      "price_chg_pct": 14.05,
+      "price_chg_pct": 17.15,
       "net_flow_pct_aum": NaN,
       "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares never changed",
       "divergence": false,
@@ -628,9 +628,9 @@
     },
     {
       "ticker": "VGT",
-      "price_chg_pct": -6.92,
+      "price_chg_pct": -6.34,
       "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 8 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 7 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
       "divergence": false,
       "measurable": false
     }
