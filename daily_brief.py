@@ -1,6 +1,13 @@
 """
-daily_brief.py  (v1.2 — October 2026)
+daily_brief.py  (v1.3 — October 2026)
 ─────────────────────────────────────
+v1.3 (2026-10-31): section 6A "Where the money went". Reads
+  flow_map_summary.json (published by Money_Flow publish_to_checklist v1.1):
+  20-session net ETF creations minus redemptions by asset class, trusted
+  funds only, with the Flow Map's verdict / evidence / rule / what would
+  change it. Funds that fail the integrity test are listed as not measured,
+  never counted as zero. A missing or stale (>36h) summary is said plainly,
+  and is a data-health row.
 v1.2 (2026-10-31): section 1A "Market read". Four diagnoses, each printed as
   verdict / evidence (numbers with their dates) / the rule applied / what
   would change it: what moved long yields (10Y split exactly into real +
@@ -82,6 +89,8 @@ DAILY_CSV = Path("logs/daily_log.csv")
 SWING_DIR = Path("logs/swing")
 ROTATION_FILE = "rotation_summary.json"
 MARKETS_FILE = "markets_summary.json"
+FLOW_MAP_FILE = "flow_map_summary.json"      # Money_Flow flow_map.SUMMARY_FILE
+FLOW_MAP_MAX_AGE_H = 36                      # one missed daily publish is tolerated, two is stale
 
 BAND = 0.25                      # regime_bands.TRANSITION_BAND
 CASH_SLEEVES = {"SGOV", "USFR", "BIL", "SHV"}   # ATR stops do not apply to cash
@@ -325,6 +334,7 @@ def gather(today_et: Optional[datetime] = None, fred_key: str = "",
     inp["data_dir"] = data_dir
     inp["rotation"] = _read_json_file(ROTATION_FILE, data_dir)
     inp["markets"] = _read_json_file(MARKETS_FILE, data_dir)
+    inp["flow_map"] = _read_json_file(FLOW_MAP_FILE, data_dir)
     try:
         inp["daily_log"] = pd.read_csv(DAILY_CSV) if DAILY_CSV.exists() else pd.DataFrame()
     except Exception as e:
@@ -906,6 +916,55 @@ def compass(prices: dict) -> list[dict]:
 
 
 # ── Flow ───────────────────────────────────────────────────────────────────
+
+def _hours_since(iso: Optional[str], now) -> Optional[float]:
+    """Hours from a UTC ISO timestamp to the brief's ET clock (naive = ET)."""
+    if not iso:
+        return None
+    try:
+        t = pd.Timestamp(iso)
+        if pd.isna(t):
+            return None
+        t = t.tz_localize("UTC") if t.tzinfo is None else t
+        n = pd.Timestamp(now)
+        n = n.tz_localize("America/New_York") if n.tzinfo is None else n
+        return round((n - t).total_seconds() / 3600.0, 1)
+    except Exception:
+        return None
+
+
+def flow_map_section(inp: dict) -> dict:
+    """6A: where the money went, by asset class (Money_Flow flow_map_summary.json).
+    Shown as published; this module does not recompute or re-judge it."""
+    s = inp.get("flow_map") or {}
+    if not s.get("asset_classes") or not (s.get("verdict") or {}).get("verdict"):
+        return {"available": False,
+                "message": "Flow map summary not published yet — Money_Flow's Daily Poll and Publish writes "
+                           f"{FLOW_MAP_FILE}. Without it the brief cannot say where money moved by asset class; "
+                           "that blocks the de-risking-versus-rotation call from flows (prices in 1A still apply)."}
+    age = _hours_since(s.get("published_at"), inp["now_et"])
+    stale = age is None or age > FLOW_MAP_MAX_AGE_H
+    v = s["verdict"]
+    rows = [{"asset_class": r.get("asset_class"), "flow_usd": _f(r.get("flow_usd")), "pct_aum": _f(r.get("pct_aum")),
+             "direction": r.get("direction") or "n/a", "measured": r.get("measured"), "total": r.get("total"),
+             "missing": list(r.get("missing") or []), "thin": bool(r.get("thin"))} for r in s["asset_classes"]]
+    cov = s.get("coverage") or {}
+    return {"available": True, "stale": stale, "age_hours": age, "published_at": s.get("published_at"),
+            "data_through": s.get("data_through"), "window": s.get("window"),
+            "measured": cov.get("measured"), "total": cov.get("total"), "rows": rows,
+            "kind": v.get("kind"), "verdict": v.get("verdict"), "evidence": list(v.get("evidence") or []),
+            "rule": v.get("rule", ""), "changes_if": v.get("changes_if", ""),
+            "excluded": s.get("excluded") or {}}
+
+
+def _usd(x) -> str:
+    x = _f(x)
+    if x is None:
+        return "n/a"
+    sign = "+" if x > 0 else ("−" if x < 0 else "")
+    a = abs(x)
+    return sign + (f"${a / 1e9:.2f}B" if a >= 1e9 else f"${a / 1e6:.0f}M")
+
 
 def flow_section(inp: dict) -> dict:
     rot = inp.get("rotation") or {}
@@ -1700,6 +1759,9 @@ def data_health(inp: dict) -> list[dict]:
         pass
     rot = inp.get("rotation") or {}
     add("Money Flow bridge", (rot.get("published_at") or "")[:10] or None, 1, ref=wall)
+    fm_ = inp.get("flow_map") or {}
+    add("Flow map summary", (fm_.get("published_at") or "")[:10] or None, 1, ref=wall,
+        note="" if fm_ else "not published yet (Money_Flow publish v1.1)")
     mk = inp.get("markets") or {}
     add("Markets bridge", (mk.get("published_at") or "")[:10] or None, 1, ref=wall)
     b = inp.get("swing") or {}
@@ -1809,6 +1871,7 @@ def build(inp: dict) -> dict:
     xa = cross_asset_section(inp, rg.get("key"))
     ro = rotation_section(inp)
     fl = flow_section(inp)
+    fm = flow_map_section(inp)
     br = breadth_section(inp)
     mr = market_read_section(inp, {"breadth": br, "rotation": ro, "regime": rg})
     targets = a.get("targets") or (inp.get("markets") or {}).get("regime_targets") or {}
@@ -1821,7 +1884,7 @@ def build(inp: dict) -> dict:
     dh = data_health(inp)
     brief = {"session": inp["session"].isoformat(), "generated_et": mt.fmt_et(inp["now_et"]),
              "scoreboard": sb, "market_read": mr, "regime": rg, "cross_asset": xa, "rotation": ro, "flow": fl,
-             "breadth": br, "model": mdl, "portfolio": pf, "swing": sw, "next48": nx, "alerts": al,
+             "flow_map": fm, "breadth": br, "model": mdl, "portfolio": pf, "swing": sw, "next48": nx, "alerts": al,
              "signals": sg,
              "data_health": dh, "errors": inp.get("errors", []), "targets": targets}
     brief["headline"] = headline(brief)
@@ -2035,6 +2098,28 @@ def render_md(b: dict) -> str:
         for c in fl["cot"]:
             L.append(f"| {c['contract']} | {c['sleeve']} | {c['report_date']} | {_fmt(c['age_days'], 0)}d{' STALE' if c['stale'] else ''} | {c['flag']} |")
     L += ["", f"**Conclusion:** {fl['conclusion']}", ""]
+
+    fm = b.get("flow_map") or {}
+    L += [f"## 6A · Where the money went (Tier A ETF flows, {fm.get('window') or 20} sessions)"]
+    if not fm.get("available"):
+        L += [f"*{fm.get('message', 'Flow map summary unavailable.')}*", ""]
+    else:
+        when = f"published {str(fm.get('published_at') or '')[:16].replace('T', ' ')} UTC"
+        L.append(f"*Data through {fm.get('data_through') or 'n/a'} · {when} · {fm.get('measured')} of {fm.get('total')} "
+                 f"funds measured (trusted share counts only).*"
+                 + (f" **STALE — {_fmt(fm.get('age_hours'), 0)}h old; treat as last known, not today's flows.**"
+                    if fm.get("stale") else ""))
+        L += ["", "| Asset class | Net flow | % of assets | Direction | Funds measured | Not measured |",
+              "|---|---|---|---|---|---|"]
+        for r in fm["rows"]:
+            L.append(f"| {r['asset_class']} | {_usd(r['flow_usd'])} | {_fmt(r['pct_aum'], 2, '%', True)} | "
+                     f"{r['direction']}{' (thin)' if r['thin'] else ''} | "
+                     f"{r['measured']} of {r['total']} | {', '.join(r['missing']) or '—'} |")
+        if any(r["thin"] for r in fm["rows"]):
+            L.append("\n*(thin) = under half the class's funds measured; that row is indicative only.*")
+        L += ["", f"**Verdict: {fm['verdict']}**"]
+        L += [f"- {str(e).replace(chr(10), ' ')}" for e in fm["evidence"]]
+        L += [f"- *Rule:* {fm['rule']}", f"- *Would change if:* {fm['changes_if']}", ""]
 
     br = b["breadth"]
     L += ["## 7 · Breadth & internals",
@@ -2381,6 +2466,65 @@ def selftest() -> dict:
             f.append(f"_rate_split must give nominal = real + breakeven on common dates: {_sp}")
         if _rate_split({"DGS10": _n10}, 20) is not None or _rate_split({"DGS10": _n10, "DFII10": _r10}, 40) is not None:
             f.append("_rate_split must return None when a series or enough history is missing")
+
+        # v1.3: 6A Where the money went — missing, fresh, stale, unmeasured funds, placement
+        fm0 = b.get("flow_map") or {}
+        if fm0.get("available") or "## 6A · Where the money went" not in md or "not published yet" not in md:
+            f.append("6A must say plainly that the flow map summary is not published when the file is absent")
+        _dh = {r["input"]: r for r in b["data_health"]}
+        if (_dh.get("Flow map summary") or {}).get("status") != "MISSING":
+            f.append(f"data health must flag a missing flow map summary: {_dh.get('Flow map summary')}")
+        _fms = {"published_at": "2026-09-25T22:00:00+00:00", "window": 20, "data_through": "2026-09-25",
+                "coverage": {"measured": 4, "total": 6},
+                "asset_classes": [
+                    {"asset_class": "US equity", "flow_usd": 1.98e9, "aum": 2.1e12, "pct_aum": 0.09, "measured": 2,
+                     "total": 3, "missing": ["VGT"], "direction": "flat"},
+                    {"asset_class": "Treasuries", "flow_usd": -592e6, "aum": 6.0e10, "pct_aum": -0.98, "measured": 2,
+                     "total": 2, "missing": [], "direction": "out"},
+                    {"asset_class": "Cash-like", "flow_usd": None, "aum": None, "pct_aum": None, "measured": 0,
+                     "total": 1, "missing": ["SGOV"], "direction": "n/a", "thin": False},
+                    {"asset_class": "International equity", "flow_usd": 1.28e9, "aum": 2.3e10, "pct_aum": 5.53,
+                     "measured": 1, "total": 5, "missing": ["EEM", "EFA", "FXI", "INDA"], "direction": "in", "thin": True}],
+                "verdict": {"kind": "stocks_flat", "verdict": "No material net move in stocks: test",
+                            "evidence": ["US equity: +$1.98B", "Within stocks: out of SPY"],
+                            "rule": "Net 20-session creations minus redemptions (test rule).",
+                            "changes_if": "Stock funds net flow of ±0.25% or more of their assets."},
+                "excluded": {"VGT": "frozen relay", "SGOV": "frozen relay"}}
+        b1 = build(dict(inp, flow_map=_fms))
+        md1 = render_md(b1)
+        fm1 = b1["flow_map"]
+        if not fm1.get("available") or fm1.get("stale") or abs((fm1.get("age_hours") or -1) - 2.0) > 0.01:
+            f.append(f"6A fresh summary: available, not stale, 2.0h old expected: {fm1.get('stale')} {fm1.get('age_hours')}")
+        for want in ("| US equity | +$1.98B | +0.09% | flat | 2 of 3 | VGT |",
+                     "| Treasuries | −$592M | -0.98% | out | 2 of 2 | — |",
+                     "| Cash-like | n/a | n/a | n/a | 0 of 1 | SGOV |",
+                     "**Verdict: No material net move in stocks: test**", "- Within stocks: out of SPY",
+                     "*Rule:* Net 20-session creations minus redemptions (test rule).",
+                     "*Would change if:* Stock funds net flow of ±0.25% or more of their assets.",
+                     "4 of 6 funds measured",
+                     "| International equity | +$1.28B | +5.53% | in (thin) | 1 of 5 | EEM, EFA, FXI, INDA |",
+                     "*(thin) = under half the class's funds measured"):
+            if want not in md1:
+                f.append(f"6A render missing: {want}")
+        if "$0" in md1.split("## 6A")[1].split("## 7")[0]:
+            f.append("6A must never print an unmeasured bucket as $0")
+        if "| US equity | +$1.98B | +0.09% | flat (thin)" in md1:
+            f.append("6A must mark only thin rows as thin")
+        if "STALE" in md1.split("## 6A")[1].split("## 7")[0]:
+            f.append("6A must not flag a 2-hour-old summary as stale")
+        if not (md1.index("## 6 · Flow") < md1.index("## 6A · Where the money went") < md1.index("## 7 · Breadth")):
+            f.append("6A must sit between section 6 and section 7")
+        if ({r["input"]: r for r in b1["data_health"]}.get("Flow map summary") or {}).get("status") != "OK":
+            f.append("data health must show a fresh flow map summary as OK")
+        b2 = build(dict(inp, flow_map=dict(_fms, published_at="2026-09-24T08:00:00+00:00")))
+        if not b2["flow_map"].get("stale") or "STALE — 40h old" not in render_md(b2):
+            f.append(f"6A must flag a 40-hour-old summary as stale: {b2['flow_map'].get('age_hours')}")
+        if not flow_map_section(dict(inp, flow_map=dict(_fms, published_at=None))).get("stale"):
+            f.append("6A summary with no timestamp must be treated as stale")
+        if flow_map_section(dict(inp, flow_map=dict(_fms, verdict={}))).get("available"):
+            f.append("6A summary without a verdict must not render as available")
+        if _usd(-592e6) != "−$592M" or _usd(3.26e9) != "+$3.26B" or _usd(None) != "n/a" or _usd(float("nan")) != "n/a":
+            f.append(f"_usd formatting: {_usd(-592e6)} {_usd(3.26e9)} {_usd(None)} {_usd(float('nan'))}")
 
         # v1.1: every cross-asset "why" must reach the markdown in full (v1 cut at 160 chars)
         for _lane, _v in (b["cross_asset"].get("lanes") or {}).items():
