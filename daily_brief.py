@@ -1,6 +1,18 @@
 """
-daily_brief.py  (v1.5.3 — November 2026)
+daily_brief.py  (v1.5.4 — November 2026)
 ─────────────────────────────────────
+v1.5.4 (2026-11-01, fix_status N33): WTI is ONE price series throughout —
+  the NYMEX front-month settle — instead of FRED's EIA Cushing spot for the
+  history plus futures for the last 1-3 days. On 10/27 the two differed by
+  $3.50 (steep backwardation), so the 5-day change spanned two price
+  definitions. Now: Yahoo's daily CL=F bars for completed sessions (Yahoo
+  overwrites them with the settle), the rebuilt 14:28-14:30 VWAP for the
+  latest; the latest daily bar is never used on its own (it can still be a
+  last trade) and partial next-day bars are dropped. Front-month expiries
+  (NYMEX rule) are named when a change spans a roll. With no futures history
+  the series is FRED spot ONLY — futures are never spliced onto spot again.
+  The data-health note reports Yahoo daily vs the rebuilt settle on earlier
+  sessions (the method check) and FRED spot minus settle (a market spread).
 v1.5.3 (2026-11-01, fix_status N29): WTI after FRED's last date is the
   NYMEX settlement, rebuilt from Yahoo 1-minute CL=F bars as the volume-
   weighted price from 2:28 to 2:30pm ET (how NYMEX settles WTI), for sessions
@@ -328,6 +340,53 @@ def settle_series(bars: Optional[pd.DataFrame], now_et) -> pd.Series:
     return pd.Series(out, dtype=float).sort_index()
 
 
+def cl_expiry(year: int, month: int) -> date:
+    """Last trading day of the NYMEX WTI contract for delivery (year, month):
+    3 business days before the 25th of the prior month, or 4 if the 25th is
+    not a business day. NYSE holidays stand in for CME's (they match on the
+    days that matter here)."""
+    py, pm = (year, month - 1) if month > 1 else (year - 1, 12)
+    d = date(py, pm, 25)
+    n = 3 if mt.is_trading_day(d) else 4
+    k = 0
+    while k < n:
+        d -= timedelta(days=1)
+        if mt.is_trading_day(d):
+            k += 1
+    return d
+
+
+def cl_expiries_between(start: date, end: date) -> list:
+    out = []
+    y, m = start.year, start.month
+    for _ in range(30):
+        e = cl_expiry(y, m)
+        if start <= e <= end:
+            out.append((e, date(y, m, 1).strftime("%b %Y")))
+        if e > end:
+            break
+        y, m = (y, m + 1) if m < 12 else (y + 1, 1)
+    return sorted(out)
+
+
+def wti_settle_series(daily: pd.Series, settle: pd.Series, session: date) -> pd.Series:
+    """One series of front-month settles: daily closes for completed sessions
+    up to `session`, overridden by the rebuilt settle wherever it exists. The
+    latest daily bar is dropped unless a rebuilt settle replaces it."""
+    if daily is None or not len(daily):
+        return pd.Series(dtype=float)
+    d = daily.copy()
+    d.index = pd.to_datetime(d.index).normalize()
+    d = d[d.index <= pd.Timestamp(session)]
+    st_ = settle[settle.index <= pd.Timestamp(session)] if settle is not None and len(settle) else pd.Series(dtype=float)
+    if len(d) and d.index[-1] not in st_.index:
+        d = d.iloc[:-1]
+    out = d.copy()
+    for k, v in st_.items():
+        out.loc[pd.Timestamp(k)] = v
+    return out.sort_index()
+
+
 def settle_vs_fred(settle: pd.Series, fred: pd.Series) -> Optional[dict]:
     """Gap between the rebuilt settle and FRED's WTI on the days both exist
     (FRED's DCOILWTICO is EIA's Cushing spot, which tracks the settle)."""
@@ -451,7 +510,7 @@ def gather(today_et: Optional[datetime] = None, fred_key: str = "",
         inp["spy_holdings_error"] = f"{type(e).__name__}: {str(e)[:120]}"
     tickers = sorted(set(universe) | set(comp) | set(ledger_tk) | {t for _, t in PRICE_SCORE}
                      | set(FRESHER.values()) | sleeves | set(BENCH_TICKERS)
-                     | {t for t, _ in inp["spy_holdings"]})
+                     | {t for t, _ in inp["spy_holdings"]} | {OIL_TICKER})
     inp["universe"] = universe
     try:
         inp["prices"] = (fetch_prices or _default_prices)(tickers)
@@ -467,25 +526,46 @@ def gather(today_et: Optional[datetime] = None, fred_key: str = "",
             tail = ys[ys.index > fs.index[-1]] if len(fs) else ys
             hist[sid] = pd.concat([fs, tail]).sort_index()
             inp["fred_src"][sid] = f"FRED + yfinance {yf_tk} after {fs.index[-1].date() if len(fs) else 'n/a'}"
-    # v1.5.3 (N29): oil after FRED's last date = the rebuilt NYMEX settle, never the after-hours last trade
+    # v1.5.4 (N33): WTI = one series of NYMEX front-month settles; never spot and futures mixed
+    inp.setdefault("series_label", {})
     try:
         fs = hist.get(OIL_SID, pd.Series(dtype=float))
-        bars = (fetch_intraday or _intraday_default)(OIL_TICKER)
-        st_ = settle_series(bars, now)
-        if len(st_):
-            last_f = fs.index[-1] if len(fs) else None
-            tail = st_[st_.index > last_f] if last_f is not None else st_
-            gap = settle_vs_fred(st_, fs)
-            note = ("FRED + NYMEX settle rebuilt from CL=F 1-min bars (VWAP 14:28–14:30 ET)"
-                    + (f" after {last_f.date()}" if last_f is not None else "")
-                    + (f"; vs FRED on {gap['n']} shared day(s): max gap ${gap['max_abs']:.2f}" if gap else ""))
-            if len(tail):
-                hist[OIL_SID] = pd.concat([fs, tail]).sort_index()
-            inp["fred_src"][OIL_SID] = note
+        daily = _price_close(inp["prices"], OIL_TICKER)
+        try:
+            st_ = settle_series((fetch_intraday or _intraday_default)(OIL_TICKER), now)
+        except Exception:
+            st_ = pd.Series(dtype=float)
+        ws = wti_settle_series(daily, st_, session)
+        if len(ws) >= 260:
+            hist[OIL_SID] = ws
+            inp["series_label"][OIL_SID] = "WTI (NYMEX front-month settle)"
+            dn = daily.copy(); dn.index = pd.to_datetime(dn.index).normalize()
+            chk = settle_vs_fred(st_[st_.index < ws.index[-1]], dn) if len(st_) else None   # method check: settled daily bars vs rebuild
+            sp = settle_vs_fred(ws, fs)                                         # market spread: spot vs settle
+            last_shared = None
+            if sp:
+                f2 = fs.copy(); f2.index = pd.to_datetime(f2.index).normalize()
+                both = pd.concat([ws, f2], axis=1, join="inner").dropna()
+                if len(both):
+                    last_shared = (both.index[-1].date(), float(both.iloc[-1, 1] - both.iloc[-1, 0]))
+            rolls = cl_expiries_between((ws.index[-21] if len(ws) > 21 else ws.index[0]).date(), ws.index[-1].date())
+            n_reb = int(st_.index.isin(ws.index).sum()) if len(st_) else 0
+            inp["fred_src"][OIL_SID] = (
+                f"one series of front-month settles: Yahoo CL=F daily for completed sessions, latest {n_reb} rebuilt "
+                f"from 1-min bars (VWAP 14:28–14:30 ET)"
+                + (f"; method check — Yahoo daily vs rebuilt on {chk['n']} earlier session(s): max ${chk['max_abs']:.2f}" if chk else "")
+                + (f"; FRED spot minus settle on {last_shared[0]}: {last_shared[1]:+.2f} (market spread, not an error)"
+                   if last_shared else "")
+                + ("; front-month expiry " + ", ".join(f"{e} ({lab} contract)" for e, lab in rolls)
+                   + " inside the 20-day window — changes spanning it include the roll" if rolls else "")
+                + ("" if n_reb else "; no settlement-window bars today, so the latest session is not shown yet"))
         else:
-            inp["fred_src"][OIL_SID] = "FRED only — no settlement-window bars, so no after-hours print is used"
+            inp["series_label"][OIL_SID] = "WTI (FRED DCOILWTICO, EIA Cushing spot)"
+            inp["fred_src"][OIL_SID] = ("FRED spot only — futures history unavailable; futures are never spliced onto spot "
+                                        "(different prices); lags the market 1–3 sessions")
     except Exception as e:
-        inp["fred_src"][OIL_SID] = f"FRED only — settle rebuild failed ({type(e).__name__})"
+        inp["series_label"][OIL_SID] = "WTI (FRED DCOILWTICO, EIA Cushing spot)"
+        inp["fred_src"][OIL_SID] = f"FRED spot only — futures series failed ({type(e).__name__})"
     missing = [t for t in tickers if t not in inp["prices"]]
     if missing:
         errors.append(f"prices missing for {len(missing)} of {len(tickers)} tickers"
@@ -572,7 +652,7 @@ def scoreboard(inp: dict) -> dict:
     rows = []
     for label, sid, unit, kind in FRED_SCORE:
         s = inp["fred"].get(sid, pd.Series(dtype=float))
-        rows.append(_score_row(label, s, unit, kind, source=f"FRED {sid}"))
+        rows.append(_score_row(label, s, unit, kind, source=(inp.get("series_label") or {}).get(sid, f"FRED {sid}")))
     # short real rate: from the live signal, deltas from the logged history
     sig = (inp.get("assessment") or {}).get("signals")
     srr = _f(getattr(sig, "short_real_rate", None)) if sig is not None else None
@@ -2078,7 +2158,8 @@ def data_health(inp: dict) -> list[dict]:
         note = (inp.get("fred_src") or {}).get(sid, "")
         if sid in FRED_MAX_AGE:
             note = (note + "; " if note else "") + "weekly release (Mondays) — a week's lag is normal"
-        add(f"FRED {sid}", s.index[-1].date().isoformat() if len(s) else None, FRED_MAX_AGE.get(sid, 4), note)
+        add((inp.get("series_label") or {}).get(sid, f"FRED {sid}"), s.index[-1].date().isoformat() if len(s) else None,
+            FRED_MAX_AGE.get(sid, 4), note)
     a = inp.get("assessment")
     _reg = (a or {}).get("regime") or {}
     if a and _reg.get("data_failure"):
@@ -2936,18 +3017,48 @@ def selftest() -> dict:
             f.append("bars stamped in UTC must give the same settle (times compared in New York time)")
         if len(settle_series(pd.DataFrame(), datetime(2026, 9, 25, 20, 0))) or len(settle_series(None, datetime(2026, 9, 25, 20))):
             f.append("no bars -> no settle (never a fallback)")
+        # v1.5.4 (N33): one series of settles; latest daily bar only via the rebuild; no next-day bar; no spot mixing
         _oil = inp["fred"]["DCOILWTICO"]
-        if "NYMEX settle" not in (inp.get("fred_src") or {}).get("DCOILWTICO", "") or abs(float(_oil.iloc[-1]) - 71.25) > 1e-9:
-            f.append(f"oil after FRED's last date must be the rebuilt settle (71.25), labelled: "
-                     f"{(inp.get('fred_src') or {}).get('DCOILWTICO')} {float(_oil.iloc[-1])}")
+        _src = (inp.get("fred_src") or {}).get("DCOILWTICO", "")
+        if abs(float(_oil.iloc[-1]) - 71.25) > 1e-9 or _oil.index[-1] != pd.Timestamp("2026-09-25") \
+                or abs(float(_oil.iloc[-4]) - 69.0) > 1e-9 or "one series of front-month settles" not in _src:
+            f.append(f"WTI must be daily settles (69.00) then the rebuilt settle (71.25) for the last 3 sessions: "
+                     f"{_oil.tail(4).round(2).tolist()} | {_src}")
+        if float(_oil.iloc[-300:].min()) < 68.99 or len(_oil) < 260:
+            f.append("the WTI series must be futures throughout (no FRED spot values mixed in)")
+        _sb = next(r for r in b["scoreboard"]["rows"] if r["name"] == "WTI crude")
+        if _sb["source"] != "WTI (NYMEX front-month settle)" or \
+                "WTI (NYMEX front-month settle)" not in {r["input"] for r in b["data_health"]}:
+            f.append(f"scoreboard and data health must name the series as the NYMEX settle: {_sb['source']}")
+        if "front-month expiry 2026-09-22 (Oct 2026 contract)" not in _src:
+            f.append(f"a roll inside the 20-day window must be named (Oct 2026 contract expired 9/22): {_src}")
+        _px2 = dict(prices)
+        _cl = prices["CL=F"].copy()                    # two bars after the session (6pm reopen) — tests the cutoff itself
+        _cl.loc[pd.Timestamp("2026-09-28")] = _cl.iloc[-1] * 0 + 55.0
+        _cl.loc[pd.Timestamp("2026-09-29")] = _cl.iloc[-1] * 0 + 55.0
+        _px2["CL=F"] = _cl
+        _i3 = gather(today_et=now, fetch_fred=fetch_fred, fetch_holdings=lambda: [], fetch_intraday=_mbars,
+                     fetch_prices=lambda tks: {t: _px2[t] for t in tks if t in _px2}, assess=lambda: assessment,
+                     macro_lookup=lambda d: [])
+        if _i3["fred"]["DCOILWTICO"].index[-1] != pd.Timestamp("2026-09-25") or (_i3["fred"]["DCOILWTICO"] == 55.0).any():
+            f.append("a daily bar dated after the session (the 6pm reopen) must be dropped")
         _i2 = gather(today_et=now, fetch_fred=fetch_fred, fetch_holdings=lambda: [], fetch_intraday=lambda t: pd.DataFrame(),
                      fetch_prices=lambda tks: {t: prices[t] for t in tks if t in prices}, assess=lambda: assessment,
                      macro_lookup=lambda d: [])
-        if len(inp["fred"]["DCOILWTICO"]) != len(fred["DCOILWTICO"]) + 2:
-            f.append("exactly the two sessions after FRED's last date must be spliced from the settle")
-        if not (_i2.get("fred_src") or {}).get("DCOILWTICO", "").startswith("FRED only") or \
-                not _i2["fred"]["DCOILWTICO"].index[-1] == fred["DCOILWTICO"].index[-1]:
-            f.append("without settlement bars, oil must stay FRED-only (no after-hours splice)")
+        if _i2["fred"]["DCOILWTICO"].index[-1] != pd.Timestamp("2026-09-24") or \
+                "latest session is not shown yet" not in (_i2.get("fred_src") or {}).get("DCOILWTICO", ""):
+            f.append("without settlement bars the latest daily bar (maybe a last trade) must be left out, and say so")
+        _px4 = {t: v for t, v in prices.items() if t != "CL=F"}
+        _i4 = gather(today_et=now, fetch_fred=fetch_fred, fetch_holdings=lambda: [], fetch_intraday=_mbars,
+                     fetch_prices=lambda tks: {t: _px4[t] for t in tks if t in _px4}, assess=lambda: assessment,
+                     macro_lookup=lambda d: [])
+        if not _i4["fred"]["DCOILWTICO"].equals(fred["DCOILWTICO"]) or \
+                not (_i4.get("fred_src") or {}).get("DCOILWTICO", "").startswith("FRED spot only"):
+            f.append("with no futures history WTI must be FRED spot only — never a settle spliced onto spot")
+        for (y_, m_), want in (((2026, 11), date(2026, 10, 20)), ((2026, 12), date(2026, 11, 20)),
+                               ((2026, 10), date(2026, 9, 22)), ((2027, 1), date(2026, 12, 21))):
+            if cl_expiry(y_, m_) != want:
+                f.append(f"cl_expiry({y_}, {m_}) must be {want} (NYMEX rule): {cl_expiry(y_, m_)}")
         _g = settle_vs_fred(pd.Series([71.0, 72.0], index=pd.to_datetime(["2026-09-24", "2026-09-25"])),
                             pd.Series([70.5, 73.0], index=pd.to_datetime(["2026-09-24", "2026-09-25"])))
         if not _g or _g["n"] != 2 or abs(_g["max_abs"] - 1.0) > 1e-9:
