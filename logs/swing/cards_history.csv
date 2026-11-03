@@ -113,3 +113,18 @@ date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_
 2026-10-30,PSA,M0 Rotation,long,2-of-3,326.0,315.26,324.77,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
 2026-10-30,WELL,M0 Rotation,long,2-of-3,239.3,229.74,234.6,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
 2026-10-30,UNH,M0 Rotation,long,2-of-3,416.11,396.73,406.97,transition_ambiguous,False,"risk budget $12.50 at this step/regime is below one share's risk ($19.38) — a single share breaches Progressive Exposure; the only expression is a 45-90 DTE call debit spread with premium <= $12, or skip"
+2026-11-02,XLF,M0 Rotation,long,3-of-3,57.7,56.17,57.56,transition_ambiguous,False,binary macro event within 48h: ELECTION in 0d
+2026-11-02,XLU,M0 Rotation,long,3-of-3,43.8,42.59,43.67,transition_ambiguous,False,binary macro event within 48h: ELECTION in 0d
+2026-11-02,XEL,M0 Rotation,long,3-of-3,80.21,77.89,79.33,transition_ambiguous,False,binary macro event within 48h: ELECTION in 0d
+2026-11-02,EXC,M0 Rotation,long,3-of-3,46.69,45.33,46.45,transition_ambiguous,False,binary macro event within 48h: ELECTION in 0d
+2026-11-02,XLRE,M0 Rotation,long,3-of-3,43.72,42.44,43.64,transition_ambiguous,False,binary macro event within 48h: ELECTION in 0d
+2026-11-02,AEP,M0 Rotation,long,3-of-3,130.84,126.99,130.33,transition_ambiguous,False,binary macro event within 48h: ELECTION in 0d
+2026-11-02,D,M0 Rotation,long,3-of-3,68.04,65.96,67.72,transition_ambiguous,False,binary macro event within 48h: ELECTION in 0d
+2026-11-02,XLY,M0 Rotation,long,3-of-3,119.21,115.29,118.16,transition_ambiguous,False,binary macro event within 48h: ELECTION in 0d
+2026-11-02,PSA,M0 Rotation,long,3-of-3,335.18,324.04,333.24,transition_ambiguous,False,binary macro event within 48h: ELECTION in 0d
+2026-11-02,WFC,M0 Rotation,long,3-of-3,86.03,83.16,85.89,transition_ambiguous,False,binary macro event within 48h: ELECTION in 0d
+2026-11-02,HD,M0 Rotation,long,3-of-3,341.54,329.36,341.15,transition_ambiguous,False,binary macro event within 48h: ELECTION in 0d
+2026-11-02,AMT,M0 Rotation,long,3-of-3,189.23,180.01,188.3,transition_ambiguous,False,binary macro event within 48h: ELECTION in 0d
+2026-11-02,JNJ,M0 Rotation,long,3-of-3,273.01,262.78,270.56,transition_ambiguous,False,binary macro event within 48h: ELECTION in 0d
+2026-11-02,ABT,M0 Rotation,long,3-of-3,110.48,105.79,110.16,transition_ambiguous,False,binary macro event within 48h: ELECTION in 0d
+2026-11-02,WELL,M0 Rotation,long,2-of-3,239.16,229.43,239.0,transition_ambiguous,False,binary macro event within 48h: ELECTION in 0d
