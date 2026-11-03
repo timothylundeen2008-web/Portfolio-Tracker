@@ -95,3 +95,5 @@ signal_id,date,signal_type,subject,direction,price_at_signal,benchmark_at_signal
 2026-10-30_regime_weekly_PORT,2026-10-30,regime_weekly,PORT,long,,,regime=transition_ambiguous,"{""weights"": {""VGT"": 17.0, ""SMH"": 3.0, ""QQQ"": 3.0, ""GLD"": 10.0, ""SLV"": 4.0, ""RING"": 4.0, ""XLE"": 5.0, ""PDBC"": 3.0, ""SCHD"": 14.0, ""XLV"": 5.0, ""XLU"": 3.0, ""SGOV"": 8.0, ""USFR"": 7.0, ""TLT"": 7.0, ""KMLM"": 7.0}, ""bench_weights"": {""VGT"": 20, ""SMH"": 4, ""QQQ"": 4, ""GLD"": 12, ""SLV"": 5, ""RING"": 5, ""XLE"": 5, ""PDBC"": 3, ""SCHD"": 13, ""XLV"": 4, ""XLU"": 3, ""SGOV"": 5, ""USFR"": 3, ""TLT"": 10, ""KMLM"": 4}, ""bench"": ""BASE""}",daily_log
 2026-10-30_stealth_flag_XLE,2026-10-30,stealth_flag,XLE,long,,,Stealth · Weakening · accum 58.07,,rotation
 2026-10-30_stealth_flag_XLY,2026-10-30,stealth_flag,XLY,long,,,Stealth · Improving · accum 48.69,,rotation
+2026-11-02_flow_divergence_XLU,2026-11-02,flow_divergence,XLU,short,,,"DISTRIBUTION (price up, money out) · flow -1.67% AUM",,rotation
+2026-11-02_stealth_flag_XLP,2026-11-02,stealth_flag,XLP,long,,,Stealth · Weakening · accum 31.62,,rotation
