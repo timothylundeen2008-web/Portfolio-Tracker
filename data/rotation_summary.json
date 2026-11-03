@@ -1,6 +1,6 @@
 {
-  "published_at": "2026-11-01T20:53:45+00:00",
-  "notes": "published by publish_to_checklist.py; etf_flow coverage: 88d history, ready=True",
+  "published_at": "2026-11-03T03:04:58+00:00",
+  "notes": "published by publish_to_checklist.py; etf_flow coverage: 89d history, ready=True",
   "cot_schema_ok": true,
   "sectors": [
     {
@@ -8,237 +8,284 @@
       "sector": "Industrials",
       "quadrant": "Lagging",
       "rotation_direction": "Strengthening",
-      "rs_ratio": 94.25801383049443,
-      "rs_momentum": 98.65983363509991,
-      "spread": 2.046666666666667,
-      "signal_score": 5.250674719325993,
-      "accumulation_score": 70.76,
+      "rs_ratio": 95.5166881871894,
+      "rs_momentum": 98.69711520462575,
+      "spread": 2.7633333333333336,
+      "signal_score": 5.497540608057757,
+      "accumulation_score": 70.15,
       "event_score": 0.0,
       "stealth_label": "Strong Stealth",
-      "cmf": 0.1965,
-      "vol_ratio": 1.06
+      "cmf": 0.1824,
+      "vol_ratio": 1.14
     },
     {
       "ticker": "XLB",
       "sector": "Basic Materials",
       "quadrant": "Weakening",
       "rotation_direction": "Topping",
-      "rs_ratio": 106.14602308535711,
-      "rs_momentum": 93.27501982342166,
-      "spread": 7.36,
-      "signal_score": 11.807588488216915,
-      "accumulation_score": 61.02,
+      "rs_ratio": 109.16930782173179,
+      "rs_momentum": 92.48210632497629,
+      "spread": 8.61,
+      "signal_score": 12.175759306191358,
+      "accumulation_score": 63.93,
       "event_score": 0.0,
       "stealth_label": "Strong Stealth",
-      "cmf": 0.3781,
-      "vol_ratio": 0.99
-    },
-    {
-      "ticker": "XLE",
-      "sector": "Energy",
-      "quadrant": "Weakening",
-      "rotation_direction": "Topping",
-      "rs_ratio": 141.29205480398167,
-      "rs_momentum": 81.5613817618258,
-      "spread": 5.066666666666667,
-      "signal_score": 11.556340396905483,
-      "accumulation_score": 58.07,
-      "event_score": 0.0,
-      "stealth_label": "Stealth",
-      "cmf": 0.2323,
-      "vol_ratio": 0.93
+      "cmf": 0.4346,
+      "vol_ratio": 1.16
     },
     {
       "ticker": "XLU",
       "sector": "Utilities",
       "quadrant": "Improving",
       "rotation_direction": "Weakening",
-      "rs_ratio": 85.598846595471,
-      "rs_momentum": 105.62494552580384,
-      "spread": 9.91,
-      "signal_score": 17.915189867236087,
-      "accumulation_score": 57.36,
+      "rs_ratio": 86.18538952146183,
+      "rs_momentum": 104.67970840609104,
+      "spread": 9.73,
+      "signal_score": 17.286580428837205,
+      "accumulation_score": 61.08,
       "event_score": 0.0,
       "stealth_label": "Strong Stealth",
-      "cmf": 0.1885,
-      "vol_ratio": 0.58
+      "cmf": 0.2725,
+      "vol_ratio": 0.69
     },
     {
       "ticker": "XLY",
       "sector": "Consumer Cyclical",
       "quadrant": "Improving",
       "rotation_direction": "Bottoming",
-      "rs_ratio": 83.98442558555136,
-      "rs_momentum": 111.17254111857828,
-      "spread": 6.766666666666667,
-      "signal_score": 16.231854618122348,
-      "accumulation_score": 48.69,
+      "rs_ratio": 87.7434753687835,
+      "rs_momentum": 108.54990374978229,
+      "spread": 7.343333333333333,
+      "signal_score": 15.72943938671207,
+      "accumulation_score": 53.65,
       "event_score": 0.0,
       "stealth_label": "Stealth",
-      "cmf": 0.1634,
-      "vol_ratio": 0.99
+      "cmf": 0.1788,
+      "vol_ratio": 1.13
+    },
+    {
+      "ticker": "XLF",
+      "sector": "Financial",
+      "quadrant": "Improving",
+      "rotation_direction": "Bottoming",
+      "rs_ratio": 96.36029267910942,
+      "rs_momentum": 110.19824041525368,
+      "spread": 7.676666666666667,
+      "signal_score": 15.12986375021907,
+      "accumulation_score": 51.57,
+      "event_score": 0.0,
+      "stealth_label": "Weak / Mixed",
+      "cmf": 0.1962,
+      "vol_ratio": 0.92
+    },
+    {
+      "ticker": "XLE",
+      "sector": "Energy",
+      "quadrant": "Weakening",
+      "rotation_direction": "Topping",
+      "rs_ratio": 136.11300230856514,
+      "rs_momentum": 79.64547793616616,
+      "spread": 1.8499999999999996,
+      "signal_score": 10.874015748031496,
+      "accumulation_score": 46.56,
+      "event_score": 0.0,
+      "stealth_label": "Strong Stealth",
+      "cmf": 0.1189,
+      "vol_ratio": 1.05
     },
     {
       "ticker": "XLV",
       "sector": "Healthcare",
       "quadrant": "Leading",
-      "rotation_direction": "Strengthening",
-      "rs_ratio": 112.70730633422832,
-      "rs_momentum": 108.91354064603493,
-      "spread": 6.4366666666666665,
-      "signal_score": 13.697812244774106,
-      "accumulation_score": 42.18,
+      "rotation_direction": "Bottoming",
+      "rs_ratio": 111.96697577962983,
+      "rs_momentum": 108.52624161113253,
+      "spread": 6.306666666666667,
+      "signal_score": 13.236188106189564,
+      "accumulation_score": 44.11,
       "event_score": 0.0,
       "stealth_label": "Stealth",
-      "cmf": 0.0993,
-      "vol_ratio": 1.35
-    },
-    {
-      "ticker": "XLK",
-      "sector": "Technology",
-      "quadrant": "Leading",
-      "rotation_direction": "Strengthening",
-      "rs_ratio": 102.43371808928528,
-      "rs_momentum": 103.73867636535576,
-      "spread": -9.563333333333333,
-      "signal_score": 14.433382608059247,
-      "accumulation_score": 30.23,
-      "event_score": 0.0,
-      "stealth_label": "Stealth",
-      "cmf": 0.0065,
-      "vol_ratio": 1.13
+      "cmf": 0.0989,
+      "vol_ratio": 1.48
     },
     {
       "ticker": "XLP",
       "sector": "Consumer Defensive",
       "quadrant": "Weakening",
       "rotation_direction": "Weakening",
-      "rs_ratio": 103.57330939040499,
-      "rs_momentum": 99.38533246547082,
-      "spread": 9.296666666666667,
-      "signal_score": 9.790555902792908,
-      "accumulation_score": 21.02,
+      "rs_ratio": 105.01154282584027,
+      "rs_momentum": 99.15812317360185,
+      "spread": 10.423333333333332,
+      "signal_score": 11.048491481856754,
+      "accumulation_score": 31.62,
       "event_score": 0.0,
-      "stealth_label": "Weak / Mixed",
-      "cmf": 0.0284,
-      "vol_ratio": 1.18
+      "stealth_label": "Stealth",
+      "cmf": 0.075,
+      "vol_ratio": 1.34
+    },
+    {
+      "ticker": "XLK",
+      "sector": "Technology",
+      "quadrant": "Leading",
+      "rotation_direction": "Strengthening",
+      "rs_ratio": 100.36310991117891,
+      "rs_momentum": 101.45354229631866,
+      "spread": -10.583333333333334,
+      "signal_score": 14.214233813757975,
+      "accumulation_score": 20.03,
+      "event_score": 0.0,
+      "stealth_label": "Stealth",
+      "cmf": -0.0389,
+      "vol_ratio": 1.3
     },
     {
       "ticker": "XLRE",
       "sector": "Real Estate",
-      "quadrant": "Lagging",
-      "rotation_direction": "Strengthening",
-      "rs_ratio": 94.92277542281427,
-      "rs_momentum": 99.79171848532059,
-      "spread": 7.333333333333334,
-      "signal_score": 5.73385418221394,
-      "accumulation_score": -0.41,
+      "quadrant": "Improving",
+      "rotation_direction": "Weakening",
+      "rs_ratio": 95.13792698673552,
+      "rs_momentum": 100.02363987313166,
+      "spread": 7.786666666666666,
+      "signal_score": 13.682224376818532,
+      "accumulation_score": 14.04,
       "event_score": 0.0,
-      "stealth_label": "None",
-      "cmf": 0.0402,
-      "vol_ratio": 1.02
+      "stealth_label": "Weak / Mixed",
+      "cmf": 0.1093,
+      "vol_ratio": 1.01
     },
     {
       "ticker": "XLC",
       "sector": "Communication Services",
       "quadrant": "Improving",
-      "rotation_direction": "Bottoming",
-      "rs_ratio": 75.08352686241162,
-      "rs_momentum": 109.60822493915249,
-      "spread": -5.803333333333335,
-      "signal_score": 14.49129621658637,
-      "accumulation_score": -24.83,
+      "rotation_direction": "Weakening",
+      "rs_ratio": 76.43228860977422,
+      "rs_momentum": 107.39317949278102,
+      "spread": -5.713333333333333,
+      "signal_score": 13.788874070641826,
+      "accumulation_score": -31.26,
       "event_score": 0.0,
       "stealth_label": "Weak / Mixed",
-      "cmf": -0.0975,
-      "vol_ratio": 1.33
+      "cmf": -0.1359,
+      "vol_ratio": 1.28
     }
   ],
   "flow_divergences": [
     {
-      "ticker": "XOP",
-      "price_chg_pct": 8.25,
-      "net_flow_pct_aum": 10.93,
+      "ticker": "XRT",
+      "price_chg_pct": 7.39,
+      "net_flow_pct_aum": 18.17,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false,
       "measurable": true
     },
     {
       "ticker": "KMLM",
-      "price_chg_pct": -0.9,
-      "net_flow_pct_aum": 9.97,
+      "price_chg_pct": -0.97,
+      "net_flow_pct_aum": 12.2,
       "verdict": "ACCUMULATION (price down, money in)",
       "divergence": true,
       "measurable": true
     },
     {
-      "ticker": "LQD",
-      "price_chg_pct": 1.9,
-      "net_flow_pct_aum": 8.81,
+      "ticker": "KRE",
+      "price_chg_pct": 1.79,
+      "net_flow_pct_aum": 8.88,
+      "verdict": "CONFIRMED UPTREND",
+      "divergence": false,
+      "measurable": true
+    },
+    {
+      "ticker": "XHB",
+      "price_chg_pct": 4.44,
+      "net_flow_pct_aum": 8.26,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false,
       "measurable": true
     },
     {
       "ticker": "USFR",
-      "price_chg_pct": 0.06,
-      "net_flow_pct_aum": 6.93,
+      "price_chg_pct": 0.04,
+      "net_flow_pct_aum": 7.56,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false,
       "measurable": true
     },
     {
-      "ticker": "HYG",
-      "price_chg_pct": -0.01,
-      "net_flow_pct_aum": 6.45,
-      "verdict": "ACCUMULATION (price down, money in)",
-      "divergence": true,
-      "measurable": true
-    },
-    {
-      "ticker": "EWJ",
-      "price_chg_pct": -4.66,
-      "net_flow_pct_aum": 5.53,
-      "verdict": "ACCUMULATION (price down, money in)",
-      "divergence": true,
+      "ticker": "XBI",
+      "price_chg_pct": 1.01,
+      "net_flow_pct_aum": 7.25,
+      "verdict": "CONFIRMED UPTREND",
+      "divergence": false,
       "measurable": true
     },
     {
       "ticker": "SOXX",
-      "price_chg_pct": -16.89,
-      "net_flow_pct_aum": 5.41,
+      "price_chg_pct": -17.0,
+      "net_flow_pct_aum": 7.01,
       "verdict": "ACCUMULATION (price down, money in)",
       "divergence": true,
       "measurable": true
     },
     {
-      "ticker": "XBI",
+      "ticker": "HYG",
+      "price_chg_pct": 0.66,
+      "net_flow_pct_aum": 6.49,
+      "verdict": "CONFIRMED UPTREND",
+      "divergence": false,
+      "measurable": true
+    },
+    {
+      "ticker": "LQD",
       "price_chg_pct": 2.14,
-      "net_flow_pct_aum": 4.63,
+      "net_flow_pct_aum": 6.35,
+      "verdict": "CONFIRMED UPTREND",
+      "divergence": false,
+      "measurable": true
+    },
+    {
+      "ticker": "XOP",
+      "price_chg_pct": 10.14,
+      "net_flow_pct_aum": 4.78,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false,
       "measurable": true
     },
     {
       "ticker": "IBB",
-      "price_chg_pct": 3.11,
-      "net_flow_pct_aum": 4.48,
+      "price_chg_pct": 3.39,
+      "net_flow_pct_aum": 4.39,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false,
       "measurable": true
     },
     {
-      "ticker": "KRE",
-      "price_chg_pct": 4.16,
-      "net_flow_pct_aum": 4.17,
+      "ticker": "EMB",
+      "price_chg_pct": 2.06,
+      "net_flow_pct_aum": 4.02,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false,
+      "measurable": true
+    },
+    {
+      "ticker": "EWJ",
+      "price_chg_pct": -4.79,
+      "net_flow_pct_aum": 3.88,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true,
+      "measurable": true
+    },
+    {
+      "ticker": "SMH",
+      "price_chg_pct": -13.9,
+      "net_flow_pct_aum": 3.86,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true,
       "measurable": true
     },
     {
       "ticker": "XLE",
-      "price_chg_pct": 9.66,
-      "net_flow_pct_aum": 4.04,
+      "price_chg_pct": 11.42,
+      "net_flow_pct_aum": 3.83,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false,
       "measurable": true
@@ -252,75 +299,51 @@
       "measurable": true
     },
     {
-      "ticker": "XLI",
-      "price_chg_pct": 0.88,
-      "net_flow_pct_aum": 3.65,
-      "verdict": "CONFIRMED UPTREND",
-      "divergence": false,
-      "measurable": true
-    },
-    {
-      "ticker": "SMH",
-      "price_chg_pct": -12.91,
-      "net_flow_pct_aum": 3.52,
-      "verdict": "ACCUMULATION (price down, money in)",
-      "divergence": true,
-      "measurable": true
-    },
-    {
       "ticker": "XLC",
-      "price_chg_pct": -7.94,
-      "net_flow_pct_aum": 3.37,
+      "price_chg_pct": -9.42,
+      "net_flow_pct_aum": 3.73,
       "verdict": "ACCUMULATION (price down, money in)",
       "divergence": true,
       "measurable": true
     },
     {
-      "ticker": "XHB",
-      "price_chg_pct": 4.65,
-      "net_flow_pct_aum": 3.37,
-      "verdict": "CONFIRMED UPTREND",
-      "divergence": false,
-      "measurable": true
-    },
-    {
-      "ticker": "EMB",
-      "price_chg_pct": 0.96,
-      "net_flow_pct_aum": 2.48,
-      "verdict": "CONFIRMED UPTREND",
-      "divergence": false,
-      "measurable": true
-    },
-    {
-      "ticker": "PAVE",
-      "price_chg_pct": 2.14,
-      "net_flow_pct_aum": 2.46,
-      "verdict": "CONFIRMED UPTREND",
-      "divergence": false,
+      "ticker": "XLI",
+      "price_chg_pct": -1.47,
+      "net_flow_pct_aum": 3.5,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true,
       "measurable": true
     },
     {
       "ticker": "XLV",
-      "price_chg_pct": 10.82,
-      "net_flow_pct_aum": 2.46,
+      "price_chg_pct": 11.32,
+      "net_flow_pct_aum": 3.24,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false,
       "measurable": true
     },
     {
-      "ticker": "XLP",
-      "price_chg_pct": 9.73,
-      "net_flow_pct_aum": 2.36,
+      "ticker": "XLRE",
+      "price_chg_pct": 5.77,
+      "net_flow_pct_aum": 2.53,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false,
       "measurable": true
     },
     {
       "ticker": "SKYY",
-      "price_chg_pct": -2.43,
-      "net_flow_pct_aum": 2.28,
+      "price_chg_pct": -4.15,
+      "net_flow_pct_aum": 2.24,
       "verdict": "ACCUMULATION (price down, money in)",
       "divergence": true,
+      "measurable": true
+    },
+    {
+      "ticker": "XLP",
+      "price_chg_pct": 11.03,
+      "net_flow_pct_aum": 2.12,
+      "verdict": "CONFIRMED UPTREND",
+      "divergence": false,
       "measurable": true
     },
     {
@@ -332,83 +355,99 @@
       "measurable": true
     },
     {
+      "ticker": "PAVE",
+      "price_chg_pct": 1.0,
+      "net_flow_pct_aum": 1.71,
+      "verdict": "CONFIRMED UPTREND",
+      "divergence": false,
+      "measurable": true
+    },
+    {
+      "ticker": "XLF",
+      "price_chg_pct": 5.71,
+      "net_flow_pct_aum": 1.47,
+      "verdict": "CONFIRMED UPTREND",
+      "divergence": false,
+      "measurable": true
+    },
+    {
+      "ticker": "XLB",
+      "price_chg_pct": 7.94,
+      "net_flow_pct_aum": 1.44,
+      "verdict": "CONFIRMED UPTREND",
+      "divergence": false,
+      "measurable": true
+    },
+    {
       "ticker": "RING",
-      "price_chg_pct": -13.56,
-      "net_flow_pct_aum": 1.41,
+      "price_chg_pct": -12.27,
+      "net_flow_pct_aum": 1.43,
       "verdict": "ACCUMULATION (price down, money in)",
       "divergence": true,
       "measurable": true
     },
     {
       "ticker": "XLK",
-      "price_chg_pct": -4.61,
-      "net_flow_pct_aum": 1.36,
+      "price_chg_pct": -10.17,
+      "net_flow_pct_aum": 1.41,
       "verdict": "ACCUMULATION (price down, money in)",
       "divergence": true,
-      "measurable": true
-    },
-    {
-      "ticker": "XLRE",
-      "price_chg_pct": 5.84,
-      "net_flow_pct_aum": 1.16,
-      "verdict": "CONFIRMED UPTREND",
-      "divergence": false,
       "measurable": true
     },
     {
       "ticker": "SLV",
-      "price_chg_pct": -18.35,
-      "net_flow_pct_aum": 1.0,
+      "price_chg_pct": -17.73,
+      "net_flow_pct_aum": 1.1,
       "verdict": "ACCUMULATION (price down, money in)",
       "divergence": true,
       "measurable": true
     },
     {
-      "ticker": "TLT",
-      "price_chg_pct": 4.08,
-      "net_flow_pct_aum": 0.61,
+      "ticker": "MDY",
+      "price_chg_pct": 0.39,
+      "net_flow_pct_aum": 0.65,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false,
       "measurable": true
     },
     {
-      "ticker": "MDY",
-      "price_chg_pct": -0.13,
-      "net_flow_pct_aum": 0.46,
-      "verdict": "ACCUMULATION (price down, money in)",
-      "divergence": true,
-      "measurable": true
-    },
-    {
       "ticker": "PDBC",
-      "price_chg_pct": 5.34,
+      "price_chg_pct": 4.36,
       "net_flow_pct_aum": 0.36,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false,
       "measurable": true
     },
     {
-      "ticker": "XLU",
-      "price_chg_pct": 8.76,
-      "net_flow_pct_aum": 0.34,
+      "ticker": "IGV",
+      "price_chg_pct": -1.93,
+      "net_flow_pct_aum": 0.32,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true,
+      "measurable": true
+    },
+    {
+      "ticker": "TIP",
+      "price_chg_pct": 2.34,
+      "net_flow_pct_aum": 0.22,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false,
+      "measurable": true
+    },
+    {
+      "ticker": "IWO",
+      "price_chg_pct": -1.49,
+      "net_flow_pct_aum": 0.2,
+      "verdict": "ACCUMULATION (price down, money in)",
+      "divergence": true,
       "measurable": true
     },
     {
       "ticker": "OIH",
-      "price_chg_pct": 8.97,
-      "net_flow_pct_aum": 0.16,
+      "price_chg_pct": 8.11,
+      "net_flow_pct_aum": 0.15,
       "verdict": "CONFIRMED UPTREND",
       "divergence": false,
-      "measurable": true
-    },
-    {
-      "ticker": "QQQ",
-      "price_chg_pct": -6.23,
-      "net_flow_pct_aum": 0.07,
-      "verdict": "ACCUMULATION (price down, money in)",
-      "divergence": true,
       "measurable": true
     },
     {
@@ -420,136 +459,104 @@
       "measurable": false
     },
     {
-      "ticker": "TIP",
-      "price_chg_pct": 2.57,
-      "net_flow_pct_aum": -0.07,
-      "verdict": "DISTRIBUTION (price up, money out)",
-      "divergence": true,
-      "measurable": true
-    },
-    {
-      "ticker": "ITA",
-      "price_chg_pct": 0.17,
+      "ticker": "XLY",
+      "price_chg_pct": 4.88,
       "net_flow_pct_aum": -0.27,
       "verdict": "DISTRIBUTION (price up, money out)",
       "divergence": true,
       "measurable": true
     },
     {
-      "ticker": "IGV",
-      "price_chg_pct": -0.82,
-      "net_flow_pct_aum": -0.3,
+      "ticker": "SPY",
+      "price_chg_pct": -1.8,
+      "net_flow_pct_aum": -0.46,
       "verdict": "CONFIRMED DOWNTREND",
       "divergence": false,
       "measurable": true
     },
     {
-      "ticker": "XLF",
-      "price_chg_pct": 6.49,
-      "net_flow_pct_aum": -0.32,
+      "ticker": "ITA",
+      "price_chg_pct": 1.24,
+      "net_flow_pct_aum": -0.53,
       "verdict": "DISTRIBUTION (price up, money out)",
       "divergence": true,
       "measurable": true
     },
     {
-      "ticker": "XLY",
-      "price_chg_pct": 6.75,
-      "net_flow_pct_aum": -0.54,
-      "verdict": "DISTRIBUTION (price up, money out)",
-      "divergence": true,
-      "measurable": true
-    },
-    {
-      "ticker": "IWO",
-      "price_chg_pct": -1.31,
+      "ticker": "QQQ",
+      "price_chg_pct": -6.43,
       "net_flow_pct_aum": -0.56,
       "verdict": "CONFIRMED DOWNTREND",
       "divergence": false,
       "measurable": true
     },
     {
-      "ticker": "XLB",
-      "price_chg_pct": 8.18,
-      "net_flow_pct_aum": -0.63,
-      "verdict": "DISTRIBUTION (price up, money out)",
-      "divergence": true,
-      "measurable": true
-    },
-    {
       "ticker": "AMLP",
-      "price_chg_pct": 3.27,
-      "net_flow_pct_aum": -0.86,
+      "price_chg_pct": 3.92,
+      "net_flow_pct_aum": -0.9,
       "verdict": "DISTRIBUTION (price up, money out)",
       "divergence": true,
       "measurable": true
     },
     {
-      "ticker": "SPY",
-      "price_chg_pct": 0.75,
-      "net_flow_pct_aum": -1.24,
+      "ticker": "TLT",
+      "price_chg_pct": 4.58,
+      "net_flow_pct_aum": -1.27,
       "verdict": "DISTRIBUTION (price up, money out)",
       "divergence": true,
       "measurable": true
     },
     {
       "ticker": "KBE",
-      "price_chg_pct": 4.47,
-      "net_flow_pct_aum": -1.5,
+      "price_chg_pct": 2.17,
+      "net_flow_pct_aum": -1.31,
       "verdict": "DISTRIBUTION (price up, money out)",
       "divergence": true,
       "measurable": true
     },
     {
       "ticker": "IHI",
-      "price_chg_pct": 5.39,
-      "net_flow_pct_aum": -1.57,
+      "price_chg_pct": 6.7,
+      "net_flow_pct_aum": -1.51,
       "verdict": "DISTRIBUTION (price up, money out)",
       "divergence": true,
       "measurable": true
     },
     {
-      "ticker": "IWM",
-      "price_chg_pct": 0.21,
-      "net_flow_pct_aum": -2.06,
+      "ticker": "XLU",
+      "price_chg_pct": 9.08,
+      "net_flow_pct_aum": -1.67,
       "verdict": "DISTRIBUTION (price up, money out)",
       "divergence": true,
       "measurable": true
     },
     {
       "ticker": "PPH",
-      "price_chg_pct": 7.41,
-      "net_flow_pct_aum": -2.38,
+      "price_chg_pct": 9.12,
+      "net_flow_pct_aum": -1.9,
       "verdict": "DISTRIBUTION (price up, money out)",
       "divergence": true,
       "measurable": true
     },
     {
-      "ticker": "XRT",
-      "price_chg_pct": 7.69,
-      "net_flow_pct_aum": -3.31,
+      "ticker": "IWM",
+      "price_chg_pct": 0.56,
+      "net_flow_pct_aum": -2.54,
       "verdict": "DISTRIBUTION (price up, money out)",
       "divergence": true,
       "measurable": true
     },
     {
-      "ticker": "IAI",
-      "price_chg_pct": -0.07,
-      "net_flow_pct_aum": -3.34,
+      "ticker": "XTN",
+      "price_chg_pct": -2.11,
+      "net_flow_pct_aum": -26.26,
       "verdict": "CONFIRMED DOWNTREND",
       "divergence": false,
       "measurable": true
     },
     {
-      "ticker": "XTN",
-      "price_chg_pct": 0.12,
-      "net_flow_pct_aum": -26.73,
-      "verdict": "DISTRIBUTION (price up, money out)",
-      "divergence": true,
-      "measurable": true
-    },
-    {
       "ticker": "DBA",
-      "price_chg_pct": -4.33,
+      "price_chg_pct": -4.23,
       "net_flow_pct_aum": NaN,
       "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares never changed",
       "divergence": false,
@@ -557,23 +564,31 @@
     },
     {
       "ticker": "EEM",
-      "price_chg_pct": -8.83,
+      "price_chg_pct": -9.22,
       "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 19 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 20 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
       "divergence": false,
       "measurable": false
     },
     {
       "ticker": "EFA",
-      "price_chg_pct": -0.51,
+      "price_chg_pct": 0.45,
       "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 16 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 17 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
       "divergence": false,
       "measurable": false
     },
     {
       "ticker": "FXI",
-      "price_chg_pct": -3.29,
+      "price_chg_pct": -3.34,
+      "net_flow_pct_aum": NaN,
+      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 6 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+      "divergence": false,
+      "measurable": false
+    },
+    {
+      "ticker": "IAI",
+      "price_chg_pct": 0.93,
       "net_flow_pct_aum": NaN,
       "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 5 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
       "divergence": false,
@@ -581,31 +596,31 @@
     },
     {
       "ticker": "INDA",
-      "price_chg_pct": 1.62,
+      "price_chg_pct": 2.6,
+      "net_flow_pct_aum": NaN,
+      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 7 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+      "divergence": false,
+      "measurable": false
+    },
+    {
+      "ticker": "PBJ",
+      "price_chg_pct": 6.07,
+      "net_flow_pct_aum": NaN,
+      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 9 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+      "divergence": false,
+      "measurable": false
+    },
+    {
+      "ticker": "SGOV",
+      "price_chg_pct": 0.05,
       "net_flow_pct_aum": NaN,
       "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 6 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
       "divergence": false,
       "measurable": false
     },
     {
-      "ticker": "PBJ",
-      "price_chg_pct": 6.71,
-      "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 8 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
-      "divergence": false,
-      "measurable": false
-    },
-    {
-      "ticker": "SGOV",
-      "price_chg_pct": 0.07,
-      "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 5 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
-      "divergence": false,
-      "measurable": false
-    },
-    {
       "ticker": "USO",
-      "price_chg_pct": 17.15,
+      "price_chg_pct": 14.05,
       "net_flow_pct_aum": NaN,
       "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares never changed",
       "divergence": false,
@@ -613,9 +628,9 @@
     },
     {
       "ticker": "VGT",
-      "price_chg_pct": -6.34,
+      "price_chg_pct": -6.92,
       "net_flow_pct_aum": NaN,
-      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 7 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+      "verdict": "UNRELIABLE \u2014 thirdparty_stockanalysis: shares unchanged for the last 8 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
       "divergence": false,
       "measurable": false
     }
@@ -625,7 +640,7 @@
       "contract": "SP500",
       "sleeve": "VGT / QQQ / SMH",
       "report_date": "2026-10-27",
-      "age_days": 5,
+      "age_days": 7,
       "stale": false,
       "matched_by": "code=13874A",
       "asset_mgr_net": 923449.0,
@@ -646,7 +661,7 @@
       "contract": "UST10Y",
       "sleeve": "TLT",
       "report_date": "2026-10-27",
-      "age_days": 5,
+      "age_days": 7,
       "stale": false,
       "matched_by": "code=043602",
       "asset_mgr_net": 3000164.0,
@@ -667,7 +682,7 @@
       "contract": "UST30Y",
       "sleeve": "TLT",
       "report_date": "2026-10-27",
-      "age_days": 5,
+      "age_days": 7,
       "stale": false,
       "matched_by": "code=020601",
       "asset_mgr_net": 383981.0,
@@ -688,7 +703,7 @@
       "contract": "UST2Y",
       "sleeve": "USFR / SGOV",
       "report_date": "2026-10-27",
-      "age_days": 5,
+      "age_days": 7,
       "stale": false,
       "matched_by": "code=042601",
       "asset_mgr_net": 1837491.0,
@@ -709,7 +724,7 @@
       "contract": "DXY",
       "sleeve": "Daily Step 4 dollar check",
       "report_date": "2026-10-27",
-      "age_days": 5,
+      "age_days": 7,
       "stale": false,
       "matched_by": "code=098662",
       "asset_mgr_net": 16713.0,
@@ -730,7 +745,7 @@
       "contract": "GOLD",
       "sleeve": "GLD / SLV / RING",
       "report_date": "2026-10-27",
-      "age_days": 5,
+      "age_days": 7,
       "stale": false,
       "matched_by": "code=088691",
       "asset_mgr_net": NaN,
@@ -751,7 +766,7 @@
       "contract": "SILVER",
       "sleeve": "SLV",
       "report_date": "2026-10-27",
-      "age_days": 5,
+      "age_days": 7,
       "stale": false,
       "matched_by": "code=084691",
       "asset_mgr_net": NaN,
@@ -772,7 +787,7 @@
       "contract": "WTI",
       "sleeve": "XLE / XOP / PDBC",
       "report_date": "2026-10-27",
-      "age_days": 5,
+      "age_days": 7,
       "stale": false,
       "matched_by": "code=067651",
       "asset_mgr_net": NaN,
@@ -793,80 +808,80 @@
   "breadth": [
     {
       "etf": "XLK",
-      "signal_quality": "NARROW",
-      "pct_positive_cmf": 0.5,
-      "top3_return_share": 0.404,
-      "dispersion": 0.112
+      "signal_quality": "CONCENTRATED",
+      "pct_positive_cmf": 0.1,
+      "top3_return_share": 0.335,
+      "dispersion": 0.1184
     },
     {
       "etf": "XLF",
       "signal_quality": "BROAD",
-      "pct_positive_cmf": 0.7,
-      "top3_return_share": 0.506,
-      "dispersion": 0.0821
+      "pct_positive_cmf": 0.6,
+      "top3_return_share": 0.515,
+      "dispersion": 0.0951
     },
     {
       "etf": "XLE",
       "signal_quality": "CONCENTRATED",
       "pct_positive_cmf": 1.0,
-      "top3_return_share": 0.722,
-      "dispersion": 0.0465
+      "top3_return_share": 0.771,
+      "dispersion": 0.0442
     },
     {
       "etf": "XLV",
       "signal_quality": "CONCENTRATED",
-      "pct_positive_cmf": 0.6,
-      "top3_return_share": 0.624,
-      "dispersion": 0.0533
+      "pct_positive_cmf": 0.7,
+      "top3_return_share": 0.61,
+      "dispersion": 0.0577
     },
     {
       "etf": "XLI",
       "signal_quality": "BROAD",
       "pct_positive_cmf": 0.7,
-      "top3_return_share": 0.423,
-      "dispersion": 0.1437
+      "top3_return_share": 0.429,
+      "dispersion": 0.1537
     },
     {
       "etf": "XLY",
       "signal_quality": "CONCENTRATED",
       "pct_positive_cmf": 0.9,
-      "top3_return_share": 0.658,
-      "dispersion": 0.0786
+      "top3_return_share": 0.595,
+      "dispersion": 0.0839
     },
     {
       "etf": "XLU",
       "signal_quality": "CONCENTRATED",
-      "pct_positive_cmf": 0.8,
-      "top3_return_share": 0.565,
-      "dispersion": 0.034
+      "pct_positive_cmf": 0.9,
+      "top3_return_share": 0.597,
+      "dispersion": 0.0375
     },
     {
       "etf": "XLRE",
       "signal_quality": "BROAD",
-      "pct_positive_cmf": 0.7,
-      "top3_return_share": 0.3,
-      "dispersion": 0.1031
+      "pct_positive_cmf": 0.8,
+      "top3_return_share": 0.315,
+      "dispersion": 0.0983
     },
     {
       "etf": "XLB",
       "signal_quality": "BROAD",
       "pct_positive_cmf": 1.0,
-      "top3_return_share": 0.439,
-      "dispersion": 0.1039
+      "top3_return_share": 0.432,
+      "dispersion": 0.1051
     },
     {
       "etf": "XLC",
       "signal_quality": "CONCENTRATED",
       "pct_positive_cmf": 0.444,
-      "top3_return_share": 0.846,
-      "dispersion": 0.0894
+      "top3_return_share": 0.849,
+      "dispersion": 0.102
     },
     {
       "etf": "XLP",
       "signal_quality": "CONCENTRATED",
       "pct_positive_cmf": 0.9,
-      "top3_return_share": 0.591,
-      "dispersion": 0.0509
+      "top3_return_share": 0.603,
+      "dispersion": 0.0493
     }
   ],
   "constituents": {
