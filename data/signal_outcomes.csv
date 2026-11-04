@@ -97,3 +97,4 @@ signal_id,date,signal_type,subject,direction,price_at_signal,benchmark_at_signal
 2026-10-30_stealth_flag_XLY,2026-10-30,stealth_flag,XLY,long,,,Stealth · Improving · accum 48.69,,rotation
 2026-11-02_flow_divergence_XLU,2026-11-02,flow_divergence,XLU,short,,,"DISTRIBUTION (price up, money out) · flow -1.67% AUM",,rotation
 2026-11-02_stealth_flag_XLP,2026-11-02,stealth_flag,XLP,long,,,Stealth · Weakening · accum 31.62,,rotation
+2026-11-03_flow_divergence_HACK,2026-11-03,flow_divergence,HACK,long,,,"ACCUMULATION (price down, money in) · flow 3.71% AUM",,rotation
