@@ -162,3 +162,16 @@ date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_
 2026-11-04,TSLA,M0 Rotation,long,3-of-3,392.04,368.37,385.19,transition_ambiguous,False,binary macro event within 48h: NFP in 1d
 2026-11-04,JNJ,M0 Rotation,long,3-of-3,277.35,266.94,276.32,transition_ambiguous,False,binary macro event within 48h: NFP in 1d
 2026-11-04,UNH,M0 Rotation,long,3-of-3,416.02,398.52,409.38,transition_ambiguous,False,binary macro event within 48h: NFP in 1d
+2026-11-05,DUK,M0 Rotation,long,3-of-3,132.99,129.48,130.08,transition_ambiguous,False,binary macro event within 48h: NFP in 0d
+2026-11-05,XLU,M0 Rotation,long,3-of-3,44.09,42.82,43.3,transition_ambiguous,False,binary macro event within 48h: NFP in 0d
+2026-11-05,SO,M0 Rotation,long,3-of-3,95.72,92.89,93.34,transition_ambiguous,False,binary macro event within 48h: NFP in 0d
+2026-11-05,XEL,M0 Rotation,long,3-of-3,81.76,79.27,80.37,transition_ambiguous,False,binary macro event within 48h: NFP in 0d
+2026-11-05,EXC,M0 Rotation,long,3-of-3,47.05,45.61,46.53,transition_ambiguous,False,binary macro event within 48h: NFP in 0d
+2026-11-05,D,M0 Rotation,long,3-of-3,71.09,68.75,69.64,transition_ambiguous,False,binary macro event within 48h: NFP in 0d
+2026-11-05,NEE,M0 Rotation,long,3-of-3,90.04,87.08,88.25,transition_ambiguous,False,binary macro event within 48h: NFP in 0d
+2026-11-05,SBUX,M0 Rotation,long,3-of-3,111.5,107.29,106.16,transition_ambiguous,False,binary macro event within 48h: NFP in 0d
+2026-11-05,HD,M0 Rotation,long,3-of-3,362.44,347.99,349.94,transition_ambiguous,False,binary macro event within 48h: NFP in 0d
+2026-11-05,XLY,M0 Rotation,long,3-of-3,122.91,118.01,117.64,transition_ambiguous,False,binary macro event within 48h: NFP in 0d
+2026-11-05,CMG,M0 Rotation,long,3-of-3,35.47,33.64,35.4,transition_ambiguous,False,binary macro event within 48h: NFP in 0d
+2026-11-05,XLF,M0 Rotation,long,3-of-3,60.04,58.12,57.5,transition_ambiguous,False,binary macro event within 48h: NFP in 0d
+2026-11-05,JNJ,M0 Rotation,long,3-of-3,281.92,270.86,272.32,transition_ambiguous,False,binary macro event within 48h: NFP in 0d
