@@ -1,6 +1,31 @@
 """
-hedge_lab.py  (v1.3 — October 2026)
-───────────────────────────────────
+hedge_lab.py  (v1.4 — November 2026)
+────────────────────────────────────
+v1.4 (2026-11-07, fix_status N42): DIVERSIFICATION TEST. On 11/5 the S&P fell
+  4.4% on an AI-chip selloff; over the month to 11/6 VGT/SMH/QQQ (23% of the
+  book) supplied about −3.6 of the book's roughly −4.1% return. Three
+  candidates, each under the production −8% breaker (B0):
+    V4  vol target   risk sleeves scaled by 9% / realized 20-session vol of
+                     the target portfolio (book_risk.vol_scale: capped at 1.0,
+                     floored at 0.5); cash and trend exempt; freed weight to SGOV
+    V5  AI-diversified growth  VGT −7, SMH −2, RSP +7, XLV +2 (sum unchanged)
+    V6  V4 + V5
+  Plus benchmarks SPY, QQQ, 60/40, SPY/QQQ/AGG 40/20/40 and 50/30/20, and
+  "V0 at 60/40 risk" (V0's return scaled to 60/40's volatility in the same
+  window, financed at the cash rate: an ex-post ILLUSTRATION of the book at
+  equal risk, not an implementable rule).
+  Bars, fixed before the run (DIV_BAR_*):
+    V4: max drawdown ≥ 2 pts shallower than V0 in at least 3 of the covered
+        stress windows, full-history CAGR no more than 0.5 pts/yr below V0,
+        and no stress window more than 1 pt deeper.
+    V5: full-history CAGR no more than 0.5 pts/yr below V0, no stress window
+        more than 1 pt deeper, and ≥ 1 pt shallower in BOTH tech-led windows
+        (dot-com 2000, rates 2022).
+    V6: both bars.
+  A variant that misses its bar is a trade-off for Matt, not an improvement.
+  RSP runs on SPY before 2003 (proxy, labelled), so V5 equals a VGT/SMH→SPY
+  shift in the dot-com window.
+
 v1.3 (2026-10-31): TRIP-LINE ROBUSTNESS. v1.2 found B0 + C1 (current breaker
   plus 1%/yr puts) the only option to meet the bar, but its edge comes from
   small option gains keeping the book above a fixed −8% trip line, which can
@@ -118,7 +143,7 @@ import pandas as pd
 
 import model_book as mb
 
-VERSION = "v1.3"
+VERSION = "v1.4"
 REGIME = "transition_ambiguous"
 HISTORY_START = "1999-01-01"
 
@@ -151,8 +176,9 @@ PROXIES = {
     "USFR": ["USFR", "BIL", "^IRX"],
     "TLT":  ["TLT", "VUSTX"],
     "KMLM": ["KMLM", "AQMIX", "^IRX"],
+    "RSP":  ["RSP", "SPY"],                  # v1.4: equal-weight S&P (V5); SPY before 2003-04
 }
-BENCH = {"SPY": ["SPY"], "AGG": ["AGG", "VBMFX"]}
+BENCH = {"SPY": ["SPY"], "AGG": ["AGG", "VBMFX"], "QQQ": ["QQQ"]}
 CASH_TICKER = "^IRX"
 VIX_TICKER = "^VIX"                         # v1.2: implied vol for pricing the convexity sleeve
 
@@ -1272,6 +1298,158 @@ def render(res: pd.DataFrame, infos: list, base: dict, inc: dict, missing: list,
 
 # ── entry points ────────────────────────────────────────────────────────────
 
+# ── v1.4: diversification test ──────────────────────────────────────────────
+
+DIV_VARIANTS = ("V0", "V4", "V5", "V6")
+DIV_LABEL = {"V0": "current book", "V4": "vol target 9%", "V5": "AI-diversified growth",
+             "V6": "V4 + V5", "SPY": "SPY", "QQQ": "QQQ", "6040": "60/40 SPY/AGG",
+             "SQA_402040": "SPY/QQQ/AGG 40/20/40", "SQA_503020": "SPY/QQQ/AGG 50/30/20",
+             "V0_at_6040_vol": "V0 at 60/40 risk (ex-post illustration)"}
+V5_SHIFT = {"VGT": -7.0, "SMH": -2.0, "RSP": 7.0, "XLV": 2.0}
+DIV_MIXES = {"SPY": {"SPY": 100}, "QQQ": {"QQQ": 100}, "6040": {"SPY": 60, "AGG": 40},
+             "SQA_402040": {"SPY": 40, "QQQ": 20, "AGG": 40}, "SQA_503020": {"SPY": 50, "QQQ": 30, "AGG": 20}}
+DIV_BAR_V4_DD, DIV_BAR_V4_WINS = 2.0, 3       # pts shallower, in at least this many covered stress windows
+DIV_BAR_CAGR = 0.5                             # max pts/yr given up over the full history
+DIV_BAR_DEEPER = 1.0                           # no stress window deeper than this
+DIV_BAR_V5_TECH = 1.0                          # pts shallower in each tech-led window
+DIV_TECH_WINDOWS = ("dotcom_2000", "rates_2022")
+
+
+def v5_weights(base: dict) -> dict:
+    """V5: shift growth weight from VGT/SMH to RSP/XLV; never below zero; sum preserved."""
+    w = {k: float(v) for k, v in base.items()}
+    take = {k: min(w.get(k, 0.0), -d) for k, d in V5_SHIFT.items() if d < 0}
+    freed = sum(take.values())
+    want = {k: d for k, d in V5_SHIFT.items() if d > 0}
+    for k, x in take.items():
+        w[k] = w.get(k, 0.0) - x
+    tot_want = sum(want.values())
+    for k, d in want.items():
+        w[k] = w.get(k, 0.0) + freed * d / tot_want
+    return w
+
+
+def vol_scales(rets: pd.DataFrame, base: dict) -> pd.Series:
+    """Scale at d from the TARGET portfolio's realized 20-session vol up to and
+    including d (no lookahead): book_risk.vol_scale, 1.0 until 20 sessions exist."""
+    import book_risk as br
+    r = sum(rets[t].fillna(0.0) * (float(w) / 100.0) for t, w in base.items() if t in rets.columns and w > 0)
+    vol = r.rolling(br.VOL_LOOKBACK, min_periods=br.VOL_LOOKBACK).std() * math.sqrt(252) * 100
+    return vol.map(lambda v: br.vol_scale(v) if v == v else 1.0).fillna(1.0)
+
+
+def div_weights_fn(base: dict, v: str, scales: dict) -> Callable:
+    import book_risk as br
+    b = v5_weights(base) if v in ("V5", "V6") else dict(base)
+    if v in ("V4", "V6"):
+        sc = scales["V5" if v == "V6" else "V0"]
+        return lambda d: br.apply_vol_scale(b, float(sc.get(d, 1.0)))
+    return lambda d: dict(b)
+
+
+def run_diversify_window(key, start, end, label, base, rets, srcs, spy_close, bench_rets, scales,
+                         cash_r: Optional[pd.Series] = None):
+    cal = rets.index
+    days = cal[(cal >= pd.Timestamp(start)) & (cal <= (pd.Timestamp(end) if end else cal[-1]))]
+    if len(days) < 2:
+        return [], {"key": key, "label": label, "error": "no sessions in range"}
+    cov, _ = coverage_for(days, v5_weights(base), srcs)
+    rows, navs = [], {}
+    for v in DIV_VARIANTS:
+        sim = simulate(days, rets, div_weights_fn(base, v, scales), spy_close)
+        navs[v] = sim["nav"]
+        m = metrics(sim["nav"], sim["turnover"])
+        m.update({"window": key, "variant": v, "breaker_days": int((sim["state"] == "ON").sum())})
+        rows.append(m)
+    for name, mix in DIV_MIXES.items():
+        nav = bench_nav(days, bench_rets, mix)
+        navs[name] = nav
+        m = metrics(nav)
+        m.update({"window": key, "variant": name})
+        rows.append(m)
+    # V0 at 60/40 risk: k x V0 return - (k - 1) x cash, k = vol(60/40) / vol(V0) in this window (ex post)
+    r0, r6 = navs["V0"].pct_change().dropna(), navs["6040"].pct_change().dropna()
+    if len(r0) > 20 and r0.std() > 0:
+        k = float(r6.std() / r0.std())
+        cash = cash_r.reindex(r0.index).fillna(0.0) if cash_r is not None else 0.0   # T-bill (^IRX) financing
+        rl = k * r0 - (k - 1) * cash
+        nav = pd.Series(mb.START_NAV * (1 + rl).cumprod().values, index=r0.index)
+        nav = pd.concat([pd.Series([mb.START_NAV], index=[navs["V0"].index[0]]), nav])
+        m = metrics(nav)
+        m.update({"window": key, "variant": "V0_at_6040_vol", "scale_k": k})
+        rows.append(m)
+    for r in rows:
+        r.update({"start": days[0].date().isoformat(), "end": days[-1].date().isoformat()})
+    info = {"key": key, "label": label, "start": days[0].date().isoformat(), "end": days[-1].date().isoformat(),
+            "coverage": cov, "low_coverage": cov["none"] > LOW_COVERAGE_PCT}
+    return rows, info
+
+
+def diversify_verdicts(dres: pd.DataFrame, dinfos: list) -> list[str]:
+    ok = [i["key"] for i in dinfos if i["key"] in {s[0] for s in STRESS}
+          and not i.get("low_coverage") and not i.get("error")]
+
+    def val(w, v, col):
+        x = dres[(dres["window"] == w) & (dres["variant"] == v)][col] if col in dres.columns else []
+        return float(x.iloc[0]) if len(x) and x.iloc[0] == x.iloc[0] else None
+
+    out, passed = [], {}
+    f0 = val(FULL[0], "V0", "cagr_pct")
+    for v in ("V4", "V5", "V6"):
+        d = {w: (val(w, v, "max_dd_pct") - val(w, "V0", "max_dd_pct"))
+             for w in ok if val(w, v, "max_dd_pct") is not None and val(w, "V0", "max_dd_pct") is not None}
+        fc = val(FULL[0], v, "cagr_pct")
+        cost = (f0 - fc) if (f0 is not None and fc is not None) else None
+        deeper = [w for w, x in d.items() if x < -DIV_BAR_DEEPER]
+        wins = sum(1 for x in d.values() if x >= DIV_BAR_V4_DD)
+        tech = all(d.get(w, -99) >= DIV_BAR_V5_TECH for w in DIV_TECH_WINDOWS if w in ok) and \
+            any(w in ok for w in DIV_TECH_WINDOWS)
+        base_ok = cost is not None and cost <= DIV_BAR_CAGR and not deeper
+        bar4 = base_ok and wins >= DIV_BAR_V4_WINS
+        bar5 = base_ok and tech
+        ok_v = {"V4": bar4, "V5": bar5, "V6": bar4 and bar5}[v]
+        passed[v] = ok_v
+        out.append(f"**{v} ({DIV_LABEL[v]})**: " + ("PASSES" if ok_v else "does NOT pass") + " its bar. "
+                   + (f"Full history {abs(cost):.2f} pts/yr {'less' if cost >= 0 else 'more'} than V0; "
+                      if cost is not None else "Full history n/a; ")
+                   + "stress-window drawdown vs V0: "
+                   + ", ".join(f"{w} {x:+.1f}" for w, x in d.items())
+                   + (f"; deeper by more than {DIV_BAR_DEEPER:.0f} pt in {', '.join(deeper)}" if deeper else "")
+                   + ".")
+    out.append("Bars (fixed before the run): V4 ≥ 2 pts shallower in ≥ 3 covered stress windows; V5 ≥ 1 pt "
+               "shallower in both dot-com and 2022; every variant gives up ≤ 0.5 pts/yr over the full history "
+               "and is never > 1 pt deeper in a stress window. Positive = shallower than V0.")
+    return out + ([""] if passed else [])
+
+
+def render_diversify(dres: Optional[pd.DataFrame], dinfos: Optional[list]) -> list[str]:
+    if dres is None or dres.empty:
+        return []
+    L = ["", "## v1.4 · Diversification test: vol target, AI-diversified growth, and SPY/QQQ/bond mixes", ""]
+    L += diversify_verdicts(dres, dinfos or [])
+    order = list(DIV_VARIANTS) + ["V0_at_6040_vol"] + list(DIV_MIXES)
+    for i in dinfos or []:
+        if i.get("error"):
+            continue
+        w = dres[dres["window"] == i["key"]]
+        L += ["", f"**{i['label']}** ({i['start']} → {i['end']})"
+              + (" — LOW COVERAGE, excluded from verdicts" if i.get("low_coverage") else ""),
+              "| Portfolio | Total | CAGR | Max DD | Vol | Worst 20d |", "|---|---|---|---|---|---|"]
+        for v in order:
+            r = w[w["variant"] == v]
+            if r.empty:
+                continue
+            r = r.iloc[0]
+            L.append(f"| {DIV_LABEL.get(v, v)} | {_f(r.get('total_return_pct'))} | {_f(r.get('cagr_pct'))} | "
+                     f"{_f(r.get('max_dd_pct'))} | {_f(r.get('vol_ann_pct'))} | {_f(r.get('worst_20d_pct'))} |")
+    L += ["", "_Return per unit of risk: compare CAGR ÷ Vol and CAGR ÷ |Max DD| across rows. "
+              "“V0 at 60/40 risk” is ex post (it uses the window's own volatility) and needs leverage or more "
+              "equity to hold; it shows what the book's risk-adjusted return would earn at 60/40's risk, "
+              "not a rule. Weights for V0/V4/V5/V6 are today's `transition_ambiguous` targets with hindsight in "
+              "the sleeve choice; proxies before inception._"]
+    return L
+
+
 def build(closes: dict, book_path: Path = mb.BOOK_FILE, base: Optional[dict] = None) -> dict:
     if base is None:
         import regime_classifier as rc
@@ -1309,8 +1487,16 @@ def build(closes: dict, book_path: Path = mb.BOOK_FILE, base: Optional[dict] = N
     for key, s, e, label in [FULL] + round_trips(cal) + STRESS:
         r, i = run_trip_window(key, s, e, label, base, rets, sig, mkt, spy)
         trows += r; tinfos.append(i)
+    # v1.4: diversification test
+    scales = {"V0": vol_scales(rets, base), "V5": vol_scales(rets, v5_weights(base))}
+    drows, dinfos = [], []
+    for key, s, e, label in STRESS + [FULL]:
+        r, i = run_diversify_window(key, s, e, label, base, rets, srcs, spy, bench_rets, scales,
+                                    ticker_returns(closes, CASH_TICKER, cal))
+        drows += r; dinfos.append(i)
     missing = [t for t in all_tickers() if t not in closes]
-    return {"results": res, "coverage": pd.DataFrame(cov_rows), "infos": infos, "inception": inc,
+    return {"diversify": pd.DataFrame(drows), "diversify_infos": dinfos, "vol_scales": scales,
+            "results": res, "coverage": pd.DataFrame(cov_rows), "infos": infos, "inception": inc,
             "base": base, "missing": missing, "signals": sig, "rets": rets,
             "breakers": pd.DataFrame(brows), "breaker_infos": binfos,
             "convexity": pd.DataFrame(crows), "convexity_infos": cinfos, "market": mkt,
@@ -1338,6 +1524,11 @@ def write(out: dict, asof: str) -> dict:
     md = render(out["results"], out["infos"], out["base"], out["inception"], out["missing"], asof,
                 out.get("breakers"), out.get("breaker_infos"), cx, out.get("convexity_infos"),
                 tx, out.get("trip_infos"))
+    dx = out.get("diversify")
+    if dx is not None and not dx.empty:
+        dn = dx.select_dtypes("number").columns
+        dx.assign(**{c: dx[c].round(4) for c in dn}).to_csv(OUT_DIR / "diversify_results.csv", index=False)
+        md += "\n" + "\n".join(render_diversify(dx, out.get("diversify_infos")))
     p = LOG_DIR / f"{asof}_report.md"
     p.write_text(md)
     return {"report": str(p), "results": str(OUT_DIR / "results.csv")}
@@ -1807,6 +1998,62 @@ def selftest() -> dict:
         fake.loc[sel & (fake["trip"] == -9.0), "cagr_pct"] = -99.0
         if trip_verdicts(fake, out["trip_infos"], binfos)[1]:
             f.append("verdict must be NOT ROBUST when any trip line fails")
+
+        # ── v1.4 diversification test ──
+        dres, dinfos = out["diversify"], out["diversify_infos"]
+        fw = dres[dres["window"] == FULL[0]]
+        need = set(DIV_VARIANTS) | set(DIV_MIXES) | {"V0_at_6040_vol"}
+        if not need <= set(fw["variant"]):
+            f.append(f"diversify results must cover {sorted(need)}: {sorted(set(fw['variant']))}")
+        else:
+            d0 = float(fw[fw["variant"] == "V0"]["total_return_pct"].iloc[0])
+            if abs(d0 - v0) > 1e-9:
+                f.append(f"diversify V0 must be the same simulation as V0: {d0} vs {v0}")
+            ve = float(fw[fw["variant"] == "V0_at_6040_vol"]["vol_ann_pct"].iloc[0])
+            v6 = float(fw[fw["variant"] == "6040"]["vol_ann_pct"].iloc[0])
+            if abs(ve - v6) > 0.5:
+                f.append(f"V0 at 60/40 risk must carry 60/40's volatility: {ve:.2f} vs {v6:.2f}")
+        w5 = v5_weights(base)
+        if abs(sum(w5.values()) - sum(base.values())) > 1e-9 or w5["VGT"] != 10.0 or w5["SMH"] != 1.0 \
+                or abs(w5["RSP"] - 7.0) > 1e-9 or abs(w5["XLV"] - 7.0) > 1e-9:
+            f.append(f"V5 must move VGT -7, SMH -2 to RSP +7, XLV +2 with the sum unchanged: {w5}")
+        if v5_weights({"VGT": 3.0, "SGOV": 97.0})["VGT"] != 0.0 or \
+                abs(sum(v5_weights({"VGT": 3.0, "SGOV": 97.0}).values()) - 100) > 1e-9:
+            f.append("V5 must never take a sleeve below zero and must keep the sum")
+        sc = out["vol_scales"]["V0"]
+        if float(sc.max()) > 1.0 + 1e-12 or float(sc.min()) < 0.5 - 1e-12:
+            f.append("vol scales must stay within [0.5, 1.0] (never lever up)")
+        rets_alt = out["rets"].copy()
+        cut = rets_alt.index[-100]
+        rets_alt.loc[rets_alt.index >= cut] = rets_alt.loc[rets_alt.index >= cut] * 5
+        sc_alt = vol_scales(rets_alt, base)
+        if not np.allclose(sc_alt[sc_alt.index < cut].values, sc[sc.index < cut].values):
+            f.append("vol scale must not look ahead: changing later returns moved an earlier scale")
+        if not (sc_alt[sc_alt.index >= cut + pd.Timedelta(days=40)] < 1.0).any():
+            f.append("a 5x volatility shock must cut the vol scale below 1")
+        md_d = "\n".join(render_diversify(dres, dinfos))
+        for s_ in ("## v1.4 · Diversification test", "Bars (fixed before the run)", "V0 at 60/40 risk"):
+            if s_ not in md_d:
+                f.append(f"diversify report missing: {s_}")
+        # verdict logic on a constructed table
+        ks = [k for k, *_ in STRESS]
+        rows_ = []
+        for k in ks + [FULL[0]]:
+            rows_.append({"window": k, "variant": "V0", "max_dd_pct": -20.0, "cagr_pct": 8.0})
+            rows_.append({"window": k, "variant": "V4", "max_dd_pct": -17.0, "cagr_pct": 7.7})
+            rows_.append({"window": k, "variant": "V5", "max_dd_pct": -22.0, "cagr_pct": 8.1})
+            rows_.append({"window": k, "variant": "V6", "max_dd_pct": -17.0, "cagr_pct": 7.0})
+        inf_ = [{"key": k} for k in ks + [FULL[0]]]
+        vv = diversify_verdicts(pd.DataFrame(rows_), inf_)
+        if not vv[0].startswith("**V4") or "PASSES" not in vv[0]:
+            f.append(f"V4 3 pts shallower everywhere at -0.3 pts/yr must pass: {vv[0]}")
+        if "does NOT pass" not in vv[1]:
+            f.append("V5 2 pts deeper must fail its bar")
+        if "does NOT pass" not in vv[2]:
+            f.append("V6 giving up 1.0 pts/yr must fail the cost bar")
+        rows2 = [dict(r_, cagr_pct=7.0) if r_["variant"] == "V4" else r_ for r_ in rows_]
+        if "does NOT pass" not in diversify_verdicts(pd.DataFrame(rows2), inf_)[0]:
+            f.append("V4 cutting drawdown but giving up 1.0 pts/yr must fail the cost bar")
     finally:
         os.chdir(cwd)
     return {"ok": not f, "failures": f}

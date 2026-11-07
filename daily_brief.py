@@ -1,6 +1,14 @@
 """
-daily_brief.py  (v1.5.4 — November 2026)
+daily_brief.py  (v1.6 — November 2026)
 ─────────────────────────────────────
+v1.6 (2026-11-07, fix_status N12/N37-N41): cross-asset lanes get 20-session
+  credit and real-yield momentum (credit WATCH at +30bp/20 sessions; rates
+  note shows both horizons). Model section adds book_risk.py readings:
+  attribution by sleeve and bucket (5 / 20 sessions / since inception), AI-
+  factor exposure (regression on SPY and SMH − SPY, PROPOSED limits 12% /
+  40% of variance), and a volatility-target readout (9% target, display
+  only, not applied). Scoreboard adds the market-implied policy path
+  (2Y − fed funds, 3M bill − fed funds; FRED DFF, DTB3).
 v1.5.4 (2026-11-01, fix_status N33): WTI is ONE price series throughout —
   the NYMEX front-month settle — instead of FRED's EIA Cushing spot for the
   history plus futures for the last 1-3 days. On 10/27 the two differed by
@@ -154,7 +162,7 @@ FRED_SCORE = [
     ("VIX", "VIXCLS", "", "level"),
     ("WTI crude", "DCOILWTICO", "$", "index"),
 ]
-EXTRA_FRED = ["DGS30"]
+EXTRA_FRED = ["DGS30", "DFF", "DTB3"]   # v1.6: DFF/DTB3 for the market-implied policy path (N12)
 BENCH_TICKERS = ("SPY", "AGG")   # model-book benchmarks: SPY and a 60/40 (60% SPY / 40% AGG)
 FRESHER = {"VIXCLS": "^VIX"}                           # yfinance close splices for lagging FRED series
 # v1.5.3 (N29): WTI is spliced from the rebuilt NYMEX settle, never the daily CL=F last trade
@@ -667,6 +675,20 @@ def scoreboard(inp: dict) -> dict:
                        source="classifier + daily log", pctile_ok=False)
         r["asof"] = "live (EFFR − latest CPI)"
         rows.insert(0, r)
+    # v1.6 (N12): market-implied policy path, crude: 2Y and 3-month bill yields minus the
+    # effective fed funds rate on the same dates. Positive = the market prices policy HIGHER.
+    _fd = inp.get("fred") or {}
+    _dff = _fd.get("DFF", pd.Series(dtype=float)).dropna()
+    for _lab, _sid in (("Market-implied path: 2Y − fed funds", "DGS2"), ("Market-implied path: 3M bill − fed funds", "DTB3")):
+        _y = _fd.get(_sid, pd.Series(dtype=float)).dropna()
+        if len(_y) and len(_dff):
+            _sp = (_y - _dff.reindex(_y.index, method="ffill")).dropna()
+            if len(_sp) > 1:
+                _rw = _score_row(_lab, _sp, "%", "rate", source=f"FRED {_sid} − DFF")
+                _rw["note"] = ("≈ {:+.1f} × 25bp moves priced{}; includes term premium, so read the direction, "
+                               "not the exact count").format(
+                    float(_sp.iloc[-1]) / 0.25, " over ~2 years" if _sid == "DGS2" else " over ~3 months")
+                rows.append(_rw)
     for label, tk in PRICE_SCORE:
         rows.append(_score_row(label, _price_close(inp["prices"], tk), "$", "index", source="yfinance"))
     rsp, spy = _price_close(inp["prices"], "RSP"), _price_close(inp["prices"], "SPY")
@@ -994,7 +1016,13 @@ def cross_asset_section(inp: dict, regime_key: Optional[str]) -> dict:
     vix_s = fred.get("VIXCLS", pd.Series(dtype=float))
     n30 = fred.get("DGS30", pd.Series(dtype=float))
     g = lambda n: _f(getattr(sig, n, None)) if sig is not None else None
+    # v1.6 (N37/N38): 20-session momentum for credit and long real yields
+    _hy = fred.get("BAMLH0A0HYM2", pd.Series(dtype=float)).dropna()
+    _r10 = fred.get("DFII10", pd.Series(dtype=float)).dropna()
+    hy20 = _f(_hy.iloc[-1] - _hy.iloc[-21]) if len(_hy) > 20 else None
+    r10_20 = _f(_r10.iloc[-1] - _r10.iloc[-21]) if len(_r10) > 20 else None
     d = ca.divergence(hy_oas=g("hy_oas"), hy_mom_2w=g("hy_oas_mom_2w"),
+                      hy_mom_20d=hy20, long_real_mom_20d=r10_20,
                       long_real=g("long_real_yield"), long_real_mom_3m=g("long_real_mom_3m"),
                       breakeven=g("breakeven_10y"),
                       nom_30y=_f(n30.iloc[-1]) if len(n30) else None,
@@ -1472,6 +1500,7 @@ READ_NEAR_DAYS = 3.0         # within this many typical days of a WATCH line = "
 # The cross-asset lanes' own lines (cross_asset.credit_lane / vol_lane); the
 # selftest asserts these match, so a change there cannot silently desync here.
 LANE_HY_WATCH, LANE_HY_STRESS, LANE_HY_MOM = 3.5, 5.0, 0.5
+LANE_HY_MOM_20D = 0.30       # v1.6 (N37): cross_asset.HY_MOM_20D_WATCH
 LANE_VIX_WATCH, LANE_VIX_STRESS = 21.0, 30.0
 
 
@@ -1621,17 +1650,19 @@ def _tdays(x: float) -> str:
     return f"about {x:.0f} typical day{'s' if round(x) != 1 else ''}"
 
 
-def read_stress(hy, hy_mom, hy_sd, hy_asof, vix, vix_sd, flips) -> dict:
+def read_stress(hy, hy_mom, hy_sd, hy_asof, vix, vix_sd, flips, hy_mom20=None) -> dict:
     topic = "Distance to stress"
     rule = (f"Lines are the cross-asset lanes' own thresholds: credit WATCH above {LANE_HY_WATCH:.2f}% HY OAS or a "
-            f"2-week widening above +{LANE_HY_MOM * 100:.0f}bp, STRESS above {LANE_HY_STRESS:.2f}%; vol WATCH at VIX "
+            f"2-week widening above +{LANE_HY_MOM * 100:.0f}bp or a 20-session widening of +{LANE_HY_MOM_20D * 100:.0f}bp "
+            f"or more, STRESS above {LANE_HY_STRESS:.2f}%; vol WATCH at VIX "
             f"{LANE_VIX_WATCH:.0f}, STRESS at {LANE_VIX_STRESS:.0f}. A typical day is one standard deviation of that "
             f"series' daily change over the past year; within {READ_NEAR_DAYS:.0f} typical days counts as close.")
     ev, states, near = [], {}, []
     if hy is not None:
         if hy > LANE_HY_STRESS:
             states["credit"] = "STRESS"
-        elif hy > LANE_HY_WATCH or (hy_mom or 0) > LANE_HY_MOM:
+        elif (hy > LANE_HY_WATCH or (hy_mom or 0) > LANE_HY_MOM
+              or (hy_mom20 is not None and hy_mom20 >= LANE_HY_MOM_20D)):
             states["credit"] = "WATCH"
         else:
             states["credit"] = "CALM"
@@ -1646,6 +1677,8 @@ def read_stress(hy, hy_mom, hy_sd, hy_asof, vix, vix_sd, flips) -> dict:
                 e += f" ({_tdays((LANE_HY_WATCH - hy) / hy_sd)})"
         if hy_mom is not None:
             e += f"; 2-week change {hy_mom * 100:+.0f}bp (WATCH above +{LANE_HY_MOM * 100:.0f}bp)"
+        if hy_mom20 is not None:
+            e += f"; 20-session change {hy_mom20 * 100:+.0f}bp (WATCH at +{LANE_HY_MOM_20D * 100:.0f}bp)"
         ev.append(e)
     if vix is not None:
         if vix >= LANE_VIX_STRESS:
@@ -1709,13 +1742,15 @@ def market_read_section(inp: dict, ctx: dict) -> dict:
     hy = _f(hy_s.iloc[-1]) if len(hy_s) else None
     hy_d = _f((hy_s.iloc[-1] - hy_s.iloc[-2]) * 100) if len(hy_s) > 1 else None
     hy_mom = _f(hy_s.iloc[-1] - hy_s.iloc[-11]) if len(hy_s) > 10 else None
+    hy_mom20 = _f(hy_s.iloc[-1] - hy_s.iloc[-21]) if len(hy_s) > 20 else None
     hy_sd = _f(hy_s.diff().dropna().iloc[-252:].std()) if len(hy_s) > 41 else None
     hy_asof = pd.to_datetime(hy_s.index[-1]).date().isoformat() if len(hy_s) else None
     s20, s1 = _rate_split(fred, 20), _rate_split(fred, 1)
     items = [read_rates(s20, s1, comp.get("Growth vs value")),
              read_breadth(spy1, rsp1, qqq1, br.get("pct_above_50"), comp.get("Equal vs cap weight"), asof),
              read_cross(spy1, gld1, tlt1, vix, vix_d, hy, hy_d, hy_asof, asof),
-             read_stress(hy, hy_mom, hy_sd, hy_asof, vix, vix_sd, (ctx.get("regime") or {}).get("flips"))]
+             read_stress(hy, hy_mom, hy_sd, hy_asof, vix, vix_sd, (ctx.get("regime") or {}).get("flips"),
+                         hy_mom20)]
     fred_asof = s20["asof"] if s20 else hy_asof
     note = (f"Prices as of {asof or 'n/a'}; FRED rates and credit as of {fred_asof or 'n/a'}"
             + (" (FRED runs one session behind prices)." if asof and fred_asof and fred_asof < asof else "."))
@@ -1982,6 +2017,17 @@ def model_section(inp: dict, rg: dict) -> dict:
              f"{sm.get('date')} and books {inp['session']} on the next run (never as a 0% day). " + c)
     if failed_regime := bool(((inp.get("assessment") or {}).get("regime") or {}).get("data_failure")):
         c = "⚠ Regime HELD through a data failure — these weights are yesterday's call, not a new one. " + c
+    # v1.6 (N39-N41): attribution, AI-factor exposure, volatility-target readout (display only)
+    try:
+        import book_risk as _br
+        out["attribution"] = _br.attribution(book, closes)
+        out["ai_exposure"] = _br.ai_exposure(sm["weights"], closes)
+        out["vol_target"] = _br.vol_target(book)
+        if (out["ai_exposure"] or {}).get("flags"):
+            c += " ⚠ " + "; ".join(out["ai_exposure"]["flags"]) + "."
+    except Exception as e:
+        out["attribution"] = out["ai_exposure"] = out["vol_target"] = {
+            "available": False, "conclusion": f"book_risk unavailable: {type(e).__name__}: {e}"}
     out.update(available=True, summary=sm, rows=rows, actions=actions, weekend=weekend,
                conclusion=c.strip(), _book=book, path=str(path), regime_held=failed_regime)
     return out
@@ -2438,6 +2484,9 @@ def render_md(b: dict) -> str:
     for r in sb["rows"]:
         L.append(f"| {r['name']} | {_fmt(r['value'], 2)}{r['unit'] if r['unit'] == '%' else ''} | {r['d1_txt']} | {r['d5_txt']} | "
                  f"{r['d20_txt']} | {_fmt(r['pctile_1y'], 0)} | {_fmt(r['z1d'], 1, 'σ', True) if r['z1d'] is not None else 'n/a'} | {r['asof'] or 'n/a'} |")
+    _notes = [f"{r['name']}: {r['note']}" for r in sb["rows"] if r.get("note")]
+    if _notes:
+        L += [""] + [f"_{x}_" for x in _notes]
     L += ["", f"**Conclusion:** {sb['conclusion']}", ""]
 
     rg = b["regime"]
@@ -2636,6 +2685,41 @@ def render_md(b: dict) -> str:
         L.append(f"_Returns are display-only (dividend-adjusted closes), not a rule input. 1M = 21 sessions, "
                  f"3M = 63, **12-1** = the 12-month return excluding the latest month. SPY: 1M {_p(_s.get('ret_1m'))} · "
                  f"3M {_p(_s.get('ret_3m'))} · 12-1 {_p(_s.get('ret_12_1'))}. “—” = not enough history._")
+        # v1.6: where the return came from, AI exposure, volatility target (display only)
+        _at = md_.get("attribution") or {}
+        if _at.get("available"):
+            _wins = _at["windows"]
+            _labs = [k for k in ("5 sessions", "20 sessions", "since inception") if k in _wins]
+            _bks = sorted({b_ for k in _labs for b_ in _wins[k]["by_bucket"]},
+                          key=lambda b_: _wins[_labs[-1]]["by_bucket"].get(b_, 0.0))
+            L += ["", "**Where the return came from** (percentage points of book return; held weights × "
+                      "each session's return, summed)",
+                  "| Bucket | " + " | ".join(_labs) + " |", "|---|" + "---|" * len(_labs)]
+            for b_ in _bks:
+                L.append(f"| {b_} | " + " | ".join(f"{_wins[k]['by_bucket'].get(b_, 0.0):+.2f}" for k in _labs) + " |")
+            L.append("| **Sum** | " + " | ".join(f"**{_wins[k]['sum_pts']:+.2f}**" for k in _labs) + " |")
+            L.append("| Book NAV change | " + " | ".join(
+                (f"{_wins[k]['nav_pct']:+.2f}%" if _wins[k].get("nav_pct") is not None else "—") for k in _labs) + " |")
+            _w20 = _wins.get("20 sessions") or {}
+            if _w20.get("by_ticker"):
+                _tk = list(_w20["by_ticker"].items())
+                L.append("_Largest 20-session drags: " + ", ".join(f"{t} {v:+.2f}" for t, v in _tk[:3])
+                         + " · supports: " + ", ".join(f"{t} {v:+.2f}" for t, v in _tk[::-1][:3])
+                         + ". The sum differs slightly from the NAV change because the NAV compounds._")
+        _ai = md_.get("ai_exposure") or {}
+        if _ai.get("conclusion"):
+            L += ["", f"**AI exposure** ({_ai.get('lookback', 60)} sessions, vs SPY and SMH − SPY): {_ai['conclusion']}"]
+            if _ai.get("available"):
+                _r = [r for r in _ai["rows"] if r.get("ai_pct") not in (None, 0)]
+                _r = sorted(_r, key=lambda r: -abs(r["ai_pct"]))[:6]
+                if _r:
+                    L.append("_Largest contributors: " + ", ".join(
+                        f"{r['ticker']} {r['weight']:.0f}% × {r['b_ai']:+.2f} = {r['ai_pct']:+.1f}%" for r in _r)
+                        + f". Limits {_ai['flag_exposure_pct']:.0f}% exposure / {_ai['flag_risk_share_pct']:.0f}% "
+                          "of variance are PROPOSED._")
+        _vt = md_.get("vol_target") or {}
+        if _vt.get("conclusion"):
+            L += ["", f"**Volatility target** (display only): {_vt['conclusion']}"]
         if md_.get("actions"):
             L += ["", "**Authorized today:**", *[f"- {x}" for x in md_["actions"]]]
         L.append("_Model: regime targets → entry gate (blocked adds parked in SGOV) → circuit breaker "
@@ -2774,6 +2858,7 @@ def selftest() -> dict:
     def walk(v0, sd):
         return pd.Series(v0 + np.cumsum(rng.normal(0, sd, len(idx))), index=idx)
     fred = {"DFII10": walk(2.0, 0.04), "DGS10": walk(4.0, 0.05), "DGS2": walk(3.7, 0.05), "T10YIE": walk(2.3, 0.02),
+            "DFF": walk(3.6, 0.0), "DTB3": walk(3.7, 0.01),
             "BAMLH0A0HYM2": walk(3.0, 0.03).clip(lower=2.5), "BAMLC0A0CM": walk(0.9, 0.01),
             "DTWEXBGS": walk(120, 0.3), "VIXCLS": walk(16, 0.6).clip(lower=10), "DCOILWTICO": walk(70, 1.0),
             "DGS30": walk(4.6, 0.05)}
@@ -2911,11 +2996,15 @@ def selftest() -> dict:
             f.append("read_stress: VIX 31 must be STRESS")
         # the lines must be the cross-asset lanes' own lines, so the two cannot disagree
         import cross_asset as _ca
-        for hy_, mom_ in ((3.49, 0.0), (3.51, 0.0), (3.0, 0.51), (3.0, 0.49), (5.01, 0.0), (4.9, 0.0)):
-            lane = _ca.credit_lane(hy_, mom_)["state"]
-            mine = read_stress(hy_, mom_, 0.05, "d", None, None, [])["states"]["credit"]
+        for hy_, mom_, m20_ in ((3.49, 0.0, None), (3.51, 0.0, None), (3.0, 0.51, None), (3.0, 0.49, None),
+                                (5.01, 0.0, None), (4.9, 0.0, None), (3.48, 0.22, 0.33), (3.48, 0.22, 0.29),
+                                (3.2, 0.0, 0.30)):
+            lane = _ca.credit_lane(hy_, mom_, m20_)["state"]
+            mine = read_stress(hy_, mom_, 0.05, "d", None, None, [], m20_)["states"]["credit"]
             if lane != mine:
-                f.append(f"credit line out of sync with cross_asset at HY {hy_}, 2wk {mom_}: {mine} vs {lane}")
+                f.append(f"credit line out of sync with cross_asset at HY {hy_}, 2wk {mom_}, 20d {m20_}: {mine} vs {lane}")
+        if abs(_ca.HY_MOM_20D_WATCH - LANE_HY_MOM_20D) > 1e-12:
+            f.append("the 20-session credit line must equal cross_asset.HY_MOM_20D_WATCH")
         for v_ in (20.99, 21.0, 29.99, 30.0, 12.0):
             lane = _ca.vol_lane(v_)["state"]
             mine = read_stress(None, None, None, "d", v_, 1.5, [])["states"]["vol"]
@@ -3382,6 +3471,23 @@ def selftest() -> dict:
         _bm = b5["model"].get("benchmarks") or {}
         if _bm.get("spy_pct") is None or _bm.get("sixty_forty_pct") is None:
             f.append(f"model benchmarks (SPY, 60/40) must be computed when priced: {_bm}")
+        # (e) v1.6: attribution, AI exposure, vol target, market-implied path
+        m5 = b5["model"]
+        if "attribution" not in m5 or "ai_exposure" not in m5 or "vol_target" not in m5:
+            f.append("the model section must carry attribution, ai_exposure and vol_target")
+        elif m5["vol_target"].get("applied"):
+            f.append("the volatility target must never be applied to the book (display only)")
+        _at = m5.get("attribution") or {}
+        if _at.get("available"):
+            _si = _at["windows"].get("since inception") or {}
+            if _si.get("nav_pct") is None or abs(_si["sum_pts"] - _si["nav_pct"]) > max(0.5, abs(_si["nav_pct"]) * 0.2):
+                f.append(f"attribution must add up to about the NAV change: {_si.get('sum_pts')} vs {_si.get('nav_pct')}")
+        _names = [r["name"] for r in b5["scoreboard"]["rows"]]
+        if not any(n_.startswith("Market-implied path: 2Y") for n_ in _names):
+            f.append("the scoreboard must show the market-implied path (2Y − fed funds)")
+        md5 = render_md(b5)
+        if _at.get("available") and "Where the return came from" not in md5:
+            f.append("the brief must render the attribution table")
     finally:
         os.chdir(cwd)
     return {"ok": not f, "failures": f}

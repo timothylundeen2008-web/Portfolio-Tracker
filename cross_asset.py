@@ -1,6 +1,14 @@
 """
-cross_asset.py  (v1 — July 2026)
-================================
+cross_asset.py  (v1.1 — November 2026)
+======================================
+v1.1 (2026-11-07, fix_status N37/N38):
+  * Credit lane: WATCH when HY OAS has widened by HY_MOM_20D_WATCH (+30bp) or
+    more over 20 sessions, even below the 350bp line. On 2026-11-06 HY was
+    3.48% (+33bp in 20 sessions, widest of the year) and the lane read CALM.
+  * Rates lane: the note now shows the 20-session change of DFII10 next to
+    the 3-month one, and says so when they point opposite ways. The STATE
+    still follows the 3-month momentum (unchanged).
+  Both new inputs are optional; callers that do not pass them get v1 results.
 The four-way confirmation panel: CREDIT, RATES, VOL, FX.
 
 WHY THIS IS ASSEMBLY, NOT NEW PLUMBING
@@ -61,6 +69,9 @@ LANE_LEAD = {
 }
 
 
+HY_MOM_20D_WATCH = 0.30      # pp over 20 sessions: slower widening than the 2-week line, but sustained
+
+
 def _vote(state: str, reading: str, note: str = "") -> dict:
     return {"state": state, "reading": reading, "note": note}
 
@@ -69,7 +80,8 @@ def _vote(state: str, reading: str, note: str = "") -> dict:
 #  Lanes
 # --------------------------------------------------------------------------- #
 def credit_lane(hy_oas: Optional[float],
-                hy_mom_2w: Optional[float] = None) -> dict:
+                hy_mom_2w: Optional[float] = None,
+                hy_mom_20d: Optional[float] = None) -> dict:
     if hy_oas is None:
         return _vote(UNKNOWN, "n/a", "HY OAS unavailable — the credit lane is "
                                      "dark, which is not the same as calm.")
@@ -86,16 +98,24 @@ def credit_lane(hy_oas: Optional[float],
         return _vote(WATCH, f"{hy_oas:.2f}%",
                      "Level is tight but the 2-week momentum is widening. "
                      "Direction beats level in this lane.")
+    if hy_mom_20d is not None and hy_mom_20d >= HY_MOM_20D_WATCH:
+        return _vote(WATCH, f"{hy_oas:.2f}%",
+                     f"Below 350bp, but spreads have widened {hy_mom_20d * 100:+.0f}bp over 20 "
+                     f"sessions (WATCH at +{HY_MOM_20D_WATCH * 100:.0f}bp). Sustained widening "
+                     "from a tight level is how credit leads equity drawdowns.")
+    tail = (f" 20-session change {hy_mom_20d * 100:+.0f}bp (WATCH at +{HY_MOM_20D_WATCH * 100:.0f}bp)."
+            if hy_mom_20d is not None else "")
     return _vote(CALM, f"{hy_oas:.2f}%",
                  "Below 350bp. Read this as late-cycle risk COMPRESSION, not "
                  "safety — it leaves little room to tighten and a great deal "
-                 "to widen.")
+                 "to widen." + tail)
 
 
 def rates_lane(long_real: Optional[float],
                long_real_mom_3m: Optional[float],
                breakeven: Optional[float] = None,
-               nom_30y: Optional[float] = None) -> dict:
+               nom_30y: Optional[float] = None,
+               long_real_mom_20d: Optional[float] = None) -> dict:
     """
     Stress in this lane means "the long end is repricing against risk assets".
 
@@ -112,6 +132,18 @@ def rates_lane(long_real: Optional[float],
 
     rising = long_real_mom_3m > 0
     reading = f"{long_real:.2f}%" + (f" / 30y {nom_30y:.2f}%" if nom_30y else "")
+    v = _rates_lane_core(long_real, long_real_mom_3m, breakeven, rising, reading)
+    horizons = f" [DFII10 3-month {long_real_mom_3m * 100:+.0f}bp"
+    if long_real_mom_20d is not None:
+        horizons += f", 20-session {long_real_mom_20d * 100:+.0f}bp"
+        if (long_real_mom_20d > 0) != rising and abs(long_real_mom_20d) >= 0.05:
+            horizons += ("; the last 20 sessions run the OTHER way, so the 3-month "
+                         + ("repricing is pausing or reversing" if rising else "easing is pausing or reversing"))
+    v["note"] = v["note"] + horizons + "]"
+    return v
+
+
+def _rates_lane_core(long_real, long_real_mom_3m, breakeven, rising, reading) -> dict:
 
     if rising and long_real > 2.0:
         diag = ("Long real yields rising from an already-high level: duration "
@@ -189,7 +221,8 @@ def fx_lane(dxy: Optional[float], dxy_20d_change_pct: Optional[float],
 def divergence(hy_oas=None, hy_mom_2w=None,
                long_real=None, long_real_mom_3m=None, breakeven=None,
                nom_30y=None, vix=None,
-               dxy=None, dxy_20d_change_pct=None, dxy_52w_high=None) -> dict:
+               dxy=None, dxy_20d_change_pct=None, dxy_52w_high=None,
+               hy_mom_20d=None, long_real_mom_20d=None) -> dict:
     """
     Build all four lanes and diagnose their agreement.
 
@@ -202,8 +235,8 @@ def divergence(hy_oas=None, hy_mom_2w=None,
         headline        one-line summary for the UI
     """
     lanes = {
-        "credit": credit_lane(hy_oas, hy_mom_2w),
-        "rates": rates_lane(long_real, long_real_mom_3m, breakeven, nom_30y),
+        "credit": credit_lane(hy_oas, hy_mom_2w, hy_mom_20d),
+        "rates": rates_lane(long_real, long_real_mom_3m, breakeven, nom_30y, long_real_mom_20d),
         "vol": vol_lane(vix),
         "fx": fx_lane(dxy, dxy_20d_change_pct, dxy_52w_high),
     }
@@ -306,6 +339,22 @@ def selftest() -> dict:
     if "term premium" not in d["lanes"]["rates"]["note"].lower():
         failures.append("Rates lane failed to diagnose term premium from the "
                         "real-yields-up / breakevens-down combination")
+    # v1.1: 20-session credit momentum and the rates-lane horizons
+    if credit_lane(3.48, 0.22, 0.33)["state"] != WATCH:
+        failures.append("HY 3.48% widened +33bp in 20 sessions must read WATCH (2026-11-06)")
+    if credit_lane(3.48, 0.22, 0.29)["state"] != CALM:
+        failures.append("HY 3.48% with +29bp in 20 sessions must stay CALM")
+    if credit_lane(3.48, 0.22)["state"] != CALM:
+        failures.append("without the 20-session input the v1 result must be unchanged")
+    if credit_lane(3.20, 0.0, 0.30)["state"] != WATCH:
+        failures.append("exactly +30bp in 20 sessions must read WATCH (the line is inclusive)")
+    r_ = rates_lane(2.60, 0.10, 2.23, 5.25, -0.32)
+    if r_["state"] != STRESS or "OTHER way" not in r_["note"] or "-32bp" not in r_["note"]:
+        failures.append(f"rates lane must keep the 3-month state and flag the opposite 20-session move: {r_}")
+    if "OTHER way" in rates_lane(2.60, 0.10, 2.23, 5.25, 0.02)["note"]:
+        failures.append("a 20-session move under 5bp must not be called a reversal")
+    if divergence(hy_oas=3.48, hy_mom_2w=0.22, hy_mom_20d=0.33)["lanes"]["credit"]["state"] != WATCH:
+        failures.append("divergence() must pass the 20-session credit momentum through")
     return {"ok": not failures, "failures": failures,
             "headline": d["headline"], "flag": d["flag"],
             "agreement_pct": d["agreement_pct"],

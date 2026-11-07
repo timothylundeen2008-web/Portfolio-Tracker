@@ -1692,6 +1692,38 @@ with tab4:
                    "Consolidated brief, sections 3 and 8.")
         if _mdl.get("conclusion"):
             st.info(_mdl["conclusion"])
+        # ── Where the return came from · AI exposure · volatility target ─────
+        # (book_risk.py via the brief; display only — nothing here moves a weight)
+        _at = _mdl.get("attribution") or {}
+        if _at.get("available"):
+            st.markdown("#### Where the return came from")
+            _wins = _at["windows"]
+            _labs = [k for k in ("5 sessions", "20 sessions", "since inception") if k in _wins]
+            _bk = sorted({b for k in _labs for b in _wins[k]["by_bucket"]},
+                         key=lambda b: _wins[_labs[-1]]["by_bucket"].get(b, 0.0))
+            _df = pd.DataFrame({k: [_wins[k]["by_bucket"].get(b, 0.0) for b in _bk] for k in _labs}, index=_bk)
+            _df.loc["Sum (pts)"] = [_wins[k]["sum_pts"] for k in _labs]
+            _df.loc["Book NAV change (%)"] = [_wins[k].get("nav_pct") for k in _labs]
+            st.dataframe(_df.style.format("{:+.2f}", na_rep="—"), use_container_width=True)
+            if _at.get("conclusion"):
+                st.caption(_at["conclusion"] + " Points of book return = held weight × each session's return, "
+                           "summed; the NAV compounds, so the sum differs slightly.")
+        _ai = _mdl.get("ai_exposure") or {}
+        if _ai.get("conclusion"):
+            st.markdown("#### AI exposure")
+            if _ai.get("available"):
+                a1, a2, a3 = st.columns(3)
+                a1.metric("AI factor exposure", f"{_ai['ai_exposure_pct']:.1f}%",
+                          help="Weight × beta to SMH − SPY (60 sessions), summed. 'The book carries X% of an "
+                               "SMH-over-SPY position.' PROPOSED limit 12%.")
+                a2.metric("AI share of book variance",
+                          f"{_ai['ai_risk_share_pct']:.0f}%" if _ai.get("ai_risk_share_pct") is not None else "—",
+                          help="PROPOSED limit 40%.")
+                a3.metric("Direct AI / growth sleeves", f"{_ai['direct_growth_pct']:.0f}%")
+            (st.warning if _ai.get("flags") else st.caption)(_ai["conclusion"])
+        _vt = _mdl.get("vol_target") or {}
+        if _vt.get("conclusion"):
+            st.caption("**Volatility target (display only):** " + _vt["conclusion"])
         # ── Model book vs SPY vs 60/40 (the real track record) ──────────────
         try:
             from model_vs_spy import build_frame as _bf
