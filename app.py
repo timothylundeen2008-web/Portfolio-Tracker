@@ -507,44 +507,22 @@ def fmt(v): return f"{'+' if v>=0 else ''}{v:.1f}%"
 
 def total_return_with_yield(price_ret: float, ticker: str, period: str) -> float:
     """
-    Add the income/yield component to the price return so the dashboard
-    shows TRUE total return — not just price appreciation.
-
-    For SGOV/USFR this is critical: they show ~0% price return but earn
-    5%+ in distributions. Without this, cash positions look like dead weight.
-
-    Income contribution = annual_yield * fraction_of_year elapsed
+    Total return for a holding. Prices are fetched with auto_adjust=True, so
+    the closes ALREADY include reinvested dividends/distributions (SGOV, USFR,
+    SCHD, TLT ... included). Nothing is added here. Until Nov 2026 this
+    function added DIV_YIELDS on top, double-counting income (~1.85%/yr at the
+    default weights) and inflating the portfolio vs SPY. The name is kept so
+    call sites do not change.
     """
-    years_map = {
-        "1mo": 1/12, "3mo": 3/12, "6mo": 6/12,
-        "1y": 1.0,   "2y": 2.0,   "5y": 5.0,
-    }
-    years = years_map.get(period, 1.0)
-    ann_yield = DIV_YIELDS.get(ticker, 0.0)
-    income_contribution = ann_yield * years        # e.g. 5.1% * 1yr = 5.1%
-    return price_ret + income_contribution
+    return price_ret
 
 def build_total_return_series(price_series: pd.Series, ticker: str, period: str) -> pd.Series:
     """
-    Build a daily total-return series by linearly accruing yield on top
-    of the price-return series. This gives a more accurate cumulative
-    return chart for income-producing holdings (SGOV, SCHD, XLE, etc.).
-
-    Method: compound daily yield accrual onto the price return series.
-    daily_yield_rate = (1 + ann_yield/100)^(1/252) - 1
-    total_return[t] = price_return[t] * (1 + daily_yield_rate)^t
+    Daily total-return index (starts at 1) from dividend-adjusted closes.
+    No yield accrual is layered on: auto_adjust=True closes already contain the
+    distributions (see total_return_with_yield).
     """
-    ann_yield = DIV_YIELDS.get(ticker, 0.0) / 100
-    daily_yield = (1 + ann_yield) ** (1/252) - 1
-    n = len(price_series)
-    yield_multiplier = pd.Series(
-        [(1 + daily_yield) ** i for i in range(n)],
-        index=price_series.index
-    )
-    # Normalise price series to start at 1, apply yield accrual
-    norm = price_series / price_series.iloc[0]
-    total = norm * yield_multiplier
-    return total
+    return price_series / price_series.iloc[0]
 
 # ─── GROWTH SATELLITE HELPERS (Level 5.5 / Level 6.5) ─────────────────────────
 @st.cache_data(ttl=3600)
@@ -1154,9 +1132,9 @@ with tab1:
     if prices.empty:
         st.error("Unable to fetch market data.")
     else:
-        # ── Weighted portfolio TOTAL return (price + yield accrual) ──────────
-        port_series_price = None   # price-only (for ratio chart)
-        port_series_total = None   # total return incl. yield
+        # ── Weighted portfolio TOTAL return (dividend-adjusted closes) ───────
+        port_series_price = None   # same adjusted closes (kept for compatibility)
+        port_series_total = None   # total return (dividends already in adjusted closes)
         port_return_price = 0.0
         port_return_total = 0.0
 
@@ -1244,8 +1222,8 @@ with tab1:
         # ── Chart 1: Total Return vs Benchmarks ──────────────────────────────
         st.markdown("### Total Return vs Benchmarks")
         st.caption(
-            "Portfolio line includes yield accrual daily. "
-            "Benchmark lines are price-only — switch to 'auto_adjust=True' data which includes dividends."
+            "Static-weight ETF All-Weather mix (the sidebar allocations, daily-rebalanced) — NOT the model book. "
+            "Every line uses dividend-adjusted closes, so income is included for the portfolio and the benchmarks alike."
         )
 
         fig = go.Figure()
@@ -1255,17 +1233,8 @@ with tab1:
             cum_total = (1 + port_series_total).cumprod() - 1
             fig.add_trace(go.Scatter(
                 x=cum_total.index, y=(cum_total*100).round(2),
-                name="Portfolio (Total Return incl. yield)",
+                name="Portfolio (static mix, total return)",
                 line=dict(color="#00E676", width=3),
-                hovertemplate="%{y:.1f}%",
-            ))
-
-        if port_series_price is not None:
-            cum_price = (1 + port_series_price).cumprod() - 1
-            fig.add_trace(go.Scatter(
-                x=cum_price.index, y=(cum_price*100).round(2),
-                name="Portfolio (Price Only)",
-                line=dict(color="#00E676", width=1.5, dash="dot"),
                 hovertemplate="%{y:.1f}%",
             ))
 
@@ -1296,7 +1265,8 @@ with tab1:
             "Rising line = portfolio outperforming S&P 500. "
             "Falling line = S&P 500 outperforming. "
             "Flat = tracking in lockstep. "
-            "Value of 1.0 = equal performance since start of period."
+            "Value of 1.0 = equal performance since start of period. "
+            "This is the STATIC-weight mix, not the model book — see the Model Portfolio panel on the Construction & P/E tab for the real track record."
         )
 
         if port_series_total is not None and "SPY" in prices.columns:
@@ -1341,11 +1311,13 @@ with tab1:
 
             # Annotation for current ratio
             current_ratio = float(ratio.iloc[-1])
+            _gap_pp = (float(port_cum.loc[common_idx].iloc[-1]) - float(spy_cum.loc[common_idx].iloc[-1])
+                       ) / float(port_cum.loc[common_idx].iloc[0]) * 100
             outperforming = current_ratio >= 1.0
             ratio_pct     = (current_ratio - 1) * 100
             ann_color     = "#00E676" if outperforming else "#e05252"
             ann_text      = (
-                f"Currently {fmt(ratio_pct)} vs S&P 500<br>"
+                f"Ratio {current_ratio:.3f} ({fmt(ratio_pct)} relative)<br>"
                 + ("Portfolio OUTPERFORMING" if outperforming else "Portfolio TRAILING")
             )
             fig_ratio.add_annotation(
@@ -1359,7 +1331,7 @@ with tab1:
             )
 
             fig_ratio.update_layout(
-                title="Portfolio Total Return ÷ S&P 500 (normalised to 1.0 at period start)",
+                title="Static ETF mix total return ÷ S&P 500 total return (1.0 at period start)",
                 yaxis_title="Relative Value (1.0 = equal)",
                 yaxis=dict(
                     gridcolor="#2a2d3e", showgrid=True,
@@ -1373,9 +1345,10 @@ with tab1:
             if outperforming:
                 st.markdown(
                     f'<div class="signal-box">'
-                    f'<b>Portfolio is outperforming the S&P 500 by {fmt(ratio_pct)} '
-                    f'over the {period_label} period</b> on a total return basis. '
-                    f'The all-weather structure is adding value vs. simply buying and holding SPY.'
+                    f'<b>The static all-weather mix is ahead of the S&P 500: ratio {current_ratio:.3f} '
+                    f'({fmt(ratio_pct)} relative; {fmt(_gap_pp)} points of return) over the {period_label} period</b> '
+                    f'on a dividend-adjusted total return basis. This is a hypothetical constant-weight mix, '
+                    f'not the model book.'
                     f'</div>',
                     unsafe_allow_html=True,
                 )
@@ -1383,8 +1356,8 @@ with tab1:
                 pct_behind = abs(ratio_pct)
                 st.markdown(
                     f'<div class="signal-box warning">'
-                    f'<b>Portfolio is trailing the S&P 500 by {pct_behind:.1f}% '
-                    f'over the {period_label} period</b> on a total return basis. '
+                    f'<b>The static mix is trailing the S&P 500: ratio {current_ratio:.3f} '
+                    f'({fmt(ratio_pct)} relative; {fmt(_gap_pp)} points of return) over the {period_label} period</b> on a dividend-adjusted total return basis. '
                     f'This is expected in strong equity bull markets — the portfolio trades '
                     f'some upside for crash protection and income. '
                     f'Check the Stress Test tab to see how much drawdown was avoided '
@@ -1719,6 +1692,51 @@ with tab4:
                    "Consolidated brief, sections 3 and 8.")
         if _mdl.get("conclusion"):
             st.info(_mdl["conclusion"])
+        # ── Model book vs SPY vs 60/40 (the real track record) ──────────────
+        try:
+            from model_vs_spy import build_frame as _bf
+            _book = pd.read_csv("data/model_book.csv")
+            _px = fetch_prices(["SPY", "AGG"], "1y")
+            _f, _inf = _bf(_book, _px["SPY"], _px["AGG"]) if not _px.empty else (None, {})
+        except Exception as _e:
+            _f, _inf = None, {}
+        st.markdown("#### Model book vs S&P 500 vs 60/40")
+        if _f is None or _f.empty:
+            st.info("Benchmark prices are unavailable right now, so the comparison is hidden "
+                    "(not zero — missing). Reload in a few minutes.")
+        else:
+            _st = _inf["stats"]
+            m1, m2, m3 = st.columns(3)
+            m1.metric("Model since start", f"{_st['Model']['ret']:+.2f}%",
+                      f"{_st['Model']['ret'] - _st['SPY']['ret']:+.2f} pp vs SPY")
+            m2.metric("SPY since start", f"{_st['SPY']['ret']:+.2f}%")
+            if "60/40" in _st:
+                m3.metric("60/40 since start", f"{_st['60/40']['ret']:+.2f}%",
+                          f"{_st['Model']['ret'] - _st['60/40']['ret']:+.2f} pp (model vs 60/40)")
+            fig_mv = go.Figure()
+            fig_mv.update_layout(**CHART_BG)
+            for _c, _col, _w in (("Model", "#00E676", 3), ("SPY", "#4a90d9", 2), ("60/40", "#f1c40f", 1.5)):
+                if _c in _f.columns:
+                    fig_mv.add_trace(go.Scatter(x=_f.index, y=_f[_c].round(2), name=_c,
+                                                line=dict(color=_col, width=_w),
+                                                hovertemplate=_c + " %{y:.2f}<extra></extra>"))
+            fig_mv.add_hline(y=100, line_color="rgba(255,255,255,0.35)", line_dash="dot")
+            if _inf.get("first_live") is not None:
+                fig_mv.add_vline(x=_inf["first_live"], line_color="rgba(255,255,255,0.4)", line_dash="dash",
+                                 annotation_text="live from here", annotation_position="top left")
+            fig_mv.update_layout(title="Model book vs SPY vs 60/40 — rebased to 100", height=340,
+                                 yaxis_title="Index (100 = start)")
+            st.plotly_chart(fig_mv, use_container_width=True)
+            _lv = ""
+            if "ret_live" in _st["Model"]:
+                _lv = (f" Live period only: model {_st['Model']['ret_live']:+.2f}% vs SPY "
+                       f"{_st['SPY']['ret_live']:+.2f}%.")
+            st.caption(
+                f"{_st['n']} sessions from {_st['since']}; the first {_st['n_reconstructed']} are "
+                "RECONSTRUCTED (the framework replayed on past data, so they flatter the model — weigh the "
+                "live period more)." + _lv + " Same dividend-adjusted closes as the model book; daily-rebalanced, "
+                "before costs and taxes; 60/40 = 60% SPY / 40% AGG. This is the model's own NAV, "
+                "not the static-weight chart on the Overview tab.")
     else:
         st.info("The model portfolio appears here after the next Consolidated Daily Brief run "
                 "(GitHub Actions → Consolidated Daily Brief → Run workflow).")
