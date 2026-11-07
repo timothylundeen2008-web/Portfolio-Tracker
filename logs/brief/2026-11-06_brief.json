@@ -1,6 +1,6 @@
 {
  "session": "2026-11-06",
- "generated_et": "Nov 07, 2026 12:45 PM EST",
+ "generated_et": "Nov 07, 2026 01:24 PM EST",
  "scoreboard": {
   "rows": [
    {
@@ -149,12 +149,12 @@
    },
    {
     "name": "WTI crude",
-    "value": 90.85514868690137,
+    "value": 90.85010395730882,
     "unit": "$",
     "kind": "index",
-    "d1": 0.35937785857409477,
-    "d5": -12.739967066622182,
-    "d20": -1.0831244461043998,
+    "d1": 0.3537956366425954,
+    "d5": -12.744812177512955,
+    "d20": -1.0886168028560128,
     "d1_txt": "+0.4%",
     "d5_txt": "-12.7%",
     "d20_txt": "-1.1%",
@@ -1485,7 +1485,7 @@
  "flow_map": {
   "available": true,
   "stale": false,
-  "age_hours": 0.1,
+  "age_hours": 0.8,
   "published_at": "2026-11-07T17:38:43+00:00",
   "data_through": "2026-11-06",
   "window": 20,
@@ -2044,13 +2044,14 @@
  },
  "model": {
   "available": true,
-  "conclusion": "You SHOULD hold the `transition_ambiguous` model above. Model book 96.77 (-5.1% from peak; 20d -4.1%). \u26a0 Drawdown past the -5% warning line \u2014 the breaker trips at -8%. No change today. Since 2026-08-12: model -3.23% vs SPY -4.58% and 60/40 -2.80%.",
+  "conclusion": "You SHOULD hold the `transition_ambiguous` model above. Model book 96.77 (-5.1% from peak; 20d -4.1%). \u26a0 Drawdown past the -5% warning line \u2014 the breaker trips at -8%. No change today. Since 2026-08-12: model -3.23% vs SPY -4.58% and 60/40 -2.80%. \u26a0 AI / growth tech carries 50% of book risk \u2265 40% (PROPOSED limit); Precious metals carries 44% of book risk \u2265 40% (PROPOSED limit).",
   "pending": false,
   "benchmarks": {
    "since": "2026-08-12",
    "model_pct": -3.23,
    "spy_pct": -4.58,
-   "sixty_forty_pct": -2.8
+   "sixty_forty_pct": -2.8,
+   "through": "2026-11-06"
   },
   "spy_returns": {
    "ret_1m": -4.99,
@@ -2310,6 +2311,177 @@
     "KMLM": 5.5
    },
    "conclusion": "Book volatility over 20 sessions 12.7% vs a 9% target: a volatility target would hold risk sleeves at 0.71\u00d7 and park 22.7% in SGOV. Display only \u2014 not applied until the hedge lab tests it (V4)."
+  },
+  "risk_by_group": {
+   "available": true,
+   "lookback": 60,
+   "flag_pct": 40.0,
+   "status": "PROPOSED limit",
+   "groups": [
+    {
+     "group": "AI / growth tech",
+     "weight_pct": 23.0,
+     "risk_pct": 49.5,
+     "vol_pct": 28.3,
+     "corr_rest": 0.22,
+     "tickers": [
+      "VGT",
+      "SMH",
+      "QQQ"
+     ]
+    },
+    {
+     "group": "Precious metals",
+     "weight_pct": 18.0,
+     "risk_pct": 43.6,
+     "vol_pct": 32.8,
+     "corr_rest": 0.26,
+     "tickers": [
+      "GLD",
+      "RING",
+      "SLV"
+     ]
+    },
+    {
+     "group": "Dividend & defensive equity",
+     "weight_pct": 22.0,
+     "risk_pct": 7.3,
+     "vol_pct": 12.5,
+     "corr_rest": 0.0,
+     "tickers": [
+      "SCHD",
+      "XLV",
+      "XLU"
+     ]
+    },
+    {
+     "group": "Duration",
+     "weight_pct": 7.0,
+     "risk_pct": 1.5,
+     "vol_pct": 10.9,
+     "corr_rest": 0.12,
+     "tickers": [
+      "TLT"
+     ]
+    },
+    {
+     "group": "Cash",
+     "weight_pct": 16.5,
+     "risk_pct": 0.1,
+     "vol_pct": 0.4,
+     "corr_rest": 0.09,
+     "tickers": [
+      "SGOV",
+      "USFR"
+     ]
+    },
+    {
+     "group": "Energy & commodities",
+     "weight_pct": 8.0,
+     "risk_pct": -0.5,
+     "vol_pct": 20.5,
+     "corr_rest": -0.19,
+     "tickers": [
+      "XLE",
+      "PDBC"
+     ]
+    },
+    {
+     "group": "Trend (managed futures)",
+     "weight_pct": 5.5,
+     "risk_pct": -1.5,
+     "vol_pct": 15.1,
+     "corr_rest": -0.26,
+     "tickers": [
+      "KMLM"
+     ]
+    }
+   ],
+   "tickers": [
+    {
+     "ticker": "VGT",
+     "weight_pct": 17.0,
+     "risk_pct": 35.2
+    },
+    {
+     "ticker": "GLD",
+     "weight_pct": 10.0,
+     "risk_pct": 17.2
+    },
+    {
+     "ticker": "RING",
+     "weight_pct": 4.0,
+     "risk_pct": 13.9
+    },
+    {
+     "ticker": "SLV",
+     "weight_pct": 4.0,
+     "risk_pct": 12.6
+    },
+    {
+     "ticker": "SMH",
+     "weight_pct": 3.0,
+     "risk_pct": 9.1
+    },
+    {
+     "ticker": "QQQ",
+     "weight_pct": 3.0,
+     "risk_pct": 5.2
+    },
+    {
+     "ticker": "SCHD",
+     "weight_pct": 14.0,
+     "risk_pct": 4.7
+    },
+    {
+     "ticker": "XLV",
+     "weight_pct": 5.0,
+     "risk_pct": 2.2
+    },
+    {
+     "ticker": "TLT",
+     "weight_pct": 7.0,
+     "risk_pct": 1.5
+    },
+    {
+     "ticker": "XLU",
+     "weight_pct": 3.0,
+     "risk_pct": 0.5
+    },
+    {
+     "ticker": "SGOV",
+     "weight_pct": 9.5,
+     "risk_pct": 0.1
+    },
+    {
+     "ticker": "USFR",
+     "weight_pct": 7.0,
+     "risk_pct": -0.0
+    },
+    {
+     "ticker": "XLE",
+     "weight_pct": 5.0,
+     "risk_pct": -0.0
+    },
+    {
+     "ticker": "PDBC",
+     "weight_pct": 3.0,
+     "risk_pct": -0.5
+    },
+    {
+     "ticker": "KMLM",
+     "weight_pct": 5.5,
+     "risk_pct": -1.5
+    }
+   ],
+   "flags": [
+    "AI / growth tech carries 50% of book risk \u2265 40% (PROPOSED limit)",
+    "Precious metals carries 44% of book risk \u2265 40% (PROPOSED limit)"
+   ],
+   "book_vol_pct": 10.2,
+   "missing": [],
+   "asof": "2026-11-06",
+   "conclusion": "AI / growth tech is 23% of the book's weight and 50% of its risk over 60 sessions (book volatility 10.2%). \u26a0 AI / growth tech carries 50% of book risk \u2265 40% (PROPOSED limit); Precious metals carries 44% of book risk \u2265 40% (PROPOSED limit). Negative = the group offset book risk."
   },
   "summary": {
    "available": true,
@@ -4695,7 +4867,7 @@
    "asof": "2026-11-06",
    "age_days": 0,
    "status": "OK",
-   "note": "one series of front-month settles: Yahoo CL=F daily for completed sessions, latest 5 rebuilt from 1-min bars (VWAP 14:28\u201314:30 ET); method check \u2014 Yahoo daily vs rebuilt on 4 earlier session(s): max $0.08; FRED spot minus settle on 2026-11-03: +3.52 (market spread, not an error); front-month expiry 2026-10-20 (Nov 2026 contract) inside the 20-day window \u2014 changes spanning it include the roll"
+   "note": "one series of front-month settles: Yahoo CL=F daily for completed sessions, latest 5 rebuilt from 1-min bars (VWAP 14:28\u201314:30 ET); method check \u2014 Yahoo daily vs rebuilt on 4 earlier session(s): max $0.07; FRED spot minus settle on 2026-11-03: +3.51 (market spread, not an error); front-month expiry 2026-10-20 (Nov 2026 contract) inside the 20-day window \u2014 changes spanning it include the roll"
   },
   {
    "input": "Regime assessment",
