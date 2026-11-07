@@ -1,6 +1,10 @@
 """
-hedge_lab.py  (v1.4 — November 2026)
-────────────────────────────────────
+hedge_lab.py  (v1.4.1 — November 2026)
+──────────────────────────────────────
+v1.4.1 (2026-11-07): book_risk is imported at module load. v1.4 imported it
+  inside vol_scales(), after the selftest had moved into a temp folder, so the
+  Actions selftest failed with ModuleNotFoundError (the local test had the
+  repo on PYTHONPATH and missed it).
 v1.4 (2026-11-07, fix_status N42): DIVERSIFICATION TEST. On 11/5 the S&P fell
   4.4% on an AI-chip selloff; over the month to 11/6 VGT/SMH/QQQ (23% of the
   book) supplied about −3.6 of the book's roughly −4.1% return. Three
@@ -142,8 +146,9 @@ import numpy as np
 import pandas as pd
 
 import model_book as mb
+import book_risk as br   # v1.4.1: imported at load time; the selftest chdirs to a temp folder
 
-VERSION = "v1.4"
+VERSION = "v1.4.1"
 REGIME = "transition_ambiguous"
 HISTORY_START = "1999-01-01"
 
@@ -1332,14 +1337,12 @@ def v5_weights(base: dict) -> dict:
 def vol_scales(rets: pd.DataFrame, base: dict) -> pd.Series:
     """Scale at d from the TARGET portfolio's realized 20-session vol up to and
     including d (no lookahead): book_risk.vol_scale, 1.0 until 20 sessions exist."""
-    import book_risk as br
     r = sum(rets[t].fillna(0.0) * (float(w) / 100.0) for t, w in base.items() if t in rets.columns and w > 0)
     vol = r.rolling(br.VOL_LOOKBACK, min_periods=br.VOL_LOOKBACK).std() * math.sqrt(252) * 100
     return vol.map(lambda v: br.vol_scale(v) if v == v else 1.0).fillna(1.0)
 
 
 def div_weights_fn(base: dict, v: str, scales: dict) -> Callable:
-    import book_risk as br
     b = v5_weights(base) if v in ("V5", "V6") else dict(base)
     if v in ("V4", "V6"):
         sc = scales["V5" if v == "V6" else "V0"]

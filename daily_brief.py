@@ -132,6 +132,10 @@ import numpy as np
 import pandas as pd
 
 import market_time as mt
+try:                                   # v1.6.1: load-time import (the selftest chdirs to a temp folder)
+    import book_risk as _book_risk
+except Exception:                      # the brief still runs; the model section says what is missing
+    _book_risk = None
 
 SUMMARY_DIR = Path("logs/summaries")
 STATE_DIR = Path("logs/brief")
@@ -2019,7 +2023,9 @@ def model_section(inp: dict, rg: dict) -> dict:
         c = "⚠ Regime HELD through a data failure — these weights are yesterday's call, not a new one. " + c
     # v1.6 (N39-N41): attribution, AI-factor exposure, volatility-target readout (display only)
     try:
-        import book_risk as _br
+        _br = _book_risk
+        if _br is None:
+            raise ImportError("book_risk.py not found next to daily_brief.py")
         out["attribution"] = _br.attribution(book, closes)
         out["ai_exposure"] = _br.ai_exposure(sm["weights"], closes)
         out["vol_target"] = _br.vol_target(book)
