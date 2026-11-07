@@ -177,12 +177,30 @@ def run_daily(fred_key: str = "", force: bool = False) -> dict:
         }
     row.update(_try(_regime, "Steps 1-6 regime", errors) or {})
 
+    # Nov 2026 (fix_status N37/N44): 20-session momentum for credit and long
+    # real yields, every trading day (it was weekly-only through cross_asset).
+    # HY widening +30bp over 20 sessions reads WATCH even below 3.50%.
+    def _momentum20():
+        from fred_client import fetch_fred
+        out = {}
+        for col, sid in (("hy_oas_mom_20d", "BAMLH0A0HYM2"), ("long_real_mom_20d", "DFII10")):
+            s = fetch_fred(sid, fred_key)
+            s = s.dropna() if s is not None else None
+            if s is not None and len(s) > 20:
+                out[col] = round(float(s.iloc[-1] - s.iloc[-21]), 4)
+                out[col + "_asof"] = str(s.index[-1].date())
+        return out
+    row.update(_try(_momentum20, "20-session momentum", errors) or {})
+
     # Step 2 — VIX. Separate so a VIX failure doesn't lose the regime block.
     def _vix():
         import yfinance as yf
         h = yf.Ticker("^VIX").history(period="5d")
         return {"vix": round(float(h["Close"].iloc[-1]), 2)} if not h.empty else {}
     row.update(_try(_vix, "Step 2 VIX", errors) or {})
+
+    # Cross-asset divergence, daily (was weekly-only).
+    row.update(_try(lambda: _xasset_fields(row), "Cross-asset", errors) or {})
 
     # Step 3 — gold gate (Level 4).
     def _gold():
@@ -233,6 +251,25 @@ def run_daily(fred_key: str = "", force: bool = False) -> dict:
     return row
 
 
+def _xasset_fields(row: dict) -> dict:
+    """The four-lane confirmation panel from the day's row (daily and weekly)."""
+    import cross_asset as ca
+    d = ca.divergence(
+        hy_oas=row.get("hy_oas"), hy_mom_2w=row.get("hy_oas_mom_2w"),
+        long_real=row.get("long_real_yield"),
+        long_real_mom_3m=row.get("long_real_mom_3m"),
+        breakeven=row.get("breakeven_10y"), vix=row.get("vix"),
+        hy_mom_20d=row.get("hy_oas_mom_20d"),
+        long_real_mom_20d=row.get("long_real_mom_20d"))
+    lanes = d.get("lanes") or {}
+    return {"xasset_majority": d.get("majority"),
+            "xasset_agreement_pct": d.get("agreement_pct"),
+            "xasset_dissenters": ",".join(d.get("dissenters", [])),
+            "xasset_flag": (d.get("flag") or "")[:400],
+            "xasset_credit": (lanes.get("credit") or {}).get("state"),
+            "xasset_rates": (lanes.get("rates") or {}).get("state")}
+
+
 # ── Weekly ───────────────────────────────────────────────────────────────────
 def run_weekly(fred_key: str = "") -> dict:
     """Execute Checklist v4 Part 2. Includes everything daily captures, plus
@@ -255,19 +292,8 @@ def run_weekly(fred_key: str = "") -> dict:
                 "cash_like_pct": round(w.get("SGOV", 0) + w.get("USFR", 0), 1)}
     row.update(_try(_targets, "Step 9 targets", errors) or {})
 
-    # Cross-asset divergence — the four-lane confirmation panel.
-    def _xasset():
-        import cross_asset as ca
-        d = ca.divergence(
-            hy_oas=row.get("hy_oas"), hy_mom_2w=row.get("hy_oas_mom_2w"),
-            long_real=row.get("long_real_yield"),
-            long_real_mom_3m=row.get("long_real_mom_3m"),
-            breakeven=row.get("breakeven_10y"), vix=row.get("vix"))
-        return {"xasset_majority": d.get("majority"),
-                "xasset_agreement_pct": d.get("agreement_pct"),
-                "xasset_dissenters": ",".join(d.get("dissenters", [])),
-                "xasset_flag": (d.get("flag") or "")[:400]}
-    row.update(_try(_xasset, "Cross-asset", errors) or {})
+    # Cross-asset: computed in run_daily() above (Nov 2026); the weekly row
+    # inherits it from that call.
 
     # Step 5 — institutional flow. Gated on integrity, not just coverage.
     def _flow():
@@ -454,6 +480,13 @@ def build_summary(row: dict, kind: str = "daily") -> str:
             notes.append(f"HY OAS {hy:.2f}% is below 3.50%. Read this as "
                          f"late-cycle risk COMPRESSION, not safety — it "
                          f"leaves little room to tighten and much to widen.")
+        m20 = row.get("hy_oas_mom_20d")
+        if m20 not in (None, "") and float(m20) == float(m20):
+            m20 = float(m20)
+            notes.append((f"⚠ Credit WATCH: HY widened {m20 * 100:+.0f}bp over 20 sessions "
+                          f"(line +30bp) — sustained widening from a tight level."
+                          if m20 >= 0.30 else
+                          f"HY 20-session change {m20 * 100:+.0f}bp (WATCH at +30bp)."))
 
     vix = row.get("vix")
     if vix not in (None, ""):
@@ -492,18 +525,21 @@ def build_summary(row: dict, kind: str = "daily") -> str:
         L.append(f"- {n}")
     L.append("")
 
+    if row.get("xasset_majority"):
+        L.append(f"- **Cross-asset:** majority {row['xasset_majority']}, "
+                 f"agreement {row.get('xasset_agreement_pct')}%"
+                 + (f", dissenting: {row['xasset_dissenters']}"
+                    if row.get("xasset_dissenters") else "")
+                 + (f" · credit {row['xasset_credit']}" if row.get("xasset_credit") else ""))
+        if row.get("xasset_flag"):
+            L.append(f"  - {row['xasset_flag']}")
+        L.append("")
+
     if kind == "weekly":
         L.append("## Weekly additions")
         L.append(f"- **Target growth complex:** "
                  f"{row.get('growth_complex_pct','n/a')}% · "
                  f"**cash-like:** {row.get('cash_like_pct','n/a')}%")
-        if row.get("xasset_majority"):
-            L.append(f"- **Cross-asset:** majority {row['xasset_majority']}, "
-                     f"agreement {row.get('xasset_agreement_pct')}%"
-                     + (f", dissenting: {row['xasset_dissenters']}"
-                        if row.get("xasset_dissenters") else ""))
-        if row.get("xasset_flag"):
-            L.append(f"  - {row['xasset_flag']}")
         L.append(f"- **Flow layer readable:** {row.get('flow_readable')} — "
                  f"{row.get('flow_note','')}")
         L.append("")

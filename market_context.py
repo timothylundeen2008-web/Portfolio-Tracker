@@ -65,6 +65,8 @@ ALERT_RULES = {
     "hy_oas_crisis": 5.00,
     "hy_oas_watch": 3.50,
     "hy_oas_velocity_2w": 0.50,      # widening >50bp/2wk
+    # Nov 2026 (N37/N44): sustained widening below the level line. = cross_asset.HY_MOM_20D_WATCH
+    "hy_oas_widening_20d": 0.30,     # widening >=30bp over 20 sessions
     # Daily Step 2. 30 = de-risk; 35 = trend-whipsaw, pause KMLM adds.
     "vix_derisk": 30.0,
     "vix_whipsaw": 35.0,
@@ -230,6 +232,14 @@ def alerts(ctx: dict, signals: Optional[dict] = None) -> list[dict]:
                 f"HY OAS {hy:.2f}% crossed the {R['hy_oas_watch']:.2f}% "
                 f"complacency line — credit is repricing risk.",
                 "Not same-day actionable. Flag for the weekly review.")
+        m20 = s.get("hy_oas_mom_20d")
+        if hy <= R["hy_oas_crisis"] and m20 not in (None, "") and float(m20) == float(m20) \
+                and float(m20) >= R["hy_oas_widening_20d"]:
+            add("WARNING", "hy_oas_widening_20d",
+                f"HY OAS widened {float(m20) * 100:+.0f}bp over 20 sessions to {hy:.2f}% "
+                f"(line +{R['hy_oas_widening_20d'] * 100:.0f}bp) — sustained repricing.",
+                "Not same-day actionable. Check the 3.50% line, equity breadth and the "
+                "credit lane; a hold-the-line read, not a de-risk.")
 
     # ── Volatility ──────────────────────────────────────────────────────────
     vix = s.get("vix") or (ctx.get("cross_asset", {}).get("VIX", {}) or {}).get("last")
@@ -420,6 +430,18 @@ def selftest() -> dict:
         failures.append("HY crisis did not raise CRITICAL")
     if not any(a["rule"] == "vix_whipsaw" for a in got):
         failures.append("VIX whipsaw not detected")
+
+    # Nov 2026: the 20-session credit line (2026-11-06: HY 3.48%, +33bp)
+    w20 = alerts(calm_ctx, dict(calm_sig, hy_oas=3.48, hy_oas_mom_2w=0.08, hy_oas_mom_20d=0.33))
+    if [a["rule"] for a in w20] != ["hy_oas_widening_20d"]:
+        failures.append(f"HY 3.48% +33bp/20 sessions must fire hy_oas_widening_20d alone: {[a['rule'] for a in w20]}")
+    if alerts(calm_ctx, dict(calm_sig, hy_oas=3.48, hy_oas_mom_20d=0.29)):
+        failures.append("+29bp over 20 sessions must stay silent")
+    if alerts(calm_ctx, dict(calm_sig, hy_oas_mom_20d=None)):
+        failures.append("a missing 20-session value must stay silent")
+    import cross_asset as _ca
+    if abs(_ca.HY_MOM_20D_WATCH - ALERT_RULES["hy_oas_widening_20d"]) > 1e-12:
+        failures.append("the alert line must equal cross_asset.HY_MOM_20D_WATCH")
 
     band = dict(calm_sig, short_real_rate=0.48)
     if not any(a["rule"] == "short_real_band" for a in alerts(calm_ctx, band)):

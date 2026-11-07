@@ -1,8 +1,15 @@
 """
-book_risk.py  (v1 — November 2026)
-──────────────────────────────────
-Three readings of the MODEL BOOK that make concentration and speed visible.
-All are DISPLAY ONLY: nothing here changes a weight. (fix_status N39-N41)
+book_risk.py  (v1.1 — November 2026)
+────────────────────────────────────
+Four readings of the MODEL BOOK that make concentration and speed visible.
+All are DISPLAY ONLY: nothing here changes a weight. (fix_status N39-N41, N45)
+
+v1.1 (2026-11-07): risk_by_group(). The first live AI reading (11/06) was
+  5.1% of an SMH-over-SPY position: VGT's AI tilt beyond the market is only
+  +0.41, and most of its loss came from high market beta (1.15). The excess-
+  over-SPY measure therefore understates concentration. risk_by_group()
+  answers the direct question: what share of the book's daily variance
+  each group carries (Euler risk contribution), next to its share of weight.
 
 1. attribution()   Which sleeves made or lost the book's return over the last
                    5 / 20 sessions and since inception. Uses each session's
@@ -49,6 +56,8 @@ AI_FACTOR_LONG, AI_FACTOR_MKT = "SMH", "SPY"
 AI_LOOKBACK = 60
 AI_EXPOSURE_FLAG_PCT = 12.0      # PROPOSED
 AI_RISK_SHARE_FLAG_PCT = 40.0    # PROPOSED
+GROUP_RISK_FLAG_PCT = 40.0       # PROPOSED: no group above 40% of book risk
+RISK_LOOKBACK = 60
 VOL_TARGET_PCT = 9.0             # book's long-run vol in the hedge lab: 8.8%
 VOL_LOOKBACK = 20
 VOL_SCALE_FLOOR, VOL_SCALE_CAP = 0.5, 1.0
@@ -206,6 +215,72 @@ def ai_exposure(weights: dict, closes: dict, lookback: int = AI_LOOKBACK) -> dic
     return out
 
 
+# ── 2b. risk contribution by group ──────────────────────────────────────────
+
+def risk_by_group(weights: dict, closes: dict, lookback: int = RISK_LOOKBACK) -> dict:
+    """Share of the book's daily variance carried by each group, over the
+    last `lookback` sessions: RC_i = w_i * cov(r_i, r_book) / var(r_book),
+    summed by bucket. Contributions add to 100%; a hedge has a negative one.
+    Also reports each group's own annualized volatility and its correlation
+    with the rest of the book."""
+    out = {"available": False, "lookback": lookback, "flag_pct": GROUP_RISK_FLAG_PCT,
+           "status": "PROPOSED limit", "groups": [], "tickers": []}
+    rets = {}
+    for t, w in weights.items():
+        if float(w) <= 0:
+            continue
+        s = _clean(closes.get(t))
+        if len(s) > lookback:
+            rets[t] = s.pct_change()
+    missing = sorted(t for t, w in weights.items() if float(w) > 0 and t not in rets)
+    held = sum(float(w) for t, w in weights.items() if float(w) > 0)
+    cov_w = sum(float(weights[t]) for t in rets)
+    if not rets or held <= 0 or cov_w / held < 0.9:
+        out["conclusion"] = (f"Risk by group unavailable: prices cover {cov_w:.0f}% of the book "
+                             f"(missing {', '.join(missing) or 'all'}); needs {lookback + 1} closes. "
+                             "A data gap, not a zero reading.")
+        return out
+    R = pd.DataFrame(rets).iloc[-lookback:].fillna(0.0)
+    w = pd.Series({t: float(weights[t]) / 100.0 for t in R.columns})
+    book = R.mul(w, axis=1).sum(axis=1)
+    var_b = float(book.var())
+    if var_b <= 0:
+        out["conclusion"] = "Risk by group unavailable: zero book variance in the window."
+        return out
+    rc = {t: float(w[t] * R[t].cov(book) / var_b * 100) for t in R.columns}
+    groups: dict = {}
+    for t in R.columns:
+        g = bucket_of(t)
+        groups.setdefault(g, []).append(t)
+    rows = []
+    for g, ts in groups.items():
+        wg = float(w[ts].sum() * 100)
+        gr = R[ts].mul(w[ts], axis=1).sum(axis=1)
+        rest = book - gr
+        vol = float(gr.std() / (wg / 100) * math.sqrt(252) * 100) if wg > 0 else None
+        corr = float(gr.corr(rest)) if rest.std() > 0 and gr.std() > 0 else None
+        rows.append({"group": g, "weight_pct": round(wg, 1), "risk_pct": round(sum(rc[t] for t in ts), 1),
+                     "vol_pct": round(vol, 1) if vol is not None else None,
+                     "corr_rest": round(corr, 2) if corr is not None else None,
+                     "tickers": sorted(ts, key=lambda t: -rc[t])})
+    rows.sort(key=lambda r: -r["risk_pct"])
+    top = rows[0]
+    flags = [f"{r['group']} carries {r['risk_pct']:.0f}% of book risk ≥ {GROUP_RISK_FLAG_PCT:.0f}% (PROPOSED limit)"
+             for r in rows if r["risk_pct"] >= GROUP_RISK_FLAG_PCT]
+    book_vol = float(book.std() * math.sqrt(252) * 100)
+    out.update(available=True, groups=rows, flags=flags, book_vol_pct=round(book_vol, 1),
+               tickers=[{"ticker": t, "weight_pct": round(float(w[t] * 100), 1), "risk_pct": round(rc[t], 1)}
+                        for t in sorted(rc, key=lambda t: -rc[t])],
+               missing=missing, asof=R.index[-1].date().isoformat(),
+               conclusion=(f"{top['group']} is {top['weight_pct']:.0f}% of the book's weight and "
+                           f"{top['risk_pct']:.0f}% of its risk over {lookback} sessions "
+                           f"(book volatility {book_vol:.1f}%). "
+                           + ("⚠ " + "; ".join(flags) + "." if flags else
+                              f"No group is above the PROPOSED {GROUP_RISK_FLAG_PCT:.0f}% line.")
+                           + " Negative = the group offset book risk.")) 
+    return out
+
+
 # ── 3. volatility target ────────────────────────────────────────────────────
 
 def vol_scale(realized_pct: Optional[float], target_pct: float = VOL_TARGET_PCT) -> Optional[float]:
@@ -299,6 +374,30 @@ def selftest() -> dict:
     vt = vol_target(bk)
     if not vt["available"] or vt["scale"] is None or vt["scale"] > 0.75 or vt["applied"]:
         f.append(f"a ~32% vol book must scale well below 1 and never be applied: {vt}")
+    # risk by group: contributions add to 100; a high-beta group dominates; a hedge is negative
+    rng2 = np.random.default_rng(5)
+    mkt = rng2.normal(0, 0.01, len(idx))
+    cl3 = {"VGT": px(1.6 * mkt + rng2.normal(0, 0.002, len(idx))),
+           "SCHD": px(0.6 * mkt + rng2.normal(0, 0.002, len(idx))),
+           "TLT": px(-0.4 * mkt + rng2.normal(0, 0.002, len(idx))),
+           "SGOV": pd.Series(np.linspace(100, 101, len(idx)), index=idx)}
+    rg = risk_by_group({"VGT": 25, "SCHD": 30, "TLT": 15, "SGOV": 30}, cl3)
+    if not rg["available"]:
+        f.append(f"risk_by_group must be available: {rg.get('conclusion')}")
+    else:
+        tot = sum(g["risk_pct"] for g in rg["groups"])
+        if abs(tot - 100) > 0.5:
+            f.append(f"group risk contributions must add to 100%: {tot}")
+        top = rg["groups"][0]
+        if top["group"] != "AI / growth tech" or top["risk_pct"] <= 25 * 1.5:
+            f.append(f"a 1.6-beta growth sleeve at 25% weight must carry far more than its weight in risk: {top}")
+        dur = next(g for g in rg["groups"] if g["group"] == "Duration")
+        if dur["risk_pct"] >= 0:
+            f.append(f"a negatively correlated duration sleeve must have a negative contribution: {dur}")
+        if not rg["flags"]:
+            f.append("a group above 40% of book risk must be flagged")
+    if risk_by_group({"VGT": 50, "XYZ": 50}, {"VGT": cl3["VGT"]})["available"]:
+        f.append("half the book unpriced must be unavailable, not a reading")
     return {"ok": not f, "failures": f}
 
 

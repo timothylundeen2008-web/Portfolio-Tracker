@@ -1,6 +1,9 @@
 """
-daily_brief.py  (v1.6 — November 2026)
-─────────────────────────────────────
+daily_brief.py  (v1.6.2 — November 2026)
+───────────────────────────────────────
+v1.6.2 (2026-11-07): model section adds book_risk.risk_by_group (share of
+  book variance by group, PROPOSED 40% line); SPY and 60/40 benchmarks now
+  come from model_vs_spy.build_frame, the function the app's chart uses.
 v1.6 (2026-11-07, fix_status N12/N37-N41): cross-asset lanes get 20-session
   credit and real-yield momentum (credit WATCH at +30bp/20 sessions; rates
   note shows both horizons). Model section adds book_risk.py readings:
@@ -136,6 +139,10 @@ try:                                   # v1.6.1: load-time import (the selftest 
     import book_risk as _book_risk
 except Exception:                      # the brief still runs; the model section says what is missing
     _book_risk = None
+try:                                   # v1.6.2: one benchmark method for the brief and the app
+    import model_vs_spy as _model_vs_spy
+except Exception:
+    _model_vs_spy = None
 
 SUMMARY_DIR = Path("logs/summaries")
 STATE_DIR = Path("logs/brief")
@@ -2029,10 +2036,13 @@ def model_section(inp: dict, rg: dict) -> dict:
         out["attribution"] = _br.attribution(book, closes)
         out["ai_exposure"] = _br.ai_exposure(sm["weights"], closes)
         out["vol_target"] = _br.vol_target(book)
+        out["risk_by_group"] = _br.risk_by_group(sm["weights"], closes)
         if (out["ai_exposure"] or {}).get("flags"):
             c += " ⚠ " + "; ".join(out["ai_exposure"]["flags"]) + "."
+        if (out["risk_by_group"] or {}).get("flags"):
+            c += " ⚠ " + "; ".join(out["risk_by_group"]["flags"]) + "."
     except Exception as e:
-        out["attribution"] = out["ai_exposure"] = out["vol_target"] = {
+        out["attribution"] = out["ai_exposure"] = out["vol_target"] = out["risk_by_group"] = {
             "available": False, "conclusion": f"book_risk unavailable: {type(e).__name__}: {e}"}
     out.update(available=True, summary=sm, rows=rows, actions=actions, weekend=weekend,
                conclusion=c.strip(), _book=book, path=str(path), regime_held=failed_regime)
@@ -2041,28 +2051,25 @@ def model_section(inp: dict, rg: dict) -> dict:
 
 def _model_benchmarks(book: pd.DataFrame, closes: dict) -> dict:
     """Model NAV vs SPY and a daily-rebalanced 60/40 (SPY/AGG), over the book's
-    own dates. Display only — never a rule input."""
+    own dates. Display only — never a rule input. v1.6.2: computed by
+    model_vs_spy.build_frame, the same function the app's chart uses."""
     out = {"since": None, "model_pct": None, "spy_pct": None, "sixty_forty_pct": None}
     try:
         if book is None or book.empty:
             return out
         b = book.assign(date=pd.to_datetime(book["date"]).dt.normalize()).sort_values("date")
-        d0, d1 = b["date"].iloc[0], b["date"].iloc[-1]
-        out["since"] = d0.date().isoformat()
+        out["since"] = b["date"].iloc[0].date().isoformat()
         out["model_pct"] = round((float(b["nav"].iloc[-1]) / float(b["nav"].iloc[0]) - 1) * 100, 2)
-
-        def _s(t):
-            s = closes.get(t, pd.Series(dtype=float)).dropna()
-            if getattr(s.index, "tz", None) is not None:
-                s.index = s.index.tz_localize(None)
-            s.index = pd.to_datetime(s.index).normalize()
-            return s[(s.index >= d0) & (s.index <= d1)]
-        spy, agg = _s("SPY"), _s("AGG")
-        if len(spy) > 1 and spy.index[0] == d0:
-            out["spy_pct"] = round((float(spy.iloc[-1]) / float(spy.iloc[0]) - 1) * 100, 2)
-        if len(spy) > 1 and len(agg) > 1 and spy.index[0] == d0 and agg.index[0] == d0:
-            r = (0.6 * spy.pct_change() + 0.4 * agg.pct_change()).dropna()
-            out["sixty_forty_pct"] = round((float((1 + r).prod()) - 1) * 100, 2)
+        if _model_vs_spy is None:
+            return out
+        f, inf = _model_vs_spy.build_frame(book, closes.get("SPY"), closes.get("AGG"))
+        if f is None or f.empty:
+            return out
+        st = inf["stats"]
+        out["spy_pct"] = round(st["SPY"]["ret"], 2)
+        if "60/40" in st:
+            out["sixty_forty_pct"] = round(st["60/40"]["ret"], 2)
+        out["through"] = st.get("last")
     except Exception:
         pass
     return out
@@ -2723,6 +2730,16 @@ def render_md(b: dict) -> str:
                         f"{r['ticker']} {r['weight']:.0f}% × {r['b_ai']:+.2f} = {r['ai_pct']:+.1f}%" for r in _r)
                         + f". Limits {_ai['flag_exposure_pct']:.0f}% exposure / {_ai['flag_risk_share_pct']:.0f}% "
                           "of variance are PROPOSED._")
+        _rg = md_.get("risk_by_group") or {}
+        if _rg.get("conclusion"):
+            L += ["", f"**Risk by group** ({_rg.get('lookback', 60)} sessions; share of book variance, "
+                      "contributions add to 100%): " + _rg["conclusion"]]
+            if _rg.get("available"):
+                L += ["| Group | Weight % | Share of risk % | Group vol % | Corr. with rest |", "|---|---|---|---|---|"]
+                for g_ in _rg["groups"]:
+                    L.append(f"| {g_['group']} | {g_['weight_pct']:.1f} | {g_['risk_pct']:+.1f} | "
+                             + (f"{g_['vol_pct']:.1f}" if g_.get("vol_pct") is not None else "—") + " | "
+                             + (f"{g_['corr_rest']:+.2f}" if g_.get("corr_rest") is not None else "—") + " |")
         _vt = md_.get("vol_target") or {}
         if _vt.get("conclusion"):
             L += ["", f"**Volatility target** (display only): {_vt['conclusion']}"]
@@ -3479,9 +3496,18 @@ def selftest() -> dict:
             f.append(f"model benchmarks (SPY, 60/40) must be computed when priced: {_bm}")
         # (e) v1.6: attribution, AI exposure, vol target, market-implied path
         m5 = b5["model"]
-        if "attribution" not in m5 or "ai_exposure" not in m5 or "vol_target" not in m5:
-            f.append("the model section must carry attribution, ai_exposure and vol_target")
-        elif m5["vol_target"].get("applied"):
+        if "attribution" not in m5 or "ai_exposure" not in m5 or "vol_target" not in m5 \
+                or "risk_by_group" not in m5:
+            f.append("the model section must carry attribution, ai_exposure, vol_target and risk_by_group")
+        elif (m5["risk_by_group"] or {}).get("available"):
+            _tot = sum(g_["risk_pct"] for g_ in m5["risk_by_group"]["groups"])
+            if abs(_tot - 100) > 1.0:
+                f.append(f"risk by group must add to 100%: {_tot}")
+            if "Risk by group" not in render_md(b5):
+                f.append("the brief must render the risk-by-group table")
+        elif (m5.get("attribution") or {}).get("available"):
+            f.append(f"risk by group must be available when attribution is: {m5['risk_by_group'].get('conclusion')}")
+        if (m5.get("vol_target") or {}).get("applied"):
             f.append("the volatility target must never be applied to the book (display only)")
         _at = m5.get("attribution") or {}
         if _at.get("available"):

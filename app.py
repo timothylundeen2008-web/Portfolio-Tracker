@@ -1677,6 +1677,7 @@ with tab4:
                                  "Pending until", "Hold trend (200-day)", "1M %", "3M %",
                                  "3M vs SPY (pp)", "12-1 %"] if c in _rows.columns]
             _fmt = {c: "{:+.1f}" for c in ("1M %", "3M %", "3M vs SPY (pp)", "12-1 %") if c in _cols}
+            _fmt.update({c: f for c, f in (("Should hold %", "{:.1f}"), ("Change today", "{:+.1f}")) if c in _cols})
             st.dataframe(_rows[_cols].style.format(_fmt, na_rep="—"),
                          use_container_width=True, hide_index=True)
             if "12-1 %" in _cols:
@@ -1721,6 +1722,21 @@ with tab4:
                           help="PROPOSED limit 40%.")
                 a3.metric("Direct AI / growth sleeves", f"{_ai['direct_growth_pct']:.0f}%")
             (st.warning if _ai.get("flags") else st.caption)(_ai["conclusion"])
+        # v1.1: risk by group — share of book variance next to share of weight
+        _rg = _mdl.get("risk_by_group") or {}
+        if _rg.get("conclusion"):
+            st.markdown("#### Risk by group")
+            if _rg.get("available"):
+                _gdf = pd.DataFrame(_rg["groups"])[["group", "weight_pct", "risk_pct", "vol_pct", "corr_rest"]]
+                _gdf.columns = ["Group", "Weight %", "Share of book risk %", "Group volatility %",
+                                "Correlation with rest of book"]
+                st.dataframe(_gdf.style.format({"Weight %": "{:.1f}", "Share of book risk %": "{:+.1f}",
+                                                "Group volatility %": "{:.1f}",
+                                                "Correlation with rest of book": "{:+.2f}"}, na_rep="—"),
+                             use_container_width=True, hide_index=True)
+            (st.warning if _rg.get("flags") else st.caption)(
+                _rg["conclusion"] + f" Share of risk = weight × covariance with the book ÷ book variance, "
+                f"{_rg.get('lookback', 60)} sessions; contributions add to 100%. The 40% line is PROPOSED.")
         _vt = _mdl.get("vol_target") or {}
         if _vt.get("conclusion"):
             st.caption("**Volatility target (display only):** " + _vt["conclusion"])

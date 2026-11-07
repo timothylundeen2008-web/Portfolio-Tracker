@@ -1,5 +1,9 @@
 """
-model_vs_spy.py — the model portfolio's REAL track record against SPY and 60/40.
+model_vs_spy.py (v1.1) — the model portfolio's REAL track record against SPY and 60/40.
+
+v1.1 (2026-11-07): the brief now uses this same function for its SPY and 60/40
+figures (they differed: app −2.61% vs brief −2.80% on 11/06). AGG is carried
+forward over a missing bar instead of dropping the day or treating it as flat.
 
 Source of truth is data/model_book.csv (the NAV the circuit breaker, the brief
 and the Model Portfolio panel all use). It is NOT the static-weight backtest on
@@ -38,8 +42,14 @@ def build_frame(book: pd.DataFrame, spy: pd.Series, agg: pd.Series | None = None
     if agg is not None:
         agg = _clean(agg)
         if not agg.empty and d0 in agg.index:
-            r = (0.6 * spy.pct_change() + 0.4 * agg.pct_change()).reindex(idx).fillna(0.0)
-            f["60/40"] = (1 + r).cumprod() * 100
+            # v1.1: one method for the app and the brief. AGG is carried forward over
+            # a missing bar (max 3 sessions) on SPY's calendar, and the 60/40 is
+            # compounded over EVERY trading day from d0, then sampled on book dates.
+            cal = spy.index[spy.index >= d0]
+            a = agg.reindex(spy.index).ffill(limit=3)
+            r = (0.6 * spy.pct_change() + 0.4 * a.pct_change()).reindex(cal).fillna(0.0)
+            r.iloc[0] = 0.0
+            f["60/40"] = ((1 + r).cumprod() * 100).reindex(idx)
     live = b.index[b["source"].astype(str).str.lower() == "live"] if "source" in b else []
     first_live = live[0] if len(live) else None
 
