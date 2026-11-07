@@ -1,6 +1,6 @@
 {
  "session": "2026-11-06",
- "generated_et": "Nov 06, 2026 04:28 PM EST",
+ "generated_et": "Nov 06, 2026 09:22 PM EST",
  "scoreboard": {
   "rows": [
    {
@@ -21,66 +21,66 @@
    },
    {
     "name": "10Y real yield (DFII10)",
-    "value": 2.64,
+    "value": 2.6,
     "unit": "%",
     "kind": "rate",
-    "d1": -0.009999999999999787,
+    "d1": -0.040000000000000036,
     "d5": -0.029999999999999805,
-    "d20": -0.27,
-    "d1_txt": "-1bp",
+    "d20": -0.31999999999999984,
+    "d1_txt": "-4bp",
     "d5_txt": "-3bp",
-    "d20_txt": "-27bp",
-    "pctile_1y": 90.0,
-    "z1d": -0.3,
-    "asof": "2026-11-04",
+    "d20_txt": "-32bp",
+    "pctile_1y": 86.0,
+    "z1d": -1.1,
+    "asof": "2026-11-05",
     "source": "FRED DFII10"
    },
    {
     "name": "10Y Treasury",
-    "value": 4.9,
+    "value": 4.84,
     "unit": "%",
     "kind": "rate",
-    "d1": -0.04999999999999982,
-    "d5": -0.14999999999999947,
-    "d20": -0.3699999999999992,
-    "d1_txt": "-5bp",
-    "d5_txt": "-15bp",
-    "d20_txt": "-37bp",
+    "d1": -0.0600000000000005,
+    "d5": -0.14000000000000057,
+    "d20": -0.4400000000000004,
+    "d1_txt": "-6bp",
+    "d5_txt": "-14bp",
+    "d20_txt": "-44bp",
     "pctile_1y": 85.0,
-    "z1d": -1.1,
-    "asof": "2026-11-04",
+    "z1d": -1.4,
+    "asof": "2026-11-05",
     "source": "FRED DGS10"
    },
    {
     "name": "2Y Treasury",
-    "value": 4.58,
+    "value": 4.46,
     "unit": "%",
     "kind": "rate",
-    "d1": -0.03000000000000025,
-    "d5": -0.08999999999999986,
-    "d20": -0.20999999999999996,
-    "d1_txt": "-3bp",
-    "d5_txt": "-9bp",
-    "d20_txt": "-21bp",
-    "pctile_1y": 86.0,
-    "z1d": -0.6,
-    "asof": "2026-11-04",
+    "d1": -0.1200000000000001,
+    "d5": -0.15000000000000036,
+    "d20": -0.3099999999999996,
+    "d1_txt": "-12bp",
+    "d5_txt": "-15bp",
+    "d20_txt": "-31bp",
+    "pctile_1y": 85.0,
+    "z1d": -2.5,
+    "asof": "2026-11-05",
     "source": "FRED DGS2"
    },
    {
     "name": "10Y breakeven",
-    "value": 2.24,
+    "value": 2.23,
     "unit": "%",
     "kind": "rate",
-    "d1": -0.019999999999999574,
+    "d1": -0.010000000000000231,
     "d5": -0.10999999999999988,
-    "d20": -0.11999999999999966,
-    "d1_txt": "-2bp",
+    "d20": -0.1200000000000001,
+    "d1_txt": "-1bp",
     "d5_txt": "-11bp",
     "d20_txt": "-12bp",
-    "pctile_1y": 16.0,
-    "z1d": -1.0,
-    "asof": "2026-11-05",
+    "pctile_1y": 10.0,
+    "z1d": -0.5,
+    "asof": "2026-11-06",
     "source": "FRED T10YIE"
    },
    {
@@ -133,28 +133,28 @@
    },
    {
     "name": "VIX",
-    "value": 25.579999923706055,
+    "value": 25.639999389648438,
     "unit": "",
     "kind": "level",
-    "d1": -9.226401974073617,
-    "d5": 31.719876023203163,
-    "d20": 72.3719671408764,
-    "d1_txt": "-9.2%",
-    "d5_txt": "+31.7%",
-    "d20_txt": "+72.4%",
+    "d1": -9.013486906854373,
+    "d5": 32.028833108385356,
+    "d20": 72.776276210569,
+    "d1_txt": "-9.0%",
+    "d5_txt": "+32.0%",
+    "d20_txt": "+72.8%",
     "pctile_1y": 95.0,
-    "z1d": -1.1,
+    "z1d": -1.0,
     "asof": "2026-11-06",
     "source": "FRED VIXCLS"
    },
    {
     "name": "WTI crude",
-    "value": 90.85514868690137,
+    "value": 90.85010395730882,
     "unit": "$",
     "kind": "index",
-    "d1": 0.35937785857409477,
-    "d5": -12.739967066622182,
-    "d20": -1.0831244461043998,
+    "d1": 0.3537956366425954,
+    "d5": -12.744812177512955,
+    "d20": -1.0886168028560128,
     "d1_txt": "+0.4%",
     "d5_txt": "-12.7%",
     "d20_txt": "-1.1%",
@@ -165,15 +165,15 @@
    },
    {
     "name": "S&P 500 (SPY)",
-    "value": 735.3599853515625,
+    "value": 735.2899780273438,
     "unit": "$",
     "kind": "index",
-    "d1": 0.3219625309089258,
-    "d5": -2.6941176812648626,
-    "d20": -5.5499212101889235,
+    "d1": 0.31241173633611563,
+    "d5": -2.7033813406800777,
+    "d20": -5.558912993016429,
     "d1_txt": "+0.3%",
     "d5_txt": "-2.7%",
-    "d20_txt": "-5.5%",
+    "d20_txt": "-5.6%",
     "pctile_1y": 56.0,
     "z1d": 0.4,
     "asof": "2026-11-06",
@@ -197,12 +197,12 @@
    },
    {
     "name": "Gold (GLD)",
-    "value": 372.5799865722656,
+    "value": 372.5199890136719,
     "unit": "$",
     "kind": "index",
-    "d1": -0.7749883453066153,
-    "d5": 4.7220158105038434,
-    "d20": -3.1202871753559402,
+    "d1": -0.7909668161458328,
+    "d5": 4.705152142282021,
+    "d20": -3.135887976408669,
     "d1_txt": "-0.8%",
     "d5_txt": "+4.7%",
     "d20_txt": "-3.1%",
@@ -229,12 +229,12 @@
    },
    {
     "name": "Equal/cap weight (RSP/SPY)",
-    "value": 0.2938016853724617,
+    "value": 0.29382965837693414,
     "unit": "",
     "kind": "index",
-    "d1": -0.6978188653323447,
-    "d5": 1.704825040187563,
-    "d20": 7.371943081634891,
+    "d1": -0.6883642553171421,
+    "d5": 1.7145084071230166,
+    "d20": 7.382166017695413,
     "d1_txt": "-0.7%",
     "d5_txt": "+1.7%",
     "d20_txt": "+7.4%",
@@ -260,6 +260,22 @@
     "z1d": 3.0,
     "asof": "2026-11-05",
     "source": "FRED BAMLH0A0HYM2"
+   },
+   {
+    "name": "2Y Treasury",
+    "value": 4.46,
+    "unit": "%",
+    "kind": "rate",
+    "d1": -0.1200000000000001,
+    "d5": -0.15000000000000036,
+    "d20": -0.3099999999999996,
+    "d1_txt": "-12bp",
+    "d5_txt": "-15bp",
+    "d20_txt": "-31bp",
+    "pctile_1y": 85.0,
+    "z1d": -2.5,
+    "asof": "2026-11-05",
+    "source": "FRED DGS2"
    },
    {
     "name": "IG OAS",
@@ -329,22 +345,22 @@
    },
    {
     "name": "VIX",
-    "value": 25.579999923706055,
+    "value": 25.639999389648438,
     "unit": "",
     "kind": "level",
-    "d1": -9.226401974073617,
-    "d5": 31.719876023203163,
-    "d20": 72.3719671408764,
-    "d1_txt": "-9.2%",
-    "d5_txt": "+31.7%",
-    "d20_txt": "+72.4%",
+    "d1": -9.013486906854373,
+    "d5": 32.028833108385356,
+    "d20": 72.776276210569,
+    "d1_txt": "-9.0%",
+    "d5_txt": "+32.0%",
+    "d20_txt": "+72.8%",
     "pctile_1y": 95.0,
-    "z1d": -1.1,
+    "z1d": -1.0,
     "asof": "2026-11-06",
     "source": "FRED VIXCLS"
    }
   ],
-  "conclusion": "Unusual moves today: HY OAS +16bp (+3.0\u03c3); IG OAS +2bp (+1.8\u03c3). Everything else moved inside its normal daily range. At a 1-year extreme: HY OAS (100th pctile), IG OAS (99th pctile), Broad dollar (DTWEXBGS) (96th pctile), VIX (95th pctile)."
+  "conclusion": "Unusual moves today: HY OAS +16bp (+3.0\u03c3); 2Y Treasury -12bp (-2.5\u03c3); IG OAS +2bp (+1.8\u03c3). Everything else moved inside its normal daily range. At a 1-year extreme: HY OAS (100th pctile), IG OAS (99th pctile), Broad dollar (DTWEXBGS) (96th pctile), VIX (95th pctile)."
  },
  "market_read": {
   "items": [
@@ -352,8 +368,8 @@
     "topic": "What moved long yields",
     "verdict": "Over 20 days, long yields FELL on real yields \u2014 discount-rate pressure on long-duration assets is easing",
     "evidence": [
-     "10Y 4.90% (FRED, 2026-11-04): 20-day -37bp = real -27bp + breakeven -10bp",
-     "Last FRED session: -5bp = real -1bp + breakeven -4bp",
+     "10Y 4.84% (FRED, 2026-11-05): 20-day -44bp = real -32bp + breakeven -12bp",
+     "Last FRED session: -6bp = real -4bp + breakeven -2bp",
      "Growth vs value (VUG/VTV) -11.6% over 20 days",
      "\u26a0 Growth is lagging value even though real yields fell, so the drag on growth is coming from something other than rates (check earnings and company news), not from the discount rate"
     ],
@@ -366,7 +382,7 @@
     "verdict": "Quiet index day (+0.3%), with a split underneath (Nasdaq-100 +1.4% vs equal-weight -0.4%)",
     "evidence": [
      "SPY +0.3% \u00b7 equal-weight RSP -0.4% \u00b7 Nasdaq-100 QQQ +1.4% (2026-11-06)",
-     "60% of the 109-name proxy universe above its 50-day",
+     "61% of the 109-name proxy universe above its 50-day",
      "Equal vs cap weight over 20 days +7.4% (participation broadening)"
     ],
     "rule": "A down day is megacap-led when equal-weight (RSP) beats cap-weight (SPY) by 0.5pp or more, and broad when most names are below their 50-day. Index days under \u00b10.5% are quiet.",
@@ -377,7 +393,7 @@
     "topic": "De-risking or rotation",
     "verdict": "No cross-asset risk event: the index moved less than \u00b11.0% (+0.3%)",
     "evidence": [
-     "SPY +0.3% \u00b7 gold (GLD) -0.8% \u00b7 long Treasuries (TLT) -0.0% \u00b7 VIX 25.6 (-2.6) (2026-11-06)",
+     "SPY +0.3% \u00b7 gold (GLD) -0.8% \u00b7 long Treasuries (TLT) -0.0% \u00b7 VIX 25.6 (-2.5) (2026-11-06)",
      "HY OAS 3.48% (+16bp) (FRED print dated 2026-11-05, one session behind prices)"
     ],
     "rule": "A risk day is an index move of \u00b11.0% or more. De-risking = stocks AND gold both down 1.0%+ with long Treasuries up; flight to quality = stocks down, Treasuries up, gold holding; stocks and Treasuries down together = a rates or inflation scare.",
@@ -400,9 +416,9 @@
     }
    }
   ],
-  "dates_note": "Prices as of 2026-11-06; FRED rates and credit as of 2026-11-04 (FRED runs one session behind prices).",
+  "dates_note": "Prices as of 2026-11-06; FRED rates and credit as of 2026-11-05 (FRED runs one session behind prices).",
   "price_asof": "2026-11-06",
-  "fred_asof": "2026-11-04"
+  "fred_asof": "2026-11-05"
  },
  "regime": {
   "available": true,
@@ -438,16 +454,16 @@
     "label": "Short real rate",
     "unit": "pp",
     "now": 0.14,
-    "delta": 0.12,
-    "at": 0.26,
-    "to": "restrictive_tightening",
+    "delta": -0.4,
+    "at": -0.26,
+    "to": "inflationary_repression",
     "typical_days": null,
-    "note": "\u22480.5 \u00d7 a 25bp policy move, or the CPI equivalent"
+    "note": "\u22481.6 \u00d7 a 25bp policy move, or the CPI equivalent"
    }
   ],
   "flip_error": null,
   "guards": [
-   "cape: 38.79 (live, as of 2026-11-06)",
+   "cape: 38.91 (live, as of 2026-11-06)",
    "top20 concentration pct: 48.48 (live, as of 2026-11-06) \u2014 top 20 SPY weights summed",
    "fed bs expanding: False (live, as of 2026-11-04) \u2014 flat / neutral: 4-wk avg +0.1B/wk, 13-wk avg -0.0B/wk",
    "deficit gt 5pct gdp: True (manual, as of 2026-08-13, 85d old)"
@@ -557,7 +573,7 @@
       "pending": 0.5,
       "gate": "PULLBACK",
       "trigger": "close back above the 50-day (30.71)",
-      "detail": "+1.3% above a rising 200d but -4.9% below the 50d \u2014 pullback in an uptrend: half now"
+      "detail": "+0.9% above a rising 200d but -5.3% below the 50d \u2014 pullback in an uptrend: half now"
      },
      {
       "ticker": "SCHD",
@@ -622,11 +638,11 @@
     "ticker": "KMLM",
     "state": "PULLBACK",
     "fraction": 0.5,
-    "close": 29.21,
+    "close": 29.09,
     "ma50": 30.71,
-    "ma200": 28.85,
+    "ma200": 28.83,
     "ma200_rising": true,
-    "detail": "+1.3% above a rising 200d but -4.9% below the 50d \u2014 pullback in an uptrend: half now",
+    "detail": "+0.9% above a rising 200d but -5.3% below the 50d \u2014 pullback in an uptrend: half now",
     "trigger": "close back above the 50-day (30.71)"
    },
    "SCHD": {
@@ -677,8 +693,8 @@
    },
    "rates": {
     "state": "STRESS",
-    "reading": "2.64% / 30y 5.28%",
-    "note": "Long real yields rising from an already-high level: duration headwind and growth-multiple compression. Breakevens 2.24% are LOW and not confirming an inflation story \u2014 this is TERM PREMIUM (supply / fiscal credibility), not inflation expectations. TIPS over nominals; short duration over long."
+    "reading": "2.60% / 30y 5.25%",
+    "note": "Long real yields rising from an already-high level: duration headwind and growth-multiple compression. Breakevens 2.23% are LOW and not confirming an inflation story \u2014 this is TERM PREMIUM (supply / fiscal credibility), not inflation expectations. TIPS over nominals; short duration over long."
    },
    "vol": {
     "state": "WATCH",
@@ -708,24 +724,14 @@
  },
  "rotation": {
   "available": true,
-  "published_at": "2026-11-06T01:49:21+00:00",
+  "published_at": "2026-11-07T01:12:52+00:00",
   "sectors": [
-   {
-    "ticker": "XLF",
-    "sector": "Financial",
-    "quadrant": "Leading",
-    "direction": "Strengthening",
-    "accumulation": 56.49,
-    "stealth": true,
-    "prior_quadrant": "Leading",
-    "agree": true
-   },
    {
     "ticker": "XLV",
     "sector": "Healthcare",
     "quadrant": "Leading",
     "direction": "Strengthening",
-    "accumulation": 32.26,
+    "accumulation": 11.46,
     "stealth": false,
     "prior_quadrant": "Leading",
     "agree": true
@@ -735,9 +741,19 @@
     "sector": "Utilities",
     "quadrant": "Improving",
     "direction": "Weakening",
-    "accumulation": 64.57,
+    "accumulation": 56.75,
     "stealth": true,
     "prior_quadrant": "Improving",
+    "agree": true
+   },
+   {
+    "ticker": "XLF",
+    "sector": "Financial",
+    "quadrant": "Improving",
+    "direction": "Bottoming",
+    "accumulation": 42.47,
+    "stealth": true,
+    "prior_quadrant": "Leading",
     "agree": true
    },
    {
@@ -745,7 +761,7 @@
     "sector": "Consumer Cyclical",
     "quadrant": "Improving",
     "direction": "Bottoming",
-    "accumulation": 39.5,
+    "accumulation": 17.85,
     "stealth": false,
     "prior_quadrant": "Improving",
     "agree": true
@@ -755,7 +771,7 @@
     "sector": "Communication Services",
     "quadrant": "Improving",
     "direction": "Weakening",
-    "accumulation": -39.64,
+    "accumulation": -47.99,
     "stealth": false,
     "prior_quadrant": "Improving",
     "agree": false
@@ -765,17 +781,47 @@
     "sector": "Basic Materials",
     "quadrant": "Weakening",
     "direction": "Topping",
-    "accumulation": 68.28,
-    "stealth": true,
+    "accumulation": 54.33,
+    "stealth": false,
     "prior_quadrant": "Weakening",
+    "agree": false
+   },
+   {
+    "ticker": "XLE",
+    "sector": "Energy",
+    "quadrant": "Weakening",
+    "direction": "Topping",
+    "accumulation": 0.01,
+    "stealth": false,
+    "prior_quadrant": null,
+    "agree": false
+   },
+   {
+    "ticker": "XLP",
+    "sector": "Consumer Defensive",
+    "quadrant": "Weakening",
+    "direction": "Weakening",
+    "accumulation": -12.74,
+    "stealth": false,
+    "prior_quadrant": "Weakening",
+    "agree": true
+   },
+   {
+    "ticker": "XLI",
+    "sector": "Industrials",
+    "quadrant": "Lagging",
+    "direction": "Topping",
+    "accumulation": 40.58,
+    "stealth": false,
+    "prior_quadrant": "Lagging",
     "agree": false
    },
    {
     "ticker": "XLRE",
     "sector": "Real Estate",
-    "quadrant": "Weakening",
-    "direction": "Topping",
-    "accumulation": 32.87,
+    "quadrant": "Lagging",
+    "direction": "Weakening",
+    "accumulation": 35.75,
     "stealth": false,
     "prior_quadrant": "Weakening",
     "agree": false
@@ -783,36 +829,22 @@
    {
     "ticker": "XLK",
     "sector": "Technology",
-    "quadrant": "Weakening",
-    "direction": "Strengthening",
-    "accumulation": 12.44,
-    "stealth": false,
-    "prior_quadrant": "Weakening",
-    "agree": false
-   },
-   {
-    "ticker": "XLP",
-    "sector": "Consumer Defensive",
-    "quadrant": "Weakening",
-    "direction": "Topping",
-    "accumulation": 3.0,
-    "stealth": false,
-    "prior_quadrant": "Weakening",
-    "agree": false
-   },
-   {
-    "ticker": "XLI",
-    "sector": "Industrials",
     "quadrant": "Lagging",
-    "direction": "Topping",
-    "accumulation": 69.52,
-    "stealth": true,
-    "prior_quadrant": "Lagging",
-    "agree": false
+    "direction": "Strengthening",
+    "accumulation": -37.65,
+    "stealth": false,
+    "prior_quadrant": "Weakening",
+    "agree": true
    }
   ],
-  "changes": [],
-  "ccw": [],
+  "changes": [
+   "XLF Leading \u2192 Improving",
+   "XLRE Weakening \u2192 Lagging",
+   "XLK Weakening \u2192 Lagging"
+  ],
+  "ccw": [
+   "XLF Leading \u2192 Improving (counter-clockwise: the prior phase is reversing)"
+  ],
   "has_prior": true,
   "compass": [
    {
@@ -832,7 +864,7 @@
    {
     "name": "Equal vs cap weight",
     "r20": 7.4,
-    "r60": 2.7,
+    "r60": 2.8,
     "arrow": "\u2191",
     "read": "broadening participation"
    },
@@ -895,409 +927,404 @@
   ],
   "grounds": {
    "long": [
-    "XLF",
     "XLV",
     "XLU",
+    "XLF",
     "XLY"
    ],
    "price_only": [
     "XLC"
    ],
-   "short": []
+   "short": [
+    "XLP",
+    "XLK"
+   ]
   },
-  "conclusion": "Confirmed leadership in XLF, XLV, XLU, XLY (price and money agree). XLC is rotating in on price with negative accumulation \u2014 a bounce without sponsorship, not a rotation."
+  "conclusion": "Confirmed leadership in XLV, XLU, XLF, XLY (price and money agree). XLC is rotating in on price with negative accumulation \u2014 a bounce without sponsorship, not a rotation. Counter-clockwise moves today: XLF Leading \u2192 Improving (counter-clockwise: the prior phase is reversing)."
  },
  "flow": {
   "available": true,
   "confirmed": [
    {
+    "ticker": "SOXX",
+    "price_chg_pct": -77.78,
+    "net_flow_pct_aum": 64.12,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true,
+    "measurable": true
+   },
+   {
+    "ticker": "ITA",
+    "price_chg_pct": -67.09,
+    "net_flow_pct_aum": 63.55,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true,
+    "measurable": true
+   },
+   {
     "ticker": "XRT",
-    "price_chg_pct": 12.99,
-    "net_flow_pct_aum": 33.71,
+    "price_chg_pct": 8.55,
+    "net_flow_pct_aum": 58.61,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
    },
    {
     "ticker": "KRE",
-    "price_chg_pct": 7.49,
-    "net_flow_pct_aum": 17.95,
-    "verdict": "CONFIRMED UPTREND",
-    "divergence": false,
-    "measurable": true
-   },
-   {
-    "ticker": "LQD",
-    "price_chg_pct": 2.67,
-    "net_flow_pct_aum": 16.67,
+    "price_chg_pct": 3.91,
+    "net_flow_pct_aum": 37.34,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
    },
    {
     "ticker": "KMLM",
-    "price_chg_pct": -5.58,
-    "net_flow_pct_aum": 12.89,
+    "price_chg_pct": -6.77,
+    "net_flow_pct_aum": 10.59,
     "verdict": "ACCUMULATION (price down, money in)",
     "divergence": true,
     "measurable": true
    },
    {
-    "ticker": "SOXX",
-    "price_chg_pct": -61.75,
-    "net_flow_pct_aum": 11.95,
+    "ticker": "LQD",
+    "price_chg_pct": 2.43,
+    "net_flow_pct_aum": 9.72,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false,
+    "measurable": true
+   },
+   {
+    "ticker": "XOP",
+    "price_chg_pct": -9.97,
+    "net_flow_pct_aum": 4.8,
     "verdict": "ACCUMULATION (price down, money in)",
     "divergence": true,
-    "measurable": true
-   },
-   {
-    "ticker": "USFR",
-    "price_chg_pct": 0.07,
-    "net_flow_pct_aum": 6.91,
-    "verdict": "CONFIRMED UPTREND",
-    "divergence": false,
-    "measurable": true
-   },
-   {
-    "ticker": "EMB",
-    "price_chg_pct": 1.99,
-    "net_flow_pct_aum": 4.83,
-    "verdict": "CONFIRMED UPTREND",
-    "divergence": false,
     "measurable": true
    },
    {
     "ticker": "XLV",
-    "price_chg_pct": 12.32,
-    "net_flow_pct_aum": 4.58,
+    "price_chg_pct": 9.96,
+    "net_flow_pct_aum": 4.67,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
    },
    {
     "ticker": "EWJ",
-    "price_chg_pct": -6.15,
-    "net_flow_pct_aum": 4.27,
+    "price_chg_pct": -9.85,
+    "net_flow_pct_aum": 4.31,
     "verdict": "ACCUMULATION (price down, money in)",
     "divergence": true,
+    "measurable": true
+   },
+   {
+    "ticker": "EMB",
+    "price_chg_pct": 1.66,
+    "net_flow_pct_aum": 4.06,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false,
+    "measurable": true
+   },
+   {
+    "ticker": "KBE",
+    "price_chg_pct": 4.3,
+    "net_flow_pct_aum": 3.36,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false,
     "measurable": true
    },
    {
     "ticker": "HACK",
-    "price_chg_pct": -4.19,
-    "net_flow_pct_aum": 3.24,
-    "verdict": "ACCUMULATION (price down, money in)",
-    "divergence": true,
-    "measurable": true
-   },
-   {
-    "ticker": "XOP",
-    "price_chg_pct": -4.73,
-    "net_flow_pct_aum": 2.94,
-    "verdict": "ACCUMULATION (price down, money in)",
-    "divergence": true,
-    "measurable": true
-   },
-   {
-    "ticker": "XLE",
-    "price_chg_pct": 0.23,
-    "net_flow_pct_aum": 2.7,
-    "verdict": "CONFIRMED UPTREND",
-    "divergence": false,
-    "measurable": true
-   },
-   {
-    "ticker": "IBB",
-    "price_chg_pct": 6.32,
-    "net_flow_pct_aum": 2.65,
-    "verdict": "CONFIRMED UPTREND",
-    "divergence": false,
-    "measurable": true
-   },
-   {
-    "ticker": "SMH",
-    "price_chg_pct": -20.01,
-    "net_flow_pct_aum": 2.57,
-    "verdict": "ACCUMULATION (price down, money in)",
-    "divergence": true,
-    "measurable": true
-   },
-   {
-    "ticker": "SLV",
-    "price_chg_pct": -14.86,
-    "net_flow_pct_aum": 2.35,
-    "verdict": "ACCUMULATION (price down, money in)",
-    "divergence": true,
-    "measurable": true
-   },
-   {
-    "ticker": "XLB",
-    "price_chg_pct": 9.99,
-    "net_flow_pct_aum": 2.27,
-    "verdict": "CONFIRMED UPTREND",
-    "divergence": false,
-    "measurable": true
-   },
-   {
-    "ticker": "SCHD",
-    "price_chg_pct": 10.88,
-    "net_flow_pct_aum": 2.1,
-    "verdict": "CONFIRMED UPTREND",
-    "divergence": false,
-    "measurable": true
-   },
-   {
-    "ticker": "MDY",
-    "price_chg_pct": -1.81,
-    "net_flow_pct_aum": 2.05,
-    "verdict": "ACCUMULATION (price down, money in)",
-    "divergence": true,
-    "measurable": true
-   },
-   {
-    "ticker": "RING",
-    "price_chg_pct": -3.42,
-    "net_flow_pct_aum": 1.94,
+    "price_chg_pct": -10.62,
+    "net_flow_pct_aum": 2.8,
     "verdict": "ACCUMULATION (price down, money in)",
     "divergence": true,
     "measurable": true
    },
    {
     "ticker": "XBI",
-    "price_chg_pct": 5.93,
-    "net_flow_pct_aum": 1.92,
+    "price_chg_pct": -0.53,
+    "net_flow_pct_aum": 2.39,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true,
+    "measurable": true
+   },
+   {
+    "ticker": "SLV",
+    "price_chg_pct": -14.59,
+    "net_flow_pct_aum": 2.32,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true,
+    "measurable": true
+   },
+   {
+    "ticker": "SMH",
+    "price_chg_pct": -29.64,
+    "net_flow_pct_aum": 2.31,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true,
+    "measurable": true
+   },
+   {
+    "ticker": "USFR",
+    "price_chg_pct": 0.05,
+    "net_flow_pct_aum": 2.1,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
    },
    {
-    "ticker": "SKYY",
-    "price_chg_pct": -7.74,
-    "net_flow_pct_aum": 1.74,
-    "verdict": "ACCUMULATION (price down, money in)",
-    "divergence": true,
-    "measurable": true
-   },
-   {
-    "ticker": "XLRE",
-    "price_chg_pct": 11.19,
-    "net_flow_pct_aum": 1.55,
+    "ticker": "SCHD",
+    "price_chg_pct": 6.82,
+    "net_flow_pct_aum": 2.09,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
    },
    {
-    "ticker": "PAVE",
-    "price_chg_pct": -0.39,
-    "net_flow_pct_aum": 1.39,
+    "ticker": "XLE",
+    "price_chg_pct": -5.38,
+    "net_flow_pct_aum": 2.07,
     "verdict": "ACCUMULATION (price down, money in)",
     "divergence": true,
     "measurable": true
    },
    {
-    "ticker": "SPY",
-    "price_chg_pct": -1.41,
-    "net_flow_pct_aum": 1.03,
-    "verdict": "ACCUMULATION (price down, money in)",
-    "divergence": true,
-    "measurable": true
-   },
-   {
-    "ticker": "TIP",
-    "price_chg_pct": 2.03,
-    "net_flow_pct_aum": 0.96,
+    "ticker": "XLB",
+    "price_chg_pct": 6.3,
+    "net_flow_pct_aum": 2.03,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
    },
    {
     "ticker": "XLF",
-    "price_chg_pct": 10.08,
-    "net_flow_pct_aum": 0.71,
+    "price_chg_pct": 6.09,
+    "net_flow_pct_aum": 1.94,
     "verdict": "CONFIRMED UPTREND",
     "divergence": false,
     "measurable": true
    },
    {
+    "ticker": "PPH",
+    "price_chg_pct": 10.68,
+    "net_flow_pct_aum": 1.76,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false,
+    "measurable": true
+   },
+   {
+    "ticker": "IBB",
+    "price_chg_pct": 1.13,
+    "net_flow_pct_aum": 1.68,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false,
+    "measurable": true
+   },
+   {
+    "ticker": "IHI",
+    "price_chg_pct": 14.44,
+    "net_flow_pct_aum": 1.51,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false,
+    "measurable": true
+   },
+   {
+    "ticker": "PAVE",
+    "price_chg_pct": -4.73,
+    "net_flow_pct_aum": 1.48,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true,
+    "measurable": true
+   },
+   {
+    "ticker": "SKYY",
+    "price_chg_pct": -13.82,
+    "net_flow_pct_aum": 1.48,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true,
+    "measurable": true
+   },
+   {
+    "ticker": "XLRE",
+    "price_chg_pct": 8.48,
+    "net_flow_pct_aum": 1.31,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false,
+    "measurable": true
+   },
+   {
+    "ticker": "TIP",
+    "price_chg_pct": 1.94,
+    "net_flow_pct_aum": 0.96,
+    "verdict": "CONFIRMED UPTREND",
+    "divergence": false,
+    "measurable": true
+   },
+   {
+    "ticker": "QQQ",
+    "price_chg_pct": -14.3,
+    "net_flow_pct_aum": 0.82,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true,
+    "measurable": true
+   },
+   {
+    "ticker": "MDY",
+    "price_chg_pct": -1.76,
+    "net_flow_pct_aum": 0.75,
+    "verdict": "ACCUMULATION (price down, money in)",
+    "divergence": true,
+    "measurable": true
+   },
+   {
     "ticker": "XLK",
-    "price_chg_pct": -12.42,
+    "price_chg_pct": -17.94,
     "net_flow_pct_aum": 0.67,
     "verdict": "ACCUMULATION (price down, money in)",
     "divergence": true,
     "measurable": true
    },
    {
-    "ticker": "XLP",
-    "price_chg_pct": 12.52,
-    "net_flow_pct_aum": 0.45,
-    "verdict": "CONFIRMED UPTREND",
-    "divergence": false,
-    "measurable": true
-   },
-   {
-    "ticker": "OIH",
-    "price_chg_pct": -7.1,
-    "net_flow_pct_aum": 0.25,
+    "ticker": "XLI",
+    "price_chg_pct": -3.52,
+    "net_flow_pct_aum": 0.52,
     "verdict": "ACCUMULATION (price down, money in)",
     "divergence": true,
     "measurable": true
    },
    {
-    "ticker": "QQQ",
-    "price_chg_pct": -7.69,
-    "net_flow_pct_aum": 0.24,
+    "ticker": "SPY",
+    "price_chg_pct": -5.26,
+    "net_flow_pct_aum": 0.47,
     "verdict": "ACCUMULATION (price down, money in)",
     "divergence": true,
-    "measurable": true
-   },
-   {
-    "ticker": "PPH",
-    "price_chg_pct": 13.57,
-    "net_flow_pct_aum": 0.16,
-    "verdict": "CONFIRMED UPTREND",
-    "divergence": false,
     "measurable": true
    },
    {
     "ticker": "IWO",
-    "price_chg_pct": -1.87,
+    "price_chg_pct": -5.02,
     "net_flow_pct_aum": 0.06,
     "verdict": "ACCUMULATION (price down, money in)",
     "divergence": true,
     "measurable": true
    },
    {
-    "ticker": "XLI",
-    "price_chg_pct": 0.93,
-    "net_flow_pct_aum": 0.02,
-    "verdict": "CONFIRMED UPTREND",
+    "ticker": "AMLP",
+    "price_chg_pct": -5.17,
+    "net_flow_pct_aum": -0.08,
+    "verdict": "CONFIRMED DOWNTREND",
     "divergence": false,
     "measurable": true
    },
    {
     "ticker": "GLD",
-    "price_chg_pct": -3.67,
+    "price_chg_pct": -0.73,
     "net_flow_pct_aum": -0.1,
     "verdict": "CONFIRMED DOWNTREND",
     "divergence": false,
     "measurable": false
    },
    {
-    "ticker": "AMLP",
-    "price_chg_pct": -3.26,
-    "net_flow_pct_aum": -0.1,
-    "verdict": "CONFIRMED DOWNTREND",
-    "divergence": false,
-    "measurable": true
-   },
-   {
     "ticker": "PDBC",
-    "price_chg_pct": -3.72,
-    "net_flow_pct_aum": -0.17,
+    "price_chg_pct": -2.85,
+    "net_flow_pct_aum": -0.25,
     "verdict": "CONFIRMED DOWNTREND",
     "divergence": false,
-    "measurable": true
-   },
-   {
-    "ticker": "TLT",
-    "price_chg_pct": 5.58,
-    "net_flow_pct_aum": -0.64,
-    "verdict": "DISTRIBUTION (price up, money out)",
-    "divergence": true,
-    "measurable": true
-   },
-   {
-    "ticker": "XLC",
-    "price_chg_pct": -5.68,
-    "net_flow_pct_aum": -0.9,
-    "verdict": "CONFIRMED DOWNTREND",
-    "divergence": false,
-    "measurable": true
-   },
-   {
-    "ticker": "ITA",
-    "price_chg_pct": -48.58,
-    "net_flow_pct_aum": -0.95,
-    "verdict": "CONFIRMED DOWNTREND",
-    "divergence": false,
-    "measurable": true
-   },
-   {
-    "ticker": "HYG",
-    "price_chg_pct": 0.59,
-    "net_flow_pct_aum": -1.63,
-    "verdict": "DISTRIBUTION (price up, money out)",
-    "divergence": true,
-    "measurable": true
-   },
-   {
-    "ticker": "PBJ",
-    "price_chg_pct": 7.32,
-    "net_flow_pct_aum": -2.22,
-    "verdict": "DISTRIBUTION (price up, money out)",
-    "divergence": true,
-    "measurable": true
-   },
-   {
-    "ticker": "IHI",
-    "price_chg_pct": 16.67,
-    "net_flow_pct_aum": -2.63,
-    "verdict": "DISTRIBUTION (price up, money out)",
-    "divergence": true,
     "measurable": true
    },
    {
     "ticker": "XLY",
-    "price_chg_pct": 9.77,
-    "net_flow_pct_aum": -2.78,
+    "price_chg_pct": 5.34,
+    "net_flow_pct_aum": -0.45,
     "verdict": "DISTRIBUTION (price up, money out)",
     "divergence": true,
     "measurable": true
    },
    {
-    "ticker": "IWM",
-    "price_chg_pct": 0.37,
-    "net_flow_pct_aum": -3.28,
-    "verdict": "DISTRIBUTION (price up, money out)",
-    "divergence": true,
+    "ticker": "OIH",
+    "price_chg_pct": -8.87,
+    "net_flow_pct_aum": -0.78,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false,
     "measurable": true
    },
    {
-    "ticker": "KBE",
-    "price_chg_pct": 7.82,
-    "net_flow_pct_aum": -4.12,
+    "ticker": "XLP",
+    "price_chg_pct": 9.48,
+    "net_flow_pct_aum": -1.04,
     "verdict": "DISTRIBUTION (price up, money out)",
     "divergence": true,
     "measurable": true
    },
    {
     "ticker": "XHB",
-    "price_chg_pct": 13.31,
-    "net_flow_pct_aum": -4.12,
+    "price_chg_pct": 8.53,
+    "net_flow_pct_aum": -1.06,
     "verdict": "DISTRIBUTION (price up, money out)",
     "divergence": true,
     "measurable": true
    },
    {
-    "ticker": "XLU",
-    "price_chg_pct": 5.96,
-    "net_flow_pct_aum": -4.26,
+    "ticker": "PBJ",
+    "price_chg_pct": 5.9,
+    "net_flow_pct_aum": -1.36,
+    "verdict": "DISTRIBUTION (price up, money out)",
+    "divergence": true,
+    "measurable": true
+   },
+   {
+    "ticker": "TLT",
+    "price_chg_pct": 6.26,
+    "net_flow_pct_aum": -2.14,
+    "verdict": "DISTRIBUTION (price up, money out)",
+    "divergence": true,
+    "measurable": true
+   },
+   {
+    "ticker": "IWM",
+    "price_chg_pct": -4.08,
+    "net_flow_pct_aum": -2.56,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false,
+    "measurable": true
+   },
+   {
+    "ticker": "XLC",
+    "price_chg_pct": -6.85,
+    "net_flow_pct_aum": -2.84,
+    "verdict": "CONFIRMED DOWNTREND",
+    "divergence": false,
+    "measurable": true
+   },
+   {
+    "ticker": "HYG",
+    "price_chg_pct": 0.01,
+    "net_flow_pct_aum": -3.0,
     "verdict": "DISTRIBUTION (price up, money out)",
     "divergence": true,
     "measurable": true
    },
    {
     "ticker": "IGV",
-    "price_chg_pct": -5.63,
-    "net_flow_pct_aum": -5.24,
+    "price_chg_pct": -9.81,
+    "net_flow_pct_aum": -4.89,
     "verdict": "CONFIRMED DOWNTREND",
     "divergence": false,
     "measurable": true
    },
    {
+    "ticker": "XLU",
+    "price_chg_pct": 5.48,
+    "net_flow_pct_aum": -4.91,
+    "verdict": "DISTRIBUTION (price up, money out)",
+    "divergence": true,
+    "measurable": true
+   },
+   {
     "ticker": "XTN",
-    "price_chg_pct": 4.81,
-    "net_flow_pct_aum": -26.41,
+    "price_chg_pct": 0.12,
+    "net_flow_pct_aum": -25.38,
     "verdict": "DISTRIBUTION (price up, money out)",
     "divergence": true,
     "measurable": true
@@ -1310,6 +1337,7 @@
    "FXI",
    "IAI",
    "INDA",
+   "RING",
    "SGOV",
    "USO",
    "VGT"
@@ -1318,84 +1346,84 @@
    {
     "contract": "SP500",
     "sleeve": "VGT / QQQ / SMH",
-    "report_date": "2026-10-27",
-    "age_days": 10.0,
+    "report_date": "2026-11-03",
+    "age_days": 4.0,
     "stale": false,
     "flag": "neutral"
    },
    {
     "contract": "UST10Y",
     "sleeve": "TLT",
-    "report_date": "2026-10-27",
-    "age_days": 10.0,
+    "report_date": "2026-11-03",
+    "age_days": 4.0,
     "stale": false,
-    "flag": "asset_mgr crowded LONG (100th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 100 vs lev_fund 42)"
+    "flag": "asset_mgr crowded LONG (99th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 99 vs lev_fund 39)"
    },
    {
     "contract": "UST30Y",
     "sleeve": "TLT",
-    "report_date": "2026-10-27",
-    "age_days": 10.0,
+    "report_date": "2026-11-03",
+    "age_days": 4.0,
     "stale": false,
-    "flag": "asset_mgr crowded SHORT (0th pctile) \u00b7 lev_fund crowded LONG (100th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 0 vs lev_fund 100)"
+    "flag": "asset_mgr crowded SHORT (4th pctile) \u00b7 lev_fund crowded LONG (98th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 4 vs lev_fund 98)"
    },
    {
     "contract": "UST2Y",
     "sleeve": "USFR / SGOV",
-    "report_date": "2026-10-27",
-    "age_days": 10.0,
+    "report_date": "2026-11-03",
+    "age_days": 4.0,
     "stale": false,
-    "flag": "lev_fund crowded LONG (94th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 25 vs lev_fund 94)"
+    "flag": "lev_fund crowded LONG (92th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 29 vs lev_fund 92)"
    },
    {
     "contract": "DXY",
     "sleeve": "Daily Step 4 dollar check",
-    "report_date": "2026-10-27",
-    "age_days": 10.0,
+    "report_date": "2026-11-03",
+    "age_days": 4.0,
     "stale": false,
     "flag": "neutral"
    },
    {
     "contract": "GOLD",
     "sleeve": "GLD / SLV / RING",
-    "report_date": "2026-10-27",
-    "age_days": 10.0,
+    "report_date": "2026-11-03",
+    "age_days": 4.0,
     "stale": false,
     "flag": "neutral"
    },
    {
     "contract": "SILVER",
     "sleeve": "SLV",
-    "report_date": "2026-10-27",
-    "age_days": 10.0,
+    "report_date": "2026-11-03",
+    "age_days": 4.0,
     "stale": false,
-    "flag": "noncomm crowded SHORT (6th pctile) \u00b7 comm crowded LONG (93th pctile) \u00b7 COHORT DIVERGENCE (noncomm 6 vs comm 93)"
+    "flag": "noncomm crowded SHORT (10th pctile) \u00b7 comm crowded LONG (95th pctile) \u00b7 COHORT DIVERGENCE (noncomm 10 vs comm 95)"
    },
    {
     "contract": "WTI",
     "sleeve": "XLE / XOP / PDBC",
-    "report_date": "2026-10-27",
-    "age_days": 10.0,
+    "report_date": "2026-11-03",
+    "age_days": 4.0,
     "stale": false,
-    "flag": "COHORT DIVERGENCE (noncomm 10 vs comm 88)"
+    "flag": "COHORT DIVERGENCE (noncomm 13 vs comm 86)"
    }
   ],
-  "conclusion": "49 of 58 ETFs pass the integrity test (20-session window). Inflows >1% of AUM: XRT, KRE, LQD, KMLM, SOXX, USFR. Outflows >1%: HYG, PBJ, IHI, XLY, IWM, KBE. Price down / money in (possible stealth accumulation): KMLM, SOXX, EWJ, HACK, XOP, SMH \u2014 a watch signal only until price structure confirms. Crowded COT positioning: UST10Y (asset_mgr crowded LONG (100th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 100 vs lev_fund 42)); UST30Y (asset_mgr crowded SHORT (0th pctile) \u00b7 lev_fund crowded LONG (100th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 0 vs lev_fund 100)); UST2Y (lev_fund crowded LONG (94th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 25 vs lev_fund 94))."
+  "conclusion": "48 of 58 ETFs pass the integrity test (20-session window). Inflows >1% of AUM: SOXX, ITA, XRT, KRE, KMLM, LQD. Outflows >1%: XLP, XHB, PBJ, TLT, IWM, XLC. Price down / money in (possible stealth accumulation): SOXX, ITA, KMLM, XOP, EWJ, HACK \u2014 a watch signal only until price structure confirms. Crowded COT positioning: UST10Y (asset_mgr crowded LONG (99th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 99 vs lev_fund 39)); UST30Y (asset_mgr crowded SHORT (4th pctile) \u00b7 lev_fund crowded LONG (98th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 4 vs lev_fund 98)); UST2Y (lev_fund crowded LONG (92th pctile) \u00b7 COHORT DIVERGENCE (asset_mgr 29 vs lev_fund 92))."
  },
  "flow_map": {
   "available": true,
   "stale": false,
-  "age_hours": 19.7,
-  "published_at": "2026-11-06T01:48:45+00:00",
-  "data_through": "2026-11-05",
+  "age_hours": 1.2,
+  "published_at": "2026-11-07T01:12:28+00:00",
+  "data_through": "2026-11-06",
   "window": 20,
-  "measured": 48,
+  "measured": 47,
   "total": 58,
   "rows": [
    {
     "asset_class": "US equity",
-    "flow_usd": 21190335088.002445,
-    "pct_aum": 0.9732940254487,
+    "flow_usd": 53718278543.172455,
+    "pct_aum": 2.469210611390475,
     "direction": "in",
     "measured": 37,
     "total": 39,
@@ -1408,7 +1436,7 @@
    {
     "asset_class": "International equity",
     "flow_usd": 1028312185.5,
-    "pct_aum": 4.268887747631623,
+    "pct_aum": 4.308654482290155,
     "direction": "in",
     "measured": 1,
     "total": 5,
@@ -1422,8 +1450,8 @@
    },
    {
     "asset_class": "Treasuries",
-    "flow_usd": -163301161.0,
-    "pct_aum": -0.2697046359192923,
+    "flow_usd": -868056786.0,
+    "pct_aum": -1.4194576904345504,
     "direction": "out",
     "measured": 2,
     "total": 2,
@@ -1432,8 +1460,8 @@
    },
    {
     "asset_class": "Credit",
-    "flow_usd": 4932213573.0,
-    "pct_aum": 8.45155377426578,
+    "flow_usd": 2745008781.0,
+    "pct_aum": 4.6065234220396745,
     "direction": "in",
     "measured": 3,
     "total": 3,
@@ -1442,8 +1470,8 @@
    },
    {
     "asset_class": "Cash-like",
-    "flow_usd": 1372100300.0,
-    "pct_aum": 6.909682617060275,
+    "flow_usd": 436939150.0,
+    "pct_aum": 2.1006791231315587,
     "direction": "in",
     "measured": 1,
     "total": 2,
@@ -1454,22 +1482,23 @@
    },
    {
     "asset_class": "Gold & commodities",
-    "flow_usd": 738980280.0,
-    "pct_aum": 1.8391489184309673,
+    "flow_usd": 688577934.0,
+    "pct_aum": 1.7991894214811448,
     "direction": "in",
-    "measured": 3,
+    "measured": 2,
     "total": 6,
     "missing": [
      "DBA",
      "GLD",
+     "RING",
      "USO"
     ],
-    "thin": false
+    "thin": true
    },
    {
     "asset_class": "Alternatives",
-    "flow_usd": 70794061.4,
-    "pct_aum": 12.889669628990353,
+    "flow_usd": 59835561.4,
+    "pct_aum": 10.587638298455884,
     "direction": "in",
     "measured": 1,
     "total": 1,
@@ -1477,63 +1506,64 @@
     "thin": false
    }
   ],
-  "kind": "new_money",
-  "verdict": "New money, not a move out of stocks: stocks +$21.19B (+0.97% of measured assets); Treasuries + cash +$1.21B (+1.50%)",
+  "kind": "into_stocks",
+  "verdict": "Money moved from safety into stocks: stocks +$53.72B (+2.47% of measured assets); Treasuries + cash \u2212$431M (-0.53%)",
   "evidence": [
-   "US equity: +$21.19B (+0.97%, in) \u2014 37 of 39 funds; not measured: IAI, VGT",
-   "International equity: +$1.03B (+4.27%, in) \u2014 1 of 5 funds; not measured: EEM, EFA, FXI, INDA \u2014 THIN: under half its funds measured, so this reading rests on one fund, is indicative only, and is left out of the verdict",
-   "Treasuries: \u2212$163M (-0.27%, out) \u2014 2 of 2 funds",
-   "Credit: +$4.93B (+8.45%, in) \u2014 3 of 3 funds",
-   "Cash-like: +$1.37B (+6.91%, in) \u2014 1 of 2 funds; not measured: SGOV",
-   "Gold & commodities: +$739M (+1.84%, in) \u2014 3 of 6 funds; not measured: DBA, GLD, USO",
-   "Alternatives: +$71M (+12.89%, in) \u2014 1 of 1 funds",
-   "With the thin class included the stock reading would be +1.01% (in)",
-   "Sensitivity: stocks without the hedging vehicles (HYG, IWM, KBE, KRE, QQQ, SMH, SPY, XBI, XHB, XOP, XRT) +1.66% (in) \u2014 agrees",
-   "Stock reading, last 5 sessions: 10-30 +0.56%, 11-02 +0.72%, 11-03 +0.92%, 11-04 +0.93%, 11-05 +0.97%; typical day 0.46 points; 1.6 typical days from the line",
-   "Within stocks: out of Small & mid caps (\u2212$2.07B), Consumer cyclical (\u2212$538M); into Tech & growth (+$9.38B), Broad US market (+$8.50B), Defensives (+$3.23B)",
-   "\u2020 SPY is among the largest moves and is a hedging vehicle: share counts also move with short selling and market-maker hedging, not only investor money"
+   "US equity: +$53.72B (+2.47%, in) \u2014 37 of 39 funds; not measured: IAI, VGT",
+   "International equity: +$1.03B (+4.31%, in) \u2014 1 of 5 funds; not measured: EEM, EFA, FXI, INDA \u2014 THIN: under half its funds measured, so this reading rests on one fund, is indicative only, and is left out of the verdict",
+   "Treasuries: \u2212$868M (-1.42%, out) \u2014 2 of 2 funds",
+   "Credit: +$2.75B (+4.61%, in) \u2014 3 of 3 funds",
+   "Cash-like: +$437M (+2.10%, in) \u2014 1 of 2 funds; not measured: SGOV",
+   "Gold & commodities: +$689M (+1.80%, in) \u2014 2 of 6 funds; not measured: DBA, GLD, RING, USO \u2014 THIN: under half its funds measured, so this reading rests on 2 funds, is indicative only, and is left out of the verdict",
+   "Alternatives: +$60M (+10.59%, in) \u2014 1 of 1 funds",
+   "With the thin classes included the stock reading would be +2.49% (in)",
+   "Sensitivity: stocks without the hedging vehicles (HYG, IWM, KBE, KRE, QQQ, SMH, SPY, XBI, XHB, XOP, XRT) +6.55% (in) \u2014 agrees",
+   "Stock reading, last 5 sessions: 11-02 +0.72%, 11-03 +0.92%, 11-04 +0.93%, 11-05 +0.82%, 11-06 +2.47%; typical day 0.58 points; 3.8 typical days from the line",
+   "Within stocks: out of Small & mid caps (\u2212$1.82B), Communication (\u2212$679M); into Tech & growth (+$37.26B), Industrials (+$7.94B), Broad US market (+$3.83B)",
+   "\u2020 QQQ is among the largest moves and is a hedging vehicle: share counts also move with short selling and market-maker hedging, not only investor money"
   ],
   "rule": "Net 20-session ETF creations minus redemptions, from trusted share counts only (integrity test passed and at least 80% of sessions measured). A bucket counts as in or out when its net flow is at least 0.25% of its measured assets. Stocks = US + international equity; safety = Treasuries + cash-like; a class with under 50% of its funds measured is shown but left out of the verdict. A reading within 1 typical day of the \u00b10.25% line is borderline (a typical day = one standard deviation of the reading's daily change over the last 20 sessions, each recomputed as of that day). ETF data shows where money left and where it arrived, not which dollar went where.",
-  "changes_if": "Stock funds net outflow of 0.25% or more of their assets.",
+  "changes_if": "Stock funds turning net negative while safe assets take money in.",
   "excluded": {
    "DBA": "not verified \u2014 thirdparty_stockanalysis: shares never changed",
-   "EEM": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 23 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
-   "EFA": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 20 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
-   "FXI": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 9 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
-   "GLD": "building history \u2014 3 of 20 sessions measured (needs 16)",
-   "IAI": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 8 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
-   "INDA": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 10 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
-   "SGOV": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 9 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+   "EEM": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 24 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+   "EFA": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 21 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+   "FXI": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 10 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+   "GLD": "building history \u2014 4 of 20 sessions measured (needs 16)",
+   "IAI": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 9 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+   "INDA": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 11 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+   "RING": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 5 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+   "SGOV": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 10 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
    "USO": "not verified \u2014 thirdparty_stockanalysis: shares never changed",
-   "VGT": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 11 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again"
+   "VGT": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 12 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again"
   },
-  "state": "new_money",
+  "state": "into_stocks",
   "borderline": false,
-  "sessions_in_state": 4,
+  "sessions_in_state": 1,
   "steps": [
    "Model portfolio: flow confirms money entering stocks. That confirms a risk-on regime tilt; it never raises equity weights on its own (flow does not override the regime).",
    "Swing book: supports long candidates whose own fund shows creations. Each Tier A leg is still scored per ticker.",
-   "Invalidated when the stock reading falls below +0.71% (back to borderline); today +0.97%.",
+   "Invalidated when the stock reading falls below +0.83% (back to borderline); today +2.47%.",
    "Readmission would change the reading: not measured in stocks or safety: EEM, EFA, FXI, IAI, INDA, SGOV, VGT."
   ],
   "regime_check": "`transition_ambiguous` has no directional tilt (swing books both ways), so money moving into stocks is context, not confirmation."
  },
  "breadth": {
-  "pct_above_50": 59.6,
+  "pct_above_50": 60.6,
   "pct_above_200": 60.6,
   "n": 109,
   "new_highs": 0,
   "new_lows": 0,
   "universe": "109-name sector-constituent proxy (not the full S&P 500)",
-  "spy_20d": -5.5499212101889235,
+  "spy_20d": -5.558912993016429,
   "rsp_20d": 1.4128848387552573,
   "trend": {
    "available": true,
    "points": {
     "today": {
      "date": "2026-11-06",
-     "p50": 59.6,
-     "p200": 60.6,
+     "p50": 62.1,
+     "p200": 61.2,
      "hl": 0.0
     },
     "5d": {
@@ -1555,10 +1585,10 @@
      "hl": 3.0
     }
    },
-   "d20": 17.4,
-   "spy20": -5.5499212101889235,
+   "d20": 19.9,
+   "spy20": -5.558912993016429,
    "trend": "improving",
-   "verdict": "Broadening under a falling index: SPY -5.5% over 20 sessions, yet the share above the 50-day rose +17 points to 60%",
+   "verdict": "Broadening under a falling index: SPY -5.6% over 20 sessions, yet the share above the 50-day rose +20 points to 62%",
    "rule": "Share of the 109-name constituent proxy closing above its 50-day average, each session from closes up to that session. A change of 10 points or more over 20 sessions (about 11 names) is a trend; a falling trend under a rising SPY is narrowing. Proxy, not the full S&P 500.",
    "n": 109,
    "series": [
@@ -1800,7 +1830,7 @@
     },
     {
      "date": "2026-11-06",
-     "p50": 59.6
+     "p50": 62.1
     }
    ]
   },
@@ -1813,9 +1843,9 @@
      "r1": 2.7753266061345316,
      "r5": -8.795934349924806,
      "r20": -18.597348053326435,
-     "c1": 0.18766584944418593,
-     "c5": -0.650086087346573,
-     "c20": -1.494785188878656
+     "c1": 0.18764798338643388,
+     "c5": -0.6500241982196237,
+     "c20": -1.4946428831869683
     },
     {
      "ticker": "GOOGL",
@@ -1823,9 +1853,9 @@
      "r1": 0.782104044235088,
      "r5": 1.7652953495044699,
      "r20": -19.018371206943907,
-     "c1": 0.02034696483366168,
-     "c5": 0.044114288505165876,
-     "c20": -0.5797111336401839
+     "c1": 0.02034502777345668,
+     "c5": 0.04411008876169386,
+     "c20": -0.5796559443096596
     },
     {
      "ticker": "AVGO",
@@ -1833,29 +1863,29 @@
      "r1": 0.7409198611305179,
      "r5": -9.93314078283094,
      "r20": -18.766942661917085,
-     "c1": 0.016129888608981114,
-     "c5": -0.2346014497483567,
-     "c20": -0.4770161435076359
+     "c1": 0.016128353020474863,
+     "c5": -0.23457911535420703,
+     "c20": -0.4769707308873121
     },
     {
      "ticker": "GOOG",
      "weight": 2.1107,
-     "r1": 0.7773133091913742,
-     "r5": 2.0523296060762197,
-     "r20": -18.37808180529037,
-     "c1": 0.01633261998227468,
-     "c5": 0.041303779369618814,
-     "c20": -0.44887169257397436
+     "r1": -1.9352585432757974,
+     "r5": -0.20544668277003852,
+     "r20": -18.30307887209377,
+     "c1": -0.041783737819245104,
+     "c5": -0.0042278206186338605,
+     "c20": -0.4465868682775812
     },
     {
      "ticker": "META",
      "weight": 2.103,
-     "r1": 0.8379069182623322,
-     "r5": -0.7869991214764283,
-     "r20": -15.10011007509413,
-     "c1": 0.017531022446261788,
-     "c5": -0.016232448337842726,
-     "c20": -0.35327636510477795
+     "r1": -3.9555528428819486,
+     "r5": -3.112790916774366,
+     "r20": -16.064863599903212,
+     "c1": -0.08688181287078563,
+     "c5": -0.0657386111943851,
+     "c20": -0.38013117824947573
     },
     {
      "ticker": "LLY",
@@ -1863,9 +1893,9 @@
      "r1": -0.7862346854184632,
      "r5": -4.482415826823671,
      "r20": 14.816791538396235,
-     "c1": -0.013683033526313884,
-     "c5": -0.07859121677115687,
-     "c20": 0.2097766729148835
+     "c1": -0.013681730881917323,
+     "c5": -0.07858373477471588,
+     "c20": 0.20975670187505704
     },
     {
      "ticker": "BRK-B",
@@ -1873,9 +1903,9 @@
      "r1": -0.25160351517613533,
      "r5": 5.235124135985014,
      "r20": 10.719138135573768,
-     "c1": -0.004251244495509832,
-     "c5": 0.0813232344081564,
-     "c20": 0.15362035961447904
+     "c1": -0.004250839770942738,
+     "c5": 0.08131549231972197,
+     "c20": 0.15360573473613873
     },
     {
      "ticker": "AAPL",
@@ -1883,9 +1913,9 @@
      "r1": -0.5230026557571765,
      "r5": -0.6557785838738783,
      "r20": 1.7021091431254742,
-     "c1": -0.041759936773505354,
-     "c5": -0.050855309396204695,
-     "c20": 0.12515331465939247
+     "c1": -0.04175596116769148,
+     "c5": -0.050850467897885415,
+     "c20": 0.125141399884519
     },
     {
      "ticker": "MSFT",
@@ -1893,9 +1923,9 @@
      "r1": -0.9926683329770536,
      "r5": 1.6669564972313644,
      "r20": -0.8335398941458072,
-     "c1": -0.06309490225348194,
-     "c5": 0.10007946596239434,
-     "c20": -0.049799541600954594
+     "c1": -0.06308889552838594,
+     "c5": 0.10006993825384229,
+     "c20": -0.04979480061324211
     },
     {
      "ticker": "AMZN",
@@ -1903,35 +1933,35 @@
      "r1": -0.3497189546875945,
      "r5": 7.884327525788204,
      "r20": -1.1927008993516508,
-     "c1": -0.014173883493620299,
-     "c5": 0.28628433765092953,
-     "c20": -0.04589834634654397
+     "c1": -0.01417253411960357,
+     "c5": 0.286257082971801,
+     "c20": -0.04589397675820929
     }
    ],
    "windows": {
     "1": {
-     "spy": 0.3219625309089258,
-     "top_contrib": 0.1210433447729339,
-     "top_w0": 37.557578376698245,
-     "rest": 0.32176712707922034,
+     "spy": 0.31241173633611563,
+     "top_contrib": -0.04149414797820638,
+     "top_w0": 37.71652881067612,
+     "rest": 0.5682179839311615,
      "share": null,
      "ratio": null
     },
     "5": {
-     "spy": -2.6941176812648626,
-     "top_contrib": -0.47726140570386905,
-     "top_w0": 37.023112769327454,
-     "rest": -3.5201109058329036,
-     "share": 0.1771494278155657,
-     "ratio": 0.4784833434165717
+     "spy": -2.7033813406800777,
+     "top_contrib": -0.5722513457523918,
+     "top_w0": 37.1146234919638,
+     "rest": -3.388911879465882,
+     "share": 0.2116798459548563,
+     "ratio": 0.5703408145867088
     },
     "20": {
-     "spy": -5.5499212101889235,
-     "top_contrib": -2.9608080644639716,
-     "top_w0": 38.43408530610485,
-     "rest": -4.205432760315485,
-     "share": 0.5334865041017732,
-     "ratio": 1.3880556798811978
+     "spy": -5.558912993016429,
+     "top_contrib": -2.9851725457867335,
+     "top_w0": 38.4550726806086,
+     "rest": -4.181888840120165,
+     "share": 0.5370065243937001,
+     "ratio": 1.3964517213472636
     }
    },
    "holdings_n": 10,
@@ -1940,30 +1970,30 @@
    "weight_now": 37.56,
    "asof": "2026-11-06",
    "kind": "in_line",
-   "verdict": "The top 10 moved in line with their weight: over 20 days SPY -5.55%, of which the top 10 (38.4% of the index) supplied -2.96 points (53% of the move, 1.4x their weight); the other names returned -4.21%",
+   "verdict": "The top 10 moved in line with their weight: over 20 days SPY -5.56%, of which the top 10 (38.5% of the index) supplied -2.99 points (54% of the move, 1.4x their weight); the other names returned -4.18%",
    "rule": "Weights: State Street's daily SPY holdings file. Start-of-window weights are backed out for a buy-and-hold window (w0 = w_now x (1+R_SPY)/(1+r)); contribution = w0 x r. The top 10 carry the move when their share of SPY's 20-day return is at least 1.5x their weight; they lag when it is 0.67x or less. SPY moves under 0.5% are not split.",
    "changes_if": "The top 10's share of the 20-day move crossing 1.5x or 0.67x their weight."
   },
-  "conclusion": "60% of the proxy universe is above its 50-day and 61% above its 200-day; 0 new 52-week highs vs 0 new lows. Participation is mixed."
+  "conclusion": "61% of the proxy universe is above its 50-day and 61% above its 200-day; 0 new 52-week highs vs 0 new lows. Participation is broad enough to support new longs."
  },
  "model": {
   "available": true,
-  "conclusion": "You SHOULD hold the `transition_ambiguous` model above. Model book 96.73 (-5.2% from peak; 20d -4.1%). \u26a0 Drawdown past the -5% warning line \u2014 the breaker trips at -8%. No change today. Since 2026-08-12: model -3.27% vs SPY -4.57% and 60/40 -2.93%.",
-  "pending": false,
+  "conclusion": "\u23f3 Closing prices for 2026-11-06 were not published when this ran \u2014 the model book stands at 2026-11-05 and books 2026-11-06 on the next run (never as a 0% day). You SHOULD hold the `transition_ambiguous` model above. Model book 96.46 (-5.4% from peak; 20d -3.9%). \u26a0 Drawdown past the -5% warning line \u2014 the breaker trips at -8%. No change today. Since 2026-08-12: model -3.54% vs SPY -4.88% and 60/40 -3.09%.",
+  "pending": true,
   "benchmarks": {
    "since": "2026-08-12",
-   "model_pct": -3.27,
-   "spy_pct": -4.57,
-   "sixty_forty_pct": -2.93
+   "model_pct": -3.54,
+   "spy_pct": -4.88,
+   "sixty_forty_pct": -3.09
   },
   "spy_returns": {
-   "ret_1m": -4.98,
-   "ret_3m": -4.64,
+   "ret_1m": -4.99,
+   "ret_3m": -4.65,
    "ret_12_1": 15.45
   },
   "summary": {
    "available": true,
-   "date": "2026-11-06",
+   "date": "2026-11-05",
    "regime": "transition_ambiguous",
    "weights": {
     "VGT": 17.0,
@@ -1982,17 +2012,17 @@
     "TLT": 7.0,
     "KMLM": 5.5
    },
-   "nav": 96.7259,
+   "nav": 96.4557,
    "peak": 101.9895,
-   "drawdown_pct": -5.16,
+   "drawdown_pct": -5.43,
    "breaker": "OFF",
    "breaker_changed": false,
    "release_count": 0,
    "warn": true,
-   "ret_5d": -1.86,
-   "ret_20d": -4.09,
-   "sessions": 62,
-   "since_inception_pct": -3.27,
+   "ret_5d": -3.74,
+   "ret_20d": -3.94,
+   "sessions": 61,
+   "since_inception_pct": -3.54,
    "since": "2026-08-12",
    "reconstructed_sessions": 36,
    "changes": []
@@ -2008,7 +2038,7 @@
     "ret_1m": -14.73,
     "ret_3m": -9.66,
     "ret_12_1": 31.48,
-    "vs_spy_3m": -5.02
+    "vs_spy_3m": -5.01
    },
    {
     "ticker": "SCHD",
@@ -2020,7 +2050,7 @@
     "ret_1m": 6.09,
     "ret_3m": 3.69,
     "ret_12_1": 29.14,
-    "vs_spy_3m": 8.33
+    "vs_spy_3m": 8.34
    },
    {
     "ticker": "GLD",
@@ -2029,10 +2059,10 @@
     "gate": null,
     "gate_trigger": null,
     "hold_trend": "DOWNTREND",
-    "ret_1m": -1.6,
-    "ret_3m": -7.44,
+    "ret_1m": -1.61,
+    "ret_3m": -7.46,
     "ret_12_1": 3.3,
-    "vs_spy_3m": -2.8
+    "vs_spy_3m": -2.81
    },
    {
     "ticker": "SGOV",
@@ -2041,10 +2071,10 @@
     "gate": null,
     "gate_trigger": null,
     "hold_trend": "cash",
-    "ret_1m": 0.02,
-    "ret_3m": 0.3,
-    "ret_12_1": 3.1,
-    "vs_spy_3m": 4.94
+    "ret_1m": -0.02,
+    "ret_3m": 0.28,
+    "ret_12_1": 3.12,
+    "vs_spy_3m": 4.93
    },
    {
     "ticker": "USFR",
@@ -2054,9 +2084,9 @@
     "gate_trigger": null,
     "hold_trend": "cash",
     "ret_1m": 0.38,
-    "ret_3m": 1.01,
+    "ret_3m": 1.03,
     "ret_12_1": 3.72,
-    "vs_spy_3m": 5.65
+    "vs_spy_3m": 5.68
    },
    {
     "ticker": "TLT",
@@ -2068,7 +2098,7 @@
     "ret_1m": 5.2,
     "ret_3m": 0.21,
     "ret_12_1": -9.1,
-    "vs_spy_3m": 4.85
+    "vs_spy_3m": 4.86
    },
    {
     "ticker": "KMLM",
@@ -2077,10 +2107,10 @@
     "gate": "PULLBACK",
     "gate_trigger": "close back above the 50-day (30.71)",
     "hold_trend": "CONFIRMED UPTREND",
-    "ret_1m": -6.77,
-    "ret_3m": 1.42,
-    "ret_12_1": 25.02,
-    "vs_spy_3m": 6.06
+    "ret_1m": -7.42,
+    "ret_3m": 3.12,
+    "ret_12_1": 25.34,
+    "vs_spy_3m": 7.77
    },
    {
     "ticker": "XLE",
@@ -2092,7 +2122,7 @@
     "ret_1m": -5.55,
     "ret_3m": 3.0,
     "ret_12_1": 53.51,
-    "vs_spy_3m": 7.64
+    "vs_spy_3m": 7.65
    },
    {
     "ticker": "XLV",
@@ -2104,7 +2134,7 @@
     "ret_1m": 9.9,
     "ret_3m": 10.13,
     "ret_12_1": 17.38,
-    "vs_spy_3m": 14.77
+    "vs_spy_3m": 14.78
    },
    {
     "ticker": "SLV",
@@ -2116,7 +2146,7 @@
     "ret_1m": -12.31,
     "ret_3m": -21.11,
     "ret_12_1": 22.45,
-    "vs_spy_3m": -16.47
+    "vs_spy_3m": -16.46
    },
    {
     "ticker": "RING",
@@ -2125,10 +2155,10 @@
     "gate": null,
     "gate_trigger": null,
     "hold_trend": "DOWNTREND",
-    "ret_1m": 0.67,
-    "ret_3m": -2.53,
-    "ret_12_1": 27.18,
-    "vs_spy_3m": 2.11
+    "ret_1m": 0.79,
+    "ret_3m": -3.63,
+    "ret_12_1": 29.63,
+    "vs_spy_3m": 1.02
    },
    {
     "ticker": "SMH",
@@ -2140,7 +2170,7 @@
     "ret_1m": -23.6,
     "ret_3m": -18.52,
     "ret_12_1": 69.45,
-    "vs_spy_3m": -13.88
+    "vs_spy_3m": -13.87
    },
    {
     "ticker": "QQQ",
@@ -2152,7 +2182,7 @@
     "ret_1m": -12.24,
     "ret_3m": -8.89,
     "ret_12_1": 20.51,
-    "vs_spy_3m": -4.25
+    "vs_spy_3m": -4.24
    },
    {
     "ticker": "PDBC",
@@ -2161,10 +2191,10 @@
     "gate": null,
     "gate_trigger": null,
     "hold_trend": "CONFIRMED UPTREND",
-    "ret_1m": -4.48,
-    "ret_3m": 5.27,
-    "ret_12_1": 50.32,
-    "vs_spy_3m": 9.91
+    "ret_1m": -3.45,
+    "ret_3m": 8.64,
+    "ret_12_1": 48.26,
+    "vs_spy_3m": 13.29
    },
    {
     "ticker": "XLU",
@@ -2176,7 +2206,7 @@
     "ret_1m": 5.02,
     "ret_3m": 0.74,
     "ret_12_1": -4.92,
-    "vs_spy_3m": 5.38
+    "vs_spy_3m": 5.39
    }
   ],
   "actions": [],
@@ -2192,9 +2222,9 @@
  },
  "swing": {
   "available": true,
-  "date": "2026-11-05",
-  "file": "2026-11-05_brief.json",
-  "same_session": false,
+  "date": "2026-11-06",
+  "file": "2026-11-06_brief.json",
+  "same_session": true,
   "regime": "transition_ambiguous",
   "grounds": {
    "long": [
@@ -2206,18 +2236,18 @@
      "feeds": "M0 rotation reclaim / M2 breakout (early phase)"
     },
     {
+     "ticker": "XLF",
+     "quadrant": "Improving",
+     "direction": "Bottoming",
+     "stealth": "Stealth",
+     "feeds": "M0 rotation reclaim / M2 breakout (early phase)"
+    },
+    {
      "ticker": "XLY",
      "quadrant": "Improving",
      "direction": "Bottoming",
      "stealth": null,
      "feeds": "M0 rotation reclaim / M2 breakout (early phase)"
-    },
-    {
-     "ticker": "XLF",
-     "quadrant": "Leading",
-     "direction": "Strengthening",
-     "stealth": "Stealth",
-     "feeds": "M1 VCP (confirmed leaders)"
     },
     {
      "ticker": "XLV",
@@ -2227,33 +2257,44 @@
      "feeds": "M1 VCP (confirmed leaders)"
     }
    ],
-   "short": [],
-   "long_watch": [
+   "short": [
     {
-     "ticker": "XLC",
-     "quadrant": "Improving",
-     "accumulation": -39.64,
-     "why": "price rotating in, money not (accumulation -39.64)"
-    }
-   ],
-   "short_watch": [
-    {
-     "ticker": "XLI",
+     "ticker": "XLK",
      "quadrant": "Lagging",
-     "accumulation": 69.52,
-     "why": "price rotating out, money not leaving (accumulation 69.52)"
+     "direction": "Strengthening"
     },
     {
      "ticker": "XLP",
      "quadrant": "Weakening",
-     "accumulation": 3.0,
-     "why": "price rotating out, money not leaving (accumulation 3)"
+     "direction": "Weakening"
+    }
+   ],
+   "long_watch": [
+    {
+     "ticker": "XLC",
+     "quadrant": "Improving",
+     "accumulation": -47.99,
+     "why": "price rotating in, money not (accumulation -47.99)"
+    }
+   ],
+   "short_watch": [
+    {
+     "ticker": "XLRE",
+     "quadrant": "Lagging",
+     "accumulation": 35.75,
+     "why": "price rotating out, money not leaving (accumulation 35.75)"
     },
     {
-     "ticker": "XLK",
+     "ticker": "XLI",
+     "quadrant": "Lagging",
+     "accumulation": 40.58,
+     "why": "price rotating out, money not leaving (accumulation 40.58)"
+    },
+    {
+     "ticker": "XLE",
      "quadrant": "Weakening",
-     "accumulation": 12.44,
-     "why": "price rotating out, money not leaving (accumulation 12.44)"
+     "accumulation": 0.01,
+     "why": "price rotating out, money not leaving (accumulation 0.01)"
     }
    ],
    "watchlist": [],
@@ -2265,6 +2306,7 @@
     "AMAT",
     "AMD",
     "AMGN",
+    "AMT",
     "AMZN",
     "AVGO",
     "AXP",
@@ -2273,16 +2315,23 @@
     "BKNG",
     "BRK-B",
     "CAT",
+    "CBRE",
+    "CCI",
     "CEG",
     "CL",
     "CMCSA",
     "CMG",
+    "COP",
     "COST",
     "CSCO",
+    "CVX",
     "D",
     "DE",
     "DIS",
+    "DLR",
     "DUK",
+    "EOG",
+    "EQIX",
     "ETN",
     "EXC",
     "GE",
@@ -2293,6 +2342,7 @@
     "ISRG",
     "JNJ",
     "JPM",
+    "KMI",
     "KO",
     "LLY",
     "LMT",
@@ -2303,6 +2353,7 @@
     "MDLZ",
     "META",
     "MO",
+    "MPC",
     "MRK",
     "MS",
     "MSFT",
@@ -2311,15 +2362,22 @@
     "NFLX",
     "NKE",
     "NVDA",
+    "O",
+    "OKE",
     "PCG",
     "PEP",
     "PFE",
     "PG",
+    "PLD",
     "PLTR",
     "PM",
+    "PSA",
+    "PSX",
     "RTX",
     "SBUX",
+    "SLB",
     "SO",
+    "SPG",
     "SPGI",
     "SRE",
     "T",
@@ -2334,17 +2392,22 @@
     "UPS",
     "V",
     "VZ",
+    "WELL",
     "WFC",
+    "WMB",
     "WMT",
     "XEL",
     "XLC",
+    "XLE",
     "XLF",
     "XLI",
     "XLK",
     "XLP",
+    "XLRE",
     "XLU",
     "XLV",
-    "XLY"
+    "XLY",
+    "XOM"
    ]
   },
   "cards": [
@@ -2353,7 +2416,7 @@
     "sector": "XLU",
     "sector_quadrant": "Improving",
     "from_watchlist": false,
-    "close": 130.08,
+    "close": 127.78,
     "setup": "M0 Rotation",
     "side": "long",
     "confluence": "3-of-3",
@@ -2363,31 +2426,31 @@
      "volume": true,
      "missing": []
     },
-    "entry": 132.99,
-    "stop": 129.48,
-    "stop_pct": 2.64,
-    "risk_per_share": 3.51,
+    "entry": 129.02,
+    "stop": 125.42,
+    "stop_pct": 2.79,
+    "risk_per_share": 3.6,
     "risk_pct": 0.25,
-    "shares": 7,
-    "notional": 930.93,
-    "notional_pct": 9.3,
-    "heat_after": 0.25,
+    "shares": 6,
+    "notional": 774.12,
+    "notional_pct": 7.7,
+    "heat_after": 0.22,
     "blocked_by_heat": false,
     "targets": {
-     "2R": 140.01,
-     "4R": 147.03,
-     "8R": 161.07
+     "2R": 136.22,
+     "4R": 143.42,
+     "8R": 157.82
     },
     "trail": "100 SMA (20-week)",
     "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
     "trail_stats": null,
     "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
-    "invalidated_when": "close below 129.48 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-    "why": "reclaim of 20-wk SMA 122.09 (close +6.5% vs SMA, rising); vol 2.11x vs tier 1.5x; CMF +0.13; ATR stop 1.5x = 129.48 (2.6%)",
-    "adr_pct": 1.69,
-    "event_risk": "NFP in 0d",
-    "entry_permitted": false,
-    "entry_block_reason": "binary macro event within 48h: NFP in 0d",
+    "invalidated_when": "close below 125.42 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "reclaim of 20-wk SMA 122.12 (close +4.6% vs SMA, rising); vol 1.38x vs tier 1.5x; CMF +0.10; ATR stop 1.5x = 125.42 (2.8%)",
+    "adr_pct": 1.74,
+    "event_risk": "clear",
+    "entry_permitted": true,
+    "entry_block_reason": null,
     "why_note": null,
     "what_would_make_this_wrong": null,
     "instrument_note": null,
@@ -2399,7 +2462,7 @@
     "sector": "XLU",
     "sector_quadrant": "Improving",
     "from_watchlist": false,
-    "close": 43.3,
+    "close": 43.13,
     "setup": "M0 Rotation",
     "side": "long",
     "confluence": "3-of-3",
@@ -2409,31 +2472,31 @@
      "volume": true,
      "missing": []
     },
-    "entry": 44.09,
-    "stop": 42.82,
-    "stop_pct": 2.88,
-    "risk_per_share": 1.27,
+    "entry": 43.37,
+    "stop": 42.13,
+    "stop_pct": 2.86,
+    "risk_per_share": 1.24,
     "risk_pct": 0.25,
-    "shares": 19,
-    "notional": 837.71,
-    "notional_pct": 8.4,
-    "heat_after": 0.24,
+    "shares": 20,
+    "notional": 867.4,
+    "notional_pct": 8.7,
+    "heat_after": 0.25,
     "blocked_by_heat": false,
     "targets": {
-     "2R": 46.63,
-     "4R": 49.17,
-     "8R": 54.25
+     "2R": 45.85,
+     "4R": 48.33,
+     "8R": 53.29
     },
     "trail": "100 SMA (20-week)",
     "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
     "trail_stats": null,
     "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
-    "invalidated_when": "close below 42.82 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-    "why": "reclaim of 20-wk SMA 43.05 (close +0.6% vs SMA, flat); vol 1.75x vs tier 1.5x; CMF +0.14; ATR stop 2.0x = 42.82 (2.9%)",
-    "adr_pct": 1.43,
-    "event_risk": "NFP in 0d",
-    "entry_permitted": false,
-    "entry_block_reason": "binary macro event within 48h: NFP in 0d",
+    "invalidated_when": "close below 42.13 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "reclaim of 20-wk SMA 43.03 (close +0.2% vs SMA, flat); vol 0.98x vs tier 1.5x; CMF +0.13; ATR stop 2.0x = 42.13 (2.9%)",
+    "adr_pct": 1.45,
+    "event_risk": "clear",
+    "entry_permitted": true,
+    "entry_block_reason": null,
     "why_note": null,
     "what_would_make_this_wrong": null,
     "instrument_note": null,
@@ -2445,7 +2508,7 @@
     "sector": "XLU",
     "sector_quadrant": "Improving",
     "from_watchlist": false,
-    "close": 93.34,
+    "close": 92.34,
     "setup": "M0 Rotation",
     "side": "long",
     "confluence": "3-of-3",
@@ -2455,77 +2518,31 @@
      "volume": true,
      "missing": []
     },
-    "entry": 95.72,
-    "stop": 92.89,
-    "stop_pct": 2.96,
-    "risk_per_share": 2.83,
+    "entry": 92.56,
+    "stop": 89.69,
+    "stop_pct": 3.1,
+    "risk_per_share": 2.87,
     "risk_pct": 0.25,
     "shares": 8,
-    "notional": 765.76,
-    "notional_pct": 7.7,
+    "notional": 740.48,
+    "notional_pct": 7.4,
     "heat_after": 0.23,
     "blocked_by_heat": false,
     "targets": {
-     "2R": 101.38,
-     "4R": 107.04,
-     "8R": 118.36
+     "2R": 98.3,
+     "4R": 104.04,
+     "8R": 115.52
     },
     "trail": "100 SMA (20-week)",
     "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
     "trail_stats": null,
     "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
-    "invalidated_when": "close below 92.89 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-    "why": "reclaim of 20-wk SMA 90.83 (close +2.8% vs SMA, rising); vol 2.34x vs tier 1.5x; CMF +0.14; ATR stop 1.5x = 92.89 (3.0%)",
-    "adr_pct": 1.88,
-    "event_risk": "NFP in 0d",
-    "entry_permitted": false,
-    "entry_block_reason": "binary macro event within 48h: NFP in 0d",
-    "why_note": null,
-    "what_would_make_this_wrong": null,
-    "instrument_note": null,
-    "teaching_question": null,
-    "pending_confirmation": true
-   },
-   {
-    "ticker": "XEL",
-    "sector": "XLU",
-    "sector_quadrant": "Improving",
-    "from_watchlist": false,
-    "close": 80.37,
-    "setup": "M0 Rotation",
-    "side": "long",
-    "confluence": "3-of-3",
-    "legs": {
-     "rotation": true,
-     "structure": true,
-     "volume": true,
-     "missing": []
-    },
-    "entry": 81.76,
-    "stop": 79.27,
-    "stop_pct": 3.05,
-    "risk_per_share": 2.49,
-    "risk_pct": 0.25,
-    "shares": 10,
-    "notional": 817.6,
-    "notional_pct": 8.2,
-    "heat_after": 0.25,
-    "blocked_by_heat": false,
-    "targets": {
-     "2R": 86.74,
-     "4R": 91.72,
-     "8R": 101.68
-    },
-    "trail": "100 SMA (20-week)",
-    "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
-    "trail_stats": null,
-    "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
-    "invalidated_when": "close below 79.27 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-    "why": "reclaim of 20-wk SMA 76.66 (close +4.8% vs SMA, rising); vol 1.52x vs tier 1.5x; CMF +0.21; ATR stop 1.5x = 79.27 (3.0%)",
-    "adr_pct": 1.96,
-    "event_risk": "NFP in 0d",
-    "entry_permitted": false,
-    "entry_block_reason": "binary macro event within 48h: NFP in 0d",
+    "invalidated_when": "close below 89.69 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "reclaim of 20-wk SMA 90.82 (close +1.7% vs SMA, rising); vol 1.08x vs tier 1.5x; CMF +0.16; ATR stop 1.5x = 89.69 (3.1%)",
+    "adr_pct": 1.93,
+    "event_risk": "clear",
+    "entry_permitted": true,
+    "entry_block_reason": null,
     "why_note": null,
     "what_would_make_this_wrong": null,
     "instrument_note": null,
@@ -2537,7 +2554,7 @@
     "sector": "XLU",
     "sector_quadrant": "Improving",
     "from_watchlist": false,
-    "close": 46.53,
+    "close": 45.62,
     "setup": "M0 Rotation",
     "side": "long",
     "confluence": "3-of-3",
@@ -2547,31 +2564,77 @@
      "volume": true,
      "missing": []
     },
-    "entry": 47.05,
-    "stop": 45.61,
-    "stop_pct": 3.06,
+    "entry": 46.09,
+    "stop": 44.65,
+    "stop_pct": 3.12,
     "risk_per_share": 1.44,
     "risk_pct": 0.25,
     "shares": 17,
-    "notional": 799.85,
-    "notional_pct": 8.0,
+    "notional": 783.53,
+    "notional_pct": 7.8,
     "heat_after": 0.24,
     "blocked_by_heat": false,
     "targets": {
-     "2R": 49.93,
-     "4R": 52.81,
-     "8R": 58.57
+     "2R": 48.97,
+     "4R": 51.85,
+     "8R": 57.61
     },
     "trail": "100 SMA (20-week)",
     "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
     "trail_stats": null,
     "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
-    "invalidated_when": "close below 45.61 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-    "why": "reclaim of 20-wk SMA 44.32 (close +5.0% vs SMA, rising); vol 1.53x vs tier 1.5x; CMF +0.17; ATR stop 1.5x = 45.61 (3.1%)",
-    "adr_pct": 1.97,
-    "event_risk": "NFP in 0d",
+    "invalidated_when": "close below 44.65 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "reclaim of 20-wk SMA 44.32 (close +2.9% vs SMA, rising); vol 1.05x vs tier 1.5x; CMF +0.15; ATR stop 1.5x = 44.65 (3.1%)",
+    "adr_pct": 2.02,
+    "event_risk": "clear",
+    "entry_permitted": true,
+    "entry_block_reason": null,
+    "why_note": null,
+    "what_would_make_this_wrong": null,
+    "instrument_note": null,
+    "teaching_question": null,
+    "pending_confirmation": true
+   },
+   {
+    "ticker": "XEL",
+    "sector": "XLU",
+    "sector_quadrant": "Improving",
+    "from_watchlist": false,
+    "close": 79.67,
+    "setup": "M0 Rotation",
+    "side": "long",
+    "confluence": "3-of-3",
+    "legs": {
+     "rotation": true,
+     "structure": true,
+     "volume": true,
+     "missing": []
+    },
+    "entry": 80.29,
+    "stop": 77.75,
+    "stop_pct": 3.16,
+    "risk_per_share": 2.54,
+    "risk_pct": 0.25,
+    "shares": 9,
+    "notional": 722.61,
+    "notional_pct": 7.2,
+    "heat_after": 0.23,
+    "blocked_by_heat": false,
+    "targets": {
+     "2R": 85.37,
+     "4R": 90.45,
+     "8R": 100.61
+    },
+    "trail": "100 SMA (20-week)",
+    "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
+    "trail_stats": null,
+    "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
+    "invalidated_when": "close below 77.75 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "reclaim of 20-wk SMA 76.68 (close +3.9% vs SMA, rising); vol 1.00x vs tier 1.5x; CMF +0.20; ATR stop 1.5x = 77.75 (3.2%)",
+    "adr_pct": 2.03,
+    "event_risk": "clear",
     "entry_permitted": false,
-    "entry_block_reason": "binary macro event within 48h: NFP in 0d",
+    "entry_block_reason": "over slot cap (4 positions max, 4 open) \u2014 watch, or close something first",
     "why_note": null,
     "what_would_make_this_wrong": null,
     "instrument_note": null,
@@ -2583,7 +2646,7 @@
     "sector": "XLU",
     "sector_quadrant": "Improving",
     "from_watchlist": false,
-    "close": 69.64,
+    "close": 68.6,
     "setup": "M0 Rotation",
     "side": "long",
     "confluence": "3-of-3",
@@ -2593,31 +2656,31 @@
      "volume": true,
      "missing": []
     },
-    "entry": 71.09,
-    "stop": 68.75,
-    "stop_pct": 3.29,
-    "risk_per_share": 2.34,
+    "entry": 69.25,
+    "stop": 66.88,
+    "stop_pct": 3.42,
+    "risk_per_share": 2.37,
     "risk_pct": 0.25,
     "shares": 10,
-    "notional": 710.9,
-    "notional_pct": 7.1,
-    "heat_after": 0.23,
+    "notional": 692.5,
+    "notional_pct": 6.9,
+    "heat_after": 0.24,
     "blocked_by_heat": false,
     "targets": {
-     "2R": 75.77,
-     "4R": 80.45,
-     "8R": 89.81
+     "2R": 73.99,
+     "4R": 78.73,
+     "8R": 88.21
     },
     "trail": "100 SMA (20-week)",
     "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
     "trail_stats": null,
     "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
-    "invalidated_when": "close below 68.75 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-    "why": "reclaim of 20-wk SMA 66.11 (close +5.3% vs SMA, rising); vol 1.26x vs tier 1.5x; CMF +0.06; ATR stop 1.5x = 68.75 (3.3%)",
-    "adr_pct": 1.93,
-    "event_risk": "NFP in 0d",
+    "invalidated_when": "close below 66.88 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "reclaim of 20-wk SMA 66.11 (close +3.8% vs SMA, rising); vol 0.75x vs tier 1.5x; CMF +0.05; ATR stop 1.5x = 66.88 (3.4%)",
+    "adr_pct": 1.99,
+    "event_risk": "clear",
     "entry_permitted": false,
-    "entry_block_reason": "binary macro event within 48h: NFP in 0d",
+    "entry_block_reason": "over slot cap (4 positions max, 4 open) \u2014 watch, or close something first",
     "why_note": null,
     "what_would_make_this_wrong": null,
     "instrument_note": null,
@@ -2629,7 +2692,7 @@
     "sector": "XLU",
     "sector_quadrant": "Improving",
     "from_watchlist": false,
-    "close": 88.25,
+    "close": 86.95,
     "setup": "M0 Rotation",
     "side": "long",
     "confluence": "3-of-3",
@@ -2639,31 +2702,31 @@
      "volume": true,
      "missing": []
     },
-    "entry": 90.04,
-    "stop": 87.08,
-    "stop_pct": 3.29,
-    "risk_per_share": 2.96,
+    "entry": 87.79,
+    "stop": 84.75,
+    "stop_pct": 3.46,
+    "risk_per_share": 3.04,
     "risk_pct": 0.25,
     "shares": 8,
-    "notional": 720.32,
-    "notional_pct": 7.2,
+    "notional": 702.32,
+    "notional_pct": 7.0,
     "heat_after": 0.24,
     "blocked_by_heat": false,
     "targets": {
-     "2R": 95.96,
-     "4R": 101.88,
-     "8R": 113.72
+     "2R": 93.87,
+     "4R": 99.95,
+     "8R": 112.11
     },
     "trail": "100 SMA (20-week)",
     "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
     "trail_stats": null,
     "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
-    "invalidated_when": "close below 87.08 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-    "why": "reclaim of 20-wk SMA 83.42 (close +5.8% vs SMA, flat); vol 1.49x vs tier 1.5x; CMF +0.10; ATR stop 1.5x = 87.08 (3.3%)",
-    "adr_pct": 1.91,
-    "event_risk": "NFP in 0d",
+    "invalidated_when": "close below 84.75 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "reclaim of 20-wk SMA 83.43 (close +4.2% vs SMA, flat); vol 0.90x vs tier 1.5x; CMF +0.10; ATR stop 1.5x = 84.75 (3.5%)",
+    "adr_pct": 1.99,
+    "event_risk": "clear",
     "entry_permitted": false,
-    "entry_block_reason": "binary macro event within 48h: NFP in 0d",
+    "entry_block_reason": "over slot cap (4 positions max, 4 open) \u2014 watch, or close something first",
     "why_note": null,
     "what_would_make_this_wrong": null,
     "instrument_note": null,
@@ -2675,7 +2738,7 @@
     "sector": "XLY",
     "sector_quadrant": "Improving",
     "from_watchlist": false,
-    "close": 106.16,
+    "close": 105.41,
     "setup": "M0 Rotation",
     "side": "long",
     "confluence": "3-of-3",
@@ -2685,31 +2748,31 @@
      "volume": true,
      "missing": []
     },
-    "entry": 111.5,
-    "stop": 107.29,
-    "stop_pct": 3.78,
-    "risk_per_share": 4.21,
+    "entry": 106.62,
+    "stop": 102.17,
+    "stop_pct": 4.17,
+    "risk_per_share": 4.45,
     "risk_pct": 0.25,
     "shares": 5,
-    "notional": 557.5,
-    "notional_pct": 5.6,
-    "heat_after": 0.21,
+    "notional": 533.1,
+    "notional_pct": 5.3,
+    "heat_after": 0.22,
     "blocked_by_heat": false,
     "targets": {
-     "2R": 119.92,
-     "4R": 128.34,
-     "8R": 145.18
+     "2R": 115.52,
+     "4R": 124.42,
+     "8R": 142.22
     },
     "trail": "100 SMA (20-week)",
     "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
     "trail_stats": null,
     "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
-    "invalidated_when": "close below 107.29 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-    "why": "reclaim of 20-wk SMA 101.72 (close +4.4% vs SMA, rising); vol 1.45x vs tier 1.5x; CMF +0.30; ATR stop 1.5x = 107.29 (3.8%)",
-    "adr_pct": 2.52,
-    "event_risk": "NFP in 0d",
+    "invalidated_when": "close below 102.17 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "reclaim of 20-wk SMA 101.77 (close +3.6% vs SMA, rising); vol 0.86x vs tier 1.5x; CMF +0.39; ATR stop 1.5x = 102.17 (4.2%)",
+    "adr_pct": 2.55,
+    "event_risk": "clear",
     "entry_permitted": false,
-    "entry_block_reason": "binary macro event within 48h: NFP in 0d",
+    "entry_block_reason": "over slot cap (4 positions max, 4 open) \u2014 watch, or close something first",
     "why_note": null,
     "what_would_make_this_wrong": null,
     "instrument_note": null,
@@ -2721,7 +2784,7 @@
     "sector": "XLY",
     "sector_quadrant": "Improving",
     "from_watchlist": false,
-    "close": 349.94,
+    "close": 343.47,
     "setup": "M0 Rotation",
     "side": "long",
     "confluence": "3-of-3",
@@ -2731,31 +2794,31 @@
      "volume": true,
      "missing": []
     },
-    "entry": 362.44,
-    "stop": 347.99,
-    "stop_pct": 3.99,
-    "risk_per_share": 14.45,
+    "entry": 346.82,
+    "stop": 331.7,
+    "stop_pct": 4.36,
+    "risk_per_share": 15.12,
     "risk_pct": 0.25,
     "shares": 1,
-    "notional": 362.44,
-    "notional_pct": 3.6,
-    "heat_after": 0.14,
+    "notional": 346.82,
+    "notional_pct": 3.5,
+    "heat_after": 0.15,
     "blocked_by_heat": false,
     "targets": {
-     "2R": 391.34,
-     "4R": 420.24,
-     "8R": 478.04
+     "2R": 377.06,
+     "4R": 407.3,
+     "8R": 467.78
     },
     "trail": "100 SMA (20-week)",
     "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
     "trail_stats": null,
     "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
-    "invalidated_when": "close below 347.99 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-    "why": "reclaim of 20-wk SMA 323.48 (close +8.2% vs SMA, rising); vol 1.57x vs tier 1.5x; CMF +0.15; ATR stop 1.5x = 347.99 (4.0%)",
-    "adr_pct": 2.31,
-    "event_risk": "NFP in 0d",
+    "invalidated_when": "close below 331.70 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "reclaim of 20-wk SMA 323.57 (close +6.2% vs SMA, rising); vol 1.16x vs tier 1.5x; CMF +0.20; ATR stop 1.5x = 331.70 (4.4%)",
+    "adr_pct": 2.35,
+    "event_risk": "clear",
     "entry_permitted": false,
-    "entry_block_reason": "binary macro event within 48h: NFP in 0d",
+    "entry_block_reason": "over slot cap (4 positions max, 4 open) \u2014 watch, or close something first",
     "why_note": null,
     "what_would_make_this_wrong": null,
     "instrument_note": null,
@@ -2763,11 +2826,11 @@
     "pending_confirmation": true
    },
    {
-    "ticker": "XLY",
+    "ticker": "LOW",
     "sector": "XLY",
     "sector_quadrant": "Improving",
     "from_watchlist": false,
-    "close": 117.64,
+    "close": 224.55,
     "setup": "M0 Rotation",
     "side": "long",
     "confluence": "3-of-3",
@@ -2777,31 +2840,31 @@
      "volume": true,
      "missing": []
     },
-    "entry": 122.91,
-    "stop": 118.01,
-    "stop_pct": 3.99,
-    "risk_per_share": 4.9,
+    "entry": 226.23,
+    "stop": 216.16,
+    "stop_pct": 4.45,
+    "risk_per_share": 10.07,
     "risk_pct": 0.25,
-    "shares": 5,
-    "notional": 614.55,
-    "notional_pct": 6.1,
-    "heat_after": 0.24,
+    "shares": 2,
+    "notional": 452.46,
+    "notional_pct": 4.5,
+    "heat_after": 0.2,
     "blocked_by_heat": false,
     "targets": {
-     "2R": 132.71,
-     "4R": 142.51,
-     "8R": 162.11
+     "2R": 246.37,
+     "4R": 266.51,
+     "8R": 306.79
     },
     "trail": "100 SMA (20-week)",
     "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
     "trail_stats": null,
     "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
-    "invalidated_when": "close below 118.01 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-    "why": "reclaim of 20-wk SMA 114.59 (close +2.7% vs SMA, rising); vol 2.33x vs tier 1.5x; CMF +0.02; ATR stop 2.0x = 118.01 (4.0%)",
-    "adr_pct": 1.59,
-    "event_risk": "NFP in 0d",
+    "invalidated_when": "close below 216.16 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "reclaim of 20-wk SMA 204.73 (close +9.7% vs SMA, flat); vol 1.02x vs tier 1.5x; CMF +0.20; ATR stop 1.5x = 216.16 (4.5%)",
+    "adr_pct": 2.43,
+    "event_risk": "clear",
     "entry_permitted": false,
-    "entry_block_reason": "binary macro event within 48h: NFP in 0d",
+    "entry_block_reason": "over slot cap (4 positions max, 4 open) \u2014 watch, or close something first",
     "why_note": null,
     "what_would_make_this_wrong": null,
     "instrument_note": null,
@@ -2813,7 +2876,7 @@
     "sector": "XLY",
     "sector_quadrant": "Improving",
     "from_watchlist": false,
-    "close": 35.4,
+    "close": 34.43,
     "setup": "M0 Rotation",
     "side": "long",
     "confluence": "3-of-3",
@@ -2823,77 +2886,31 @@
      "volume": true,
      "missing": []
     },
-    "entry": 35.47,
-    "stop": 33.64,
-    "stop_pct": 5.16,
-    "risk_per_share": 1.83,
+    "entry": 35.13,
+    "stop": 33.22,
+    "stop_pct": 5.44,
+    "risk_per_share": 1.91,
     "risk_pct": 0.25,
     "shares": 13,
-    "notional": 461.11,
+    "notional": 456.69,
     "notional_pct": 4.6,
-    "heat_after": 0.24,
-    "blocked_by_heat": false,
-    "targets": {
-     "2R": 39.13,
-     "4R": 42.79,
-     "8R": 50.11
-    },
-    "trail": "100 SMA (20-week)",
-    "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
-    "trail_stats": null,
-    "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
-    "invalidated_when": "close below 33.64 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-    "why": "reclaim of 20-wk SMA 33.43 (close +5.9% vs SMA, rising); vol 1.11x vs tier 1.5x; CMF +0.09; ATR stop 1.5x = 33.64 (5.2%)",
-    "adr_pct": 3.35,
-    "event_risk": "NFP in 0d",
-    "entry_permitted": false,
-    "entry_block_reason": "binary macro event within 48h: NFP in 0d",
-    "why_note": null,
-    "what_would_make_this_wrong": null,
-    "instrument_note": null,
-    "teaching_question": null,
-    "pending_confirmation": true
-   },
-   {
-    "ticker": "XLF",
-    "sector": "XLF",
-    "sector_quadrant": "Leading",
-    "from_watchlist": false,
-    "close": 57.5,
-    "setup": "M0 Rotation",
-    "side": "long",
-    "confluence": "3-of-3",
-    "legs": {
-     "rotation": true,
-     "structure": true,
-     "volume": true,
-     "missing": []
-    },
-    "entry": 60.04,
-    "stop": 58.12,
-    "stop_pct": 3.2,
-    "risk_per_share": 1.92,
-    "risk_pct": 0.25,
-    "shares": 13,
-    "notional": 780.52,
-    "notional_pct": 7.8,
     "heat_after": 0.25,
     "blocked_by_heat": false,
     "targets": {
-     "2R": 63.88,
-     "4R": 67.72,
-     "8R": 75.4
+     "2R": 38.95,
+     "4R": 42.77,
+     "8R": 50.41
     },
     "trail": "100 SMA (20-week)",
     "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
     "trail_stats": null,
     "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
-    "invalidated_when": "close below 58.12 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-    "why": "reclaim of 20-wk SMA 55.97 (close +2.7% vs SMA, rising); vol 2.01x vs tier 1.25x; CMF +0.06; ATR stop 2.0x = 58.12 (3.2%)",
-    "adr_pct": 1.36,
-    "event_risk": "NFP in 0d",
+    "invalidated_when": "close below 33.22 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "reclaim of 20-wk SMA 33.45 (close +2.9% vs SMA, rising); vol 0.69x vs tier 1.5x; CMF +0.10; ATR stop 1.5x = 33.22 (5.4%)",
+    "adr_pct": 3.24,
+    "event_risk": "clear",
     "entry_permitted": false,
-    "entry_block_reason": "binary macro event within 48h: NFP in 0d",
+    "entry_block_reason": "over slot cap (4 positions max, 4 open) \u2014 watch, or close something first",
     "why_note": null,
     "what_would_make_this_wrong": null,
     "instrument_note": null,
@@ -2905,7 +2922,7 @@
     "sector": "XLV",
     "sector_quadrant": "Leading",
     "from_watchlist": false,
-    "close": 272.32,
+    "close": 276.22,
     "setup": "M0 Rotation",
     "side": "long",
     "confluence": "3-of-3",
@@ -2915,31 +2932,173 @@
      "volume": true,
      "missing": []
     },
-    "entry": 281.92,
-    "stop": 270.86,
-    "stop_pct": 3.92,
-    "risk_per_share": 11.06,
+    "entry": 276.41,
+    "stop": 264.62,
+    "stop_pct": 4.27,
+    "risk_per_share": 11.79,
     "risk_pct": 0.25,
     "shares": 2,
-    "notional": 563.84,
-    "notional_pct": 5.6,
-    "heat_after": 0.22,
+    "notional": 552.82,
+    "notional_pct": 5.5,
+    "heat_after": 0.24,
     "blocked_by_heat": false,
     "targets": {
-     "2R": 304.04,
-     "4R": 326.16,
-     "8R": 370.4
+     "2R": 299.99,
+     "4R": 323.57,
+     "8R": 370.73
     },
     "trail": "100 SMA (20-week)",
     "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
     "trail_stats": null,
     "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
-    "invalidated_when": "close below 270.86 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-    "why": "reclaim of 20-wk SMA 260.61 (close +4.5% vs SMA, rising); vol 1.21x vs tier 1.25x; CMF +0.06; ATR stop 1.5x = 270.86 (3.9%)",
-    "adr_pct": 2.52,
-    "event_risk": "NFP in 0d",
+    "invalidated_when": "close below 264.62 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "reclaim of 20-wk SMA 261.03 (close +5.8% vs SMA, rising); vol 1.09x vs tier 1.25x; CMF +0.08; ATR stop 1.5x = 264.62 (4.3%)",
+    "adr_pct": 2.59,
+    "event_risk": "clear",
     "entry_permitted": false,
-    "entry_block_reason": "binary macro event within 48h: NFP in 0d",
+    "entry_block_reason": "over slot cap (4 positions max, 4 open) \u2014 watch, or close something first",
+    "why_note": null,
+    "what_would_make_this_wrong": null,
+    "instrument_note": null,
+    "teaching_question": null,
+    "pending_confirmation": true
+   },
+   {
+    "ticker": "ABT",
+    "sector": "XLV",
+    "sector_quadrant": "Leading",
+    "from_watchlist": false,
+    "close": 109.93,
+    "setup": "M0 Rotation",
+    "side": "long",
+    "confluence": "3-of-3",
+    "legs": {
+     "rotation": true,
+     "structure": true,
+     "volume": true,
+     "missing": []
+    },
+    "entry": 111.81,
+    "stop": 106.24,
+    "stop_pct": 4.98,
+    "risk_per_share": 5.57,
+    "risk_pct": 0.25,
+    "shares": 4,
+    "notional": 447.24,
+    "notional_pct": 4.5,
+    "heat_after": 0.22,
+    "blocked_by_heat": false,
+    "targets": {
+     "2R": 122.95,
+     "4R": 134.09,
+     "8R": 156.37
+    },
+    "trail": "100 SMA (20-week)",
+    "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
+    "trail_stats": null,
+    "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
+    "invalidated_when": "close below 106.24 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "breakout above 20-wk SMA 102.35 (close +7.4% vs SMA, rising); vol 0.86x vs tier 1.5x; CMF +0.12; ATR stop 1.5x = 106.24 (5.0%)",
+    "adr_pct": 2.81,
+    "event_risk": "clear",
+    "entry_permitted": false,
+    "entry_block_reason": "over slot cap (4 positions max, 4 open) \u2014 watch, or close something first",
+    "why_note": null,
+    "what_would_make_this_wrong": null,
+    "instrument_note": null,
+    "teaching_question": null,
+    "pending_confirmation": true
+   },
+   {
+    "ticker": "XLF",
+    "sector": "XLF",
+    "sector_quadrant": "Improving",
+    "from_watchlist": false,
+    "close": 57.16,
+    "setup": "M0 Rotation",
+    "side": "long",
+    "confluence": "2-of-3",
+    "legs": {
+     "rotation": true,
+     "structure": true,
+     "volume": false,
+     "missing": [
+      "volume"
+     ]
+    },
+    "entry": 57.71,
+    "stop": 55.72,
+    "stop_pct": 3.45,
+    "risk_per_share": 1.99,
+    "risk_pct": 0.125,
+    "shares": 6,
+    "notional": 346.26,
+    "notional_pct": 3.5,
+    "heat_after": 0.12,
+    "blocked_by_heat": false,
+    "targets": {
+     "2R": 61.69,
+     "4R": 65.67,
+     "8R": 73.63
+    },
+    "trail": "100 SMA (20-week)",
+    "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
+    "trail_stats": null,
+    "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
+    "invalidated_when": "close below 55.72 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "reclaim of 20-wk SMA 56.00 (close +2.1% vs SMA, rising); vol 0.98x vs tier 1.25x; CMF +0.02; ATR stop 2.0x = 55.72 (3.5%)",
+    "adr_pct": 1.4,
+    "event_risk": "clear",
+    "entry_permitted": false,
+    "entry_block_reason": "over slot cap (4 positions max, 4 open) \u2014 watch, or close something first",
+    "why_note": null,
+    "what_would_make_this_wrong": null,
+    "instrument_note": null,
+    "teaching_question": null,
+    "pending_confirmation": true
+   },
+   {
+    "ticker": "XLY",
+    "sector": "XLY",
+    "sector_quadrant": "Improving",
+    "from_watchlist": false,
+    "close": 117.58,
+    "setup": "M0 Rotation",
+    "side": "long",
+    "confluence": "2-of-3",
+    "legs": {
+     "rotation": true,
+     "structure": true,
+     "volume": false,
+     "missing": [
+      "volume"
+     ]
+    },
+    "entry": 118.96,
+    "stop": 114.04,
+    "stop_pct": 4.14,
+    "risk_per_share": 4.92,
+    "risk_pct": 0.125,
+    "shares": 2,
+    "notional": 237.92,
+    "notional_pct": 2.4,
+    "heat_after": 0.1,
+    "blocked_by_heat": false,
+    "targets": {
+     "2R": 128.8,
+     "4R": 138.64,
+     "8R": 158.32
+    },
+    "trail": "100 SMA (20-week)",
+    "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
+    "trail_stats": null,
+    "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
+    "invalidated_when": "close below 114.04 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "reclaim of 20-wk SMA 114.58 (close +2.6% vs SMA, rising); vol 1.19x vs tier 1.5x; CMF -0.01; ATR stop 2.0x = 114.04 (4.1%)",
+    "adr_pct": 1.66,
+    "event_risk": "clear",
+    "entry_permitted": false,
+    "entry_block_reason": "over slot cap (4 positions max, 4 open) \u2014 watch, or close something first",
     "why_note": null,
     "what_would_make_this_wrong": null,
     "instrument_note": null,
@@ -2947,246 +3106,299 @@
     "pending_confirmation": true
    }
   ],
-  "permitted": [],
-  "near_misses": [
+  "permitted": [
    {
-    "ticker": "AMZN",
-    "sector": "XLY",
+    "ticker": "DUK",
+    "sector": "XLU",
     "sector_quadrant": "Improving",
     "from_watchlist": false,
-    "close": 260.21,
-    "setup": "M2b Failed-BO Short",
-    "side": "short",
-    "confluence": "2-of-3",
-    "ground": "long",
-    "reason": "M2b Failed-BO Short short (2-of-3) demoted \u2014 short card from a long hunting ground (XLY Improving, accumulation 39.5) \u2014 the setup fights the sector rotation; watch only"
-   },
-   {
-    "ticker": "CL",
-    "sector": "XLP",
-    "sector_quadrant": "Weakening",
-    "from_watchlist": false,
-    "close": 98.69,
+    "close": 127.78,
     "setup": "M0 Rotation",
     "side": "long",
-    "confluence": "2-of-3",
-    "ground": "short_watch",
-    "reason": "M0 Rotation long (2-of-3) demoted \u2014 long card from a short hunting ground (XLP Weakening, accumulation 3) \u2014 the setup fights the sector rotation; watch only"
+    "confluence": "3-of-3",
+    "legs": {
+     "rotation": true,
+     "structure": true,
+     "volume": true,
+     "missing": []
+    },
+    "entry": 129.02,
+    "stop": 125.42,
+    "stop_pct": 2.79,
+    "risk_per_share": 3.6,
+    "risk_pct": 0.25,
+    "shares": 6,
+    "notional": 774.12,
+    "notional_pct": 7.7,
+    "heat_after": 0.22,
+    "blocked_by_heat": false,
+    "targets": {
+     "2R": 136.22,
+     "4R": 143.42,
+     "8R": 157.82
+    },
+    "trail": "100 SMA (20-week)",
+    "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
+    "trail_stats": null,
+    "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
+    "invalidated_when": "close below 125.42 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "reclaim of 20-wk SMA 122.12 (close +4.6% vs SMA, rising); vol 1.38x vs tier 1.5x; CMF +0.10; ATR stop 1.5x = 125.42 (2.8%)",
+    "adr_pct": 1.74,
+    "event_risk": "clear",
+    "entry_permitted": true,
+    "entry_block_reason": null,
+    "why_note": null,
+    "what_would_make_this_wrong": null,
+    "instrument_note": null,
+    "teaching_question": null,
+    "pending_confirmation": true
    },
+   {
+    "ticker": "XLU",
+    "sector": "XLU",
+    "sector_quadrant": "Improving",
+    "from_watchlist": false,
+    "close": 43.13,
+    "setup": "M0 Rotation",
+    "side": "long",
+    "confluence": "3-of-3",
+    "legs": {
+     "rotation": true,
+     "structure": true,
+     "volume": true,
+     "missing": []
+    },
+    "entry": 43.37,
+    "stop": 42.13,
+    "stop_pct": 2.86,
+    "risk_per_share": 1.24,
+    "risk_pct": 0.25,
+    "shares": 20,
+    "notional": 867.4,
+    "notional_pct": 8.7,
+    "heat_after": 0.25,
+    "blocked_by_heat": false,
+    "targets": {
+     "2R": 45.85,
+     "4R": 48.33,
+     "8R": 53.29
+    },
+    "trail": "100 SMA (20-week)",
+    "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
+    "trail_stats": null,
+    "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
+    "invalidated_when": "close below 42.13 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "reclaim of 20-wk SMA 43.03 (close +0.2% vs SMA, flat); vol 0.98x vs tier 1.5x; CMF +0.13; ATR stop 2.0x = 42.13 (2.9%)",
+    "adr_pct": 1.45,
+    "event_risk": "clear",
+    "entry_permitted": true,
+    "entry_block_reason": null,
+    "why_note": null,
+    "what_would_make_this_wrong": null,
+    "instrument_note": null,
+    "teaching_question": null,
+    "pending_confirmation": true
+   },
+   {
+    "ticker": "SO",
+    "sector": "XLU",
+    "sector_quadrant": "Improving",
+    "from_watchlist": false,
+    "close": 92.34,
+    "setup": "M0 Rotation",
+    "side": "long",
+    "confluence": "3-of-3",
+    "legs": {
+     "rotation": true,
+     "structure": true,
+     "volume": true,
+     "missing": []
+    },
+    "entry": 92.56,
+    "stop": 89.69,
+    "stop_pct": 3.1,
+    "risk_per_share": 2.87,
+    "risk_pct": 0.25,
+    "shares": 8,
+    "notional": 740.48,
+    "notional_pct": 7.4,
+    "heat_after": 0.23,
+    "blocked_by_heat": false,
+    "targets": {
+     "2R": 98.3,
+     "4R": 104.04,
+     "8R": 115.52
+    },
+    "trail": "100 SMA (20-week)",
+    "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
+    "trail_stats": null,
+    "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
+    "invalidated_when": "close below 89.69 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "reclaim of 20-wk SMA 90.82 (close +1.7% vs SMA, rising); vol 1.08x vs tier 1.5x; CMF +0.16; ATR stop 1.5x = 89.69 (3.1%)",
+    "adr_pct": 1.93,
+    "event_risk": "clear",
+    "entry_permitted": true,
+    "entry_block_reason": null,
+    "why_note": null,
+    "what_would_make_this_wrong": null,
+    "instrument_note": null,
+    "teaching_question": null,
+    "pending_confirmation": true
+   },
+   {
+    "ticker": "EXC",
+    "sector": "XLU",
+    "sector_quadrant": "Improving",
+    "from_watchlist": false,
+    "close": 45.62,
+    "setup": "M0 Rotation",
+    "side": "long",
+    "confluence": "3-of-3",
+    "legs": {
+     "rotation": true,
+     "structure": true,
+     "volume": true,
+     "missing": []
+    },
+    "entry": 46.09,
+    "stop": 44.65,
+    "stop_pct": 3.12,
+    "risk_per_share": 1.44,
+    "risk_pct": 0.25,
+    "shares": 17,
+    "notional": 783.53,
+    "notional_pct": 7.8,
+    "heat_after": 0.24,
+    "blocked_by_heat": false,
+    "targets": {
+     "2R": 48.97,
+     "4R": 51.85,
+     "8R": 57.61
+    },
+    "trail": "100 SMA (20-week)",
+    "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
+    "trail_stats": null,
+    "instrument": "stock/ETF (ATR stop is tight in $; no options needed)",
+    "invalidated_when": "close below 44.65 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+    "why": "reclaim of 20-wk SMA 44.32 (close +2.9% vs SMA, rising); vol 1.05x vs tier 1.5x; CMF +0.15; ATR stop 1.5x = 44.65 (3.1%)",
+    "adr_pct": 2.02,
+    "event_risk": "clear",
+    "entry_permitted": true,
+    "entry_block_reason": null,
+    "why_note": null,
+    "what_would_make_this_wrong": null,
+    "instrument_note": null,
+    "teaching_question": null,
+    "pending_confirmation": true
+   }
+  ],
+  "near_misses": [
    {
     "ticker": "CMCSA",
     "sector": "XLC",
     "sector_quadrant": "Improving",
     "from_watchlist": false,
-    "close": 24.95,
+    "close": 24.39,
     "setup": "M0 Rotation",
     "side": "long",
     "confluence": "3-of-3",
     "ground": "long_watch",
-    "reason": "M0 Rotation long (3-of-3) demoted \u2014 flow does not confirm the ground: XLC Improving \u2014 price rotating in, money not (accumulation -39.64); watch until accumulation turns positive"
-   },
-   {
-    "ticker": "GS",
-    "sector": "XLF",
-    "sector_quadrant": "Leading",
-    "from_watchlist": false,
-    "close": 868.95,
-    "setup": "M2b Failed-BO Short",
-    "side": "short",
-    "confluence": "2-of-3",
-    "ground": "long",
-    "reason": "M2b Failed-BO Short short (2-of-3) demoted \u2014 short card from a long hunting ground (XLF Leading, accumulation 56.49) \u2014 the setup fights the sector rotation; watch only"
-   },
-   {
-    "ticker": "HON",
-    "sector": "XLI",
-    "sector_quadrant": "Lagging",
-    "from_watchlist": false,
-    "close": 215.78,
-    "setup": "M2b Failed-BO Short",
-    "side": "short",
-    "confluence": "2-of-3",
-    "ground": "short_watch",
-    "reason": "M2b Failed-BO Short short (2-of-3) demoted \u2014 flow does not confirm the ground: XLI Lagging \u2014 price rotating out, money not leaving (accumulation 69.52); watch until accumulation turns negative"
-   },
-   {
-    "ticker": "JPM",
-    "sector": "XLF",
-    "sector_quadrant": "Leading",
-    "from_watchlist": false,
-    "close": 337.34,
-    "setup": "M2b Failed-BO Short",
-    "side": "short",
-    "confluence": "2-of-3",
-    "ground": "long",
-    "reason": "M2b Failed-BO Short short (2-of-3) demoted \u2014 short card from a long hunting ground (XLF Leading, accumulation 56.49) \u2014 the setup fights the sector rotation; watch only"
-   },
-   {
-    "ticker": "LLY",
-    "sector": "XLV",
-    "sector_quadrant": "Leading",
-    "from_watchlist": false,
-    "close": 1364.73,
-    "setup": "M2b Failed-BO Short",
-    "side": "short",
-    "confluence": "2-of-3",
-    "ground": "long",
-    "reason": "M2b Failed-BO Short short (2-of-3) demoted \u2014 short card from a long hunting ground (XLV Leading, accumulation 32.26) \u2014 the setup fights the sector rotation; watch only"
-   },
-   {
-    "ticker": "LMT",
-    "sector": "XLI",
-    "sector_quadrant": "Lagging",
-    "from_watchlist": false,
-    "close": 576.16,
-    "setup": "M0 Rotation",
-    "side": "long",
-    "confluence": "2-of-3",
-    "ground": "short_watch",
-    "reason": "M0 Rotation long (2-of-3) demoted \u2014 long card from a short hunting ground (XLI Lagging, accumulation 69.52) \u2014 the setup fights the sector rotation; watch only"
-   },
-   {
-    "ticker": "MDLZ",
-    "sector": "XLP",
-    "sector_quadrant": "Weakening",
-    "from_watchlist": false,
-    "close": 66.82,
-    "setup": "M0 Rotation",
-    "side": "long",
-    "confluence": "2-of-3",
-    "ground": "short_watch",
-    "reason": "M0 Rotation long (2-of-3) demoted \u2014 long card from a short hunting ground (XLP Weakening, accumulation 3) \u2014 the setup fights the sector rotation; watch only"
-   },
-   {
-    "ticker": "MS",
-    "sector": "XLF",
-    "sector_quadrant": "Leading",
-    "from_watchlist": false,
-    "close": 182.44,
-    "setup": "M2b Failed-BO Short",
-    "side": "short",
-    "confluence": "2-of-3",
-    "ground": "long",
-    "reason": "M2b Failed-BO Short short (2-of-3) demoted \u2014 short card from a long hunting ground (XLF Leading, accumulation 56.49) \u2014 the setup fights the sector rotation; watch only"
+    "reason": "M0 Rotation long (3-of-3) demoted \u2014 flow does not confirm the ground: XLC Improving \u2014 price rotating in, money not (accumulation -47.99); watch until accumulation turns positive"
    },
    {
     "ticker": "PEP",
     "sector": "XLP",
     "sector_quadrant": "Weakening",
     "from_watchlist": false,
-    "close": 142.71,
+    "close": 141.34,
+    "setup": "M0 Rotation",
+    "side": "long",
+    "confluence": "2-of-3",
+    "ground": "short",
+    "reason": "M0 Rotation long (2-of-3) demoted \u2014 long card from a short hunting ground (XLP Weakening, accumulation -12.74) \u2014 the setup fights the sector rotation; watch only"
+   },
+   {
+    "ticker": "PSA",
+    "sector": "XLRE",
+    "sector_quadrant": "Lagging",
+    "from_watchlist": false,
+    "close": 337.46,
     "setup": "M0 Rotation",
     "side": "long",
     "confluence": "2-of-3",
     "ground": "short_watch",
-    "reason": "M0 Rotation long (2-of-3) demoted \u2014 long card from a short hunting ground (XLP Weakening, accumulation 3) \u2014 the setup fights the sector rotation; watch only"
+    "reason": "M0 Rotation long (2-of-3) demoted \u2014 long card from a short hunting ground (XLRE Lagging, accumulation 35.75) \u2014 the setup fights the sector rotation; watch only"
    },
    {
-    "ticker": "PFE",
-    "sector": "XLV",
-    "sector_quadrant": "Leading",
-    "from_watchlist": false,
-    "close": 29.88,
-    "setup": "M2b Failed-BO Short",
-    "side": "short",
-    "confluence": "2-of-3",
-    "ground": "long",
-    "reason": "M2b Failed-BO Short short (2-of-3) demoted \u2014 short card from a long hunting ground (XLV Leading, accumulation 32.26) \u2014 the setup fights the sector rotation; watch only"
-   },
-   {
-    "ticker": "PM",
-    "sector": "XLP",
-    "sector_quadrant": "Weakening",
-    "from_watchlist": false,
-    "close": 201.5,
-    "setup": "M2b Failed-BO Short",
-    "side": "short",
-    "confluence": "3-of-3",
-    "ground": "short_watch",
-    "reason": "M2b Failed-BO Short short (3-of-3) demoted \u2014 flow does not confirm the ground: XLP Weakening \u2014 price rotating out, money not leaving (accumulation 3); watch until accumulation turns negative"
-   },
-   {
-    "ticker": "RTX",
-    "sector": "XLI",
+    "ticker": "SPG",
+    "sector": "XLRE",
     "sector_quadrant": "Lagging",
     "from_watchlist": false,
-    "close": 191.88,
-    "setup": "M2b Failed-BO Short",
-    "side": "short",
-    "confluence": "3-of-3",
-    "ground": "short_watch",
-    "reason": "M2b Failed-BO Short short (3-of-3) demoted \u2014 flow does not confirm the ground: XLI Lagging \u2014 price rotating out, money not leaving (accumulation 69.52); watch until accumulation turns negative"
-   },
-   {
-    "ticker": "TGT",
-    "sector": "XLP",
-    "sector_quadrant": "Weakening",
-    "from_watchlist": false,
-    "close": 157.95,
-    "setup": "M2b Failed-BO Short",
-    "side": "short",
+    "close": 228.42,
+    "setup": "M0 Rotation",
+    "side": "long",
     "confluence": "2-of-3",
     "ground": "short_watch",
-    "reason": "M2b Failed-BO Short short (2-of-3) demoted \u2014 flow does not confirm the ground: XLP Weakening \u2014 price rotating out, money not leaving (accumulation 3); watch until accumulation turns negative"
+    "reason": "M0 Rotation long (2-of-3) demoted \u2014 long card from a short hunting ground (XLRE Lagging, accumulation 35.75) \u2014 the setup fights the sector rotation; watch only"
    },
    {
     "ticker": "UNP",
     "sector": "XLI",
     "sector_quadrant": "Lagging",
     "from_watchlist": false,
-    "close": 297.95,
+    "close": 290.16,
     "setup": "M0 Rotation",
     "side": "long",
-    "confluence": "3-of-3",
+    "confluence": "2-of-3",
     "ground": "short_watch",
-    "reason": "M0 Rotation long (3-of-3) demoted \u2014 long card from a short hunting ground (XLI Lagging, accumulation 69.52) \u2014 the setup fights the sector rotation; watch only"
+    "reason": "M0 Rotation long (2-of-3) demoted \u2014 long card from a short hunting ground (XLI Lagging, accumulation 40.58) \u2014 the setup fights the sector rotation; watch only"
    },
    {
     "ticker": "UPS",
     "sector": "XLI",
     "sector_quadrant": "Lagging",
     "from_watchlist": false,
-    "close": 111.04,
+    "close": 108.3,
     "setup": "M0 Rotation",
     "side": "long",
-    "confluence": "3-of-3",
+    "confluence": "2-of-3",
     "ground": "short_watch",
-    "reason": "M0 Rotation long (3-of-3) demoted \u2014 long card from a short hunting ground (XLI Lagging, accumulation 69.52) \u2014 the setup fights the sector rotation; watch only"
+    "reason": "M0 Rotation long (2-of-3) demoted \u2014 long card from a short hunting ground (XLI Lagging, accumulation 40.58) \u2014 the setup fights the sector rotation; watch only"
    },
    {
     "ticker": "VZ",
     "sector": "XLC",
     "sector_quadrant": "Improving",
     "from_watchlist": false,
-    "close": 46.12,
+    "close": 45.69,
     "setup": "M0 Rotation",
     "side": "long",
     "confluence": "3-of-3",
     "ground": "long_watch",
-    "reason": "M0 Rotation long (3-of-3) demoted \u2014 flow does not confirm the ground: XLC Improving \u2014 price rotating in, money not (accumulation -39.64); watch until accumulation turns positive"
+    "reason": "M0 Rotation long (3-of-3) demoted \u2014 flow does not confirm the ground: XLC Improving \u2014 price rotating in, money not (accumulation -47.99); watch until accumulation turns positive"
    },
    {
-    "ticker": "XLP",
-    "sector": "XLP",
-    "sector_quadrant": "Weakening",
+    "ticker": "WELL",
+    "sector": "XLRE",
+    "sector_quadrant": "Lagging",
     "from_watchlist": false,
-    "close": 91.25,
+    "close": 245.01,
     "setup": "M0 Rotation",
     "side": "long",
     "confluence": "2-of-3",
     "ground": "short_watch",
-    "reason": "M0 Rotation long (2-of-3) demoted \u2014 long card from a short hunting ground (XLP Weakening, accumulation 3) \u2014 the setup fights the sector rotation; watch only"
+    "reason": "M0 Rotation long (2-of-3) demoted \u2014 long card from a short hunting ground (XLRE Lagging, accumulation 35.75) \u2014 the setup fights the sector rotation; watch only"
    }
   ],
   "refusals": [],
   "breadth": {
-   "pct_above_200": 59.6,
+   "pct_above_200": 60.6,
    "n": 109,
    "source": "109-name sector-constituent proxy (not the full S&P 500)",
    "size_cut": false,
    "read": "tailwind"
   },
-  "conclusion": "\u26a0 Latest swing brief is from 2026-11-05, not this session. 0 entry-permitted cards; 19 near-misses building on watch."
+  "conclusion": "4 entry-permitted cards (DUK long 3-of-3, XLU long 3-of-3, SO long 3-of-3, EXC long 3-of-3); 8 near-misses building on watch. All permitted cards are in XLU \u2014 one sector bet, size them as one position."
  },
  "next48": {
   "horizon": "2026-11-10",
@@ -3201,12 +3413,23 @@
   ],
   "next_event": null,
   "if_then": [
-   "CPI \u2014 hot (MoM \u2265 0.4%): YoY rises, so the short real rate FALLS. The short real rate moves away from its flip. Cool (MoM \u2264 0.1%): the short real rate rises and the tightening read strengthens."
+   "CPI \u2014 hot (MoM \u2265 0.4%): YoY rises, so the short real rate FALLS. The short real rate (+0.14%) is 0.40pp from flipping the regime to `inflationary_repression`. Cool (MoM \u2264 0.1%): the short real rate rises and the tightening read strengthens."
   ],
   "calendar_asof": "2026-11-01",
   "conclusion": "Binary event inside the window: CPI 2026-11-10. No new entries in the affected sleeves until it prints."
  },
- "alerts": [],
+ "alerts": [
+  {
+   "rule": "dfii10_level",
+   "sessions": 14,
+   "repeat": true
+  },
+  {
+   "rule": "sector_dispersion",
+   "sessions": 33,
+   "repeat": true
+  }
+ ],
  "signals": {
   "available": true,
   "new": [
@@ -3761,6 +3984,54 @@
     "context": "M0 Rotation \u00b7 regime=transition_ambiguous",
     "notes": "",
     "source": "swing_cards"
+   },
+   {
+    "signal_id": "2026-11-06_confluence_3of3_SO",
+    "date": "2026-11-06",
+    "signal_type": "confluence_3of3",
+    "subject": "SO",
+    "direction": "long",
+    "price_at_signal": 92.34,
+    "benchmark_at_signal": null,
+    "context": "M0 Rotation \u00b7 regime=transition_ambiguous",
+    "notes": "",
+    "source": "swing_cards"
+   },
+   {
+    "signal_id": "2026-11-06_confluence_3of3_EXC",
+    "date": "2026-11-06",
+    "signal_type": "confluence_3of3",
+    "subject": "EXC",
+    "direction": "long",
+    "price_at_signal": 45.62,
+    "benchmark_at_signal": null,
+    "context": "M0 Rotation \u00b7 regime=transition_ambiguous",
+    "notes": "",
+    "source": "swing_cards"
+   },
+   {
+    "signal_id": "2026-11-06_flow_divergence_XLE",
+    "date": "2026-11-06",
+    "signal_type": "flow_divergence",
+    "subject": "XLE",
+    "direction": "long",
+    "price_at_signal": null,
+    "benchmark_at_signal": null,
+    "context": "ACCUMULATION (price down, money in) \u00b7 flow 2.07% AUM",
+    "notes": "",
+    "source": "rotation"
+   },
+   {
+    "signal_id": "2026-11-09_flow_into_stocks_PORT",
+    "date": "2026-11-09",
+    "signal_type": "flow_into_stocks",
+    "subject": "PORT",
+    "direction": "long",
+    "price_at_signal": null,
+    "benchmark_at_signal": null,
+    "context": "into_stocks (was borderline) \u00b7 stocks +2.47% \u00b7 3.8 typical days past the line \u00b7 data 2026-11-06",
+    "notes": "{\"weights\": {\"SPY\": 100}, \"bench_weights\": {\"SGOV\": 100}, \"bench\": \"SGOV\", \"data_date\": \"2026-11-06\", \"record\": {\"stocks_pct\": 2.469210611390475, \"stocks_ex_hedge_pct\": 6.554967053837335, \"safety_pct\": -0.5260482218225918, \"typical_day\": 0.5846346478395159, \"margin_days\": 3.79589307543, \"hedge_agrees\": true}}",
+    "source": "flow_map"
    }
   ],
   "scorecard": {
@@ -3780,7 +4051,7 @@
      "confluence_3of3",
      "flow_divergence"
     ],
-    "weeks_of_history": 12.0,
+    "weeks_of_history": 12.1,
     "since": "2026-08-14",
     "ready": true,
     "message": "2 signal type(s) have 20+ observations. Overlapping horizons are correlated \u2014 treat early readings as directional."
@@ -3790,10 +4061,10 @@
      {
       "signal_type": "flow_divergence",
       "logged": 45,
-      "n": 42,
-      "hit_rate": 31.0,
-      "avg_rel": -1.61,
-      "med_rel": -2.11,
+      "n": 41,
+      "hit_rate": 31.7,
+      "avg_rel": -1.42,
+      "med_rel": -1.82,
       "verdict": "NEGATIVE \u2014 candidate for removal from the checklist"
      },
      {
@@ -3801,18 +4072,18 @@
       "logged": 20,
       "n": 20,
       "hit_rate": 80.0,
-      "avg_rel": 2.27,
-      "med_rel": 2.75,
+      "avg_rel": 2.28,
+      "med_rel": 2.76,
       "verdict": "EDGE \u2014 keep and consider sizing up"
      },
      {
       "signal_type": "regime_weekly",
       "logged": 12,
-      "n": 12,
+      "n": 11,
       "hit_rate": NaN,
-      "avg_rel": 0.1,
-      "med_rel": 0.05,
-      "verdict": "INSUFFICIENT \u2014 12/20 scored, no rate reported"
+      "avg_rel": 0.11,
+      "med_rel": 0.09,
+      "verdict": "INSUFFICIENT \u2014 11/20 scored, no rate reported"
      },
      {
       "signal_type": "confluence_2of3",
@@ -4010,36 +4281,85 @@
     ]
    }
   },
-  "conclusion": "100 signals on record since 2026-08-14; 0 new this run. 4-week scores so far: regime_weekly n=8 avg +0.37pp; confluence_2of3 n=6 avg -2.59pp; confluence_3of3 n=3 avg -4.74pp; regime_transition n=1 avg -0.35pp; gold_gate_fail n=1 avg +5.94pp. Hit rates appear only at 20+ scored signals.",
-  "new_today": [],
-  "recorded": 0
+  "conclusion": "100 signals on record since 2026-08-14; 4 new this run (confluence_3of3, flow_divergence, flow_into_stocks). 4-week scores so far: regime_weekly n=8 avg +0.37pp; confluence_2of3 n=6 avg -2.59pp; confluence_3of3 n=3 avg -4.74pp; regime_transition n=1 avg -0.35pp; gold_gate_fail n=1 avg +5.94pp. Hit rates appear only at 20+ scored signals.",
+  "new_today": [
+   {
+    "signal_id": "2026-11-06_confluence_3of3_SO",
+    "date": "2026-11-06",
+    "signal_type": "confluence_3of3",
+    "subject": "SO",
+    "direction": "long",
+    "price_at_signal": 92.34,
+    "benchmark_at_signal": null,
+    "context": "M0 Rotation \u00b7 regime=transition_ambiguous",
+    "notes": "",
+    "source": "swing_cards"
+   },
+   {
+    "signal_id": "2026-11-06_confluence_3of3_EXC",
+    "date": "2026-11-06",
+    "signal_type": "confluence_3of3",
+    "subject": "EXC",
+    "direction": "long",
+    "price_at_signal": 45.62,
+    "benchmark_at_signal": null,
+    "context": "M0 Rotation \u00b7 regime=transition_ambiguous",
+    "notes": "",
+    "source": "swing_cards"
+   },
+   {
+    "signal_id": "2026-11-06_flow_divergence_XLE",
+    "date": "2026-11-06",
+    "signal_type": "flow_divergence",
+    "subject": "XLE",
+    "direction": "long",
+    "price_at_signal": null,
+    "benchmark_at_signal": null,
+    "context": "ACCUMULATION (price down, money in) \u00b7 flow 2.07% AUM",
+    "notes": "",
+    "source": "rotation"
+   },
+   {
+    "signal_id": "2026-11-09_flow_into_stocks_PORT",
+    "date": "2026-11-09",
+    "signal_type": "flow_into_stocks",
+    "subject": "PORT",
+    "direction": "long",
+    "price_at_signal": null,
+    "benchmark_at_signal": null,
+    "context": "into_stocks (was borderline) \u00b7 stocks +2.47% \u00b7 3.8 typical days past the line \u00b7 data 2026-11-06",
+    "notes": "{\"weights\": {\"SPY\": 100}, \"bench_weights\": {\"SGOV\": 100}, \"bench\": \"SGOV\", \"data_date\": \"2026-11-06\", \"record\": {\"stocks_pct\": 2.469210611390475, \"stocks_ex_hedge_pct\": 6.554967053837335, \"safety_pct\": -0.5260482218225918, \"typical_day\": 0.5846346478395159, \"margin_days\": 3.79589307543, \"hedge_agrees\": true}}",
+    "source": "flow_map"
+   }
+  ],
+  "recorded": 4
  },
  "data_health": [
   {
    "input": "FRED DFII10",
-   "asof": "2026-11-04",
-   "age_days": 2,
+   "asof": "2026-11-05",
+   "age_days": 1,
    "status": "OK",
    "note": ""
   },
   {
    "input": "FRED DGS10",
-   "asof": "2026-11-04",
-   "age_days": 2,
+   "asof": "2026-11-05",
+   "age_days": 1,
    "status": "OK",
    "note": ""
   },
   {
    "input": "FRED DGS2",
-   "asof": "2026-11-04",
-   "age_days": 2,
+   "asof": "2026-11-05",
+   "age_days": 1,
    "status": "OK",
    "note": ""
   },
   {
    "input": "FRED T10YIE",
-   "asof": "2026-11-05",
-   "age_days": 1,
+   "asof": "2026-11-06",
+   "age_days": 0,
    "status": "OK",
    "note": ""
   },
@@ -4076,7 +4396,7 @@
    "asof": "2026-11-06",
    "age_days": 0,
    "status": "OK",
-   "note": "one series of front-month settles: Yahoo CL=F daily for completed sessions, latest 5 rebuilt from 1-min bars (VWAP 14:28\u201314:30 ET); method check \u2014 Yahoo daily vs rebuilt on 4 earlier session(s): max $0.08; FRED spot minus settle on 2026-11-03: +3.52 (market spread, not an error); front-month expiry 2026-10-20 (Nov 2026 contract) inside the 20-day window \u2014 changes spanning it include the roll"
+   "note": "one series of front-month settles: Yahoo CL=F daily for completed sessions, latest 5 rebuilt from 1-min bars (VWAP 14:28\u201314:30 ET); method check \u2014 Yahoo daily vs rebuilt on 4 earlier session(s): max $0.07; FRED spot minus settle on 2026-11-03: +3.51 (market spread, not an error); front-month expiry 2026-10-20 (Nov 2026 contract) inside the 20-day window \u2014 changes spanning it include the roll"
   },
   {
    "input": "Regime assessment",
@@ -4087,8 +4407,8 @@
   },
   {
    "input": "Money Flow bridge",
-   "asof": "2026-11-06",
-   "age_days": 0,
+   "asof": "2026-11-07",
+   "age_days": -1,
    "status": "OK",
    "note": ""
   },
@@ -4101,23 +4421,23 @@
   },
   {
    "input": "Flow map summary",
-   "asof": "2026-11-06",
-   "age_days": 0,
+   "asof": "2026-11-07",
+   "age_days": -1,
    "status": "OK",
    "note": ""
   },
   {
    "input": "Markets bridge",
-   "asof": "2026-11-06",
-   "age_days": 0,
+   "asof": "2026-11-07",
+   "age_days": -1,
    "status": "OK",
    "note": ""
   },
   {
    "input": "Swing brief",
-   "asof": "2026-11-05",
-   "age_days": 1,
-   "status": "STALE",
+   "asof": "2026-11-06",
+   "age_days": 0,
+   "status": "OK",
    "note": ""
   },
   {
@@ -4129,15 +4449,15 @@
   },
   {
    "input": "Daily log row",
-   "asof": "2026-11-05",
-   "age_days": 1,
-   "status": "STALE",
-   "note": "today's daily log not written yet \u2014 alerts section uses no row"
+   "asof": "2026-11-06",
+   "age_days": 0,
+   "status": "OK",
+   "note": ""
   },
   {
    "input": "COT (freshest)",
-   "asof": "2026-10-27",
-   "age_days": 10,
+   "asof": "2026-11-03",
+   "age_days": 3,
    "status": "OK",
    "note": ""
   },
@@ -4146,7 +4466,7 @@
    "asof": "2026-11-06",
    "age_days": 0,
    "status": "OK",
-   "note": "SPY calendar; 143/143 tickers have that bar"
+   "note": "SPY calendar; 131/143 tickers have that bar"
   },
   {
    "input": "Event calendar",
@@ -4175,15 +4495,15 @@
   "KMLM": 5.5
  },
  "headline": [
-  "Biggest moves: HY OAS +16bp to 3.48% (+3.0\u03c3, 100th pctile, print dated 11-05); IG OAS +2bp to 0.93% (+1.8\u03c3, 99th pctile, print dated 11-05).",
+  "Biggest moves: HY OAS +16bp to 3.48% (+3.0\u03c3, 100th pctile, print dated 11-05); 2Y Treasury -12bp to 4.46% (-2.5\u03c3, 85th pctile, print dated 11-05).",
   "Regime `transition_ambiguous` (session 14); cross-asset majority WATCH; nearest flip is HY OAS +1.02pp to `credit_stress` (~19 typical days).",
-  "Model portfolio: `transition_ambiguous`, drawdown -5.2%, no change today."
+  "Model portfolio: `transition_ambiguous`, drawdown -5.4%, no change today; this session's closes not yet published (books next run). Swing: 4 entry-permitted cards."
  ],
  "conclusions": {
-  "base_case": "Base case: `transition_ambiguous` holds. Cross-asset: WATCH majority, dissent from credit, rates. Money is confirming only XLF, XLV, XLU, XLY.",
+  "base_case": "Base case: `transition_ambiguous` holds. Cross-asset: WATCH majority, dissent from credit, rates. Money is confirming only XLV, XLU, XLF, XLY.",
   "what_would_change": [
    "HY OAS 3.48pp \u2192 4.50pp flips to `credit_stress` (~19 typical days)",
-   "Short real rate 0.14pp \u2192 0.26pp flips to `restrictive_tightening` \u2014 \u22480.5 \u00d7 a 25bp policy move, or the CPI equivalent"
+   "Short real rate 0.14pp \u2192 -0.26pp flips to `inflationary_repression` \u2014 \u22481.6 \u00d7 a 25bp policy move, or the CPI equivalent"
   ],
   "weekend": []
  }

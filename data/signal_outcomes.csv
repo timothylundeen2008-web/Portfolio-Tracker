@@ -99,3 +99,7 @@ signal_id,date,signal_type,subject,direction,price_at_signal,benchmark_at_signal
 2026-11-02_stealth_flag_XLP,2026-11-02,stealth_flag,XLP,long,,,Stealth · Weakening · accum 31.62,,rotation
 2026-11-03_flow_divergence_HACK,2026-11-03,flow_divergence,HACK,long,,,"ACCUMULATION (price down, money in) · flow 3.71% AUM",,rotation
 2026-11-05_flow_divergence_XOP,2026-11-05,flow_divergence,XOP,long,,,"ACCUMULATION (price down, money in) · flow 2.94% AUM",,rotation
+2026-11-06_confluence_3of3_EXC,2026-11-06,confluence_3of3,EXC,long,45.62,,M0 Rotation · regime=transition_ambiguous,,swing_cards
+2026-11-06_confluence_3of3_SO,2026-11-06,confluence_3of3,SO,long,92.34,,M0 Rotation · regime=transition_ambiguous,,swing_cards
+2026-11-06_flow_divergence_XLE,2026-11-06,flow_divergence,XLE,long,,,"ACCUMULATION (price down, money in) · flow 2.07% AUM",,rotation
+2026-11-09_flow_into_stocks_PORT,2026-11-09,flow_into_stocks,PORT,long,,,into_stocks (was borderline) · stocks +2.47% · 3.8 typical days past the line · data 2026-11-06,"{""weights"": {""SPY"": 100}, ""bench_weights"": {""SGOV"": 100}, ""bench"": ""SGOV"", ""data_date"": ""2026-11-06"", ""record"": {""stocks_pct"": 2.469210611390475, ""stocks_ex_hedge_pct"": 6.554967053837335, ""safety_pct"": -0.5260482218225918, ""typical_day"": 0.5846346478395159, ""margin_days"": 3.79589307543, ""hedge_agrees"": true}}",flow_map
