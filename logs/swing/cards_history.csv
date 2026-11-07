@@ -175,3 +175,18 @@ date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_
 2026-11-05,CMG,M0 Rotation,long,3-of-3,35.47,33.64,35.4,transition_ambiguous,False,binary macro event within 48h: NFP in 0d
 2026-11-05,XLF,M0 Rotation,long,3-of-3,60.04,58.12,57.5,transition_ambiguous,False,binary macro event within 48h: NFP in 0d
 2026-11-05,JNJ,M0 Rotation,long,3-of-3,281.92,270.86,272.32,transition_ambiguous,False,binary macro event within 48h: NFP in 0d
+2026-11-06,DUK,M0 Rotation,long,3-of-3,129.02,125.42,127.78,transition_ambiguous,True,
+2026-11-06,XLU,M0 Rotation,long,3-of-3,43.37,42.13,43.13,transition_ambiguous,True,
+2026-11-06,SO,M0 Rotation,long,3-of-3,92.56,89.69,92.34,transition_ambiguous,True,
+2026-11-06,EXC,M0 Rotation,long,3-of-3,46.09,44.65,45.62,transition_ambiguous,True,
+2026-11-06,XEL,M0 Rotation,long,3-of-3,80.29,77.75,79.67,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-06,D,M0 Rotation,long,3-of-3,69.25,66.88,68.6,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-06,NEE,M0 Rotation,long,3-of-3,87.79,84.75,86.95,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-06,SBUX,M0 Rotation,long,3-of-3,106.62,102.17,105.41,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-06,HD,M0 Rotation,long,3-of-3,346.82,331.7,343.47,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-06,LOW,M0 Rotation,long,3-of-3,226.23,216.16,224.55,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-06,CMG,M0 Rotation,long,3-of-3,35.13,33.22,34.43,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-06,JNJ,M0 Rotation,long,3-of-3,276.41,264.62,276.22,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-06,ABT,M0 Rotation,long,3-of-3,111.81,106.24,109.93,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-06,XLF,M0 Rotation,long,2-of-3,57.71,55.72,57.16,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-06,XLY,M0 Rotation,long,2-of-3,118.96,114.04,117.58,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
