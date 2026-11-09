@@ -1,6 +1,32 @@
 """
-hedge_lab.py  (v1.4.1 — November 2026)
-──────────────────────────────────────
+hedge_lab.py  (v1.5 — November 2026)
+────────────────────────────────────
+v1.5 (2026-11-08, fix_status N49): CONSTRUCTION TEST — battle-test before
+  changing the live book. Risk by group (11/06) put 50% of book risk in
+  AI/growth tech and 44% in metals (RING + SLV: 8% of weight, 26.5% of risk);
+  16.5% sits in cash. Candidates, each under the production −8% breaker:
+    C1  metals rebuild     SLV and RING moved into GLD (gold kept, miner/silver beta cut)
+    C2  trend rule         every risk sleeve held only while its own price is above
+                           its 200-day average (checked at the close, held from the
+                           next session; out = SGOV). Cash and KMLM exempt
+    C3  cash to diversifiers  SGOV −5, USFR −5 → DBMF +5 (trend), SCHP +5 (TIPS)
+    C4  C1 + C2 + C3
+    S125 / S150  C4 at 1.25× / 1.5×, the extra financed at the T-bill rate
+                 (fixed ex ante; implementable through stacked funds, not margin).
+                 Reported against −20% / −25% drawdown budgets and a 9% return
+                 target; a risk-budget choice for Matt, not a pass/fail rule.
+  Out-of-sample check: every bar must hold in BOTH halves, 2005–2015 and
+  2016–2026, so a change fitted to one era cannot pass.
+  Bars, fixed before the run (CON_BAR_*), Calmar = CAGR ÷ |max drawdown|:
+    C1, C2 (risk reducers): ≥ 1 pt shallower in ≥ 3 covered stress windows,
+        ≤ 0.25 pts/yr given up over the full history, Calmar not lower in
+        either half.
+    C3 (return adder): ≥ +0.30 pts/yr over the full history, Calmar not lower
+        in either half, no stress window more than 1.5 pts deeper.
+    C4: Calmar ≥ 1.10 × V0's over the full history AND higher in both halves.
+  Proxies before inception (labelled in coverage): DBMF → AQMIX → T-bills;
+  SCHP → TIP → VIPSX.
+
 v1.4.1 (2026-11-07): book_risk is imported at module load. v1.4 imported it
   inside vol_scales(), after the selftest had moved into a temp folder, so the
   Actions selftest failed with ModuleNotFoundError (the local test had the
@@ -148,7 +174,7 @@ import pandas as pd
 import model_book as mb
 import book_risk as br   # v1.4.1: imported at load time; the selftest chdirs to a temp folder
 
-VERSION = "v1.4.1"
+VERSION = "v1.5"
 REGIME = "transition_ambiguous"
 HISTORY_START = "1999-01-01"
 
@@ -182,6 +208,8 @@ PROXIES = {
     "TLT":  ["TLT", "VUSTX"],
     "KMLM": ["KMLM", "AQMIX", "^IRX"],
     "RSP":  ["RSP", "SPY"],                  # v1.4: equal-weight S&P (V5); SPY before 2003-04
+    "DBMF": ["DBMF", "AQMIX", "^IRX"],       # v1.5: second trend fund (C3); AQMIX from 2010
+    "SCHP": ["SCHP", "TIP", "VIPSX"],        # v1.5: TIPS (C3)
 }
 BENCH = {"SPY": ["SPY"], "AGG": ["AGG", "VBMFX"], "QQQ": ["QQQ"]}
 CASH_TICKER = "^IRX"
@@ -1453,6 +1481,195 @@ def render_diversify(dres: Optional[pd.DataFrame], dinfos: Optional[list]) -> li
     return L
 
 
+# ── v1.5: construction test ─────────────────────────────────────────────────
+
+CON_VARIANTS = ("V0", "C1", "C2", "C3", "C4")
+CON_SCALED = {"S125": 1.25, "S150": 1.5}
+CON_LABEL = {"V0": "current book", "C1": "metals rebuild (SLV, RING → GLD)",
+             "C2": "200-day trend rule on each risk sleeve", "C3": "cash → DBMF + SCHP",
+             "C4": "C1 + C2 + C3", "S125": "C4 at 1.25× (T-bill financed)", "S150": "C4 at 1.5× (T-bill financed)",
+             "SPY": "SPY", "6040": "60/40 SPY/AGG"}
+CON_HALVES = [("half1", "2005-01-03", "2015-12-31", "Out-of-sample check: 2005–2015"),
+              ("half2", "2016-01-04", None, "Out-of-sample check: 2016–2026")]
+CON_TREND_EXEMPT = {"SGOV", "USFR", "KMLM", "DBMF"}
+CON_PARK = "SGOV"
+CON_BAR_DD, CON_BAR_DD_WINS, CON_BAR_COST = 1.0, 3, 0.25
+CON_BAR_ADD, CON_BAR_DEEPER = 0.30, 1.5
+CON_BAR_CALMAR_X = 1.10
+CON_BUDGETS = (-20.0, -25.0)
+CON_TARGET_CAGR = 9.0
+
+
+def c1_weights(base: dict) -> dict:
+    w = {k: float(v) for k, v in base.items()}
+    moved = w.pop("SLV", 0.0) + w.pop("RING", 0.0)
+    w["GLD"] = w.get("GLD", 0.0) + moved
+    return w
+
+
+def c3_weights(base: dict) -> dict:
+    w = {k: float(v) for k, v in base.items()}
+    take = min(w.get("SGOV", 0.0), 5.0) + min(w.get("USFR", 0.0), 5.0)
+    w["SGOV"] = w.get("SGOV", 0.0) - min(w.get("SGOV", 0.0), 5.0)
+    w["USFR"] = w.get("USFR", 0.0) - min(w.get("USFR", 0.0), 5.0)
+    w["DBMF"] = w.get("DBMF", 0.0) + take / 2
+    w["SCHP"] = w.get("SCHP", 0.0) + take / 2
+    return w
+
+
+def trend_states(rets: pd.DataFrame, ma: int = RELEASE_MA) -> dict:
+    """Own-price-above-200-day per sleeve at each close (data up to and incl. d).
+    Before 200 sessions exist a sleeve counts as IN (no rule yet), so the rule
+    never acts on missing history."""
+    lvl = (1 + rets.fillna(0.0)).cumprod()
+    out = {}
+    for c in rets.columns:
+        m = lvl[c].rolling(ma, min_periods=ma).mean()
+        st_ = (lvl[c] >= m)
+        out[c] = st_.where(m.notna(), True).astype(bool)
+    return out
+
+
+def con_weights_fn(base: dict, v: str, tstates: dict) -> Callable:
+    b = dict(base)
+    if v in ("C1", "C4"):
+        b = c1_weights(b)
+    if v in ("C3", "C4"):
+        b = c3_weights(b)
+    if v in ("C2", "C4"):
+        def fn(d, b=b):
+            w, out_ = {}, 0.0
+            for t, x in b.items():
+                if t in CON_TREND_EXEMPT or x <= 0 or t not in tstates or bool(tstates[t].get(d, True)):
+                    w[t] = x
+                else:
+                    out_ += x
+            w[CON_PARK] = w.get(CON_PARK, 0.0) + out_
+            return w
+        return fn
+    return lambda d, b=b: dict(b)
+
+
+def run_construct_window(key, start, end, label, base, rets, srcs, spy_close, bench_rets, tstates,
+                         cash_r: Optional[pd.Series]):
+    cal = rets.index
+    days = cal[(cal >= pd.Timestamp(start)) & (cal <= (pd.Timestamp(end) if end else cal[-1]))]
+    if len(days) < 2:
+        return [], {"key": key, "label": label, "error": "no sessions in range"}
+    cov, _ = coverage_for(days, c3_weights(c1_weights(base)), srcs)
+    rows = []
+    for v in CON_VARIANTS:
+        sim = simulate(days, rets, con_weights_fn(base, v, tstates), spy_close)
+        m = metrics(sim["nav"], sim["turnover"])
+        m.update({"window": key, "variant": v, "breaker_days": int((sim["state"] == "ON").sum()),
+                  "avg_trend_out_pct": round(float(sim["w"].map(lambda w: w.get(CON_PARK, 0.0)).mean()), 2)})
+        rows.append(m)
+    c = cash_r.reindex(rets.index).fillna(0.0) if cash_r is not None else pd.Series(0.0, index=rets.index)
+    for name, k in CON_SCALED.items():
+        rk = rets.mul(k).sub(c * (k - 1), axis=0)          # Σw(k·r − (k−1)·c) = k·Σw·r − (k−1)·c, weights sum to 100
+        sim = simulate(days, rk, con_weights_fn(base, "C4", tstates), spy_close, cost_bps=COST_BPS * k)
+        m = metrics(sim["nav"], sim["turnover"])
+        m.update({"window": key, "variant": name, "breaker_days": int((sim["state"] == "ON").sum())})
+        rows.append(m)
+    for name, mix in (("SPY", {"SPY": 100}), ("6040", {"SPY": 60, "AGG": 40})):
+        m = metrics(bench_nav(days, bench_rets, mix))
+        m.update({"window": key, "variant": name})
+        rows.append(m)
+    for r in rows:
+        r.update({"start": days[0].date().isoformat(), "end": days[-1].date().isoformat()})
+    return rows, {"key": key, "label": label, "start": days[0].date().isoformat(),
+                  "end": days[-1].date().isoformat(), "coverage": cov,
+                  "low_coverage": cov["none"] > LOW_COVERAGE_PCT}
+
+
+def _calmar(cagr, dd):
+    return (cagr / abs(dd)) if (cagr is not None and dd not in (None, 0)) else None
+
+
+def construct_verdicts(cres: pd.DataFrame, cinfos: list) -> tuple:
+    stress_ok = [i["key"] for i in cinfos if i["key"] in {s[0] for s in STRESS}
+                 and not i.get("low_coverage") and not i.get("error")]
+
+    def val(w, v, col):
+        x = cres[(cres["window"] == w) & (cres["variant"] == v)][col] if col in cres.columns else []
+        return float(x.iloc[0]) if len(x) and x.iloc[0] == x.iloc[0] else None
+
+    def calmar(w, v):
+        return _calmar(val(w, v, "cagr_pct"), val(w, v, "max_dd_pct"))
+
+    lines, passed = [], {}
+    f0 = val(FULL[0], "V0", "cagr_pct")
+    for v in ("C1", "C2", "C3", "C4"):
+        dd = {w: val(w, v, "max_dd_pct") - val(w, "V0", "max_dd_pct") for w in stress_ok
+              if val(w, v, "max_dd_pct") is not None and val(w, "V0", "max_dd_pct") is not None}
+        fc = val(FULL[0], v, "cagr_pct")
+        add = (fc - f0) if (fc is not None and f0 is not None) else None
+        halves = {h: (calmar(h, v), calmar(h, "V0")) for h, *_ in CON_HALVES}
+        halves_ok = all(a is not None and b is not None and a >= b for a, b in halves.values())
+        halves_up = all(a is not None and b is not None and a > b for a, b in halves.values())
+        if v in ("C1", "C2"):
+            ok = (add is not None and -add <= CON_BAR_COST and halves_ok
+                  and sum(1 for x in dd.values() if x >= CON_BAR_DD) >= CON_BAR_DD_WINS)
+        elif v == "C3":
+            ok = (add is not None and add >= CON_BAR_ADD and halves_ok
+                  and not any(x < -CON_BAR_DEEPER for x in dd.values()))
+        else:
+            cf, c0 = calmar(FULL[0], v), calmar(FULL[0], "V0")
+            ok = cf is not None and c0 is not None and cf >= CON_BAR_CALMAR_X * c0 and halves_up
+        passed[v] = ok
+        lines.append(f"**{v} ({CON_LABEL[v]})**: " + ("PASSES" if ok else "does NOT pass") + " its bar. "
+                     + (f"Full history {add:+.2f} pts/yr vs V0; " if add is not None else "")
+                     + "Calmar by half (variant vs V0): "
+                     + ", ".join(f"{h} {a:.2f} vs {b:.2f}" if a is not None and b is not None else f"{h} n/a"
+                                 for h, (a, b) in halves.items())
+                     + "; stress drawdown vs V0: " + ", ".join(f"{w} {x:+.1f}" for w, x in dd.items()) + ".")
+    for v in CON_SCALED:
+        c_, d_ = val(FULL[0], v, "cagr_pct"), val(FULL[0], v, "max_dd_pct")
+        if c_ is None or d_ is None:
+            continue
+        fits = [f"{b:.0f}%" for b in CON_BUDGETS if d_ >= b]
+        lines.append(f"**{v} ({CON_LABEL[v]})**: {c_:.2f}%/yr, max drawdown {d_:.1f}% — "
+                     + (f"inside the {' and '.join(fits)} budget(s)" if fits else "outside both drawdown budgets")
+                     + (f", meets the {CON_TARGET_CAGR:.0f}% return target." if c_ >= CON_TARGET_CAGR
+                        else f", below the {CON_TARGET_CAGR:.0f}% return target.")
+                     + " A risk-budget choice, not a pass/fail rule.")
+    lines.append("Bars (fixed before the run): C1/C2 ≥ 1 pt shallower in ≥ 3 covered stress windows, ≤ 0.25 pts/yr "
+                 "cost, Calmar not lower in either half; C3 ≥ +0.30 pts/yr, Calmar not lower in either half, no "
+                 "stress window > 1.5 pts deeper; C4 Calmar ≥ 1.10× V0 and higher in both halves. "
+                 "Calmar = CAGR ÷ |max drawdown|.")
+    return lines, passed
+
+
+def render_construct(cres: Optional[pd.DataFrame], cinfos: Optional[list]) -> list[str]:
+    if cres is None or cres.empty:
+        return []
+    L = ["", "## v1.5 · Construction test: metals rebuild, trend rule, cash to diversifiers, scaling", ""]
+    L += construct_verdicts(cres, cinfos or [])[0]
+    order = list(CON_VARIANTS) + list(CON_SCALED) + ["SPY", "6040"]
+    for i in cinfos or []:
+        if i.get("error"):
+            continue
+        w = cres[cres["window"] == i["key"]]
+        L += ["", f"**{i['label']}** ({i['start']} → {i['end']})"
+              + (" — LOW COVERAGE, excluded from verdicts" if i.get("low_coverage") else ""),
+              "| Portfolio | Total | CAGR | Max DD | Calmar | Vol | Worst 20d |", "|---|---|---|---|---|---|---|"]
+        for v in order:
+            r = w[w["variant"] == v]
+            if r.empty:
+                continue
+            r = r.iloc[0]
+            cm = _calmar(r.get("cagr_pct"), r.get("max_dd_pct"))
+            L.append(f"| {CON_LABEL.get(v, v)} | {_f(r.get('total_return_pct'))} | {_f(r.get('cagr_pct'))} | "
+                     f"{_f(r.get('max_dd_pct'))} | {cm:.2f} | {_f(r.get('vol_ann_pct'))} | {_f(r.get('worst_20d_pct'))} |"
+                     if cm is not None else
+                     f"| {CON_LABEL.get(v, v)} | {_f(r.get('total_return_pct'))} | {_f(r.get('cagr_pct'))} | "
+                     f"{_f(r.get('max_dd_pct'))} | — | {_f(r.get('vol_ann_pct'))} | {_f(r.get('worst_20d_pct'))} |")
+    L += ["", "_Weights are today's `transition_ambiguous` targets (hindsight in the sleeve choice); proxies before "
+              "inception. S125/S150 finance the extra exposure at the T-bill rate with costs scaled by the leverage; "
+              "real stacked funds charge more. Short windows (Covid, carry) are too fast for a 200-day rule._"]
+    return L
+
+
 def build(closes: dict, book_path: Path = mb.BOOK_FILE, base: Optional[dict] = None) -> dict:
     if base is None:
         import regime_classifier as rc
@@ -1497,8 +1714,16 @@ def build(closes: dict, book_path: Path = mb.BOOK_FILE, base: Optional[dict] = N
         r, i = run_diversify_window(key, s, e, label, base, rets, srcs, spy, bench_rets, scales,
                                     ticker_returns(closes, CASH_TICKER, cal))
         drows += r; dinfos.append(i)
+    # v1.5: construction test
+    tstates = trend_states(rets)
+    con_rows, con_infos = [], []
+    for key, s, e, label in STRESS + [FULL] + CON_HALVES:
+        r, i = run_construct_window(key, s, e, label, base, rets, srcs, spy, bench_rets, tstates,
+                                    ticker_returns(closes, CASH_TICKER, cal))
+        con_rows += r; con_infos.append(i)
     missing = [t for t in all_tickers() if t not in closes]
-    return {"diversify": pd.DataFrame(drows), "diversify_infos": dinfos, "vol_scales": scales,
+    return {"construct": pd.DataFrame(con_rows), "construct_infos": con_infos, "trend_states": tstates,
+            "diversify": pd.DataFrame(drows), "diversify_infos": dinfos, "vol_scales": scales,
             "results": res, "coverage": pd.DataFrame(cov_rows), "infos": infos, "inception": inc,
             "base": base, "missing": missing, "signals": sig, "rets": rets,
             "breakers": pd.DataFrame(brows), "breaker_infos": binfos,
@@ -1532,6 +1757,11 @@ def write(out: dict, asof: str) -> dict:
         dn = dx.select_dtypes("number").columns
         dx.assign(**{c: dx[c].round(4) for c in dn}).to_csv(OUT_DIR / "diversify_results.csv", index=False)
         md += "\n" + "\n".join(render_diversify(dx, out.get("diversify_infos")))
+    conx = out.get("construct")
+    if conx is not None and not conx.empty:
+        cn_ = conx.select_dtypes("number").columns
+        conx.assign(**{c: conx[c].round(4) for c in cn_}).to_csv(OUT_DIR / "construct_results.csv", index=False)
+        md += "\n" + "\n".join(render_construct(conx, out.get("construct_infos")))
     p = LOG_DIR / f"{asof}_report.md"
     p.write_text(md)
     return {"report": str(p), "results": str(OUT_DIR / "results.csv")}
@@ -2057,6 +2287,62 @@ def selftest() -> dict:
         rows2 = [dict(r_, cagr_pct=7.0) if r_["variant"] == "V4" else r_ for r_ in rows_]
         if "does NOT pass" not in diversify_verdicts(pd.DataFrame(rows2), inf_)[0]:
             f.append("V4 cutting drawdown but giving up 1.0 pts/yr must fail the cost bar")
+
+        # ── v1.5 construction test ──
+        kres, kinfos = out["construct"], out["construct_infos"]
+        for w_ in (FULL[0], "half1", "half2"):
+            got = set(kres[kres["window"] == w_]["variant"])
+            need_ = set(CON_VARIANTS) | set(CON_SCALED) | {"SPY", "6040"}
+            if not need_ <= got:
+                f.append(f"construct window {w_} must cover {sorted(need_)}: {sorted(got)}")
+        c0 = kres[(kres["window"] == FULL[0]) & (kres["variant"] == "V0")]
+        if len(c0) and abs(float(c0["total_return_pct"].iloc[0]) - v0) > 1e-9:
+            f.append("construct V0 must be the same simulation as V0")
+        w1 = c1_weights(base)
+        if "SLV" in w1 or "RING" in w1 or abs(w1["GLD"] - (base["GLD"] + base["SLV"] + base["RING"])) > 1e-9 \
+                or abs(sum(w1.values()) - sum(base.values())) > 1e-9:
+            f.append(f"C1 must move SLV and RING into GLD with the sum unchanged: {w1}")
+        w3 = c3_weights(base)
+        if abs(w3["DBMF"] - 5) > 1e-9 or abs(w3["SCHP"] - 5) > 1e-9 or abs(sum(w3.values()) - sum(base.values())) > 1e-9:
+            f.append(f"C3 must move 10 pts of cash to DBMF 5 / SCHP 5 with the sum unchanged: {w3}")
+        ts = out["trend_states"]
+        r_alt = out["rets"].copy()
+        cut_ = r_alt.index[-150]
+        r_alt.loc[r_alt.index >= cut_] = -0.02
+        ts_alt = trend_states(r_alt)
+        if not all((ts_alt[c][ts_alt[c].index < cut_] == ts[c][ts[c].index < cut_]).all() for c in ("VGT", "GLD")):
+            f.append("the trend rule must not look ahead: later returns changed an earlier state")
+        if bool(ts_alt["VGT"].iloc[-1]):
+            f.append("150 sessions of -2% days must put VGT below its 200-day")
+        fn2 = con_weights_fn(base, "C2", ts_alt)
+        w2 = fn2(r_alt.index[-1])
+        if w2.get("VGT", 0) != 0 or abs(sum(w2.values()) - sum(base.values())) > 1e-9 \
+                or w2["SGOV"] < base["SGOV"] + base["VGT"] - 1e-9 or w2.get("KMLM") != base["KMLM"]:
+            f.append(f"C2 must move a sleeve below its 200-day to SGOV and leave KMLM: {w2}")
+        if con_weights_fn(base, "C2", ts)(r_alt.index[0]) != dict(base):
+            f.append("before 200 sessions exist the trend rule must hold the base weights")
+        # verdict logic on a constructed table
+        rows3 = []
+        for k_ in [k for k, *_ in STRESS] + [FULL[0], "half1", "half2"]:
+            rows3 += [{"window": k_, "variant": "V0", "max_dd_pct": -20.0, "cagr_pct": 8.0},
+                      {"window": k_, "variant": "C1", "max_dd_pct": -18.0, "cagr_pct": 7.9},
+                      {"window": k_, "variant": "C2", "max_dd_pct": -18.0, "cagr_pct": 7.5},
+                      {"window": k_, "variant": "C3", "max_dd_pct": -20.5, "cagr_pct": 8.5},
+                      {"window": k_, "variant": "C4", "max_dd_pct": -15.0, "cagr_pct": 8.0}]
+        inf3 = [{"key": k_} for k_ in [k for k, *_ in STRESS] + [FULL[0], "half1", "half2"]]
+        cv, cp = construct_verdicts(pd.DataFrame(rows3), inf3)
+        if not cp.get("C1") or cp.get("C2") or not cp.get("C3") or not cp.get("C4"):
+            f.append(f"bar logic: C1 pass, C2 fail (cost 0.5), C3 pass, C4 pass expected: {cp}")
+        rows4 = [dict(r_, max_dd_pct=-30.0) if (r_["variant"] == "C1" and r_["window"] == "half2") else r_ for r_ in rows3]
+        if construct_verdicts(pd.DataFrame(rows4), inf3)[1].get("C1"):
+            f.append("C1 worse in the second half must fail the out-of-sample check")
+        md_c = "\n".join(render_construct(kres, kinfos))
+        for s_ in ("## v1.5 · Construction test", "Out-of-sample check: 2016–2026", "C4 at 1.25×"):
+            if s_ not in md_c:
+                f.append(f"construct report missing: {s_}")
+        s1 = kres[(kres["window"] == FULL[0]) & (kres["variant"].isin(["C4", "S125"]))].set_index("variant")
+        if len(s1) == 2 and not (s1.loc["S125", "vol_ann_pct"] > s1.loc["C4", "vol_ann_pct"] * 1.15):
+            f.append(f"S125 must carry ~1.25× C4's volatility: {s1['vol_ann_pct'].to_dict()}")
     finally:
         os.chdir(cwd)
     return {"ok": not f, "failures": f}
