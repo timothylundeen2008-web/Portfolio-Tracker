@@ -190,3 +190,20 @@ date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_
 2026-11-06,ABT,M0 Rotation,long,3-of-3,111.81,106.24,109.93,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
 2026-11-06,XLF,M0 Rotation,long,2-of-3,57.71,55.72,57.16,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
 2026-11-06,XLY,M0 Rotation,long,2-of-3,118.96,114.04,117.58,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-09,DUK,M0 Rotation,long,3-of-3,129.19,125.62,128.1,transition_ambiguous,False,binary macro event within 48h: CPI in 0d
+2026-11-09,XLU,M0 Rotation,long,3-of-3,44.02,42.74,43.79,transition_ambiguous,False,binary macro event within 48h: CPI in 0d
+2026-11-09,SO,M0 Rotation,long,3-of-3,94.08,91.16,93.57,transition_ambiguous,False,binary macro event within 48h: CPI in 0d
+2026-11-09,XEL,M0 Rotation,long,3-of-3,80.67,78.17,80.17,transition_ambiguous,False,binary macro event within 48h: CPI in 0d
+2026-11-09,EXC,M0 Rotation,long,3-of-3,45.99,44.56,45.65,transition_ambiguous,False,binary macro event within 48h: CPI in 0d
+2026-11-09,AEP,M0 Rotation,long,3-of-3,128.72,124.44,128.33,transition_ambiguous,False,binary macro event within 48h: CPI in 0d
+2026-11-09,WFC,M0 Rotation,long,3-of-3,86.33,83.14,85.49,transition_ambiguous,False,binary macro event within 48h: CPI in 0d
+2026-11-09,SBUX,M0 Rotation,long,3-of-3,110.19,105.49,109.44,transition_ambiguous,False,binary macro event within 48h: CPI in 0d
+2026-11-09,HD,M0 Rotation,long,3-of-3,356.9,341.18,353.42,transition_ambiguous,False,binary macro event within 48h: CPI in 0d
+2026-11-09,CMG,M0 Rotation,long,3-of-3,36.04,34.09,35.74,transition_ambiguous,False,binary macro event within 48h: CPI in 0d
+2026-11-09,TSLA,M0 Rotation,long,3-of-3,382.2,354.15,378.05,transition_ambiguous,False,binary macro event within 48h: CPI in 0d
+2026-11-09,CEG,M2c Burst,long,3-of-3,276.09,247.0,276.09,transition_ambiguous,False,binary macro event within 48h: CPI in 0d
+2026-11-09,JNJ,M0 Rotation,long,3-of-3,282.73,270.99,282.11,transition_ambiguous,False,binary macro event within 48h: CPI in 0d
+2026-11-09,D,M0 Rotation,long,2-of-3,69.18,66.81,68.24,transition_ambiguous,False,binary macro event within 48h: CPI in 0d
+2026-11-09,XLF,M0 Rotation,long,2-of-3,58.26,56.23,57.99,transition_ambiguous,False,binary macro event within 48h: CPI in 0d
+2026-11-09,XLY,M0 Rotation,long,2-of-3,121.81,116.54,121.01,transition_ambiguous,False,binary macro event within 48h: CPI in 0d
+2026-11-09,AMZN,M0 Rotation,long,2-of-3,275.34,259.5,266.93,transition_ambiguous,False,binary macro event within 48h: CPI in 0d
