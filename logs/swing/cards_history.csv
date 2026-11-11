@@ -207,3 +207,21 @@ date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_
 2026-11-09,XLF,M0 Rotation,long,2-of-3,58.26,56.23,57.99,transition_ambiguous,False,binary macro event within 48h: CPI in 0d
 2026-11-09,XLY,M0 Rotation,long,2-of-3,121.81,116.54,121.01,transition_ambiguous,False,binary macro event within 48h: CPI in 0d
 2026-11-09,AMZN,M0 Rotation,long,2-of-3,275.34,259.5,266.93,transition_ambiguous,False,binary macro event within 48h: CPI in 0d
+2026-11-10,XLU,M0 Rotation,long,3-of-3,43.83,42.54,43.73,transition_ambiguous,True,
+2026-11-10,XEL,M0 Rotation,long,3-of-3,80.58,78.03,80.12,transition_ambiguous,True,
+2026-11-10,SO,M0 Rotation,long,3-of-3,94.15,91.13,93.65,transition_ambiguous,True,
+2026-11-10,EXC,M0 Rotation,long,3-of-3,45.95,44.46,45.53,transition_ambiguous,True,
+2026-11-10,AEP,M0 Rotation,long,3-of-3,128.01,123.59,127.84,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-10,XLF,M0 Rotation,long,3-of-3,58.44,56.4,58.29,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-10,MCD,M0 Rotation,long,3-of-3,283.53,273.14,282.17,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-10,WFC,M0 Rotation,long,3-of-3,86.43,83.23,85.76,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-10,XLY,M0 Rotation,long,3-of-3,121.23,115.97,121.05,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-10,SBUX,M0 Rotation,long,3-of-3,109.98,105.16,109.95,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-10,HD,M0 Rotation,long,3-of-3,352.65,336.91,351.0,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-10,CMG,M0 Rotation,long,3-of-3,36.19,34.33,35.92,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-10,JNJ,M0 Rotation,long,3-of-3,283.25,271.59,280.78,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-10,UNH,M0 Rotation,long,3-of-3,406.72,389.59,405.12,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-10,DUK,M0 Rotation,long,2-of-3,129.85,126.11,128.94,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-10,D,M0 Rotation,long,2-of-3,68.53,66.18,68.37,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
+2026-11-10,TSLA,M0 Rotation,long,3-of-3,380.0,352.54,379.78,transition_ambiguous,False,"risk budget $25.00 at this step/regime is below one share's risk ($27.46) — a single share breaches Progressive Exposure; the only expression is a 45-90 DTE call debit spread with premium <= $25, or skip"
+2026-11-10,AMZN,M0 Rotation,long,2-of-3,272.88,256.87,270.87,transition_ambiguous,False,"risk budget $12.50 at this step/regime is below one share's risk ($16.01) — a single share breaches Progressive Exposure; the only expression is a 45-90 DTE call debit spread with premium <= $12, or skip"
