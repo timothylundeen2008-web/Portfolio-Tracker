@@ -104,3 +104,17 @@ signal_id,date,signal_type,subject,direction,price_at_signal,benchmark_at_signal
 2026-11-06_flow_divergence_XLE,2026-11-06,flow_divergence,XLE,long,,,"ACCUMULATION (price down, money in) · flow 2.07% AUM",,rotation
 2026-11-06_regime_weekly_PORT,2026-11-06,regime_weekly,PORT,long,,,regime=transition_ambiguous,"{""weights"": {""VGT"": 17.0, ""SMH"": 3.0, ""QQQ"": 3.0, ""GLD"": 10.0, ""SLV"": 4.0, ""RING"": 4.0, ""XLE"": 5.0, ""PDBC"": 3.0, ""SCHD"": 14.0, ""XLV"": 5.0, ""XLU"": 3.0, ""SGOV"": 9.5, ""USFR"": 7.0, ""TLT"": 7.0, ""KMLM"": 5.5}, ""bench_weights"": {""VGT"": 20, ""SMH"": 4, ""QQQ"": 4, ""GLD"": 12, ""SLV"": 5, ""RING"": 5, ""XLE"": 5, ""PDBC"": 3, ""SCHD"": 13, ""XLV"": 4, ""XLU"": 3, ""SGOV"": 5, ""USFR"": 3, ""TLT"": 10, ""KMLM"": 4}, ""bench"": ""BASE""}",daily_log
 2026-11-09_flow_into_stocks_PORT,2026-11-09,flow_into_stocks,PORT,long,,,into_stocks (was borderline) · stocks +2.47% · 3.8 typical days past the line · data 2026-11-06,"{""weights"": {""SPY"": 100}, ""bench_weights"": {""SGOV"": 100}, ""bench"": ""SGOV"", ""data_date"": ""2026-11-06"", ""record"": {""stocks_pct"": 2.469210611390475, ""stocks_ex_hedge_pct"": 6.554967053837335, ""safety_pct"": -0.5260482218225918, ""typical_day"": 0.5846346478395159, ""margin_days"": 3.79589307543, ""hedge_agrees"": true}}",flow_map
+2026-11-10_flow_divergence_EWJ,2026-11-10,flow_divergence,EWJ,long,,,"ACCUMULATION (price down, money in) · flow 5.03% AUM",,rotation
+2026-11-10_flow_divergence_KMLM,2026-11-10,flow_divergence,KMLM,long,,,"ACCUMULATION (price down, money in) · flow 9.94% AUM",,rotation
+2026-11-10_flow_divergence_OIH,2026-11-10,flow_divergence,OIH,long,,,"ACCUMULATION (price down, money in) · flow 3.25% AUM",,rotation
+2026-11-10_flow_divergence_PBJ,2026-11-10,flow_divergence,PBJ,short,,,"DISTRIBUTION (price up, money out) · flow -1.35% AUM",,rotation
+2026-11-10_flow_divergence_PDBC,2026-11-10,flow_divergence,PDBC,long,,,"ACCUMULATION (price down, money in) · flow 0.29% AUM",,rotation
+2026-11-10_flow_divergence_QQQ,2026-11-10,flow_divergence,QQQ,long,,,"ACCUMULATION (price down, money in) · flow 1.52% AUM",,rotation
+2026-11-10_flow_divergence_SLV,2026-11-10,flow_divergence,SLV,long,,,"ACCUMULATION (price down, money in) · flow 2.48% AUM",,rotation
+2026-11-10_flow_divergence_SMH,2026-11-10,flow_divergence,SMH,long,,,"ACCUMULATION (price down, money in) · flow 4.02% AUM",,rotation
+2026-11-10_flow_divergence_SOXX,2026-11-10,flow_divergence,SOXX,long,,,"ACCUMULATION (price down, money in) · flow 13.23% AUM",,rotation
+2026-11-10_flow_divergence_XBI,2026-11-10,flow_divergence,XBI,short,,,"DISTRIBUTION (price up, money out) · flow -0.85% AUM",,rotation
+2026-11-10_flow_divergence_XHB,2026-11-10,flow_divergence,XHB,short,,,"DISTRIBUTION (price up, money out) · flow -3.66% AUM",,rotation
+2026-11-10_flow_divergence_XLF,2026-11-10,flow_divergence,XLF,short,,,"DISTRIBUTION (price up, money out) · flow -2.68% AUM",,rotation
+2026-11-10_flow_divergence_XLK,2026-11-10,flow_divergence,XLK,long,,,"ACCUMULATION (price down, money in) · flow 1.27% AUM",,rotation
+2026-11-10_flow_divergence_XLY,2026-11-10,flow_divergence,XLY,short,,,"DISTRIBUTION (price up, money out) · flow -2.0% AUM",,rotation
