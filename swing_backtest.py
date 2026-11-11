@@ -1,6 +1,12 @@
 """
-swing_backtest.py  (v1.0 — 2026-11-11)
+swing_backtest.py  (v1.1 — 2026-11-11)
 ──────────────────────────────────────
+v1.1: R and sizing use the PLANNED entry and stop (the card), as the live
+      desk sizes an order before the open. v1.0 used the fill, so an open
+      that landed on the stop made risk ~0 and R explode (FAS 2020-11-04:
+      -6,813R / +56,544R). PB stop now fixed at the signal close - 2 ATR.
+      Any |R| > 20 is listed as a probable data error.
+
 Historical test bench for the swing desk. Answers one question before real
 money goes in on 2027-01-04: which end-of-day, long-only setups made money
 after costs, in both halves of history, and which stop method executes them
@@ -66,7 +72,7 @@ import pandas as pd
 
 import swing_desk as sd
 
-VERSION = "1.0"
+VERSION = "1.1"
 
 # ── FROZEN parameters (changing any of these is a new trial; log it) ────────
 START = "2004-01-01"            # data start; first signals need ~320 bars
@@ -260,6 +266,7 @@ class Signal:
     size_mult: float
     rot_ok: bool
     max_entry: Optional[float] = None   # VCP: void if the fill is > 5% past the pivot
+    plan_entry: Optional[float] = None  # the card's entry: buy-stop level, or the signal close
 
 
 def _rot_leg(quad: Optional[str]) -> bool:
@@ -318,13 +325,15 @@ def signals_for_ticker(tk: str, df: pd.DataFrame, x: pd.DataFrame, pf: dict,
         if pf["PB"][t] and "PB" in setups:
             pb = detect_pullback(w)
             if pb["is_setup"]:
-                fired.append(("PB", "open", 0.0, None, pb["volume_ok"], None))
+                pc = float(w["Close"].iloc[-1])
+                fired.append(("PB", "open", 0.0, pc - PB_ATR_STOP * sd._atr(w), pb["volume_ok"], None))
         for setup, et, level, stop, vleg, mx in fired:
             conf = int(rot) + 1 + int(bool(vleg))
             if conf < 2:
                 continue
+            plan = float(level) if et == "stop" else float(w["Close"].iloc[-1])
             out.append(Signal(tk, int(t), setup, et, float(level), stop, conf,
-                              1.0 if conf == 3 else 0.5, rot, mx))
+                              1.0 if conf == 3 else 0.5, rot, mx, plan))
     return out
 
 
@@ -344,6 +353,7 @@ class Trade:
     conf: int
     size_mult: float
     asset: str
+    risk: float = float("nan")                    # planned risk per share (card entry - stop)
     events: list = field(default_factory=list)    # (t, kind, frac, price, bps)
     stops: list = field(default_factory=list)     # (t, stop) whenever it changes
     exit_t: int = -1
@@ -379,11 +389,14 @@ def simulate_trade(sig: Signal, arr: dict, variant: str, quads: Optional[np.ndar
         return None                                       # VCP: chasing, void
     stop = sig.stop if sig.stop is not None else fill - PB_ATR_STOP * atr[sig.t]
     if not np.isfinite(stop) or fill <= stop:
+        return None                                       # opened at or through the stop: no trade
+    plan = sig.plan_entry if sig.plan_entry is not None else fill
+    risk = plan - stop                                    # shares are sized on the card, before the open
+    if not np.isfinite(risk) or risk <= 0:
         return None
-    risk = fill - stop
     atr_e = atr[sig.t] if np.isfinite(atr[sig.t]) else risk
     tr = Trade(sig.ticker, sig.setup, variant, sig.t, d, float(fill), float(stop),
-               sig.conf, sig.size_mult, asset)
+               sig.conf, sig.size_mult, asset, float(risk))
     tr.events.append((d, "entry", 1.0, float(fill), bps))
     tr.stops.append((d, float(stop)))
     rem, trims = 1.0, 0
@@ -594,7 +607,7 @@ def run_portfolio(trades: list, signals_unfilled: list, data: dict, cal: pd.Date
         def rank(o):
             obj = o[1]
             if o[0] == "fill":
-                return (-obj.conf, (obj.entry - obj.stop0) / obj.entry)
+                return (-obj.conf, obj.risk / obj.entry)
             return (-obj.conf, 1.0)
         orders.sort(key=rank)
         heat = sum(p["shares"] * max(0.0, p["entry"] - p["stop"]) for p in pos.values())
@@ -615,7 +628,7 @@ def run_portfolio(trades: list, signals_unfilled: list, data: dict, cal: pd.Date
                 continue
             tr = obj
             risk_pct = (REDUCED_RISK_PCT if reduced else BASE_RISK_PCT) * tr.size_mult
-            rps = tr.entry - tr.stop0
+            rps = tr.risk                                  # planned, as the order is sized
             shares = math.floor(equity_prev * risk_pct / 100 / rps)
             shares = min(shares, math.floor(equity_prev * MAX_POSITION_PCT / 100 / tr.entry))
             bps = COST_BPS[tr.asset]
@@ -912,7 +925,8 @@ def write_outputs(res: dict, summ: dict, ohlcv: dict, stamp: str) -> str:
             trows.append({"variant": v, "setup": t.setup, "ticker": t.ticker, "asset": t.asset,
                           "signal_date": ix[t.signal_t].date(), "entry_date": ix[t.entry_t].date(),
                           "exit_date": ix[t.exit_t].date(), "entry": round(t.entry, 4),
-                          "stop0": round(t.stop0, 4), "conf": t.conf, "r_net": round(t.r_net, 3),
+                          "stop0": round(t.stop0, 4), "risk": round(t.risk, 4), "conf": t.conf,
+                          "r_net": round(t.r_net, 3),
                           "exit_reason": t.exit_reason, "still_open": t.still_open})
     pd.DataFrame(trows).to_csv(os.path.join(OUT_DATA, "trades.csv"), index=False)
     summ["table"].to_csv(os.path.join(OUT_DATA, "setup_stats.csv"), index=False)
@@ -991,6 +1005,16 @@ def render_report(res: dict, summ: dict, ohlcv: dict, stamp: str) -> str:
     for b, st in summ["bench"].items():
         L.append(f"- **{b}**: CAGR {_fmt(st.get('cagr_pct'))}%, max DD {_fmt(st.get('max_dd_pct'))}%, "
                  f"Sharpe {_fmt(st.get('sharpe'))}")
+    odd = [tr for v in res["trades"].values() for tr in v if np.isfinite(tr.r_net) and abs(tr.r_net) > 20]
+    L += ["", "## Data sanity", ""]
+    if odd:
+        L.append(f"{len(odd)} trades beyond ±20R (probable bad bars or splits; check before trusting a verdict):")
+        for tr in odd[:15]:
+            ix = res["data"][tr.ticker]["index"]
+            L.append(f"- {tr.variant} {tr.setup} {tr.ticker} {ix[tr.entry_t].date()}: {tr.r_net:+.1f}R "
+                     f"(entry {tr.entry:.4f}, stop {tr.stop0:.4f}, planned risk {tr.risk:.4f})")
+    else:
+        L.append("No trade beyond ±20R.")
     mix = exit_mix([tr for v in res["trades"].values() for tr in v])
     if len(mix):
         L += ["", "## How trades ended (does the thesis exit cut winners?)", "",
@@ -1187,6 +1211,13 @@ def selftest() -> dict:
     tr = simulate_trade(Signal("Z", 5, "M0", "stop", 101.0, 95.0, 3, 1.0, True), a7, "A", None, "etf")
     if tr is None or tr.exit_t != 6 or tr.exit_reason != "stop":
         f.append("ambiguous entry bar must assume the stop was hit")
+    # open lands a hair above the stop: R stays on the planned risk (v1.0 bug: R exploded)
+    a9 = {k: v.copy() for k, v in a.items()}
+    a9["Open"][6] = 95.0001
+    a9["Low"][7] = 94.0
+    tr = simulate_trade(Signal("Z", 5, "M2c", "open", 0.0, 95.0, 3, 1.0, True, None, 100.0), a9, "A", None, "etf")
+    if tr is None or abs(tr.risk - 5.0) > 1e-9 or not (-0.5 < tr.r_net < 0.1):
+        f.append(f"R must use the planned risk (100 - 95), got risk {tr and tr.risk}, R {tr and tr.r_net}")
     # ladder: steady rise -> trims of 25% and fractions sum to 1
     up = np.linspace(100, 160, 60)
     dfu = _bars(up, np.full(60, 1e6), band=0.002)
@@ -1243,7 +1274,7 @@ def selftest() -> dict:
         tk = f"P{i}"
         sec[tk] = ("XLK", "XLF", "XLE")[i % 3]
         pdata[tk] = {"index": cal, "close_cal": pd.Series(100.0, index=cal)}
-        tr = Trade(tk, "M2", "A", 4, 5, 100.0, 99.0 - i * 0.1, 3, 1.0, "etf")   # tight stops -> big size
+        tr = Trade(tk, "M2", "A", 4, 5, 100.0, 99.0 - i * 0.1, 3, 1.0, "etf", 1.0 + i * 0.1)   # tight stops -> big size
         tr.events = [(5, "entry", 1.0, 100.0, 3.0), (30, "exit", 1.0, 100.0, 3.0)]
         tr.stops = [(5, tr.stop0)]
         tr.exit_t, tr.r_net = 30, 0.0
@@ -1261,7 +1292,7 @@ def selftest() -> dict:
         # wide stops (small notional) across 4 sectors: only the position cap can bind
         wide, sec4 = [], {}
         for i, tr in enumerate(trs):
-            w2 = Trade(tr.ticker, "M2", "A", 4, 5, 100.0, 50.0, 3, 1.0, "etf")
+            w2 = Trade(tr.ticker, "M2", "A", 4, 5, 100.0, 50.0, 3, 1.0, "etf", 50.0)
             w2.events, w2.stops, w2.exit_t, w2.r_net = tr.events, [(5, 50.0)], 30, 0.0
             wide.append(w2)
             sec4[tr.ticker] = ("XLK", "XLF", "XLE", "XLV")[i % 4]
