@@ -1,0 +1,11 @@
+variant,setup,verdict,etf_reasons,all_reasons
+A,M1,FAIL,n 21 < 100; 2005-15 n 7 < 30; 2016-26 n 14 < 30,2005-15 expectancy -0.033R <= 0; 2005-15 PF 0.94 < 1.3
+A,M2,FAIL,n 2 < 100; 2005-15 n 0 < 30; 2016-26 n 2 < 30,n 17 < 100; 2005-15 n 10 < 30; 2016-26 n 7 < 30
+A,M2c,FAIL,2005-15 expectancy -0.235R <= 0; 2005-15 PF 0.57 < 1.3; 2016-26 expectancy -52.455R <= 0; 2016-26 PF 0.01 < 1.3,2005-15 expectancy -0.166R <= 0; 2005-15 PF 0.67 < 1.3; 2016-26 expectancy -13.18R <= 0; 2016-26 PF 0.03 < 1.3
+A,M0,PASS,meets bar,meets bar
+A,PB,FAIL,2016-26 PF 1.18 < 1.3,2005-15 PF 1.28 < 1.3; 2016-26 PF 1.08 < 1.3
+B,M1,FAIL,n 21 < 100; 2005-15 n 7 < 30; 2016-26 n 14 < 30,2005-15 expectancy -0.049R <= 0; 2005-15 PF 0.92 < 1.3
+B,M2,FAIL,n 2 < 100; 2005-15 n 0 < 30; 2016-26 n 2 < 30,n 17 < 100; 2005-15 n 10 < 30; 2016-26 n 7 < 30
+B,M2c,FAIL,2005-15 expectancy -0.36R <= 0; 2005-15 PF 0.48 < 1.3,2005-15 expectancy -0.143R <= 0; 2005-15 PF 0.79 < 1.3
+B,M0,PASS,meets bar,meets bar
+B,PB,FAIL,2016-26 PF 1.28 < 1.3,2016-26 PF 1.12 < 1.3
