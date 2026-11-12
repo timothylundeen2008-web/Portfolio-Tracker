@@ -1,6 +1,12 @@
 """
-swing_exits.py  (v1 — September 2026)
-─────────────────────────────────────
+swing_exits.py  (v2 — 2026-11-12)
+─────────────────────────────────
+v2: stop method B (won in swing_backtest v1.1/v1.2). The card stop is
+    CLOSING-basis: a close at or below it -> EXIT at the next open. The only
+    resting order is the DISASTER stop, 1 x ATR(14) below the stop at entry;
+    it moves up with every TIGHTEN (same distance). A session whose low
+    touches it is reported first: the order has likely filled.
+    N50: the trail parser now also reads "50-day SMA".
 Open-position management for the swing book. RECOMMENDS; never acts.
 
 exit_rules.py governs the All-Weather book (ATR trail, falling 200-day).
@@ -43,7 +49,7 @@ SHORT_HOSTILE_QUADS = {"Improving", "Leading"}
 
 
 def _ma(close: pd.Series, spec: str) -> Optional[pd.Series]:
-    m = re.search(r"(\d+)\s*(EMA|SMA)", spec or "", re.I)
+    m = re.search(r"(\d+)(?:-day)?\s*(EMA|SMA)", spec or "", re.I)
     if not m:
         return None
     n, kind = int(m.group(1)), m.group(2).upper()
@@ -63,12 +69,27 @@ def manage_one(ticker: str, pos: dict, df: pd.DataFrame, regime_key: str,
 
     trig = {}
     rec, why = "HOLD", []
+    off = pos.get("disaster_offset")
+    disaster = round(stop - float(off), 2) if (long and off is not None and not pd.isna(off)) else None
 
-    # 1 structural
+    # 0 disaster stop (resting order): did today's range reach it?
+    low = float(df["Low"].iloc[-1]) if "Low" in df.columns else close
+    if disaster is not None:
+        if low <= disaster:
+            trig["disaster"] = f"HIT — low {low:.2f} reached the resting disaster stop {disaster:.2f}"
+            rec, why = "EXIT", [f"the resting disaster stop at {disaster:.2f} traded today: the order has likely "
+                                f"filled — confirm the fill with the broker and record STOP_HIT"]
+        else:
+            trig["disaster"] = f"resting at {disaster:.2f} (low today {low:.2f})"
+    else:
+        trig["disaster"] = "none recorded — place a resting SELL STOP 1 x ATR below the stop"
+
+    # 1 structural (closing basis)
     hit = close <= stop if long else close >= stop
     trig["structural"] = f"HIT — close {close:.2f} vs stop {stop:.2f}" if hit else f"clear ({close:.2f} vs {stop:.2f})"
-    if hit:
-        rec, why = "EXIT", [f"structural stop hit at {stop:.2f}; never moved, no exceptions"]
+    if hit and rec == "HOLD":
+        rec, why = "EXIT", [f"closing-basis stop: closed at or below {stop:.2f} — sell at the next open; "
+                            f"never moved down, no exceptions"]
 
     # 2 thesis
     direction = REGIME_DIRECTION.get(regime_key, ("both", 0.5))[0]
@@ -98,7 +119,9 @@ def manage_one(ticker: str, pos: dict, df: pd.DataFrame, regime_key: str,
             if (long and tight > stop) or ((not long) and tight < stop):
                 new_stop = round(tight, 2)
                 if rec == "HOLD":
-                    rec, why = "TIGHTEN", [f"stop to {new_stop} (the rising {pos['trail']}); below a rising MA you tighten, you do not exit"]
+                    rec, why = "TIGHTEN", [f"stop to {new_stop} (the rising {pos['trail']}); below a rising MA you tighten, you do not exit"
+                                           + (f"; move the resting disaster stop up to {round(new_stop - float(off), 2)}"
+                                              if disaster is not None else "")]
         else:
             trig["trend"] = f"clear (close {close:.2f} vs {pos['trail']} {mv:.2f}, {'rising' if rising else 'falling'})"
     else:
@@ -127,7 +150,7 @@ def manage_one(ticker: str, pos: dict, df: pd.DataFrame, regime_key: str,
         trig["ladder"] = f"R = {R:.2f}, next rung {rung:.0f}R at {entry + rung*rps if long else entry - rung*rps:.2f}"
 
     return {"ticker": ticker, "setup": pos.get("setup"), "side": side, "entry": round(entry, 2),
-            "stop": stop, "current": round(close, 2), "R": round(R, 2), "days_held": days_held,
+            "stop": stop, "disaster_stop": disaster, "current": round(close, 2), "R": round(R, 2), "days_held": days_held,
             "shares": pos["shares"], "trail": pos.get("trail"), "triggers": trig,
             "recommendation": rec, "new_stop": new_stop, "why": "; ".join(why) if why else "all four triggers clear",
             "pending_confirmation": rec != "HOLD",
@@ -185,6 +208,30 @@ def selftest() -> dict:
     r = manage_one("BBB", b, df, "goldilocks", "Leading")
     if r["recommendation"] != "EXIT" or "burst" not in r["why"]:
         f.append(f"burst past day 5 must EXIT: {r}")
+    # v2: disaster stop. Entry 60, stop 57, disaster 55 (offset 2).
+    d = dict(base, disaster_offset=2.0, trims=3)
+    flat = pd.Series(np.full(120, 60.0), index=idx)
+    fdf = pd.DataFrame({"Close": flat, "High": flat + 0.5, "Low": flat - 0.5, "Volume": 1e6})
+    r = manage_one("DDD", d, fdf, "goldilocks", "Leading")
+    if r["recommendation"] != "HOLD" or r["disaster_stop"] != 55.0:
+        f.append(f"quiet day: HOLD with the disaster stop resting at 55.0: {r['recommendation']} {r['disaster_stop']}")
+    hit = fdf.copy(); hit.iloc[-1, hit.columns.get_loc("Low")] = 54.8      # wick to 54.8, close back at 60
+    r = manage_one("DDD", d, hit, "goldilocks", "Leading")
+    if r["recommendation"] != "EXIT" or "HIT" not in r["triggers"]["disaster"]:
+        f.append(f"a low through the disaster stop must report the resting order filled: {r['triggers']}")
+    dip = fdf.copy(); dip.iloc[-1, dip.columns.get_loc("Low")] = 56.0       # through the stop intraday, closes 60
+    r = manage_one("DDD", d, dip, "goldilocks", "Leading")
+    if r["recommendation"] != "HOLD":
+        f.append("closing-basis: an intraday dip below the stop that closes above it must HOLD")
+    # tighten moves the disaster stop with the stop
+    td = dict(base, disaster_offset=2.0, stop=57.0, trims=3, trail="10 SMA")
+    rise_dip = pd.Series(np.r_[np.linspace(50, 75, 119), [73.5]], index=idx)   # one dip below a RISING 10 SMA
+    tdf = pd.DataFrame({"Close": rise_dip, "High": rise_dip + 0.3, "Low": rise_dip - 0.3, "Volume": 1e6})
+    r = manage_one("TTT", td, tdf, "goldilocks", "Leading")
+    if r["recommendation"] != "TIGHTEN" or f"{round(r['new_stop'] - 2.0, 2)}" not in r["why"]:
+        f.append(f"TIGHTEN must name where the disaster stop moves: {r['recommendation']} / {r['why']}")
+    if _ma(up, "50-day SMA") is None:
+        f.append("N50: '50-day SMA' must parse")
     return {"ok": not f, "failures": f}
 
 

@@ -1,7 +1,7 @@
 {
   "starting_equity": 10000.0,
   "max_positions": 4,
-  "heat_cap_pct": 15.0,
+  "heat_cap_pct": 8.0,
   "max_position_pct": 30.0,
   "notional_cap_pct": 25.0,
   "atr_pct_band": [
@@ -10,5 +10,7 @@
   ],
   "trail_default": "10 EMA",
   "new_campaign_step": 1,
-  "min_sample_per_setup": 20
+  "min_sample_per_setup": 20,
+  "base_risk_pct": 1.0,
+  "max_per_sector": 2
 }

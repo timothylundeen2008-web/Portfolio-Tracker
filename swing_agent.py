@@ -1,6 +1,18 @@
 """
-swing_agent.py  (v1 — September 2026)
-─────────────────────────────────────
+swing_agent.py  (v2 — 2026-11-12)
+─────────────────────────────────
+v2 (build #2; evidence in swing_backtest v1.2, risk_policy.md §5):
+  * Only LIVE setups (M0 Rotation Reclaim) may be entered; every other
+    setup is shown as watch-only with its backtest evidence.
+  * Market-trend filter: no new entries while SPY is below its 200-day SMA
+    (or when SPY data is missing — a data gap is not a signal).
+  * Sizing from the journal: 1% base on 3-of-3, half on 2-of-3, halved after
+    3 straight losses; 2% ceiling; no regime multiple; breadth no longer cuts
+    size (it was never tested) — it is shown for context only.
+  * Max 2 open/entry-permitted positions per sector; heat cap from config (8%).
+  * Each permitted card carries an end-of-day ORDER TICKET: buy-stop-limit
+    entry, closing-basis stop, resting disaster stop.
+  * Non-permitted cards render as one line each (N56).
 The Swing Desk Agent's daily run. Runs Part 2 of swing_trading_procedure.md
 in order, writes ONE brief, and stops. It never places, sizes into, or
 closes anything: every card and every exit recommendation carries
@@ -172,12 +184,18 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
         if markets.get("very_stale"):
             brief["refusals"].append(f"Markets summary very stale ({markets.get('age_hours')}h): "
                                      "cards suppressed until republished.")
-    direction, size_mult = swing_desk.REGIME_DIRECTION.get(regime_key, ("both", 0.5))
+    direction, regime_mult = swing_desk.REGIME_DIRECTION.get(regime_key, ("both", 0.5))
+    if swing_desk.LONG_ONLY and direction == "short":
+        brief["refusals"].append(f"Regime {regime_key} closes the long book and the desk is long-only: "
+                                 "no new swing entries; stand aside.")
+    size_mult = regime_mult if swing_desk.SIZING_USES_REGIME else 1.0
     trip = markets.get("tripwires") or []
     brief["regime"] = {"key": regime_key, "label": (markets.get("regime") or {}).get("label"),
                        "direction": direction, "size_mult": size_mult,
                        "long_book": "open" if direction in ("long", "both") else "CLOSED",
-                       "short_book": "open" if direction in ("short", "both") else "closed",
+                       "short_book": ("closed (long-only desk)" if swing_desk.LONG_ONLY else
+                                      "open" if direction in ("short", "both") else "closed"),
+                       "sizing_note": "regime sets direction only; it does not scale size (2026-11-12)",
                        "drivers": (markets.get("regime") or {}).get("drivers", []),
                        "fed_posture": markets.get("fed_posture"), "tripwires": trip,
                        "bridge_age_hours": markets.get("age_hours"), "regime_read": None}
@@ -193,8 +211,8 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
                          "slots_open": heat["slots_open"], "max_positions": cfg["max_positions"]}
     if eq["equity"] is None:
         brief["refusals"].append(eq["note"]); cards_allowed = False
-    if pe["step"] == 0:
-        brief["refusals"].append("Progressive Exposure step 0: " + pe["why"]); cards_allowed = False
+    if pe["risk_pct"] <= 0:
+        brief["refusals"].append("Risk per trade is 0: " + pe["why"]); cards_allowed = False
 
     # ── 3. Rotation: hunting grounds ───────────────────────────────────────
     # max_long=5 so LEADING sectors are not crowded out by the Improving-first
@@ -257,7 +275,18 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
     stale_set = set(health["stale"])
     bench = (ohlcv.get("SPY") if ohlcv.get("SPY") is not None else pd.DataFrame()).get("Close")
     brief["breadth"] = _breadth_proxy(ohlcv, breadth_universe)
-    breadth_mult = 0.5 if brief["breadth"]["size_cut"] else 1.0
+    breadth_mult = 1.0      # v2: breadth is context only; the tested sizing has no breadth cut
+    # Market-trend filter (passed its pre-set bar in swing_backtest v1.2)
+    mkt_ok = swing_desk.market_ok(bench)
+    spy_c = bench.dropna() if bench is not None else None
+    brief["market_filter"] = {
+        "ok": mkt_ok, "rule": f"new entries only while SPY closes above its {swing_desk.MARKET_SMA}-day SMA",
+        "spy_close": round(float(spy_c.iloc[-1]), 2) if spy_c is not None and len(spy_c) else None,
+        "spy_sma": (round(float(spy_c.tail(swing_desk.MARKET_SMA).mean()), 2)
+                    if spy_c is not None and len(spy_c) >= swing_desk.MARKET_SMA else None)}
+    if mkt_ok is None:
+        brief["data_gaps"].append("Market filter unknown: SPY history missing or short — new entries blocked "
+                                  "(a data gap is not a signal).")
 
     # ── 6. Events ──────────────────────────────────────────────────────────
     import event_calendar as ec
@@ -284,7 +313,8 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
                                     equity=eq["equity"] or 0.0, pe_step=pe["step"],
                                     heat_used_pct=heat["heat_pct"] or 0.0,
                                     earnings_within_48h=tk in brief["events"]["earnings_48h"],
-                                    is_etf=bool(m.get("is_etf")))
+                                    is_etf=bool(m.get("is_etf")), risk_pct=pe["risk_pct"],
+                                    market_ok=mkt_ok, heat_cap_pct=float(cfg["heat_cap_pct"]))
         except Exception as e:
             errors.append({"ticker": tk, "error": f"{type(e).__name__}: {e}"}); continue
         base = {"ticker": tk, "sector": m.get("sector"), "sector_quadrant": m.get("quadrant"),
@@ -323,10 +353,22 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
                 "why": c["why"], "adr_pct": adr,
                 "event_risk": ("EP — catalyst already happened" if c["setup"] == "M2 EP" else
                                "; ".join(f"{e['event']} in {e['days_away']}d" for e in blackout) or "clear"),
+                "live": bool(c.get("live")), "evidence": c.get("evidence"),
+                "ticket": {**(c.get("ticket") or {}), "shares": shares},
+                "disaster_stop": (c.get("ticket") or {}).get("disaster_stop"),
                 "entry_permitted": True, "entry_block_reason": None,
                 "why_note": None, "what_would_make_this_wrong": None, "instrument_note": None,
                 "teaching_question": None, "pending_confirmation": True}
-        if blackout and c["setup"] != "M2 EP":
+        if not card["live"]:
+            card["entry_permitted"] = False
+            card["entry_block_reason"] = f"watch only — {card['evidence']}"
+        elif mkt_ok is not True:
+            card["entry_permitted"] = False
+            mf = brief["market_filter"]
+            card["entry_block_reason"] = (f"market filter: SPY {mf['spy_close']} below its {swing_desk.MARKET_SMA}-day "
+                                          f"{mf['spy_sma']} — no new swing entries" if mkt_ok is False else
+                                          "market filter unknown (SPY data missing) — no new entries")
+        if card["entry_permitted"] and blackout and c["setup"] != "M2 EP":
             card["entry_permitted"] = False
             card["entry_block_reason"] = "binary macro event within 48h: " + card["event_risk"]
         if not cards_allowed:
@@ -336,19 +378,16 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
             card["entry_permitted"] = False
             budget = (eq["equity"] or 0) * card["risk_pct"] / 100
             card["entry_block_reason"] = (sz.get("reason") if sz.get("blocked_by_heat") else
-                f"risk budget ${budget:,.2f} at this step/regime is below one share's risk (${c['risk_per_share']:,.2f}) "
-                f"— a single share breaches Progressive Exposure; the only expression is a 45-90 DTE call "
-                f"debit spread with premium <= ${budget:,.0f}, or skip")
+                f"risk budget ${budget:,.2f} is below one share's risk (${c['risk_per_share']:,.2f}) "
+                f"— skip (no options or fractional workarounds in the swing book)")
         cards.append(card)
 
     cards.sort(key=lambda c: (not c["entry_permitted"], -int(c["confluence"][0]),
                               swing_screener.QUAD_PRIORITY.get(c["sector_quadrant"], 9), c["stop_pct"]))
-    # slots: the desk shows what fits, and names what doesn't
-    slots = heat["slots_open"]
-    for i, c in enumerate(cards):
-        if c["entry_permitted"] and i >= slots:
-            c["entry_permitted"] = False
-            c["entry_block_reason"] = f"over slot cap ({cfg['max_positions']} positions max, {slots} open) — watch, or close something first"
+    # slots: the desk shows what fits, and names what doesn't (position cap, then sector cap)
+    open_sectors = [sector_of.get(tk, tk) for tk in opens]
+    allocate_slots(cards, heat["slots_open"], open_sectors, int(cfg.get("max_per_sector", 2)),
+                   int(cfg["max_positions"]))
     brief["cards"], brief["watch"], brief["avoid"], brief["errors"] = cards, watch, avoid, errors
 
     # ── 9. Manage opens ────────────────────────────────────────────────────
@@ -360,6 +399,30 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
     brief["question_of_the_day"] = None
     brief["review"] = None
     return brief
+
+
+def allocate_slots(cards: list, slots_open: int, open_sectors: list, max_per_sector: int,
+                   max_positions: int) -> None:
+    """Walk the ranked cards; permit at most `slots_open` entries and at most
+    `max_per_sector` positions per sector (open ones included). In place."""
+    used = 0
+    per_sec: dict = {}
+    for s_ in open_sectors:
+        per_sec[s_] = per_sec.get(s_, 0) + 1
+    for c in cards:
+        if not c["entry_permitted"]:
+            continue
+        sec = c.get("sector") or c["ticker"]
+        if used >= slots_open:
+            c["entry_permitted"] = False
+            c["entry_block_reason"] = (f"over slot cap ({max_positions} positions max, {slots_open} open) — "
+                                       f"watch, or close something first")
+        elif per_sec.get(sec, 0) >= max_per_sector:
+            c["entry_permitted"] = False
+            c["entry_block_reason"] = f"sector cap: already {per_sec[sec]} in {sec} (max {max_per_sector})"
+        else:
+            used += 1
+            per_sec[sec] = per_sec.get(sec, 0) + 1
 
 
 def _pending_from_prior(journal: pd.DataFrame, today: date) -> list[dict]:
@@ -385,8 +448,9 @@ def render_md(b: dict) -> str:
          f"**Equity:** ${x['equity']:,.0f} (start ${x['starting_equity']:,.0f}, realized {x['realized_pnl']:+,.0f}) · "
          f"heat {x['heat_used_pct']}% of {x['heat_cap_pct']}% · {x['open_count']} open, {x['slots_open']} slots"
          if x["equity"] is not None else "**Equity:** not set — desk cannot size",
-         (f"**Breadth (proxy):** {b['breadth']['pct_above_200']}% above 200-day — {b['breadth']['read']}"
-          if b["breadth"]["pct_above_200"] is not None else "**Breadth (proxy):** no price data this run"), ""]
+         (f"**Breadth (proxy):** {b['breadth']['pct_above_200']}% above 200-day — {b['breadth']['read']} (context only; does not size)"
+          if b["breadth"]["pct_above_200"] is not None else "**Breadth (proxy):** no price data this run"),
+         _mf_line(b.get("market_filter")), ""]
     if r.get("regime_read"):
         L += [r["regime_read"], ""]
     if b["refusals"]:
@@ -412,7 +476,8 @@ def render_md(b: dict) -> str:
     hg = b["hunting_grounds"]
     L += ["## Hunting grounds",
           "Long: " + (", ".join(f"{s['ticker']} ({s['quadrant']}, {s['direction']} → {s['feeds']})" for s in hg["long"]) or "none"),
-          "Short: " + (", ".join(f"{s['ticker']} ({s['quadrant']})" for s in hg["short"]) or "none"),
+          ("Short grounds (not traded — long-only desk): " if swing_desk.LONG_ONLY else "Short: ")
+          + (", ".join(f"{s['ticker']} ({s['quadrant']})" for s in hg["short"]) or "none"),
           *(["Watch grounds (price and money disagree — no cards): " + ", ".join(
               f"{s['ticker']} ({s['quadrant']}, acc {s['accumulation'] if s['accumulation'] is not None else 'missing'})"
               for s in hg.get("long_watch", []) + hg.get("short_watch", []))]
@@ -427,9 +492,18 @@ def render_md(b: dict) -> str:
               "This is a data gap, not a market verdict.", ""]
     elif not b["cards"]:
         L += ["No card today. That is a valid answer, not a gap.", ""]
+    held = [c for c in b["cards"] if not c["entry_permitted"]]
     for c in b["cards"]:
-        tag = "ENTRY PERMITTED" if c["entry_permitted"] else f"NOT PERMITTED — {c['entry_block_reason']}"
-        L += [f"### {c['ticker']} — {c['setup']} ({c['side']}) · {c['confluence']} · {tag}",
+        if not c["entry_permitted"]:
+            continue
+        tk_ = c.get("ticket") or {}
+        L += [f"### {c['ticker']} — {c['setup']} ({c['side']}) · {c['confluence']} · ENTRY PERMITTED",
+              f"- **Order ticket (place after the close, valid next session):** {tk_.get('entry_order', 'BUY STOP LIMIT')} "
+              f"**{tk_.get('shares', c['shares'])} sh**, trigger **{tk_.get('trigger', c['entry'])}**, limit **{tk_.get('limit', '—')}**",
+              f"- **After the fill:** resting SELL STOP (market) at **{tk_.get('disaster_stop', '—')}** (disaster, 1×ATR below). "
+              f"Closing-basis stop **{tk_.get('closing_stop', c['stop'])}**: {tk_.get('closing_stop_rule', '')}",
+              f"- Evidence: {c.get('evidence')}"]
+        L += [
               f"- Sector {c['sector']} [{c['sector_quadrant']}] · close {c['close']} · ADR {c['adr_pct']}%" + (" · from watchlist" if c["from_watchlist"] else ""),
               f"- Entry trigger **{c['entry']}** · stop **{c['stop']}** ({c['stop_pct']}%) — never moved down",
               f"- Risk {c['risk_pct']}% → **{c['shares']} sh**, ${c['notional']:,.0f} ({c['notional_pct']}% of equity) · heat after {c['heat_after']}%",
@@ -446,6 +520,9 @@ def render_md(b: dict) -> str:
             if c.get(k):
                 L += [f"- **{lab}:** {c[k]}"]
         L += [""]
+    if held:
+        L += [f"## Cards not permitted today ({len(held)}) — one line each",
+              *[f"- {c['ticker']} {c['setup']} {c['confluence']}: {c['entry_block_reason']}" for c in held], ""]
     if b["watch"]:
         L += ["## Watch (1-of-3, regime-refused, or flow-unconfirmed ground)", *[f"- {w['ticker']} [{w['sector_quadrant']}]: {w['reason']}" for w in b["watch"]], ""]
     if b["avoid"]:
@@ -459,6 +536,13 @@ def render_md(b: dict) -> str:
         L += ["## Question of the day", b["question_of_the_day"], ""]
     L += ["---", "_Desk research, not personalized advice. Nothing here executes; confirm or decline from the tab or chat._"]
     return "\n".join(L)
+
+
+def _mf_line(mf: Optional[dict]) -> str:
+    if not mf:
+        return "**Market filter:** not computed"
+    state = {True: "OPEN — new entries allowed", False: "CLOSED — no new entries", None: "UNKNOWN — no new entries"}[mf.get("ok")]
+    return f"**Market filter:** SPY {mf.get('spy_close')} vs {swing_desk.MARKET_SMA}-day {mf.get('spy_sma')} → {state}"
 
 
 def _numeric_fingerprint(b: dict) -> str:
@@ -518,24 +602,59 @@ def selftest() -> dict:
 
     synth = {"XLE": swing_desk._synth("breakout", seed=2), "XOM": swing_desk._synth("breakout"),
              "CVX": swing_desk._synth("chop"), "NVDA": swing_desk._synth("parabolic"),
-             "XLK": swing_desk._synth("chop", seed=4), "SPY": swing_desk._synth("chop", seed=5)}
+             "XLK": swing_desk._synth("chop", seed=4), "SPY": swing_desk._synth("chop", seed=5),
+             "XLF": swing_desk._synth("reclaim")}
     fetch = lambda tks, period="2y": {t: synth[t] for t in tks if t in synth}
     markets = {"available": True, "age_hours": 2.0, "regime": {"key": "goldilocks", "label": "Goldilocks", "drivers": ["test"]}}
     rotation = {"available": True, "sectors": [
         {"ticker": "XLE", "sector": "Energy", "quadrant": "Improving", "rotation_direction": "Strengthening", "accumulation_score": 60, "stealth_label": "Stealth"},
-        {"ticker": "XLK", "sector": "Technology", "quadrant": "Lagging", "rotation_direction": "Weakening", "accumulation_score": -20}],
+        {"ticker": "XLK", "sector": "Technology", "quadrant": "Lagging", "rotation_direction": "Weakening", "accumulation_score": -20},
+        {"ticker": "XLF", "sector": "Financials", "quadrant": "Improving", "rotation_direction": "Strengthening", "accumulation_score": 40}],
         "constituents": {"XLE": ["XOM", "CVX"], "XLK": ["NVDA"]}}
     no_earn = lambda tks: {}
     no_macro = lambda d: []
 
     b = build_brief(fetch, (markets, rotation), date(2026, 9, 14), no_earn, no_macro)
     tick = {c["ticker"]: c for c in b["cards"]}
-    if b["exposure"]["step"] != 1 or b["exposure"]["equity"] != 10_000:
-        f.append(f"fresh journal: step 1, equity 10k: {b['exposure']}")
+    if b["exposure"]["risk_pct"] != 1.0 or b["exposure"]["equity"] != 10_000:
+        f.append(f"fresh journal: base risk 1.0%, equity 10k: {b['exposure']}")
     if "XOM" not in tick or tick["XOM"]["confluence"] != "3-of-3":
         f.append(f"XOM in an Improving+stealth sector on a volume breakout should be 3-of-3: {tick.get('XOM')}")
-    if "NVDA" not in tick or tick["NVDA"]["side"] != "short":
-        f.append("NVDA parabolic in a Lagging sector should surface as a short")
+    if any(c["side"] == "short" for c in b["cards"]):
+        f.append("long-only desk produced a short card")
+    # v2: the live M0 card is permitted with a full ticket; the breakout is watch-only
+    xlf = tick.get("XLF")
+    if not xlf or not xlf["entry_permitted"] or not xlf["live"]:
+        f.append(f"XLF M0 reclaim (Improving, SPY above 200d) must be a permitted live card: {xlf and xlf['entry_block_reason']}")
+    else:
+        t_ = xlf["ticket"]
+        if not (t_["limit"] > t_["trigger"] and t_["disaster_stop"] < t_["closing_stop"] < t_["trigger"]):
+            f.append(f"ticket levels out of order: {t_}")
+        if t_["shares"] != xlf["shares"] or xlf["shares"] <= 0:
+            f.append("ticket shares must equal the card's shares (> 0)")
+        want = 1.0 * (1.0 if xlf["confluence"] == "3-of-3" else 0.5)
+        if abs(xlf["risk_pct"] - want) > 1e-9:
+            f.append(f"risk % must be base x confluence ({want}), got {xlf['risk_pct']}")
+    if "XOM" in tick and (tick["XOM"]["entry_permitted"] or "watch only" not in (tick["XOM"]["entry_block_reason"] or "")):
+        f.append("M2 Breakout failed the backtest: it must be shown watch-only, not permitted")
+    md0 = render_md(b)
+    if "Order ticket" not in md0 or "Market filter:" not in md0 or "Cards not permitted today" not in md0:
+        f.append("render must show the order ticket, the market filter and the one-line held list")
+    # market filter CLOSED: SPY below its 200-day
+    synth_dn = dict(synth, SPY=swing_desk._synth("chop", seed=1))
+    fetch_dn = lambda tks, period="2y": {t: synth_dn[t] for t in tks if t in synth_dn}
+    bd = build_brief(fetch_dn, (markets, rotation), date(2026, 9, 14), no_earn, no_macro)
+    if bd["market_filter"]["ok"] is not False or any(c["entry_permitted"] for c in bd["cards"]):
+        f.append("SPY below its 200-day must block every new entry")
+    if not any("market filter" in (c["entry_block_reason"] or "") for c in bd["cards"] if c["ticker"] == "XLF"):
+        f.append("the XLF block reason must name the market filter")
+    # sector cap (unit): two permitted cards in one sector with one already open -> only one more
+    cs = [{"ticker": "A", "sector": "XLE", "entry_permitted": True, "entry_block_reason": None},
+          {"ticker": "B", "sector": "XLE", "entry_permitted": True, "entry_block_reason": None},
+          {"ticker": "C", "sector": "XLF", "entry_permitted": True, "entry_block_reason": None}]
+    allocate_slots(cs, 4, ["XLE"], 2, 4)
+    if [c["entry_permitted"] for c in cs] != [True, False, True] or "sector cap" not in (cs[1]["entry_block_reason"] or ""):
+        f.append(f"sector cap of 2 not enforced: {[(c['ticker'], c['entry_permitted'], c['entry_block_reason']) for c in cs]}")
     if not any(a["ticker"] == "CVX" for a in b["avoid"]):
         f.append("CVX chop must be in avoid with a named reason")
     if any(c["shares"] > 0 and c["notional_pct"] and c["notional_pct"] > 30.5 for c in b["cards"]):
@@ -571,8 +690,10 @@ def selftest() -> dict:
     # regime gate: growth_scare closes the long book
     b2 = build_brief(fetch, (dict(markets, regime={"key": "growth_scare", "label": "", "drivers": []}), rotation),
                      date(2026, 9, 14), no_earn, no_macro)
-    if any(c["side"] == "long" for c in b2["cards"]):
-        f.append("long card produced in growth_scare")
+    if any(c["entry_permitted"] for c in b2["cards"]) or any(c["side"] == "short" for c in b2["cards"]):
+        f.append("growth_scare: long-only desk must stand aside (no permitted entries, no shorts)")
+    if not any("long-only" in r for r in b2["refusals"]):
+        f.append("growth_scare refusal must say the long-only desk stands aside")
     if not any("long" in (w["reason"] or "").lower() and "closed" in (w["reason"] or "").lower() for w in b2["watch"]):
         f.append("refused long must be reported on the watch list with the regime named")
     # Fix 8: XLE Improving but accumulation negative -> watch ground; XOM's
@@ -592,8 +713,7 @@ def selftest() -> dict:
     bsg = build_brief(fetch, (markets, rot_short), date(2026, 9, 14), no_earn, no_macro)
     if any(c["ticker"] == "XOM" and c["side"] == "long" for c in bsg["cards"]):
         f.append("long card from a short hunting ground must be demoted")
-    if "NVDA" not in {c["ticker"] for c in b["cards"]}:
-        f.append("NVDA short from a Lagging/negative ground must still be a card")
+    pass
     # macro blackout blocks non-EP entries but keeps the card
     b3 = build_brief(fetch, (markets, rotation), date(2026, 9, 14), no_earn,
                      lambda d: [{"event": "FOMC", "days_away": 1, "blackout": True}])
@@ -614,8 +734,8 @@ def selftest() -> dict:
         f.append("open XOM must be managed")
     if b5["exposure"]["open_count"] != 1 or b5["exposure"]["slots_open"] != 3:
         f.append(f"slots must reflect the journal: {b5['exposure']}")
-    if not any(p["ticker"] == "NVDA" for p in b5["unconfirmed_from_prior"]):
-        f.append("undecided NVDA card from 09-14 must carry over as UNCONFIRMED")
+    if not any(p["ticker"] == "XLF" for p in b5["unconfirmed_from_prior"]):
+        f.append("undecided XLF card from 09-14 must carry over as UNCONFIRMED")
     # validator: annotation may touch only LLM fields
     ann = json.loads(json.dumps(b5)); ann["question_of_the_day"] = "x"; ann["cards"][0]["why_note"] = "y"
     if not validate(b5, ann):

@@ -47,22 +47,32 @@ WATCHLIST = "swing_watchlist.csv"
 COLUMNS = ["event_id", "ts", "source", "ticker", "event", "setup", "side",
            "price", "shares", "stop", "planned_entry", "risk_per_share",
            "realized_pnl", "exit_trigger", "regime_at_entry", "confluence",
-           "trail", "card_date", "note"]
+           "trail", "card_date", "note", "disaster_stop"]
 
 EVENTS = {"TAKE", "TRIM", "EXIT", "STOP_HIT", "TIGHTEN", "PASS", "WATCH",
           "DECLINE", "RESET"}
 HUMAN_SOURCES = {"tab", "chat"}
 
-# Progressive Exposure — the table from swing_trading_agent_prompt.md.
-# Step goes DOWN immediately on losses, UP only on streaks. Asymmetric on purpose.
-PROGRESSIVE_EXPOSURE = {0: 0.0, 1: 0.5, 2: 1.0, 3: 2.0}     # step -> risk %
+# Risk per trade — v2 (decided 2026-11-12, risk_policy.md §5).
+# Base planned risk = base_risk_pct (1%) on a 3-of-3 card (the desk halves it
+# for 2-of-3). After 3 consecutive losses the base is HALVED until 2
+# consecutive winners. 2% is the hard ceiling. Stepping the base up to 1.5%
+# then 2% needs 30 live closed trades with positive net expectancy AND
+# Matt's approval: it is a config change (save_config(base_risk_pct=...)),
+# never automatic. Step numbers kept for the tab: 2 = base, 1 = reduced.
+PROGRESSIVE_EXPOSURE = {0: 0.0, 1: 0.5, 2: 1.0}             # step -> risk % at base 1%
+MAX_RISK_PCT = 2.0
+STREAK_LOSSES, STREAK_RESET_WINS = 3, 2
+MIN_TRADES_FOR_STEP_UP = 30
 RISK_ON_REGIMES = {"goldilocks", "inflationary_repression"}
 SCRATCH_R = 0.15      # |R| below this is a scratch: neither win nor loss
 
 DEFAULT_CONFIG = {
     "starting_equity": None,       # set once; equity() = this + realized P&L
     "max_positions": 4,            # architecture doc: small account, 4 max
-    "heat_cap_pct": 15.0,
+    "heat_cap_pct": 8.0,           # v2: 4 positions x 2% ceiling
+    "base_risk_pct": 1.0,          # v2: planned risk on a 3-of-3 card (decided 2026-11-12)
+    "max_per_sector": 2,           # v2 (decided 2026-11-11)
     "max_position_pct": 30.0,      # concentration permitted only at tight stops
     "notional_cap_pct": 25.0,      # architecture doc: notional per name
     "atr_pct_band": [2.0, 7.0],    # stops the desk drifting to vol just because it fits the math
@@ -101,7 +111,7 @@ def load() -> pd.DataFrame:
             df[c] = None
     df = df[COLUMNS].copy()
     df["ts"] = pd.to_datetime(df["ts"], utc=True, errors="coerce")
-    for c in ("price", "shares", "stop", "planned_entry", "risk_per_share", "realized_pnl"):
+    for c in ("price", "shares", "stop", "planned_entry", "risk_per_share", "realized_pnl", "disaster_stop"):
         df[c] = pd.to_numeric(df[c], errors="coerce")
     return df.sort_values("ts").reset_index(drop=True)
 
@@ -126,7 +136,8 @@ def _append(row: dict, df: Optional[pd.DataFrame] = None) -> pd.DataFrame:
 
 def record_take(source: str, ticker: str, price: float, shares: float, stop: float, *,
                 setup: str, side: str, planned_entry: float, regime: str,
-                confluence: str, trail: str, card_date: str, note: str = "") -> pd.DataFrame:
+                confluence: str, trail: str, card_date: str, note: str = "",
+                disaster_stop: Optional[float] = None) -> pd.DataFrame:
     if shares <= 0 or price <= 0:
         raise ValueError("shares and price must be positive")
     if (side == "long" and stop >= price) or (side == "short" and stop <= price):
@@ -136,7 +147,7 @@ def record_take(source: str, ticker: str, price: float, shares: float, stop: flo
                     "stop": stop, "planned_entry": planned_entry,
                     "risk_per_share": abs(price - stop), "regime_at_entry": regime,
                     "confluence": confluence, "trail": trail, "card_date": card_date,
-                    "note": note})
+                    "note": note, "disaster_stop": disaster_stop})
 
 
 def record_exit(source: str, ticker: str, price: float, shares: Optional[float] = None, *,
@@ -200,7 +211,11 @@ def open_positions(df: Optional[pd.DataFrame] = None) -> dict:
                                 "trail": r["trail"], "entry_ts": r["ts"], "stop": r["stop"],
                                 "risk_per_share": r["risk_per_share"], "trims": 0,
                                 "regime_at_entry": r["regime_at_entry"], "confluence": r["confluence"],
-                                "shares_taken": 0.0}
+                                "shares_taken": 0.0,
+                                "disaster_stop": (None if pd.isna(r.get("disaster_stop")) else r.get("disaster_stop")),
+                                # v2: the disaster stop trails the stop at a fixed distance (1 x ATR at entry)
+                                "disaster_offset": (None if pd.isna(r.get("disaster_stop"))
+                                                    else round(float(r["stop"]) - float(r["disaster_stop"]), 4))}
             p["shares"] += r["shares"]; p["cost"] += r["shares"] * r["price"]
             p["shares_taken"] += r["shares"]
             # a later add never loosens the stop
@@ -276,38 +291,49 @@ def _streak(closed: pd.DataFrame, reset_ts=None) -> tuple[str, int]:
 
 def pe_step(regime_key: Optional[str] = None, df: Optional[pd.DataFrame] = None) -> dict:
     """
-    Progressive Exposure step, derived. Returns step, risk %, and the reason
-    in words so the brief can print WHY you are at this step.
+    Risk per trade, derived from your closed trades (v2). Walks them in order
+    since the last RESET: 3 consecutive losses -> reduced (half the base)
+    until 2 consecutive winners. Scratches (|R| < 0.15) count as neither.
+    Returns step (2 base / 1 reduced), risk_pct, and the reason in words.
+    regime_key is accepted for compatibility; the regime no longer sizes.
     """
     df = load() if df is None else df
     cfg = load_config()
+    base = min(float(cfg.get("base_risk_pct") or 1.0), MAX_RISK_PCT)
     closed = closed_trades(df)
     resets = df[df["event"] == "RESET"]
     reset_ts = resets["ts"].max() if not resets.empty else None
-    kind, n = _streak(closed, reset_ts)
-
-    if closed.empty or (reset_ts is not None and kind == "none"):
-        step = int(cfg["new_campaign_step"])
-        why = ("New campaign: no closed swing trades yet. Procedure Part 3 starts every "
-               "campaign at 0.5% risk regardless of how good the setups look."
-               if closed.empty else "Reset acknowledged; back at step 1 until results speak.")
-    elif kind == "loss" and n >= 3:
-        step, why = 0, (f"{n} consecutive losses: cash / paper only. The market is telling you the "
-                        f"environment changed before any indicator did. Record a RESET to re-enter at step 1.")
-    elif kind == "loss" and n == 2:
-        step, why = 1, "2 consecutive losses: stepped down to 0.5% immediately."
-    elif kind == "loss":
-        step, why = 1, "Last trade a loss: 0.5% until a winner."
-    elif kind == "win" and n >= 3:
-        if regime_key in RISK_ON_REGIMES:
-            step, why = 3, f"{n} consecutive winners in a risk-on regime ({regime_key}): max 2.0%."
+    c = closed.sort_values("closed") if not closed.empty else closed
+    if reset_ts is not None and not c.empty:
+        c = c[c["closed"] > reset_ts]
+    losses = wins = 0
+    reduced = False
+    for R in (c["R"].tolist() if not c.empty else []):
+        if R is None or pd.isna(R) or abs(R) < SCRATCH_R:
+            continue
+        if R < 0:
+            losses, wins = losses + 1, 0
+            if losses >= STREAK_LOSSES:
+                reduced = True
         else:
-            step, why = 2, (f"{n} consecutive winners, but regime {regime_key} is not risk-on: "
-                            f"step 3 needs both. Holding at 1.0%.")
+            wins, losses = wins + 1, 0
+            if reduced and wins >= STREAK_RESET_WINS:
+                reduced = False
+    kind, n = _streak(closed, reset_ts)
+    if closed.empty:
+        why = f"New campaign: no closed swing trades yet. Base risk {base:g}% on a 3-of-3 card, half on 2-of-3."
+    elif reduced:
+        why = (f"Reduced to {base / 2:g}%: 3 losses in a row. Back to {base:g}% after "
+               f"{STREAK_RESET_WINS} winners in a row (now {wins}).")
     else:
-        step, why = 2, f"{n} winner(s) in a row: 1.0%."
-    return {"step": step, "risk_pct": PROGRESSIVE_EXPOSURE[step], "streak": f"{kind}:{n}",
-            "closed_trades": int(len(closed)), "why": why,
+        why = f"Base risk {base:g}% (last run: {kind} x{n})."
+    n_closed = int(len(closed))
+    if n_closed >= MIN_TRADES_FOR_STEP_UP and base < MAX_RISK_PCT:
+        why += (f" {n_closed} trades closed: a step-up review is due (needs positive net expectancy "
+                f"and Matt's approval).")
+    return {"step": 1 if reduced else 2, "risk_pct": round(base / 2 if reduced else base, 3),
+            "streak": f"{kind}:{n}", "reduced": reduced, "base_risk_pct": base,
+            "closed_trades": n_closed, "why": why,
             "last_5_R": [r for r in closed.sort_values("closed")["R"].tail(5).tolist()] if not closed.empty else []}
 
 
@@ -436,8 +462,9 @@ def selftest() -> dict:
         write_df(WATCHLIST, pd.DataFrame(columns=WL_COLUMNS))
         save_config(starting_equity=10_000.0)
 
-        if pe_step("goldilocks")["step"] != 1:
-            f.append("new campaign must be step 1")
+        p0 = pe_step("goldilocks")
+        if p0["step"] != 2 or abs(p0["risk_pct"] - 1.0) > 1e-9:
+            f.append(f"new campaign must be base risk 1.0%: {p0}")
         # execution boundary
         try:
             _append({"source": "agent", "ticker": "X", "event": "TAKE"}); f.append("agent wrote a TAKE row")
@@ -462,19 +489,35 @@ def selftest() -> dict:
             f.append(f"round trip R should be 3.0: {ct.to_dict('records')}")
         if abs(equity()["equity"] - 10_600) > 0.01:
             f.append(f"equity must be starting + realized: {equity()}")
-        if pe_step("transition_ambiguous")["step"] != 2:
-            f.append("1 winner -> step 2")
-        # three losers -> step 0; reset -> step 1
+        if pe_step("transition_ambiguous")["risk_pct"] != 1.0:
+            f.append("1 winner -> base 1.0%")
+        # three losers -> reduced 0.5%; two winners -> back to base
         for i, tk in enumerate(("BBB", "CCC", "DDD")):
             record_take("tab", tk, 100, 10, 95, setup="M1 VCP", side="long", planned_entry=100,
                         regime="goldilocks", confluence="2-of-3", trail="50 SMA", card_date="2026-09-15")
             record_exit("tab", tk, 95, trigger="structural")
         ps = pe_step("goldilocks")
-        if ps["step"] != 0:
-            f.append(f"3 losses -> step 0, got {ps}")
-        record_reset("chat", "acknowledged")
-        if pe_step("goldilocks")["step"] != 1:
-            f.append("after RESET -> step 1")
+        if ps["step"] != 1 or abs(ps["risk_pct"] - 0.5) > 1e-9:
+            f.append(f"3 losses -> reduced 0.5%, got {ps}")
+        for tk in ("W1", "W2"):
+            record_take("tab", tk, 100, 10, 95, setup="M0 Rotation", side="long", planned_entry=100,
+                        regime="goldilocks", confluence="3-of-3", trail="100 SMA", card_date="2026-09-15",
+                        disaster_stop=93.5)
+            if tk == "W1":
+                op = open_positions()["W1"]
+                if op["disaster_stop"] != 93.5 or op.get("disaster_offset") != 1.5:
+                    f.append(f"disaster stop 93.5 and offset 1.5 (stop 95) must be carried: {op}")
+                record_exit("tab", tk, 105, trigger="ladder")
+                if pe_step("goldilocks")["risk_pct"] != 0.5:
+                    f.append("one winner must not end the reduced state (needs 2)")
+            else:
+                record_exit("tab", tk, 105, trigger="ladder")
+        if pe_step("goldilocks")["risk_pct"] != 1.0:
+            f.append("2 winners after the losing streak -> back to base 1.0%")
+        save_config(base_risk_pct=5.0)
+        if pe_step("goldilocks")["risk_pct"] > MAX_RISK_PCT:
+            f.append("base risk above the 2% ceiling must be capped")
+        save_config(base_risk_pct=1.0)
         ex = expectancy_by_setup()
         if ex[ex.setup == "M1 VCP"].iloc[0]["stops_honored"] is not True:
             f.append("losses at exactly -1R should count as stops honored")

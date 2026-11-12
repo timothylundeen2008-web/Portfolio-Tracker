@@ -1,6 +1,26 @@
 """
-swing_desk.py  (v1 — September 2026)
-────────────────────────────────────
+swing_desk.py  (v2 — 2026-11-12)
+────────────────────────────────
+v2 (build #2, evidence from swing_backtest.py v1.2, runs e2f4fdd / b5d651b):
+  * LONG ONLY (Matt, 2026-11-11). Short setups are no longer evaluated.
+  * Only setups that PASSED the backtest are live: M0 Rotation Reclaim.
+    Every other setup still prints, as WATCH ONLY, with its evidence.
+  * Market-trend filter: a new long entry needs SPY above its 200-day SMA
+    (passed its pre-set bar: max DD -24% -> -14%, expectancy up in both
+    halves). evaluate() reports it; the agent blocks the entry.
+  * Sizing (risk_policy.md §5, decided 2026-11-12): planned risk 1% of
+    equity on 3-of-3, 0.5% on 2-of-3, halved after 3 straight losses
+    (swing_journal.pe_step); 2% is a hard ceiling; the regime multiple no
+    longer scales size (regime sets direction only). Heat cap 8%.
+  * Stop method B (won in the backtest): the card stop is a CLOSING-basis
+    stop (exit at the next open after a close through it) and the ticket
+    carries a resting DISASTER stop 1 x ATR(14) below it.
+  * Entries are BUY STOP LIMIT tickets: limit = trigger + 0.25 x ATR(14), so
+    a gap-up cannot fill far above plan (N55). The 0.25 is a PROPOSED
+    default, not yet tested.
+  * No options: the card's instrument is always the stock/ETF.
+  * N50: VCP trail text is "50 SMA" so swing_exits can parse it.
+
 The ACTIVE agent. Reads market signals, spots setups across every method in
 swing_trading_procedure.md — long AND short, 3-day bursts AND multi-week
 trends — scores confluence, and produces trade cards with direction,
@@ -71,7 +91,36 @@ REGIME_DIRECTION = {
     "liquidity_crisis":        ("short", 1.0),
 }
 
-PROGRESSIVE_EXPOSURE = {0: 0.0, 1: 0.5, 2: 1.0, 3: 2.0}   # step -> risk %
+# v2: step 2 = base risk, step 1 = reduced (after 3 straight losses). The
+# journal supplies the actual risk % (base may be stepped up after 30 live
+# trades, by Matt's approval); this table is the fallback for callers that
+# pass only a step.
+PROGRESSIVE_EXPOSURE = {0: 0.0, 1: 0.5, 2: 1.0}            # step -> risk %
+MAX_RISK_PCT = 2.0            # hard ceiling per trade (risk_policy §5)
+HEAT_CAP_PCT = 8.0
+SIZING_USES_REGIME = False    # regime sets direction only (decided 2026-11-12)
+LONG_ONLY = True              # decided 2026-11-11
+LIVE_SETUPS = {"M0 Rotation"}
+EVIDENCE = {   # swing_backtest v1.2, ETF + leveraged universe, net of costs
+    "M0 Rotation": "PASS: +0.127R/trade, PF 1.63 / 1.51 (2005-15 / 2016-26); 3-of-3 trades +0.21R",
+    "M1 VCP": "FAIL: 21 ETF trades, negative 2005-15 — watch only",
+    "M2 Breakout": "FAIL: 2 ETF trades — watch only",
+    "M2 EP": "not tested: needs an intraday opening-range entry — watch only",
+    "M2c Burst": "FAIL: -0.22R/trade, negative in both halves — watch only",
+}
+MARKET_SMA = 200              # market-trend filter (passed, v1.2)
+DISASTER_ATR = 1.0            # stop method B (passed, v1.1/v1.2)
+ENTRY_LIMIT_ATR = 0.25        # buy-stop-limit offset — PROPOSED, untested
+
+
+def market_ok(spy_close: Optional[pd.Series]) -> Optional[bool]:
+    """True if SPY's last close is above its 200-day SMA; None if unknowable."""
+    if spy_close is None:
+        return None
+    c = pd.Series(spy_close).dropna()
+    if len(c) < MARKET_SMA:
+        return None
+    return bool(c.iloc[-1] > c.tail(MARKET_SMA).mean())
 
 
 # ── Indicators ──────────────────────────────────────────────────────────────
@@ -405,11 +454,11 @@ def confluence(rotation_ok: Optional[bool], structure_ok: bool, volume_ok: bool)
 
 def size_position(equity: float, entry: float, stop: float, risk_pct: float,
                   regime_mult: float, confl_mult: float, heat_used_pct: float,
-                  heat_cap_pct: float = 15.0, max_position_pct: float = 30.0) -> dict:
+                  heat_cap_pct: float = HEAT_CAP_PCT, max_position_pct: float = 30.0) -> dict:
     risk_per_share = abs(entry - stop)
     if risk_per_share <= 0 or equity <= 0:
         return {"shares": 0, "reason": "invalid entry/stop"}
-    eff_risk = risk_pct * regime_mult * confl_mult
+    eff_risk = min(risk_pct * regime_mult * confl_mult, MAX_RISK_PCT)
     risk_dollars = equity * eff_risk / 100
     shares = int(risk_dollars // risk_per_share)
     notional = shares * entry
@@ -433,8 +482,10 @@ def evaluate(ticker: str, df: pd.DataFrame, regime_key: str, *,
              bench: Optional[pd.Series] = None,
              sector_quadrant: Optional[str] = None, tier_a_confirmed: Optional[bool] = None,
              catalyst: Optional[str] = None, equity: float = 25_000.0,
-             pe_step: int = 1, heat_used_pct: float = 0.0,
-             earnings_within_48h: bool = False, is_etf: bool = False) -> dict:
+             pe_step: int = 2, heat_used_pct: float = 0.0,
+             earnings_within_48h: bool = False, is_etf: bool = False,
+             risk_pct: Optional[float] = None, market_ok: Optional[bool] = None,
+             heat_cap_pct: float = HEAT_CAP_PCT) -> dict:
     """
     The full agent pass for one ticker. Returns a classification, the
     confluence table, a trade card (when tradeable), and -- always -- the
@@ -487,12 +538,13 @@ def evaluate(ticker: str, df: pd.DataFrame, regime_key: str, *,
     # Short side. Parabolic shorts are an ALL-market setup (Kullamägi's #3):
     # evaluated even in risk-on regimes, at half size. Failed-breakout shorts
     # only where the regime already permits the short book.
-    ps = detect_parabolic_short(df); out["detail"]["parabolic"] = ps
+    ps = detect_parabolic_short(df) if not LONG_ONLY else {"is_setup": False}
+    out["detail"]["parabolic"] = ps
     if ps["is_setup"] and not candidates:
         candidates.append(("M2b Parabolic Short", "short", ps["climax_low"], ps["climax_high"], ps["reason"]))
         if direction == "long":
             regime_mult = min(regime_mult, 0.5); out["regime_mult"] = regime_mult
-    if direction in ("short", "both"):
+    if direction in ("short", "both") and not LONG_ONLY:
         fb = detect_failed_breakout(df); out["detail"]["failed_bo"] = fb
         if fb["is_setup"]:
             candidates.append(("M2b Failed-BO Short", "short", fb["pivot"], fb["failed_high"], fb["reason"]))
@@ -550,32 +602,56 @@ def evaluate(ticker: str, df: pd.DataFrame, regime_key: str, *,
         out["avoid_reason"] = f"Only {cf['score']}-of-3 confluence (missing: {', '.join(cf['missing'])}). Watchlist only."
         return out
 
-    risk_pct = PROGRESSIVE_EXPOSURE.get(pe_step, 0.5)
-    sz = size_position(equity, entry, stop, risk_pct, regime_mult, cf["size_mult"], heat_used_pct)
+    if risk_pct is None:
+        risk_pct = PROGRESSIVE_EXPOSURE.get(pe_step, 0.5)
+    risk_pct = min(float(risk_pct), MAX_RISK_PCT)
+    size_regime = regime_mult if SIZING_USES_REGIME else 1.0
+    sz = size_position(equity, entry, stop, risk_pct, size_regime, cf["size_mult"], heat_used_pct,
+                       heat_cap_pct=heat_cap_pct)
     r = abs(entry - stop)
     tgt = (lambda k: entry + k * r) if side == "long" else (lambda k: entry - k * r)
-    trail = {"M0 Rotation": "100 SMA (20-week)", "M1 VCP": "50-day SMA", "M2 Breakout": "10 EMA (aggressive) / 20 EMA (patient)",
+    trail = {"M0 Rotation": "100 SMA (20-week)", "M1 VCP": "50 SMA (50-day)", "M2 Breakout": "10 EMA (aggressive) / 20 EMA (patient)",
              "M2 EP": "10 EMA", "M2c Burst": "exit day 3-5 or first close < 5 EMA — no trail",
              "M2b Parabolic Short": "cover at 10 EMA, then 20 EMA",
              "M2b Failed-BO Short": "cover at base low"}[setup]
     out["card"] = {
         "setup": setup, "side": side, "entry": round(entry, 2), "stop": round(stop, 2),
         "stop_pct": round(r / entry * 100, 2), "risk_per_share": round(r, 2),
-        "pe_step": pe_step, "risk_pct": risk_pct, "regime_mult": regime_mult,
+        "pe_step": pe_step, "risk_pct": risk_pct, "regime_mult": size_regime,
         "confluence": f"{cf['score']}-of-3", "size": sz,
         "targets": {"2R": round(tgt(2), 2), "4R": round(tgt(4), 2), "8R": round(tgt(8), 2)},
         "trail": trail,
-        "instrument": ("put debit spread 45-90 DTE" if side == "short" and equity < 100_000 else
-                       "stock/ETF (ATR stop is tight in $; no options needed)" if setup == "M0 Rotation" else
-                       "call debit spread 45-90 DTE" if sz["blocked_by_heat"] or equity < 15_000 else
-                       "stock"),
+        "instrument": "stock/ETF (no options, no margin — risk_policy §6)",
         "invalidated_when": (f"close {'below' if side == 'long' else 'above'} {stop:.2f} "
                              f"(structural), OR regime flips "
                              f"{'hostile' if side == 'long' else 'risk-on'}, OR sector rotates to "
                              f"{'Weakening/Lagging' if side == 'long' else 'Improving/Leading'}"),
         "why": why,
+        "live": setup in LIVE_SETUPS and side == "long",
+        "evidence": EVIDENCE.get(setup, "not tested — watch only"),
+        "market_ok": market_ok,
+        "ticket": _ticket(entry, stop, df, sz.get("shares", 0)),
     }
     return out
+
+
+def _ticket(trigger: float, stop: float, df: pd.DataFrame, shares: int) -> dict:
+    """End-of-day order ticket for the next session (long only).
+    Entry: BUY STOP LIMIT, limit = trigger + 0.25 x ATR(14) so a gap cannot
+    fill far above plan. Exit: the card stop is CLOSING-basis (sell at the
+    next open after a close at or below it); the only resting stop is the
+    disaster stop-market 1 x ATR below it."""
+    atr = _atr(df)
+    if not np.isfinite(atr) or atr <= 0:
+        atr = abs(trigger - stop)
+    return {"entry_order": "BUY STOP LIMIT, GTC (cancel if not filled next session)",
+            "trigger": round(trigger, 2), "limit": round(trigger + ENTRY_LIMIT_ATR * atr, 2),
+            "shares": int(shares or 0),
+            "closing_stop": round(stop, 2),
+            "closing_stop_rule": f"if a session CLOSES at or below {stop:.2f}, sell at the next open",
+            "disaster_stop": round(stop - DISASTER_ATR * atr, 2),
+            "disaster_order": "SELL STOP (market), GTC — placed right after the fill",
+            "atr14": round(float(atr), 4)}
 
 
 def scan(universe: list[str], fetch_ohlcv: Callable[[str], pd.DataFrame],
@@ -697,16 +773,17 @@ def selftest() -> dict:
     bo_h = evaluate("BO", _synth("breakout"), "growth_scare", sector_quadrant="Leading", pe_step=2)
     if bo_h["card"] is not None or "CLOSED" not in (bo_h["avoid_reason"] or ""):
         f.append("long breakout in growth_scare must be refused with the regime named")
+    # v2: LONG ONLY — a parabolic in growth_scare produces no short card
     ps = evaluate("PS", _synth("parabolic"), "growth_scare", sector_quadrant="Weakening", pe_step=2)
-    if ps["card"] is None or ps["side"] != "short":
-        f.append(f"parabolic in growth_scare should produce a short card: {ps.get('avoid_reason')}")
+    if ps["card"] is not None and ps["card"]["side"] == "short":
+        f.append("long-only desk produced a short card")
     ch = evaluate("CH", _synth("chop"), "goldilocks", sector_quadrant="Leading", pe_step=2)
     if ch["card"] is not None or not ch["avoid_reason"] or "Not a setup" not in ch["avoid_reason"]:
         f.append("chop must be 'Not a setup' with a named reason")
     # heat cap blocks
-    blk = evaluate("BO", _synth("breakout"), "goldilocks", sector_quadrant="Leading", pe_step=3, heat_used_pct=14.5)
-    if blk["card"] and not blk["card"]["size"]["blocked_by_heat"]:
-        f.append("15% heat cap not enforced")
+    blk = evaluate("BO", _synth("breakout"), "goldilocks", sector_quadrant="Leading", pe_step=2, heat_used_pct=7.9)
+    if blk["card"] and blk["card"]["size"]["shares"] and not blk["card"]["size"]["blocked_by_heat"]:
+        f.append("8% heat cap not enforced")
     # concentration cap: tight stop cannot exceed 30% position
     sz = size_position(25_000, 100, 99, 2.0, 1.0, 1.0, 0)
     if sz["position_pct"] > 30.01:
@@ -715,7 +792,40 @@ def selftest() -> dict:
     z = evaluate("BO", _synth("breakout"), "goldilocks", sector_quadrant="Leading", pe_step=0)
     if z["card"] and z["card"]["size"]["shares"] != 0:
         f.append("PE step 0 must size to zero")
+    # ── v2 rules ───────────────────────────────────────────────────────
+    m0c = evaluate("XLF", rc, "transition_ambiguous", sector_quadrant="Improving", equity=10_000,
+                   risk_pct=1.0, is_etf=True, market_ok=True)
+    m0g = evaluate("XLF", rc, "goldilocks", sector_quadrant="Improving", equity=10_000,
+                   risk_pct=1.0, is_etf=True, market_ok=True)
+    if not m0c["card"] or not m0c["card"]["live"]:
+        f.append("M0 card must be live")
+    elif m0c["card"]["size"]["shares"] != m0g["card"]["size"]["shares"]:
+        f.append("regime multiple must not change size (transition_ambiguous vs goldilocks)")
+    else:
+        tk = m0c["card"]["ticket"]
+        if not (tk["limit"] > tk["trigger"] and tk["disaster_stop"] < tk["closing_stop"] < tk["trigger"]):
+            f.append(f"ticket levels out of order: {tk}")
+        if tk["shares"] != m0c["card"]["size"]["shares"]:
+            f.append("ticket shares must match the sized shares")
+        if m0c["card"]["market_ok"] is not True:
+            f.append("market_ok must be carried on the card")
+    bo2 = evaluate("XOM", _synth("breakout"), "goldilocks", sector_quadrant="Improving", equity=10_000)
+    if bo2["card"] and bo2["card"]["live"]:
+        f.append("M2 Breakout failed the backtest: it must be watch-only (live=False)")
+    big = size_position(10_000, 100, 90, 5.0, 1.0, 1.0, 0, heat_cap_pct=50, max_position_pct=100)
+    if big["effective_risk_pct"] > MAX_RISK_PCT + 1e-9:
+        f.append(f"risk ceiling {MAX_RISK_PCT}% breached: {big['effective_risk_pct']}%")
+    up = pd.Series(np.linspace(100, 200, 260)); dn = pd.Series(np.linspace(200, 100, 260))
+    if market_ok(up) is not True or market_ok(dn) is not False or market_ok(up.head(150)) is not None:
+        f.append("market_ok: up-trend True, down-trend False, short history None")
+    if _ma_ok("50 SMA (50-day)") is False:
+        f.append("N50: the VCP trail text must be parseable by swing_exits")
     return {"ok": not f, "failures": f}
+
+
+def _ma_ok(spec: str) -> bool:
+    import re
+    return re.search(r"(\d+)(?:-day)?\s*(EMA|SMA)", spec, re.I) is not None
 
 
 if __name__ == "__main__":

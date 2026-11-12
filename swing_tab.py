@@ -210,7 +210,8 @@ def render(st, fetch_ohlcv=None):
                             sj.record_take("tab", c["ticker"], float(px), float(sh), float(c["stop"]),
                                            setup=c["setup"], side=c["side"], planned_entry=float(c["entry"]),
                                            regime=brief["regime"]["key"], confluence=c["confluence"],
-                                           trail=c["trail"], card_date=brief["date"], note=note)
+                                           trail=c["trail"], card_date=brief["date"], note=note,
+                                           disaster_stop=c.get("disaster_stop"))
                             st.success(f"Journaled TAKE {c['ticker']} {sh} @ {px}, stop {c['stop']}.")
                             st.rerun()
                         except Exception as e:
@@ -334,7 +335,9 @@ def render(st, fetch_ohlcv=None):
                     bench = ohlcv.get("SPY", pd.DataFrame()).get("Close")
                     res = sd.scan(tks, lambda t: ohlcv.get(t), rk, bench=bench,
                                   equity=float(live_eq["equity"] or 0), pe_step=int(live_pe["step"]),
-                                  heat_used_pct=float(live_heat["heat_pct"] or 0))
+                                  heat_used_pct=float(live_heat["heat_pct"] or 0),
+                                  risk_pct=float(live_pe["risk_pct"]), market_ok=sd.market_ok(bench),
+                                  heat_cap_pct=float(cfg["heat_cap_pct"]))
                     for r_ in res["cards"] + res["avoid"]:
                         r_["sector_quadrant"] = quads.get(r_["ticker"])
                 sd.render(st, res)
