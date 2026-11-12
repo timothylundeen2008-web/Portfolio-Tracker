@@ -73,6 +73,7 @@ DEFAULT_CONFIG = {
     "heat_cap_pct": 8.0,           # v2: 4 positions x 2% ceiling
     "base_risk_pct": 1.0,          # v2: planned risk on a 3-of-3 card (decided 2026-11-12)
     "max_per_sector": 2,           # v2 (decided 2026-11-11)
+    "live_stock_cards": True,      # v2.1: False = M0 stock cards paper-only (ETFs carry the backtest pass)
     "max_position_pct": 30.0,      # concentration permitted only at tight stops
     "notional_cap_pct": 25.0,      # architecture doc: notional per name
     "atr_pct_band": [2.0, 7.0],    # stops the desk drifting to vol just because it fits the math

@@ -133,6 +133,12 @@ def render(st, fetch_ohlcv=None):
                            f"{live_pe['step']}. Sizes on the cards are from the brief — re-run the job to resize.")
             b = brief.get("breadth", {})
             st.caption(f"Breadth proxy: {b.get('pct_above_200')}% above 200-day ({b.get('read')}) · {b.get('source')}")
+            mf = brief.get("market_filter")
+            if mf:
+                state = {True: "OPEN — new entries allowed", False: "CLOSED — no new swing entries",
+                         None: "UNKNOWN — no new entries (SPY data missing)"}.get(mf.get("ok"), "UNKNOWN")
+                (st.success if mf.get("ok") is True else st.error)(
+                    f"**Market filter:** SPY {mf.get('spy_close')} vs 200-day {mf.get('spy_sma')} → {state}")
 
             if brief.get("refusals"):
                 st.error("**Refused:** " + " · ".join(brief["refusals"]))
@@ -363,6 +369,15 @@ def _card(st, c: dict, decided: set, date: str):
         m[0].metric("Entry trigger", c["entry"]); m[1].metric("Stop", f"{c['stop']} ({c['stop_pct']}%)")
         m[2].metric("Shares", c["shares"], f"{c['notional_pct']}% of equity" if c.get("notional_pct") is not None else None)
         m[3].metric("Risk %", c["risk_pct"], f"heat after {c['heat_after']}%")
+        tk_ = c.get("ticket") or {}
+        if c["entry_permitted"] and tk_:
+            st.success(f"**Order ticket — place after the close, valid next session:** "
+                       f"{tk_.get('entry_order', 'BUY STOP LIMIT')} **{tk_.get('shares', c['shares'])} sh**, "
+                       f"trigger **{tk_.get('trigger')}**, limit **{tk_.get('limit')}**  \n"
+                       f"**After the fill:** resting SELL STOP (market) at **{tk_.get('disaster_stop')}** (disaster stop).  \n"
+                       f"**Closing-basis stop {tk_.get('closing_stop')}:** {tk_.get('closing_stop_rule', '')}")
+        if c.get("evidence"):
+            st.caption(f"Backtest evidence: {c['evidence']}")
         legs = c.get("legs", {})
         st.markdown(f"**Legs:** rotation {'✅' if legs.get('rotation') else '❌'} · structure {'✅' if legs.get('structure') else '❌'} "
                     f"· volume {'✅' if legs.get('volume') else '❌'}"

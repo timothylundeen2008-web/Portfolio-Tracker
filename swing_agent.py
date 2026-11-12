@@ -354,6 +354,7 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
                 "event_risk": ("EP — catalyst already happened" if c["setup"] == "M2 EP" else
                                "; ".join(f"{e['event']} in {e['days_away']}d" for e in blackout) or "clear"),
                 "live": bool(c.get("live")), "evidence": c.get("evidence"),
+                "is_etf": bool(m.get("is_etf")),
                 "ticket": {**(c.get("ticket") or {}), "shares": shares},
                 "disaster_stop": (c.get("ticket") or {}).get("disaster_stop"),
                 "entry_permitted": True, "entry_block_reason": None,
@@ -362,6 +363,10 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
         if not card["live"]:
             card["entry_permitted"] = False
             card["entry_block_reason"] = f"watch only — {card['evidence']}"
+        elif not card["is_etf"] and not cfg.get("live_stock_cards", True):
+            card["entry_permitted"] = False
+            card["entry_block_reason"] = ("stock card — paper only: the M0 pass is proven on ETFs; stock results "
+                                          "carry survivorship bias (config live_stock_cards=false)")
         elif mkt_ok is not True:
             card["entry_permitted"] = False
             mf = brief["market_filter"]
@@ -415,8 +420,8 @@ def allocate_slots(cards: list, slots_open: int, open_sectors: list, max_per_sec
         sec = c.get("sector") or c["ticker"]
         if used >= slots_open:
             c["entry_permitted"] = False
-            c["entry_block_reason"] = (f"over slot cap ({max_positions} positions max, {slots_open} open) — "
-                                       f"watch, or close something first")
+            c["entry_block_reason"] = (f"over slot cap: all {slots_open} open slot(s) went to higher-ranked "
+                                       f"cards (max {max_positions} positions) — watch, or close something first")
         elif per_sec.get(sec, 0) >= max_per_sector:
             c["entry_permitted"] = False
             c["entry_block_reason"] = f"sector cap: already {per_sec[sec]} in {sec} (max {max_per_sector})"
@@ -603,14 +608,14 @@ def selftest() -> dict:
     synth = {"XLE": swing_desk._synth("breakout", seed=2), "XOM": swing_desk._synth("breakout"),
              "CVX": swing_desk._synth("chop"), "NVDA": swing_desk._synth("parabolic"),
              "XLK": swing_desk._synth("chop", seed=4), "SPY": swing_desk._synth("chop", seed=5),
-             "XLF": swing_desk._synth("reclaim")}
+             "XLF": swing_desk._synth("reclaim"), "WFC": swing_desk._synth("reclaim", seed=3)}
     fetch = lambda tks, period="2y": {t: synth[t] for t in tks if t in synth}
     markets = {"available": True, "age_hours": 2.0, "regime": {"key": "goldilocks", "label": "Goldilocks", "drivers": ["test"]}}
     rotation = {"available": True, "sectors": [
         {"ticker": "XLE", "sector": "Energy", "quadrant": "Improving", "rotation_direction": "Strengthening", "accumulation_score": 60, "stealth_label": "Stealth"},
         {"ticker": "XLK", "sector": "Technology", "quadrant": "Lagging", "rotation_direction": "Weakening", "accumulation_score": -20},
         {"ticker": "XLF", "sector": "Financials", "quadrant": "Improving", "rotation_direction": "Strengthening", "accumulation_score": 40}],
-        "constituents": {"XLE": ["XOM", "CVX"], "XLK": ["NVDA"]}}
+        "constituents": {"XLE": ["XOM", "CVX"], "XLK": ["NVDA"], "XLF": ["WFC"]}}
     no_earn = lambda tks: {}
     no_macro = lambda d: []
 
@@ -648,6 +653,18 @@ def selftest() -> dict:
         f.append("SPY below its 200-day must block every new entry")
     if not any("market filter" in (c["entry_block_reason"] or "") for c in bd["cards"] if c["ticker"] == "XLF"):
         f.append("the XLF block reason must name the market filter")
+    # v2.1 switch: live_stock_cards=False keeps ETF cards live, makes stock cards paper-only
+    sj.save_config(live_stock_cards=False)
+    bs = build_brief(fetch, (markets, rotation), date(2026, 9, 14), no_earn, no_macro)
+    sj.save_config(live_stock_cards=True)
+    tks = {c["ticker"]: c for c in bs["cards"]}
+    if "XLF" in tks and not tks["XLF"]["entry_permitted"]:
+        f.append(f"live_stock_cards=False must not block an ETF card: {tks['XLF']['entry_block_reason']}")
+    stock_live = [c for c in bs["cards"] if not c["is_etf"] and c["live"]]
+    if not stock_live:
+        f.append("selftest needs a live stock M0 card (WFC reclaim) to test the switch")
+    elif any(c["entry_permitted"] for c in stock_live) or "paper only" not in (stock_live[0]["entry_block_reason"] or ""):
+        f.append("live_stock_cards=False must make stock cards paper-only")
     # sector cap (unit): two permitted cards in one sector with one already open -> only one more
     cs = [{"ticker": "A", "sector": "XLE", "entry_permitted": True, "entry_block_reason": None},
           {"ticker": "B", "sector": "XLE", "entry_permitted": True, "entry_block_reason": None},
@@ -724,6 +741,9 @@ def selftest() -> dict:
     b4 = build_brief(fetch, (markets, rotation), date(2026, 9, 14), no_earn, no_macro)
     if sum(c["entry_permitted"] for c in b4["cards"]) > 1:
         f.append("slot cap not enforced")
+    over = [c for c in b4["cards"] if "slot cap" in (c["entry_block_reason"] or "")]
+    if not over or "higher-ranked" not in over[0]["entry_block_reason"]:
+        f.append("over-cap cards must say the slots went to higher-ranked cards (N20 wording)")
     sj.save_config(max_positions=4)
     # open position management + pending carry-over
     sj.record_take("chat", "XOM", 80.0, 30, 77.0, setup="M2 Breakout", side="long", planned_entry=80,
