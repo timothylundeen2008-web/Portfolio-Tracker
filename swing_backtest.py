@@ -1,6 +1,14 @@
 """
-swing_backtest.py  (v1.1 — 2026-11-11)
+swing_backtest.py  (v1.2 — 2026-11-12)
 ──────────────────────────────────────
+v1.2: portfolio sizing set to the APPROVED live rule (Matt 2026-11-12): 1% of
+      equity on a 3-of-3 trade, 0.5% on 2-of-3, halved after 3 straight
+      losses until 2 straight wins; 2% is the ceiling. No regime multiple.
+      Adds the pre-declared market-trend test: no NEW entries while SPY
+      closes below its 200-day SMA (exits unchanged), for M0 and PB.
+      Bar (fixed 2026-11-11): max portfolio drawdown at least 1/3
+      shallower AND trade expectancy not lower in either half.
+      The stop method is now chosen automatically by the pre-set rule.
 v1.1: R and sizing use the PLANNED entry and stop (the card), as the live
       desk sizes an order before the open. v1.0 used the fill, so an open
       that landed on the stop made risk ~0 and R explode (FAS 2020-11-04:
@@ -72,15 +80,15 @@ import pandas as pd
 
 import swing_desk as sd
 
-VERSION = "1.1"
+VERSION = "1.2"
 
 # ── FROZEN parameters (changing any of these is a new trial; log it) ────────
 START = "2004-01-01"            # data start; first signals need ~320 bars
 HALF_SPLIT = pd.Timestamp("2016-01-01")
 WINDOW = 320                    # bars handed to the production detectors
 START_EQUITY = 10_000.0
-BASE_RISK_PCT = 2.0
-REDUCED_RISK_PCT = 1.0
+BASE_RISK_PCT = 1.0          # approved 2026-11-12 (risk_policy §5); ceiling 2%
+REDUCED_RISK_PCT = 0.5
 STREAK_LOSSES, STREAK_RESET_WINS = 3, 2
 SCRATCH_R = 0.15
 MAX_POSITIONS, MAX_PER_SECTOR = 4, 2
@@ -97,6 +105,9 @@ EPS = 1e-9
 
 # Pass bar, fixed before the first run (risk_policy.md §5)
 BAR = {"min_trades": 100, "min_per_half": 30, "min_pf": 1.3}
+FILTER_SETUPS = ("M0", "PB")      # market-trend test (v1.2)
+FILTER_DD_CUT = 1 / 3              # bar: max DD at least a third shallower
+MKT_SMA = 200
 
 SECTOR_ETFS = ["XLK", "XLF", "XLE", "XLV", "XLI", "XLY", "XLU", "XLRE", "XLB", "XLC", "XLP"]
 OTHER_ETFS = {   # ticker -> sector ETF whose rotation it follows (None = no sector)
@@ -267,6 +278,7 @@ class Signal:
     rot_ok: bool
     max_entry: Optional[float] = None   # VCP: void if the fill is > 5% past the pivot
     plan_entry: Optional[float] = None  # the card's entry: buy-stop level, or the signal close
+    mkt_ok: bool = True                 # SPY closed above its 200-day SMA on the signal day
 
 
 def _rot_leg(quad: Optional[str]) -> bool:
@@ -354,6 +366,7 @@ class Trade:
     size_mult: float
     asset: str
     risk: float = float("nan")                    # planned risk per share (card entry - stop)
+    mkt_ok: bool = True                           # SPY > 200-day on the signal day
     events: list = field(default_factory=list)    # (t, kind, frac, price, bps)
     stops: list = field(default_factory=list)     # (t, stop) whenever it changes
     exit_t: int = -1
@@ -396,7 +409,7 @@ def simulate_trade(sig: Signal, arr: dict, variant: str, quads: Optional[np.ndar
         return None
     atr_e = atr[sig.t] if np.isfinite(atr[sig.t]) else risk
     tr = Trade(sig.ticker, sig.setup, variant, sig.t, d, float(fill), float(stop),
-               sig.conf, sig.size_mult, asset, float(risk))
+               sig.conf, sig.size_mult, asset, float(risk), bool(sig.mkt_ok))
     tr.events.append((d, "entry", 1.0, float(fill), bps))
     tr.stops.append((d, float(stop)))
     rem, trims = 1.0, 0
@@ -770,6 +783,11 @@ def fetch_ohlcv(tickers: list, start: str = START) -> dict:
 # Orchestration
 # ═══════════════════════════════════════════════════════════════════════════
 
+def market_ok(spy_close: pd.Series) -> pd.Series:
+    """True where SPY's close is above its 200-day SMA. Trailing data only."""
+    return (spy_close > spy_close.rolling(MKT_SMA).mean()).fillna(False)
+
+
 def run(ohlcv: dict, etfs: list, stocks: list, sector_of: dict, setups=SETUPS,
         variants=VARIANTS, verbose: bool = True) -> dict:
     bench = ohlcv["SPY"]["Close"] if "SPY" in ohlcv else None
@@ -777,6 +795,7 @@ def run(ohlcv: dict, etfs: list, stocks: list, sector_of: dict, setups=SETUPS,
     cal = ohlcv["SPY"].index if "SPY" in ohlcv else sorted(set().union(*[v.index for v in ohlcv.values()]))
     cal = pd.DatetimeIndex(cal)
     data, sigs = {}, []
+    mkt = market_ok(ohlcv["SPY"]["Close"]) if "SPY" in ohlcv else None
     for i, tk in enumerate(sorted(ohlcv)):
         df = ohlcv[tk]
         is_etf = tk in etfs
@@ -791,6 +810,10 @@ def run(ohlcv: dict, etfs: list, stocks: list, sector_of: dict, setups=SETUPS,
         data[tk] = {"arr": arr, "quads": qv, "index": df.index, "asset": _asset(tk, is_etf),
                     "close_cal": df["Close"].reindex(cal).ffill()}
         s = signals_for_ticker(tk, df, x, pf, bench, q, is_etf, setups)
+        if mkt is not None:
+            mk = mkt.reindex(df.index).ffill().fillna(False).to_numpy(dtype=bool)
+            for sg in s:
+                sg.mkt_ok = bool(mk[sg.t])
         sigs.extend(s)
         if verbose:
             print(f"[{i + 1}/{len(ohlcv)}] {tk}: {len(s)} signals")
@@ -873,6 +896,45 @@ def summarise(res: dict, sector_of: dict, ohlcv: dict) -> dict:
             sel = [t for t in trs if s == "ALL" or t.setup == s]
             uf = [g for g in res["unfilled"] if s == "ALL" or g.setup == s]
             ports[(v, s)] = run_portfolio(sel, uf, data, cal, sector_of)
+    # pre-declared market-trend test: same trades, minus entries signalled with SPY < 200d
+    for v, trs in res["trades"].items():
+        for s in FILTER_SETUPS:
+            sel = [t for t in trs if t.setup == s and t.mkt_ok]
+            uf = [g for g in res["unfilled"] if g.setup == s and g.mkt_ok]
+            ports[(v, s + "+F")] = run_portfolio(sel, uf, data, cal, sector_of)
+    filt = []
+    for v, trs in res["trades"].items():
+        for s in FILTER_SETUPS:
+            base, fp = ports[(v, s)], ports[(v, s + "+F")]
+            dd0, dd1 = base["stats"].get("max_dd_pct"), fp["stats"].get("max_dd_pct")
+            row = {"variant": v, "setup": s, "dd_base": dd0, "dd_filtered": dd1,
+                   "cagr_base": base["stats"].get("cagr_pct"), "cagr_filtered": fp["stats"].get("cagr_pct")}
+            why = []
+            if dd0 is None or dd1 is None or not (abs(dd1) <= abs(dd0) * (1 - FILTER_DD_CUT)):
+                why.append(f"max DD {dd1}% vs {dd0}% (needs ≤ {abs(dd0 or 0) * (1 - FILTER_DD_CUT):.1f}%)")
+            for half, lo, hi in (("2005-15", None, HALF_SPLIT), ("2016-26", HALF_SPLIT, None)):
+                def inh(t):
+                    d0 = data[t.ticker]["index"][t.entry_t]
+                    return (lo is None or d0 >= lo) and (hi is None or d0 < hi)
+                e0 = trade_stats([t.r_net for t in trs if t.setup == s and not t.still_open and inh(t)])
+                e1 = trade_stats([t.r_net for t in trs if t.setup == s and t.mkt_ok and not t.still_open and inh(t)])
+                row[f"exp_{half}_base"], row[f"exp_{half}_filtered"] = e0.get("expectancy_R"), e1.get("expectancy_R")
+                row[f"n_{half}_filtered"] = e1.get("n", 0)
+                if (e1.get("expectancy_R") or -9) < (e0.get("expectancy_R") or 0):
+                    why.append(f"{half} expectancy {e1.get('expectancy_R')}R < {e0.get('expectancy_R')}R")
+            row["verdict"] = "PASS" if not why else "FAIL"
+            row["reasons"] = "; ".join(why) or "meets bar"
+            filt.append(row)
+    stop_choice = []
+    for s in SETUPS:
+        def ex(v, half):
+            r = table[(table.variant == v) & (table.setup == s) & (table.scope == "etf+lev") & (table.half == half)]
+            return float(r.iloc[0]["expectancy_R"]) if len(r) and r.iloc[0].get("n", 0) else float("nan")
+        b_wins = all(np.isfinite(ex("B", h)) and np.isfinite(ex("A", h)) and ex("B", h) >= ex("A", h)
+                     for h in ("2005-15", "2016-26"))
+        stop_choice.append({"setup": s, "stop": "B" if b_wins else "A",
+                            "A_2005_15": ex("A", "2005-15"), "B_2005_15": ex("B", "2005-15"),
+                            "A_2016_26": ex("A", "2016-26"), "B_2016_26": ex("B", "2016-26")})
     # deflated Sharpe across the portfolio trials run in this pass
     srs, info = [], {}
     for key, p in ports.items():
@@ -893,7 +955,8 @@ def summarise(res: dict, sector_of: dict, ohlcv: dict) -> dict:
             s = s[s.index >= cal[WINDOW]] if len(cal) > WINDOW else s
             bench[b] = series_stats(s)
     return {"table": table, "verdicts": pd.DataFrame(verdicts), "ports": ports,
-            "bench": bench, "n_trials": n_trials, "trials_this_run": len(info)}
+            "bench": bench, "n_trials": n_trials, "trials_this_run": len(info),
+            "filter": pd.DataFrame(filt), "stop_choice": pd.DataFrame(stop_choice)}
 
 
 def prior_trials() -> int:
@@ -931,6 +994,8 @@ def write_outputs(res: dict, summ: dict, ohlcv: dict, stamp: str) -> str:
     pd.DataFrame(trows).to_csv(os.path.join(OUT_DATA, "trades.csv"), index=False)
     summ["table"].to_csv(os.path.join(OUT_DATA, "setup_stats.csv"), index=False)
     summ["verdicts"].to_csv(os.path.join(OUT_DATA, "verdicts.csv"), index=False)
+    summ["filter"].to_csv(os.path.join(OUT_DATA, "filter_test.csv"), index=False)
+    summ["stop_choice"].to_csv(os.path.join(OUT_DATA, "stop_choice.csv"), index=False)
     prow = []
     eqs = {}
     for (v, s), p in summ["ports"].items():
@@ -943,7 +1008,7 @@ def write_outputs(res: dict, summ: dict, ohlcv: dict, stamp: str) -> str:
     pd.DataFrame(eqs).round(2).to_csv(os.path.join(OUT_DATA, "equity.csv"))
     tl = os.path.join(OUT_DATA, "trial_log.csv")
     row = pd.DataFrame([{"date": stamp, "version": VERSION, "trials": summ["trials_this_run"],
-                         "note": "5 setups + ALL x stop A/B portfolios"}])
+                         "note": "5 setups + ALL x stop A/B portfolios + SPY>200d filter on M0, PB x A/B"}])
     prev = pd.concat([pd.read_csv(tl), row]) if os.path.exists(tl) else row
     prev.to_csv(tl, index=False)
     md = render_report(res, summ, ohlcv, stamp)
@@ -992,12 +1057,28 @@ def render_report(res: dict, summ: dict, ohlcv: dict, stamp: str) -> str:
             continue
         L.append(f"| {r.variant} | {SETUP_NAMES.get(r.setup, r.setup)} | {r.half} | {int(r.n)} | "
                  f"{_fmt(r.win_rate, 1)} | {_fmt(r.expectancy_R, 3)} | {_fmt(r.profit_factor)} |")
-    L += ["", "## Portfolio pass ($10,000, 2% base risk, production sizing)", "",
+    L += ["", "## Market-trend test (pre-declared): no new entries while SPY < 200-day", "",
+          f"Bar: max portfolio drawdown at least {FILTER_DD_CUT:.0%} shallower AND trade expectancy not lower in either half.", "",
+          "| Stop | Setup | Max DD base → filtered | CAGR base → filtered | Exp. 2005–15 base → filt. | Exp. 2016–26 base → filt. | Verdict | Reasons |",
+          "|---|---|---|---|---|---|---|---|"]
+    for _, r in summ["filter"].iterrows():
+        L.append(f"| {r.variant} | {SETUP_NAMES[r.setup]} | {_fmt(r.dd_base)}% → {_fmt(r.dd_filtered)}% | "
+                 f"{_fmt(r.cagr_base)}% → {_fmt(r.cagr_filtered)}% | {_fmt(r['exp_2005-15_base'], 3)} → {_fmt(r['exp_2005-15_filtered'], 3)} | "
+                 f"{_fmt(r['exp_2016-26_base'], 3)} → {_fmt(r['exp_2016-26_filtered'], 3)} | **{r.verdict}** | {r.reasons} |")
+    L += ["", "## Stop method chosen by the pre-set rule (B only if its ETF expectancy ≥ A's in both halves)", "",
+          "| Setup | Chosen | A 2005–15 | B 2005–15 | A 2016–26 | B 2016–26 |", "|---|---|---|---|---|---|"]
+    for _, r in summ["stop_choice"].iterrows():
+        L.append(f"| {SETUP_NAMES[r.setup]} | **{r.stop}** | {_fmt(r.A_2005_15, 3)} | {_fmt(r.B_2005_15, 3)} | "
+                 f"{_fmt(r.A_2016_26, 3)} | {_fmt(r.B_2016_26, 3)} |")
+    L += ["", f"## Portfolio pass ($10,000, approved sizing: {BASE_RISK_PCT:g}% on 3-of-3, {BASE_RISK_PCT / 2:g}% on 2-of-3)", "",
+          "Heat can exceed the 8% cap when an entry gaps above its planned price (shares are sized on the card). "
+          "Live entries should be buy-stop-LIMIT orders to cap that.", "",
           "| Stop | Setups | CAGR % | Max DD % | Vol % | Sharpe | Calmar | DSR | Exposure % | Max heat % | Trades | Months ≤ −10% | −20% HWM breached |",
           "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for (v, s), p in summ["ports"].items():
         st = p["stats"]
-        L.append(f"| {v} | {SETUP_NAMES.get(s, 'ALL combined')} | {_fmt(st.get('cagr_pct'))} | {_fmt(st.get('max_dd_pct'))} | "
+        name = SETUP_NAMES.get(s.replace("+F", ""), "ALL combined") + (" + SPY>200d" if s.endswith("+F") else "")
+        L.append(f"| {v} | {name} | {_fmt(st.get('cagr_pct'))} | {_fmt(st.get('max_dd_pct'))} | "
                  f"{_fmt(st.get('vol_pct'))} | {_fmt(st.get('sharpe'))} | {_fmt(st.get('calmar'))} | {_fmt(p.get('dsr'), 3)} | "
                  f"{p['exposure_avg_pct']} | {p['heat_max_pct']} | {p['trades_taken']} | {p['months_le_-10pct']} | "
                  f"{'yes' if p['hwm_-20pct_breached'] else 'no'} |")
@@ -1316,6 +1397,21 @@ def selftest() -> dict:
         if q[s].iloc[-1] != exp:
             f.append(f"rotation quadrant for {s} is {q[s].iloc[-1]}, rotation_math formula gives {exp}")
             break
+    # 4d. market filter: trailing only, and filtered sets exclude mkt_ok=False signals
+    spy = _walk(5, n=600)["Close"]
+    mk = market_ok(spy)
+    for t0 in (250, 333, 480, 599):
+        if bool(mk.iloc[t0]) != bool(market_ok(spy.iloc[:t0 + 1]).iloc[-1]):
+            f.append(f"market filter at bar {t0} depends on later bars")
+            break
+    if mk.iloc[:199].any():
+        f.append("market filter must be False before 200 bars of history")
+    ohl2 = {"SPY": _walk(77, n=700, drift=-0.0004), "E1": _walk(78, n=700, drift=0.0008)}
+    r2 = run(ohl2, ["SPY", "E1"], [], {"SPY": None, "E1": "XLK"}, setups=("M0", "PB"), verbose=False)
+    mk2 = market_ok(ohl2["SPY"]["Close"])
+    bad = [s_ for s_ in r2["signals"] if s_.mkt_ok != bool(mk2.reindex(ohl2[s_.ticker].index).ffill().fillna(False).iloc[s_.t])]
+    if bad:
+        f.append(f"{len(bad)} signals carry the wrong market-filter flag")
     # 5. deflated Sharpe behaves
     a_ = deflated_sharpe(0.10, 1000, 0.0, 3.0, 0.001, 10)
     b_ = deflated_sharpe(0.10, 1000, 0.0, 3.0, 0.001, 1000)
