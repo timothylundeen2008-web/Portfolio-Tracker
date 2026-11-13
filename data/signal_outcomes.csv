@@ -127,3 +127,10 @@ signal_id,date,signal_type,subject,direction,price_at_signal,benchmark_at_signal
 2026-11-11_stealth_flag_XLB,2026-11-11,stealth_flag,XLB,long,,,Strong Stealth · Weakening · accum 78.18,,rotation
 2026-11-11_stealth_flag_XLF,2026-11-11,stealth_flag,XLF,long,,,Stealth · Improving · accum 40.15,,rotation
 2026-11-11_stealth_flag_XLI,2026-11-11,stealth_flag,XLI,long,,,Strong Stealth · Lagging · accum 56.57,,rotation
+2026-11-12_flow_divergence_IWM,2026-11-12,flow_divergence,IWM,short,,,"DISTRIBUTION (price up, money out) · flow -1.77% AUM",,rotation
+2026-11-12_flow_divergence_PAVE,2026-11-12,flow_divergence,PAVE,short,,,"DISTRIBUTION (price up, money out) · flow -1.03% AUM",,rotation
+2026-11-12_flow_divergence_PPH,2026-11-12,flow_divergence,PPH,short,,,"DISTRIBUTION (price up, money out) · flow -4.63% AUM",,rotation
+2026-11-12_flow_divergence_SPY,2026-11-12,flow_divergence,SPY,long,,,"ACCUMULATION (price down, money in) · flow 0.41% AUM",,rotation
+2026-11-12_flow_divergence_XTN,2026-11-12,flow_divergence,XTN,short,,,"DISTRIBUTION (price up, money out) · flow -26.5% AUM",,rotation
+2026-11-12_stealth_flag_XLRE,2026-11-12,stealth_flag,XLRE,long,,,Stealth · Improving · accum 38.14,,rotation
+2026-11-12_stealth_flag_XLV,2026-11-12,stealth_flag,XLV,long,,,Stealth · Leading · accum 39.56,,rotation
