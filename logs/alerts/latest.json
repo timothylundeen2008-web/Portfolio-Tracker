@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-11-13T00:58:18+00:00",
+  "date": "2026-11-12",
+  "version": "alerts v1 (build #3, 2026-11-12)",
+  "selftest_ok": true,
+  "families_read": [
+    "ALERTS",
+    "DATA",
+    "HY",
+    "LT",
+    "SWING",
+    "TEST"
+  ],
+  "findings": [],
+  "actions": [],
+  "error": null
+}
