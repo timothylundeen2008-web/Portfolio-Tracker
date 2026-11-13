@@ -50,7 +50,7 @@ import pandas as pd
 import hedge_lab as hl
 import offense_lab as ol
 
-VERSION = "v1.0"
+VERSION = "v1.0.1"   # v1.0.1 (N66): drop bars after the expected session (no intraday reads)
 SHADOW_START = "2026-12-01"
 ENGINES = ("O9", "O7")
 FETCH_DAYS = 700                      # >= 200-day average + warm-up + slack
@@ -202,6 +202,10 @@ def build(closes: dict, book: Optional[pd.DataFrame], expected: Optional[date], 
           start: str = SHADOW_START) -> dict:
     status = {"version": VERSION, "asof": asof, "start": start, "error": None,
               "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+    if expected:      # N66: a run before the close settles must not read today's partial bar
+        cut = pd.Timestamp(expected)
+        closes = {t: (lambda x: x[x.index <= cut])(hl._norm(v)) for t, v in closes.items()
+                  if v is not None and len(v)}
     missing = [t for t in NEEDED if t not in closes or closes[t] is None or not len(closes[t])]
     if missing:
         status["error"] = f"signal inputs missing: {', '.join(missing)}"
@@ -286,6 +290,13 @@ def selftest() -> dict:
         i = chg[0]
         if w(cal[i]) != ol.book_for(st["O7"].iloc[i - 1], ol.CANDIDATES["O7"], bal(cal[i])):
             f.append("weights must follow the state one session late")
+    # N66: a bar after the expected session (intraday) is ignored, not read
+    c3 = {t: pd.concat([v, pd.Series([v.iloc[-1] * 0.7], index=[v.index[-1] + pd.offsets.BDay(1)])])
+          for t, v in closes.items()}
+    r3 = build(c3, book, exp, "T", start=start)
+    if r3["status"].get("last_bar") != exp.isoformat() or r3["status"]["error"] or \
+            not r3["nav"].equals(nav) or [x["state"] for x in r3["reads"]] != [x["state"] for x in r["reads"]]:
+        f.append(f"a partial bar after the expected session must be dropped: {r3['status'].get('last_bar')}")
     # pre-start: reads, no NAV
     r0 = build(closes, book, exp, "T", start=(cal[-1] + pd.Timedelta(days=30)).date().isoformat())
     if len(r0["nav"]) or not r0["reads"] or "starts on" not in r0["md"]:

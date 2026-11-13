@@ -1,6 +1,22 @@
 """
-offense_lab.py  (v1.3 — 2026-11-13)
+offense_lab.py  (v1.4 — 2026-11-13)
 ───────────────────────────────────
+v1.4: one new candidate, using a dashboard input that has real history.
+  v1.3 showed O9's profile (drawdown inside −20%, CAGR above SPY full) holds
+  in 7 of 8 nearby settings, but 2005–15 lags SPY in all 9 (3.5–6.2% vs
+  7.1%): whipsaw exits in 2007, 2011 and 2015. Credit is the classic check
+  on whether an equity dip is a false alarm.
+    O11  O9, but the 50-day fast exit fires only if CREDIT confirms: the
+         high-yield bond fund (VWEHX) relative to intermediate Treasuries
+         (VFITX), both total return, closed below its own 50-day average for
+         2 closes. The −8% Offense stop stays unconditional (the hard floor);
+         re-entry and the SPY < 200d → Defense rule are unchanged. If the
+         credit ratio is unknown on a day, the plain 50-day exit applies
+         (a data gap never keeps the book in Offense).
+  Why a fund ratio and not the dashboards' HY OAS: FRED carries only recent
+  years of the ICE spread (the "full HY history" gap); the funds go back to
+  the 1990s and are point-in-time. Bar unchanged. 1 new trial (19 total).
+
 v1.3: no new candidates. O9 (best so far: −19.3% max DD, Sharpe 0.79, missed
   2005–15 and, by 0.02 pts, 2016–26) gets the sensitivity check the bar would
   have run had it passed, widened to every parameter it has: the trend average
@@ -112,7 +128,7 @@ import pandas as pd
 import hedge_lab as hl
 import model_book as mb
 
-VERSION = "v1.3"
+VERSION = "v1.4"
 HISTORY_START = "1998-01-01"
 EVAL_START = "2000-01-03"
 HALVES = (("2005-15", "2005-01-03", "2015-12-31"), ("2016-26", "2016-01-01", None))
@@ -144,7 +160,9 @@ OUT_DIR = Path("data/offense_lab")
 LOG_DIR = Path("logs/offense_lab")
 
 CHAINS = {**hl.PROXIES, "SPY": ["SPY"], "AGG": ["AGG", "VBMFX"]}
-EXTRA_TICKERS = ["SPY", "QQQ", "AGG", "VBMFX", "SSO", "QLD", *SECTORS9]
+CREDIT_PAIR = ("VWEHX", "VFITX")    # v1.4: HY fund / intermediate Treasuries (total return)
+CREDIT_SMA = 50
+EXTRA_TICKERS = ["SPY", "QQQ", "AGG", "VBMFX", "SSO", "QLD", *SECTORS9, *CREDIT_PAIR]
 
 OFFENSE_1X = {"QQQ": 50.0, "SPY": 50.0}
 OFFENSE_15X = {"QQQ2X": 25.0, "SPY2X": 25.0, "QQQ": 25.0, "SPY": 25.0}
@@ -163,6 +181,8 @@ CANDIDATES = {
     "O9": {"label": "O7, fast exit (QQQ < 50d or −8%) to Balanced, slow re-entry", "kind": "fast",
            "off": OFFENSE_1X, "out": "BAL"},
     "O10": {"label": "O9 with the fast exit to Defense", "kind": "fast", "off": OFFENSE_1X, "out": "DEF"},
+    "O11": {"label": "O9, 50-day exit only when credit confirms (−8% stop unconditional)", "kind": "fast",
+            "off": OFFENSE_1X, "out": "BAL", "credit": True},
 }
 PRIOR_V10 = {"O1", "O2", "O3", "O4", "O5"}      # run in v1.0 (logged before the candidates column existed)
 
@@ -185,6 +205,11 @@ def build_data(closes: dict) -> dict:
     for t in ("SPY", "QQQ", *SECTORS9):
         s = closes.get(t)
         lv[t] = hl._norm(s).reindex(cal).ffill(limit=3) if s is not None and len(s) else pd.Series(np.nan, index=cal)
+    a, b = (closes.get(t) for t in CREDIT_PAIR)
+    if a is not None and b is not None and len(a) and len(b):
+        lv["CREDIT"] = (hl._norm(a) / hl._norm(b)).reindex(cal).ffill(limit=3)
+    else:
+        lv["CREDIT"] = pd.Series(np.nan, index=cal)
     return {"cal": cal, "rets": rets, "srcs": srcs, "levels": pd.DataFrame(lv, index=cal), "closes": closes}
 
 
@@ -227,7 +252,7 @@ def _two_down(s: pd.Series) -> pd.Series:
 
 
 def states_fast(levels: pd.DataFrame, rets: pd.DataFrame, ma: int = MA, fast_sma: int = FAST_SMA,
-                fast_stop: float = FAST_STOP, cooldown: int = COOLDOWN) -> pd.Series:
+                fast_stop: float = FAST_STOP, cooldown: int = COOLDOWN, credit: bool = False) -> pd.Series:
     """O9/O10 state machine: OFF / BAL / DEF / OUT (fast-exited). Value at d uses data <= d only."""
     spy_up, qqq_up = above_ma(levels["SPY"], ma), above_ma(levels["QQQ"], ma)
     q50 = above_ma(levels["QQQ"], fast_sma)
@@ -235,6 +260,11 @@ def states_fast(levels: pd.DataFrame, rets: pd.DataFrame, ma: int = MA, fast_sma
     spy_dn2, qqq_dn2, q50_dn2 = _two_down(spy_up).to_numpy(), _two_down(qqq_up).to_numpy(), _two_down(q50).to_numpy()
     entry = (_two_up(spy_up) & _two_up(qqq_up) & _two_up(q50)).to_numpy()
     spy_up2 = _two_up(spy_up).to_numpy()
+    if credit:      # the 50-day exit needs credit to confirm; unknown credit = plain exit
+        c_up = above_ma(levels["CREDIT"], CREDIT_SMA) if "CREDIT" in levels else pd.Series(np.nan, index=levels.index)
+        c_ok = (_two_down(c_up) | c_up.isna()).to_numpy()
+    else:
+        c_ok = np.ones(len(levels), dtype=bool)
     r = rets.reindex(levels.index)
     idx = (1 + 0.5 * r["SPY"].fillna(0.0) + 0.5 * r["QQQ"].fillna(0.0)).cumprod().to_numpy()
     out, state, peak, out_i = [], "BAL", None, -10 ** 9
@@ -246,7 +276,7 @@ def states_fast(levels: pd.DataFrame, rets: pd.DataFrame, ma: int = MA, fast_sma
             state = "DEF"
         elif state == "OFF":
             peak = max(peak, idx[i])
-            if q50_dn2[i] or (idx[i] / peak - 1) * 100 <= fast_stop:
+            if (q50_dn2[i] and c_ok[i]) or (idx[i] / peak - 1) * 100 <= fast_stop:
                 state, out_i = "OUT", i
             elif qqq_dn2[i]:
                 state = "BAL"
@@ -439,6 +469,8 @@ def dd_episodes(nav: pd.Series, depth: float, start=EVAL_START) -> int:
 
 def run_candidate(key: str, data: dict, balanced: dict, ma: int = MA, lag: int = LAG, **fast) -> dict:
     cand = CANDIDATES[key]
+    if cand.get("credit"):
+        fast = {**fast, "credit": True}
     st = states(cand["kind"], data["levels"], ma, rets=data["rets"], **fast)
     days = data["cal"][data["cal"] >= pd.Timestamp(EVAL_START) - pd.Timedelta(days=10)]
     if cand.get("guard"):
@@ -701,7 +733,7 @@ def write(out: dict, data: dict, asof: str) -> dict:
 def main() -> int:
     tickers = sorted(set(hl.all_tickers()) | set(EXTRA_TICKERS))
     closes = hl.yf_fetch(tickers, start=HISTORY_START)
-    missing = [t for t in ("SPY", "QQQ", *SECTORS9, "^IRX") if t not in closes]
+    missing = [t for t in ("SPY", "QQQ", *SECTORS9, "^IRX", *CREDIT_PAIR) if t not in closes]
     print(f"[offense_lab] {VERSION}: {len(closes)} of {len(tickers)} tickers; required missing: {missing}")
     if missing:
         print("[offense_lab] DATA FAILURE: a signal input is missing; nothing written (a gap is not a result).")
@@ -728,6 +760,8 @@ def _synthetic(seed: int = 5, n: int = 3200) -> dict:
               "^IRX": pd.Series(3.0, index=cal)}
     for t in SECTORS9:
         closes[t] = pd.Series(100 * np.exp(np.cumsum(0.9 * mk + rng.normal(0, 0.006, n))), index=cal)
+    closes["VWEHX"] = pd.Series(100 * np.exp(np.cumsum(0.3 * mk + rng.normal(0.0002, 0.002, n))), index=cal)
+    closes["VFITX"] = pd.Series(100 * np.exp(np.cumsum(rng.normal(0.0001, 0.002, n))), index=cal)
     for t in ("VUSTX", "GC=F", "XLK", "DVY", "XLE", "DBC", "SOXX", "SI=F", "GDX", "AQMIX", "VBMFX"):
         closes[t] = pd.Series(100 * np.exp(np.cumsum(rng.normal(0.0001, 0.008, n))), index=cal)
     return closes
@@ -845,6 +879,21 @@ def selftest() -> dict:
     bc = next((i for i in range(oc or 0, nf) if sc.iloc[i] == "OFF"), None) if oc else None
     if oc is None or bc is None or bc - oc != COOLDOWN:
         f.append(f"after a fast exit and an immediate rebound, Offense resumes exactly {COOLDOWN} sessions later: {oc}, {bc}")
+    # v1.4 credit confirmation on the same fixtures
+    lvc2 = lvc.copy()
+    lvc2["CREDIT"] = np.linspace(100, 130, nf)                       # credit healthy throughout
+    if "OUT" in set(states_fast(lvc2, lvc2.pct_change().fillna(0.0), credit=True).iloc[400:415]):
+        f.append("with credit healthy, a QQQ 50-day dip must NOT trigger the fast exit")
+    lvc3 = lvc.copy()
+    lvc3["CREDIT"] = np.r_[np.linspace(100, 130, 330), np.linspace(130, 100, nf - 330)]   # credit broke weeks earlier
+    if "OUT" not in set(states_fast(lvc3, lvc3.pct_change().fillna(0.0), credit=True).iloc[400:415]):
+        f.append("with credit below its 50-day, the QQQ 50-day dip must trigger the fast exit")
+    lvc4 = lvc.copy(); lvc4["CREDIT"] = np.nan
+    if not states_fast(lvc4, lvc4.pct_change().fillna(0.0), credit=True).equals(sc):
+        f.append("unknown credit must fall back to the plain 50-day exit (a gap never holds Offense)")
+    lv8c = lv8.copy(); lv8c["CREDIT"] = np.linspace(100, 130, nf)
+    if "OUT" not in set(states_fast(lv8c, r8, credit=True).iloc[420:445]):
+        f.append("the −8% Offense stop must fire regardless of credit")
     cO9, cO10 = CANDIDATES["O9"], CANDIDATES["O10"]
     if book_for("OUT", cO9, bal) != bal or book_for("OUT", cO10, bal) != DEFENSE or book_for("OFF", cO9, bal) != OFFENSE_1X:
         f.append("fast-exit books: O9 → Balanced, O10 → Defense, Offense unchanged")
@@ -907,7 +956,9 @@ def selftest() -> dict:
         alt = run_candidate("O9", data, bal, cooldown=200)["states"]
         if alt.equals(out["runs"]["O9"]["states"]):
             f.append("the cooldown parameter must reach the state machine")
-        for k in ("O6", "O7", "O8", "O9", "O10"):
+        if out["runs"]["O11"]["states"].equals(out["runs"]["O9"]["states"]):
+            f.append("O11 must differ from O9 on a history where credit and QQQ disagree")
+        for k in ("O6", "O7", "O8", "O9", "O10", "O11"):
             if k not in set(out["verdicts"]["candidate"]):
                 f.append(f"{k} missing from the verdicts")
         nav = out["navs"]["O5"]
