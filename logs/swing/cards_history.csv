@@ -247,25 +247,25 @@ date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_
 2026-11-11,XLY,M0 Rotation,long,2-of-3,121.47,116.27,120.99,transition_ambiguous,False,"over slot cap (4 positions max, 4 open) — watch, or close something first"
 2026-11-11,AMZN,M0 Rotation,long,2-of-3,274.87,259.4,266.17,transition_ambiguous,False,"risk budget $12.50 at this step/regime is below one share's risk ($15.47) — a single share breaches Progressive Exposure; the only expression is a 45-90 DTE call debit spread with premium <= $12, or skip"
 2026-11-11,UNH,M0 Rotation,long,2-of-3,404.74,387.76,402.94,transition_ambiguous,False,"risk budget $12.50 at this step/regime is below one share's risk ($16.98) — a single share breaches Progressive Exposure; the only expression is a 45-90 DTE call debit spread with premium <= $12, or skip"
-2026-11-12,XLU,M0 Rotation,long,3-of-3,44.14,42.94,43.81,transition_ambiguous,True,
-2026-11-12,SPG,M0 Rotation,long,3-of-3,237.27,230.7,233.61,transition_ambiguous,True,
-2026-11-12,XEL,M0 Rotation,long,3-of-3,81.97,79.62,81.5,transition_ambiguous,True,
-2026-11-12,EXC,M0 Rotation,long,3-of-3,46.1,44.77,45.63,transition_ambiguous,False,sector cap: already 2 in XLU (max 2)
-2026-11-12,SO,M0 Rotation,long,3-of-3,94.17,91.35,92.47,transition_ambiguous,False,sector cap: already 2 in XLU (max 2)
-2026-11-12,XLRE,M0 Rotation,long,3-of-3,44.73,43.34,44.36,transition_ambiguous,True,
-2026-11-12,AEP,M0 Rotation,long,3-of-3,130.52,126.33,128.91,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
-2026-11-12,PSA,M0 Rotation,long,3-of-3,337.32,325.6,333.33,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
-2026-11-12,MCD,M0 Rotation,long,3-of-3,279.79,269.16,273.63,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
-2026-11-12,WELL,M0 Rotation,long,3-of-3,249.75,240.14,244.93,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
-2026-11-12,HD,M0 Rotation,long,3-of-3,356.42,341.59,348.26,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
-2026-11-12,SBUX,M0 Rotation,long,3-of-3,110.54,105.73,107.26,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
-2026-11-12,EQIX,M0 Rotation,long,3-of-3,1078.64,1021.43,1072.77,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
-2026-11-12,CMG,M0 Rotation,long,3-of-3,36.69,34.72,35.17,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
-2026-11-12,JNJ,M0 Rotation,long,3-of-3,286.07,275.15,283.52,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
-2026-11-12,UNH,M0 Rotation,long,3-of-3,406.19,389.49,405.13,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
-2026-11-12,DUK,M0 Rotation,long,2-of-3,129.97,126.63,128.59,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
-2026-11-12,D,M0 Rotation,long,2-of-3,68.8,66.66,67.51,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
-2026-11-12,XLF,M0 Rotation,long,2-of-3,59.08,57.06,58.21,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
-2026-11-12,WFC,M0 Rotation,long,2-of-3,86.67,83.68,85.76,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
-2026-11-12,XLY,M0 Rotation,long,2-of-3,122.22,117.02,120.46,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
-2026-11-12,AMZN,M0 Rotation,long,2-of-3,273.6,257.76,267.44,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-12,SPG,M0 Rotation,long,3-of-3,235.37,228.9,234.75,transition_ambiguous,True,
+2026-11-12,XLU,M0 Rotation,long,3-of-3,43.89,42.68,43.82,transition_ambiguous,True,
+2026-11-12,SO,M0 Rotation,long,3-of-3,93.84,91.09,93.84,transition_ambiguous,True,
+2026-11-12,EXC,M0 Rotation,long,3-of-3,45.78,44.43,45.61,transition_ambiguous,False,sector cap: already 2 in XLU (max 2)
+2026-11-12,XEL,M0 Rotation,long,3-of-3,81.15,78.73,81.1,transition_ambiguous,False,sector cap: already 2 in XLU (max 2)
+2026-11-12,XLRE,M0 Rotation,long,3-of-3,44.63,43.17,44.59,transition_ambiguous,True,
+2026-11-12,AEP,M0 Rotation,long,3-of-3,129.39,125.14,129.21,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-12,XLF,M0 Rotation,long,3-of-3,58.63,56.63,58.63,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-12,PSA,M0 Rotation,long,3-of-3,336.8,325.22,335.73,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-12,WFC,M0 Rotation,long,3-of-3,86.01,82.98,85.8,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-12,MCD,M0 Rotation,long,3-of-3,279.41,268.9,274.8,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-12,WELL,M0 Rotation,long,3-of-3,247.41,237.76,247.35,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-12,SBUX,M0 Rotation,long,3-of-3,110.3,105.66,109.89,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-12,HD,M0 Rotation,long,3-of-3,351.53,336.55,351.31,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-12,CMG,M0 Rotation,long,3-of-3,36.64,34.74,36.64,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-12,JNJ,M0 Rotation,long,3-of-3,281.16,270.29,280.41,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-12,DUK,M0 Rotation,long,2-of-3,128.95,125.59,128.77,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-12,D,M0 Rotation,long,2-of-3,68.26,66.17,68.06,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-12,JPM,M0 Rotation,long,2-of-3,345.0,333.09,343.39,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-12,XLY,M0 Rotation,long,2-of-3,121.47,116.27,120.99,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-12,AMZN,M0 Rotation,long,2-of-3,274.87,259.4,266.17,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-12,UNH,M0 Rotation,long,2-of-3,404.74,387.76,402.94,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
