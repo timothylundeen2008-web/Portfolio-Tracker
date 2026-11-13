@@ -51,7 +51,7 @@ import argparse
 import json
 import os
 import sys
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -104,10 +104,43 @@ def _default_fetch(tickers: list[str], period: str = "2y") -> dict:
                 out[t] = df
         except Exception:
             continue
+    # N64: a threaded batch can drop names on yfinance's own cache lock ("database is
+    # locked", PLTR 2026-11-12). Retry the gaps once, unthreaded.
+    for t in sorted(set(tickers) - set(out)):
+        try:
+            d1 = yf.download(t, period=period, auto_adjust=True, progress=False, threads=False)
+            if isinstance(d1.columns, pd.MultiIndex):          # (Price, Ticker) on newer yfinance
+                d1.columns = d1.columns.get_level_values(0)
+            df = _clean_ohlcv(d1.dropna(how="all"))
+            if df is not None and not df.empty:
+                out[t] = df
+        except Exception:
+            continue
     return out
 
 
-def _data_health(raw: dict, clean: dict, requested: list[str]) -> dict:
+SESSION_SETTLE_MIN = 30     # after this many minutes past the close, the session's bar is expected
+
+
+def expected_session(now_et: Optional[datetime] = None) -> Optional[date]:
+    """
+    The session whose bar a run at `now_et` must contain: today once the close has
+    settled on a trading day, otherwise the trading day before. None if the calendar
+    can't be read (then the check is skipped and said so).
+    """
+    try:
+        import market_time as mt
+        n = now_et or mt.now_et()
+        d = n.date()
+        m = mt.minutes_since_close(n)
+        if m is not None and m >= SESSION_SETTLE_MIN:
+            return d
+        return mt.last_trading_day(d - timedelta(days=1))
+    except Exception:
+        return None
+
+
+def _data_health(raw: dict, clean: dict, requested: list[str], expected: Optional[date] = None) -> dict:
     """Did the price fetch actually work? Separates 'the market gave no setups'
     from 'the data never arrived' -- two states that demand opposite reads.
 
@@ -125,9 +158,14 @@ def _data_health(raw: dict, clean: dict, requested: list[str]) -> dict:
         stale = sorted(t for t, d in last.items() if d < ref)
     bad = len(missing) + len(stale)
     frac = bad / len(req) if req else 0.0
+    last_bar = str(ref.date()) if ref is not None and hasattr(ref, "date") else (str(ref) if ref is not None else None)
+    # N64: the feed can drop the whole latest session (Yahoo, 2026-11-12 21:00 ET: every name ended
+    # 11-11). Mode-vs-mode staleness can't see that, so check the session itself.
+    behind = bool(expected and last_bar and last_bar < expected.isoformat())
     return {"requested": len(req), "missing": missing, "stale": stale, "nan_last_cleaned": nan_last,
-            "last_bar": str(ref.date()) if ref is not None and hasattr(ref, "date") else (str(ref) if ref is not None else None),
-            "bad_fraction": round(frac, 3), "failed": bool(req) and frac > DATA_FAIL_FRACTION}
+            "last_bar": last_bar, "expected_session": expected.isoformat() if expected else None,
+            "session_missing": behind,
+            "bad_fraction": round(frac, 3), "failed": (bool(req) and frac > DATA_FAIL_FRACTION) or behind}
 
 
 def _read_bridges() -> tuple[dict, dict]:
@@ -160,9 +198,13 @@ def _breadth_proxy(ohlcv: dict, universe: list[str]) -> dict:
 def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple] = None,
                 today: Optional[date] = None, earnings_lookup: Optional[Callable] = None,
                 macro_lookup: Optional[Callable] = None,
-                history: Optional[list] = None) -> dict:
-    """history: [(YYYY-MM-DD, equity_mtm), ...] from prior briefs; None = read logs/swing (tests pass it)."""
+                history: Optional[list] = None, expected: Optional[date] = None) -> dict:
+    """history: [(YYYY-MM-DD, equity_mtm), ...] from prior briefs; None = read logs/swing (tests pass it).
+    expected: the session the prices must reach. None = from the market calendar on a live run
+    (today=None); skipped when a test injects `today` without it."""
     fetch = fetch_ohlcv or _default_fetch
+    if expected is None and today is None:
+        expected = expected_session()          # live run: the calendar says which session must be in the data
     if today is None:
         try:
             import market_time as mt
@@ -263,12 +305,17 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
     tickers = sorted(set(all_meta) | set(opens) | set(breadth_universe) | {"SPY"})
     raw_ohlcv = fetch(tickers) if tickers else {}
     ohlcv = {t: _clean_ohlcv(d) for t, d in raw_ohlcv.items()}
-    health = _data_health(raw_ohlcv, ohlcv, tickers)
+    health = _data_health(raw_ohlcv, ohlcv, tickers, expected or None)
     brief["data_health"] = health
     if health["nan_last_cleaned"]:
         brief["data_gaps"].append(f"Price feed returned a NaN last close for {len(health['nan_last_cleaned'])} names "
                                   f"(dropped the empty bar, used the prior close).")
-    if health["failed"]:
+    if health["session_missing"]:
+        brief["refusals"].append(
+            f"DATA FAILURE: the price feed has no bar for the {health['expected_session']} session (latest "
+            f"{health['last_bar']}). Levels would be a day old. No cards; re-run later — Yahoo usually restores it.")
+        cards_allowed = False
+    elif health["failed"]:
         brief["refusals"].append(
             f"DATA FAILURE: {len(health['missing'])} missing + {len(health['stale'])} stale of "
             f"{health['requested']} tickers ({health['bad_fraction']:.0%}). No cards until the price feed is healthy; "
@@ -682,6 +729,21 @@ def write_brief(b: dict, log_dir: Optional[Path] = None) -> dict:
     log_dir = log_dir or LOG_DIR      # resolved at call time, not import time
     log_dir.mkdir(parents=True, exist_ok=True)
     jp, mp = log_dir / f"{b['date']}_brief.json", log_dir / f"{b['date']}_brief.md"
+    # N64: a re-run on a broken feed must not overwrite a healthy brief for the same date.
+    if (b.get("data_health") or {}).get("failed") and jp.exists():
+        try:
+            prev = json.loads(jp.read_text())
+        except Exception:
+            prev = {}
+        ph, exp = prev.get("data_health") or {}, (b.get("data_health") or {}).get("expected_session")
+        # healthy = not failed AND (if we know the session) its prices actually reach it; a pre-N64
+        # brief built on the prior day's bars is not protected
+        if prev and not ph.get("failed") and not (exp and str(ph.get("last_bar") or "") < exp):
+            rj = log_dir / f"{b['date']}_brief.rejected.json"
+            rj.write_text(json.dumps(b, indent=2, default=str))
+            return {"json": str(jp), "kept_existing": True, "rejected": str(rj),
+                    "why": "this run's price feed failed; the earlier healthy brief for the date stands",
+                    "cards": len(prev.get("cards") or [])}
     jp.write_text(json.dumps(b, indent=2, default=str))
     mp.write_text(render_md(b))
     # sidecar the workflow gate reads: proves a proper post-close capture,
@@ -858,6 +920,43 @@ def selftest() -> dict:
     if not over or "higher-ranked" not in over[0]["entry_block_reason"]:
         f.append("over-cap cards must say the slots went to higher-ranked cards (N20 wording)")
     sj.save_config(max_positions=4)
+    # N64: the feed drops the whole latest session -> no cards, and a healthy brief is never overwritten
+    last_d = fetch(["SPY"])["SPY"].index[-1].date()
+    bx = build_brief(fetch, (markets, rotation), date(2026, 9, 14), no_earn, no_macro,
+                     expected=last_d + timedelta(days=1))
+    if not bx["data_health"]["session_missing"] or not bx["data_health"]["failed"] \
+            or any(c["entry_permitted"] for c in bx["cards"]) or not any("no bar for the" in r for r in bx["refusals"]):
+        f.append(f"a feed one session behind must fail the scan and block every card: {bx['data_health']}")
+    bok = build_brief(fetch, (markets, rotation), date(2026, 9, 14), no_earn, no_macro, expected=last_d)
+    if bok["data_health"]["session_missing"] or bok["data_health"]["failed"]:
+        f.append("a feed that reaches the expected session must pass")
+    import tempfile as _tf
+    _ld = Path(_tf.mkdtemp())
+    _healthy_prev = dict(bok, data_health=dict(bok["data_health"], last_bar=str(last_d + timedelta(days=1))))
+    write_brief(_healthy_prev, _ld)          # an earlier run tonight that did get the session's bar
+    wr = write_brief(bx, _ld)
+    kept = json.loads((_ld / f"{bok['date']}_brief.json").read_text())
+    if not wr.get("kept_existing") or kept["data_health"]["failed"] or not (_ld / f"{bok['date']}_brief.rejected.json").exists():
+        f.append("a failed re-run must not overwrite the healthy brief for the same date (kept + .rejected.json)")
+    _ld2 = Path(_tf.mkdtemp())
+    _stale_prev = bok                        # prices end at last_d, one session short of what bx expects
+    write_brief(_stale_prev, _ld2)
+    if write_brief(bx, _ld2).get("kept_existing"):
+        f.append("a same-date brief whose prices stop before the expected session is not 'healthy' and may be replaced")
+    wr2 = write_brief(bx, Path(_tf.mkdtemp()))
+    if wr2.get("kept_existing"):
+        f.append("with no healthy brief on disk, a failed brief is still written (it carries the refusal)")
+    try:
+        import market_time as _mt
+        _n = datetime(2026, 11, 12, 21, 0, tzinfo=_mt.ET)
+        if expected_session(_n) != date(2026, 11, 12):
+            f.append("21:00 ET on a trading day must expect that day's bar")
+        if expected_session(datetime(2026, 11, 12, 16, 10, tzinfo=_mt.ET)) != date(2026, 11, 11):
+            f.append("10 minutes after the close, the previous session is what's expected")
+        if expected_session(datetime(2026, 11, 14, 10, 0, tzinfo=_mt.ET)) != date(2026, 11, 13):
+            f.append("a Saturday run expects Friday's bar")
+    except ImportError:
+        pass
     # build #3: loss-limit stand-downs (risk_policy §5) — unit
     D = date(2026, 11, 12)
     r0 = risk_state(D, 10_000.0, 10_000.0, [], [])
