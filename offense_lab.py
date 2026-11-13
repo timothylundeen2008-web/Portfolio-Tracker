@@ -1,6 +1,20 @@
 """
-offense_lab.py  (v1.1 — 2026-11-13)
+offense_lab.py  (v1.2 — 2026-11-13)
 ───────────────────────────────────
+v1.2: fast out, slow back in. v1.1's O7 was the best engine (beat SPY full
+  and 2016–26, Sharpe 0.73) but its −25.7% came from one episode (2000: QQQ
+  crashed while still above its 200-day), and O8's −8% stop with a quick
+  50-day re-entry whipsawed to −33.6%. New candidates:
+    O9   O7 with an asymmetric Offense exit. Leave Offense when QQQ closes
+         below its 50-day for 2 closes OR the Offense book is −8% from its
+         high since entry. Re-enter Offense only when SPY and QQQ are above
+         their 200-day AND QQQ above its 50-day (2 closes each) AND at least
+         20 sessions after a fast exit. SPY below its 200-day (2 closes)
+         still means Defense. The fast exit goes to BALANCED.
+    O10  O9 with the fast exit going to DEFENSE.
+  Bar unchanged from v1.1 (−20% max drawdown, beat SPY full and both halves,
+  robust at 150/250). 2 new trials.
+
 v1.1 (Matt, 2026-11-13): "catch and pivot fast" — the book should detect a
   bear trend before its drawdown gets much past 8–10%, not ride a −33% one.
   So the drawdown bar becomes ABSOLUTE: max drawdown no deeper than −20%
@@ -89,7 +103,7 @@ import pandas as pd
 import hedge_lab as hl
 import model_book as mb
 
-VERSION = "v1.1"
+VERSION = "v1.2"
 HISTORY_START = "1998-01-01"
 EVAL_START = "2000-01-03"
 HALVES = (("2005-15", "2005-01-03", "2015-12-31"), ("2016-26", "2016-01-01", None))
@@ -112,6 +126,9 @@ GUARD_TRIP = -8.0          # O6 breaker and O8 stop, % from the engine's peak (m
 GUARD_RELEASE_DD = -5.0    # O6 only (model_book.RELEASE_DD)
 GUARD_SMA = 50
 GUARD_CLOSES = 2
+FAST_SMA = 50              # O9/O10: QQQ below its 50-day for 2 closes ends Offense
+FAST_STOP = -8.0           # O9/O10: Offense book % from its high since entry
+COOLDOWN = 20              # O9/O10: sessions after a fast exit before Offense may resume
 OUT_DIR = Path("data/offense_lab")
 LOG_DIR = Path("logs/offense_lab")
 
@@ -132,6 +149,9 @@ CANDIDATES = {
     "O7": {"label": "Three-state O2: Offense / Balanced (mixed) / Defense (SPY < 200d)", "kind": "two3",
            "off": OFFENSE_1X},
     "O8": {"label": "O7 + −8% portfolio stop to Defense", "kind": "two3", "off": OFFENSE_1X, "guard": "stop"},
+    "O9": {"label": "O7, fast exit (QQQ < 50d or −8%) to Balanced, slow re-entry", "kind": "fast",
+           "off": OFFENSE_1X, "out": "BAL"},
+    "O10": {"label": "O9 with the fast exit to Defense", "kind": "fast", "off": OFFENSE_1X, "out": "DEF"},
 }
 PRIOR_V10 = {"O1", "O2", "O3", "O4", "O5"}      # run in v1.0 (logged before the candidates column existed)
 
@@ -183,7 +203,53 @@ def confirm(raw: pd.Series, n: int, start) -> pd.Series:
     return pd.Series(out, index=raw.index, dtype=object)
 
 
-def states(kind: str, levels: pd.DataFrame, ma: int = MA, n_confirm: int = CONFIRM) -> pd.Series:
+def _two_up(s: pd.Series) -> pd.Series:
+    """True on the 2nd consecutive close that is True (NaN counts as not)."""
+    x = s.fillna(False).astype(bool)
+    return x & x.shift(1, fill_value=False)
+
+
+def _two_down(s: pd.Series) -> pd.Series:
+    """True on the 2nd consecutive close that is known False."""
+    x = (s == False) & s.notna()          # noqa: E712  (NaN is not "down")
+    return x & x.shift(1, fill_value=False)
+
+
+def states_fast(levels: pd.DataFrame, rets: pd.DataFrame, ma: int = MA) -> pd.Series:
+    """O9/O10 state machine: OFF / BAL / DEF / OUT (fast-exited). Value at d uses data <= d only."""
+    spy_up, qqq_up = above_ma(levels["SPY"], ma), above_ma(levels["QQQ"], ma)
+    q50 = above_ma(levels["QQQ"], FAST_SMA)
+    known = spy_up.notna() & qqq_up.notna() & q50.notna()
+    spy_dn2, qqq_dn2, q50_dn2 = _two_down(spy_up).to_numpy(), _two_down(qqq_up).to_numpy(), _two_down(q50).to_numpy()
+    entry = (_two_up(spy_up) & _two_up(qqq_up) & _two_up(q50)).to_numpy()
+    spy_up2 = _two_up(spy_up).to_numpy()
+    r = rets.reindex(levels.index)
+    idx = (1 + 0.5 * r["SPY"].fillna(0.0) + 0.5 * r["QQQ"].fillna(0.0)).cumprod().to_numpy()
+    out, state, peak, out_i = [], "BAL", None, -10 ** 9
+    kn = known.to_numpy()
+    for i in range(len(levels)):
+        if not kn[i]:
+            out.append(state); continue
+        if spy_dn2[i]:
+            state = "DEF"
+        elif state == "OFF":
+            peak = max(peak, idx[i])
+            if q50_dn2[i] or (idx[i] / peak - 1) * 100 <= FAST_STOP:
+                state, out_i = "OUT", i
+            elif qqq_dn2[i]:
+                state = "BAL"
+        elif entry[i] and (state != "OUT" or i - out_i >= COOLDOWN):
+            state, peak = "OFF", idx[i]
+        elif state == "DEF" and spy_up2[i]:
+            state = "BAL"
+        out.append(state)
+    return pd.Series(out, index=levels.index, dtype=object)
+
+
+def states(kind: str, levels: pd.DataFrame, ma: int = MA, n_confirm: int = CONFIRM,
+           rets: Optional[pd.DataFrame] = None) -> pd.Series:
+    if kind == "fast":
+        return states_fast(levels, rets, ma)
     spy_up = above_ma(levels["SPY"], ma)
     if kind == "spy":
         raw = spy_up.map(lambda x: None if x != x else ("OFF" if x else "CASH"))
@@ -213,6 +279,8 @@ def states(kind: str, levels: pd.DataFrame, ma: int = MA, n_confirm: int = CONFI
 def book_for(state: str, cand: dict, balanced: dict) -> dict:
     if cand["kind"] == "spy":
         return {"SPY": 100.0} if state == "OFF" else {"SGOV": 100.0}
+    if state == "OUT":
+        return DEFENSE if cand.get("out") == "DEF" else balanced
     return {"OFF": cand["off"], "DEF": DEFENSE}.get(state, balanced)
 
 
@@ -359,7 +427,7 @@ def dd_episodes(nav: pd.Series, depth: float, start=EVAL_START) -> int:
 
 def run_candidate(key: str, data: dict, balanced: dict, ma: int = MA, lag: int = LAG) -> dict:
     cand = CANDIDATES[key]
-    st = states(cand["kind"], data["levels"], ma)
+    st = states(cand["kind"], data["levels"], ma, rets=data["rets"])
     days = data["cal"][data["cal"] >= pd.Timestamp(EVAL_START) - pd.Timedelta(days=10)]
     if cand.get("guard"):
         sim = sim_guarded(days, data["rets"], weights_fn(st, cand, balanced, lag), cand["guard"],
@@ -373,6 +441,10 @@ def run_candidate(key: str, data: dict, balanced: dict, ma: int = MA, lag: int =
     g = sim["guard"] if "guard" in sim else None
     guard_pct = round(float(g[g.index >= pd.Timestamp(EVAL_START)].mean()) * 100, 1) if g is not None else None
     trips = int((g.astype(int).diff() == 1).sum()) if g is not None else None
+    if cand["kind"] == "fast":                       # report fast exits in the guard columns
+        ev = s_in[s_in.index >= pd.Timestamp(EVAL_START)]
+        trips = int(((ev == "OUT") & (ev.shift(1) != "OUT")).sum())
+        guard_pct = round(float((ev == "OUT").mean()) * 100, 1)
     return {"nav": sim["nav"], "states": st, "switches": switches, "share": share, "guard_pct": guard_pct,
             "guard_trips": trips, "turnover": float(sim["turnover"].sum()),
             "coverage_min": float(sim["coverage"].min())}
@@ -492,7 +564,7 @@ def render(out: dict, acc: pd.DataFrame, data: dict, n_trials: int, dsr: dict, a
         f, a, b = s[k]["full"], s[k]["2005-15"], s[k]["2016-26"]
         sh = out["runs"][k]["share"] if k in out["runs"] else {}
         mix = (f"{sh.get('OFF', 0):.0f} / {sh.get('BAL', 0) + sh.get('CASH', 0):.0f} / {sh.get('DEF', 0):.0f}%"
-               if sh else "—")
+               + (f" + fast-exit {sh.get('OUT', 0):.0f}%" if "OUT" in sh else "") if sh else "—")
         L.append(f"| {NAMES[k]} | {_f(f.get('cagr_pct'))} / {_f(a.get('cagr_pct'))} / {_f(b.get('cagr_pct'))} | "
                  f"{_f(f.get('max_dd_pct'))} | {_f(f.get('vol_pct'))} | {_f(f.get('sharpe'))} | {_f(f.get('calmar'))} | "
                  f"{_f(dsr.get(k), 3)} | {mix} |")
@@ -677,6 +749,53 @@ def selftest() -> dict:
     s3 = states("two3", lv)
     if s3.iloc[250] != "OFF" or "DEF" not in set(s3.iloc[300:]) or "BAL" not in set(s3.iloc[255:330]):
         f.append(f"two3 states: {s3.iloc[[250, 280, 310, 419]].tolist()}")
+    # 6d. v1.2 fast exit / slow re-entry (O9, O10)
+    nf = 600
+    ix = pd.bdate_range("2000-01-03", periods=nf)
+    qq = np.r_[np.linspace(100, 300, 400), np.linspace(300, 270, 15), np.linspace(270, 330, 185)]
+    lvf = pd.DataFrame({"SPY": np.linspace(100, 250, nf), "QQQ": qq}, index=ix)
+    rf = lvf.pct_change().fillna(0.0)
+    sf = states_fast(lvf, rf)
+    first_out = next((i for i in range(nf) if sf.iloc[i] == "OUT"), None)
+    if sf.iloc[399] != "OFF" or first_out is None or not 400 < first_out <= 415:
+        f.append(f"fast exit: Offense by day 399 and OUT within the 15-day QQQ pullback: {sf.iloc[399]}, {first_out}")
+    else:
+        back = next((i for i in range(first_out, nf) if sf.iloc[i] == "OFF"), None)
+        if back is None or back - first_out < COOLDOWN:
+            f.append(f"re-entry must wait {COOLDOWN} sessions after a fast exit: out {first_out}, back {back}")
+        if sf.iloc[first_out:first_out + 5].isin(["DEF"]).any():
+            f.append("a QQQ pullback with SPY above its 200-day must not go to Defense")
+    lvd = lvf.copy(); lvd.iloc[450:, 0] = np.linspace(250, 120, nf - 450)        # SPY breaks down
+    sd = states_fast(lvd, lvd.pct_change().fillna(0.0))
+    if sd.iloc[-1] != "DEF":
+        f.append("SPY below its 200-day must mean Defense in the fast machine")
+    lv8 = pd.DataFrame({"SPY": np.linspace(100, 250, nf), "QQQ": np.r_[np.linspace(100, 300, 400), np.full(nf - 400, 300.0)]},
+                       index=ix)
+    r8 = pd.DataFrame({"SPY": 0.0, "QQQ": 0.0}, index=ix); r8.iloc[420:440, :] = -0.005    # book bleeds -9.5%
+    s8 = states_fast(lv8, r8)
+    if "OUT" not in set(s8.iloc[420:445]):
+        f.append("the −8% Offense-book stop must trigger a fast exit even when QQQ holds its 50-day")
+    lv2 = lvf.copy(); lv2.iloc[421:] = lv2.iloc[421:] * 0.6
+    if not states_fast(lv2, lv2.pct_change().fillna(0.0)).iloc[:421].equals(
+            states_fast(lvf, rf).iloc[:421]):
+        f.append("fast machine: states depend on later prices (look-ahead)")
+    first_off = next((i for i in range(nf) if sf.iloc[i] == "OFF"), None)
+    if first_off != 200:
+        f.append(f"entry needs 2 closes: the 200-day is first known at bar 199, so Offense starts at 200, got {first_off}")
+    bleed = next((i for i in range(nf) if s8.iloc[i] == "OUT"), None)
+    want = 420 + next(n for n in range(1, 60) if (0.995 ** n - 1) * 100 <= FAST_STOP) - 1
+    if bleed != want:
+        f.append(f"the −8% stop must fire on the close that crosses it (bar {want}), got {bleed}")
+    qv = np.r_[np.linspace(100, 300, 400), [286.0, 285.0], np.linspace(310, 400, nf - 402)]   # 2-close dip, fast rebound
+    lvc = pd.DataFrame({"SPY": np.linspace(100, 250, nf), "QQQ": qv}, index=ix)
+    sc = states_fast(lvc, lvc.pct_change().fillna(0.0))
+    oc = next((i for i in range(nf) if sc.iloc[i] == "OUT"), None)
+    bc = next((i for i in range(oc or 0, nf) if sc.iloc[i] == "OFF"), None) if oc else None
+    if oc is None or bc is None or bc - oc != COOLDOWN:
+        f.append(f"after a fast exit and an immediate rebound, Offense resumes exactly {COOLDOWN} sessions later: {oc}, {bc}")
+    cO9, cO10 = CANDIDATES["O9"], CANDIDATES["O10"]
+    if book_for("OUT", cO9, bal) != bal or book_for("OUT", cO10, bal) != DEFENSE or book_for("OFF", cO9, bal) != OFFENSE_1X:
+        f.append("fast-exit books: O9 → Balanced, O10 → Defense, Offense unchanged")
     # 6c. guards: a steady 1%/day fall trips at -8%, acts one session late, and the stop re-bases its peak
     gd = pd.bdate_range("2020-01-01", periods=40)
     gr = pd.DataFrame({"X": np.r_[np.zeros(5), np.full(12, -0.01), np.full(23, 0.01)], "SGOV": 0.0, "GLD": 0.0,
@@ -728,7 +847,7 @@ def selftest() -> dict:
         res2 = write(out, data, "SELFTEST2")
         if res2["n_trials"] != res["n_trials"] + out.get("robust_n", 0):
             f.append(f"a rerun must not re-count candidates already tried: {res['n_trials']} -> {res2['n_trials']}")
-        for k in ("O6", "O7", "O8"):
+        for k in ("O6", "O7", "O8", "O9", "O10"):
             if k not in set(out["verdicts"]["candidate"]):
                 f.append(f"{k} missing from the verdicts")
         nav = out["navs"]["O5"]
