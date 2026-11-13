@@ -2378,8 +2378,53 @@ def build(inp: dict) -> dict:
              "signals": sg,
              "data_health": dh, "errors": inp.get("errors", []), "targets": targets}
     brief["headline"] = headline(brief)
+    ra = risk_alerts_section(brief, inp)
+    brief["risk_alerts"] = ra
+    if ra.get("line"):
+        brief["headline"].insert(0, ra["line"])       # risk_policy §9: the alert line leads the brief
     brief["conclusions"] = conclusions(brief)
     return brief
+
+
+def risk_alerts_section(b: dict, inp: dict) -> dict:
+    """
+    The conditions tonight's Alerts run will push to the phone (risk_policy §9),
+    computed here from this brief's own inputs with alerts.py's rules, so the
+    brief leads with the same line. alerts.py stays the delivery (GitHub issue
+    → phone) and the record; this section never opens or closes an issue.
+    """
+    try:
+        import alerts as _al
+    except Exception as e:
+        return {"available": False, "items": [], "line": None,
+                "conclusion": f"Risk alerts unavailable: alerts.py did not import ({type(e).__name__})."}
+    sm = (b.get("model") or {}).get("summary") or {}
+    mb = ({"date": sm.get("date"), "nav": sm.get("nav"), "peak": sm.get("peak"),
+           "drawdown_pct": sm.get("drawdown_pct"), "breaker": sm.get("breaker"), "warn": str(bool(sm.get("warn")))}
+          if sm.get("drawdown_pct") is not None else None)
+    sf = inp.get("swing_file")
+    src = {"model_book": mb, "model_book_error": None if mb else "model summary unavailable in this brief",
+           "daily": {"regime": {"key": (b.get("regime") or {}).get("key")}, "data_health": b.get("data_health") or []},
+           "daily_date": b.get("session"),
+           "swing": inp.get("swing") or None, "swing_date": str(sf)[:10] if sf else None}
+    try:
+        found, _ = _al.evaluate(src, inp["now_et"].date())
+    except Exception as e:
+        return {"available": False, "items": [], "line": None,
+                "conclusion": f"Risk alerts not evaluated: {type(e).__name__}: {e}"}
+    order = {"alarm": 0, "alert": 1}
+    items = sorted(({k: x[k] for k in ("key", "severity", "state", "title")} for x in found),
+                   key=lambda x: (x["state"] != "active", order.get(x["severity"], 2), x["key"]))
+    live = [x for x in items if x["state"] == "active"]
+    held = [x for x in items if x["state"] == "hold"]
+    line = None
+    if live or held:
+        parts = [f"{x['severity'].upper()} {x['title']}" for x in live]
+        parts += [f"still open, recovering: {x['title']}" for x in held]
+        line = ("🔔 **Risk alerts:** " + "; ".join(parts)
+                + ". Pushed to the phone by tonight's Alerts run (GitHub issues).")
+    return {"available": True, "items": items, "live": len(live), "line": line,
+            "conclusion": line or "No risk alert is live (risk_policy §9)."}
 
 
 def headline(b: dict) -> list[str]:
@@ -3419,6 +3464,41 @@ def selftest() -> dict:
         al = {a["rule"]: a for a in b["alerts"]}
         if al.get("short_real_band", {}).get("sessions") != 3 or al.get("cpi_mixed_signal", {}).get("repeat"):
             f.append(f"alert repetition counts wrong: {b['alerts']}")
+        # risk_policy §9: the alert line leads the brief (build #4)
+        ra = b.get("risk_alerts") or {}
+        if not ra.get("available") or not isinstance(ra.get("items"), list):
+            f.append(f"risk_alerts must be evaluated in every brief: {ra.get('conclusion')}")
+        elif ra.get("line") and b["headline"][0] != ra["line"]:
+            f.append("a live risk alert must be the first headline line")
+        elif not ra.get("line") and any("Risk alerts" in h for h in b["headline"]):
+            f.append("no live alert, no alert line")
+        _fake = {"session": "2026-11-12", "regime": {"key": "liquidity_crisis"},
+                 "data_health": [{"input": "FRED DGS10", "status": "MISSING"}],
+                 "model": {"summary": {"date": "2026-11-12", "nav": 88.0, "peak": 100.0, "drawdown_pct": -12.0,
+                                       "breaker": "ON", "warn": True}}}
+        _swb = {"risk_state": {"equity_mtm": 8900, "monthly": {"active": True, "month": "2026-11", "refusal": "x"},
+                               "high_water": {"active": False}}, "open_positions": [], "data_health": {"failed": False}}
+        _ra = risk_alerts_section(_fake, {"now_et": datetime(2026, 11, 12, 20, 0), "swing": _swb,
+                                          "swing_file": "2026-11-12_brief.json"})
+        _keys = [x["key"] for x in _ra["items"]]
+        if _keys != ["HY_OVERRIDE", "LT_BREAKER_ON", "DATA_FAIL", "LT_DD_10", "SWING_MONTH"]:
+            f.append(f"risk alerts must list alarms first, then alerts: {_keys}")
+        elif not _ra["line"].startswith("🔔 **Risk alerts:** ALARM HY crisis override") or _ra["live"] != 5:
+            f.append(f"the alert line must lead with the alarms: {_ra['line']}")
+        _calm = dict(_fake, regime={"key": "goldilocks"}, data_health=[{"input": "FRED DGS10", "status": "OK"}],
+                     model={"summary": {"date": "2026-11-12", "nav": 97.0, "peak": 100.0, "drawdown_pct": -3.0,
+                                        "breaker": "OFF", "warn": False}})
+        _swc = dict(_swb, risk_state={"equity_mtm": 10000, "monthly": {"active": False}, "high_water": {"active": False}})
+        _rc = risk_alerts_section(_calm, {"now_et": datetime(2026, 11, 12, 20, 0), "swing": _swc,
+                                          "swing_file": "2026-11-12_brief.json"})
+        if _rc["items"] or _rc["line"]:
+            f.append(f"a calm night must produce no alert line: {_rc['items']}")
+        _held = risk_alerts_section(dict(_calm, model={"summary": {"date": "2026-11-12", "nav": 91.0, "peak": 100.0,
+                                                                  "drawdown_pct": -9.0, "breaker": "OFF", "warn": True}}),
+                                    {"now_et": datetime(2026, 11, 12, 20, 0), "swing": _swc,
+                                     "swing_file": "2026-11-12_brief.json"})
+        if "still open, recovering" not in (_held["line"] or "") or _held["live"] != 1:
+            f.append(f"-9% must show the -10% alert as still open (recovering) plus the breaker warn: {_held}")
         nx = b["next48"]
         if nx["events"] or not nx["next_event"] or "NFP" not in nx["conclusion"]:
             f.append("no event in window must name the next one")
