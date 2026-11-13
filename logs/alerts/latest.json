@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-13T01:13:39+00:00",
+  "generated_at": "2026-11-13T02:01:47+00:00",
   "date": "2026-11-12",
   "version": "alerts v1 (build #3, 2026-11-12)",
   "selftest_ok": true,
@@ -11,17 +11,10 @@
     "SWING",
     "TEST"
   ],
-  "findings": [
-    {
-      "key": "TEST",
-      "severity": "alert",
-      "state": "active",
-      "title": "Alert pipeline test \u2014 did this reach your phone?"
-    }
-  ],
+  "findings": [],
   "actions": [
     {
-      "action": "open",
+      "action": "close",
       "key": "TEST",
       "number": 7
     }
