@@ -1,0 +1,6 @@
+candidate,label,reasons_200,verdict,years_beat_spy,worst_year_vs_spy_pts,switches,dsr
+O1,SPY trend (SPY or T-bills),full CAGR 7.48% ≤ SPY 8.2%; 2005-15 CAGR 4.8% ≤ SPY 7.06%; 2016-26 CAGR 11.74% ≤ SPY 14.77%,FAIL,10 of 27,-14.4,100,0.998
+O2,"Two-mode: growth when SPY & QQQ > 200d, else Balanced",max DD -45.01% deeper than 33.1% (60% of SPY's -55.19%),FAIL,14 of 27,-9.7,108,0.999
+O3,Three-mode 1x (trend + breadth),full CAGR 7.42% ≤ SPY 8.2%; 2005-15 CAGR 5.77% ≤ SPY 7.06%; 2016-26 CAGR 13.35% ≤ SPY 14.77%; max DD -38.21% deeper than 33.1% (60% of SPY's -55.19%),FAIL,10 of 27,-12.9,209,0.993
+O4,Three-mode 1.5x offense,2005-15 CAGR 6.53% ≤ SPY 7.06%; max DD -49.56% deeper than 33.1% (60% of SPY's -55.19%),FAIL,15 of 27,-23.7,209,0.986
+O5,Three-mode 2x offense,2005-15 CAGR 6.91% ≤ SPY 7.06%; max DD -59.81% deeper than 33.1% (60% of SPY's -55.19%),FAIL,16 of 27,-34.0,209,0.979
