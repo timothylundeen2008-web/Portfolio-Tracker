@@ -1,6 +1,24 @@
 """
-offense_lab.py  (v1.0 — 2026-11-13)
+offense_lab.py  (v1.1 — 2026-11-13)
 ───────────────────────────────────
+v1.1 (Matt, 2026-11-13): "catch and pivot fast" — the book should detect a
+  bear trend before its drawdown gets much past 8–10%, not ride a −33% one.
+  So the drawdown bar becomes ABSOLUTE: max drawdown no deeper than −20%
+  (room for gaps and the one-session lag past an −8% pivot), replacing
+  "60% of SPY's". Return bar and robustness unchanged. New candidates,
+  aimed at O2 (beat SPY in every window in v1.0, failed on drawdown only):
+    O6  O2 + the production breaker on the engine's own NAV: at −8% from peak
+        every risk sleeve is halved into SGOV; released above −5% with SPY
+        above its 50-day for 2 closes (model_book rules)
+    O7  three-state O2: Offense while SPY and QQQ > 200d; Defense while
+        SPY < 200d; Balanced when mixed (SPY up, QQQ down)
+    O8  O7 + a portfolio stop: at −8% from peak the WHOLE book pivots to
+        Defense, held until SPY closes above its 50-day for 2 closes; the
+        peak is re-based at the release so the next stop is measured afresh
+  Guards (breaker / stop) act with the same one-session lag as the trend
+  states. New report column: drawdown episodes beyond −10% and −15%.
+  Trials: only candidates not run before are added to the trial log.
+
 Offense / Balanced / Defense engine, battle test #1 (risk_policy §3:
 "allocation must be able to beat SPY in bull markets and defend in bear
 markets, with tested switch-in and switch-back rules").
@@ -71,7 +89,7 @@ import pandas as pd
 import hedge_lab as hl
 import model_book as mb
 
-VERSION = "v1.0"
+VERSION = "v1.1"
 HISTORY_START = "1998-01-01"
 EVAL_START = "2000-01-03"
 HALVES = (("2005-15", "2005-01-03", "2015-12-31"), ("2016-26", "2016-01-01", None))
@@ -89,7 +107,11 @@ LEV_FEE = 0.0095
 LEV_SPREAD = 0.0050
 BREADTH_ON, BREADTH_OFF = 6, 3
 SECTORS9 = ("XLK", "XLF", "XLE", "XLV", "XLI", "XLY", "XLU", "XLB", "XLP")
-BAR_DD_FRAC = 0.60
+BAR_MAX_DD = 20.0          # v1.1: absolute (Matt: pivot near −8–10%; −20% allows gaps and lag)
+GUARD_TRIP = -8.0          # O6 breaker and O8 stop, % from the engine's peak (model_book.TRIGGER_DD)
+GUARD_RELEASE_DD = -5.0    # O6 only (model_book.RELEASE_DD)
+GUARD_SMA = 50
+GUARD_CLOSES = 2
 OUT_DIR = Path("data/offense_lab")
 LOG_DIR = Path("logs/offense_lab")
 
@@ -106,7 +128,12 @@ CANDIDATES = {
     "O3": {"label": "Three-mode 1x (trend + breadth)", "kind": "three", "off": OFFENSE_1X},
     "O4": {"label": "Three-mode 1.5x offense", "kind": "three", "off": OFFENSE_15X},
     "O5": {"label": "Three-mode 2x offense", "kind": "three", "off": OFFENSE_2X},
+    "O6": {"label": "O2 + production −8% breaker", "kind": "two", "off": OFFENSE_1X, "guard": "breaker"},
+    "O7": {"label": "Three-state O2: Offense / Balanced (mixed) / Defense (SPY < 200d)", "kind": "two3",
+           "off": OFFENSE_1X},
+    "O8": {"label": "O7 + −8% portfolio stop to Defense", "kind": "two3", "off": OFFENSE_1X, "guard": "stop"},
 }
+PRIOR_V10 = {"O1", "O2", "O3", "O4", "O5"}      # run in v1.0 (logged before the candidates column existed)
 
 
 # ── data ────────────────────────────────────────────────────────────────────
@@ -162,6 +189,12 @@ def states(kind: str, levels: pd.DataFrame, ma: int = MA, n_confirm: int = CONFI
         raw = spy_up.map(lambda x: None if x != x else ("OFF" if x else "CASH"))
         return confirm(raw, n_confirm, "CASH")
     qqq_up = above_ma(levels["QQQ"], ma)
+    if kind == "two3":
+        both = spy_up.notna() & qqq_up.notna()
+        su, qu = spy_up.fillna(False).astype(bool), qqq_up.fillna(False).astype(bool)
+        raw = pd.Series(np.where(both, np.where(su & qu, "OFF", np.where(~su, "DEF", "BAL")), None),
+                        index=levels.index, dtype=object)
+        return confirm(raw, n_confirm, "BAL")
     if kind == "two":
         both = spy_up.notna() & qqq_up.notna()
         raw = pd.Series(np.where(both, np.where(spy_up.fillna(False) & qqq_up.fillna(False), "OFF", "BAL"), None),
@@ -236,10 +269,9 @@ def bar_check(st: dict, spy: dict) -> list:
         c, s = (st.get(k) or {}).get("cagr_pct"), (spy.get(k) or {}).get("cagr_pct")
         if c is None or s is None or not c > s:
             why.append(f"{k} CAGR {c}% ≤ SPY {s}%")
-    d, ds = (st.get("full") or {}).get("max_dd_pct"), (spy.get("full") or {}).get("max_dd_pct")
-    lim = abs(ds or 0) * BAR_DD_FRAC
-    if d is None or abs(d) > lim + 1e-9:
-        why.append(f"max DD {d}% deeper than {lim:.1f}% ({BAR_DD_FRAC:.0%} of SPY's {ds}%)")
+    d = (st.get("full") or {}).get("max_dd_pct")
+    if d is None or abs(d) > BAR_MAX_DD + 1e-9:
+        why.append(f"max DD {d}% deeper than −{BAR_MAX_DD:g}%")
     return why
 
 
@@ -258,16 +290,92 @@ def simulate(days, rets, weights_on, cost=COST_BPS) -> pd.Series:
     return hl.simulate(days, rets, weights_on, None, breaker=False, cost_bps=cost)["nav"]
 
 
+def sim_guarded(days, rets: pd.DataFrame, weights_on: Callable, guard: str, spy_up50: pd.Series,
+                cost: float = COST_BPS) -> pd.DataFrame:
+    """hedge_lab.simulate's accounting plus a drawdown guard on the engine's own NAV.
+    The guard state after the close of d-1 shapes the weights set at d (held over d+1):
+    the same one-session lag as the trend states.
+      breaker: risk sleeves halved into SGOV (model_book.apply_breaker); off above −5% with
+               SPY > 50d for 2 closes
+      stop:    the whole book in DEFENSE; off after SPY > 50d for 2 closes; peak re-based"""
+    rows, prev = [], None
+    nav = peak = mb.START_NAV
+    g_prev, g_now, rc = False, False, 0
+    for d in days:
+        if prev is not None:
+            r, have, tot = 0.0, 0.0, 0.0
+            for t, wt in prev["w"].items():
+                if wt <= 0:
+                    continue
+                tot += wt
+                x = rets.at[d, t] if t in rets.columns else np.nan
+                if x == x:
+                    r += wt / 100.0 * float(x); have += wt
+            nav *= 1 + r
+            peak = max(peak, nav)
+        base = weights_on(d)
+        if g_prev:
+            w = mb.apply_breaker(base, hl.REGIME) if guard == "breaker" else dict(DEFENSE)
+        else:
+            w = dict(base)
+        w = {k: float(v) for k, v in w.items()}
+        turn = 0.0
+        if prev is not None:
+            keys = set(w) | set(prev["w"])
+            turn = sum(abs(w.get(k, 0.0) - prev["w"].get(k, 0.0)) for k in keys) / 2.0
+            nav *= 1 - turn / 100.0 * cost / 1e4
+            peak = max(peak, nav)
+        dd = (nav / peak - 1) * 100
+        v = spy_up50.get(d, np.nan)
+        up50 = bool(v) if v == v else False          # unknown 50-day = no release
+        if not g_now:
+            g_now, rc = (dd <= GUARD_TRIP), 0
+        else:
+            ok = up50 and (guard == "stop" or dd > GUARD_RELEASE_DD)
+            rc = rc + 1 if ok else 0
+            if rc >= GUARD_CLOSES:
+                g_now, rc = False, 0
+                if guard == "stop":
+                    peak = nav                      # the next stop is measured from the release
+        rows.append({"date": d, "nav": nav, "peak": peak, "w": w, "turnover": turn, "guard": g_now,
+                     "coverage": 1.0})
+        prev = rows[-1]
+        g_prev = g_now
+    return pd.DataFrame(rows).set_index("date")
+
+
+def dd_episodes(nav: pd.Series, depth: float, start=EVAL_START) -> int:
+    """Distinct peak-to-new-peak drawdowns whose trough reached `depth` (%)."""
+    s = nav[nav.index >= pd.Timestamp(start)]
+    n, peak, hit = 0, -np.inf, False
+    for v in s.to_numpy():
+        if v >= peak:
+            peak, hit = v, False
+            continue
+        if not hit and (v / peak - 1) * 100 <= depth:
+            n, hit = n + 1, True
+    return n
+
+
 def run_candidate(key: str, data: dict, balanced: dict, ma: int = MA, lag: int = LAG) -> dict:
     cand = CANDIDATES[key]
     st = states(cand["kind"], data["levels"], ma)
     days = data["cal"][data["cal"] >= pd.Timestamp(EVAL_START) - pd.Timedelta(days=10)]
-    sim = hl.simulate(days, data["rets"], weights_fn(st, cand, balanced, lag), None, breaker=False, cost_bps=COST_BPS)
+    if cand.get("guard"):
+        sim = sim_guarded(days, data["rets"], weights_fn(st, cand, balanced, lag), cand["guard"],
+                          above_ma(data["levels"]["SPY"], GUARD_SMA))
+    else:
+        sim = hl.simulate(days, data["rets"], weights_fn(st, cand, balanced, lag), None, breaker=False,
+                          cost_bps=COST_BPS)
     s_in = st.reindex(days)
     switches = int((s_in != s_in.shift(1)).iloc[1:].sum())
     share = s_in[s_in.index >= pd.Timestamp(EVAL_START)].value_counts(normalize=True).mul(100).round(1).to_dict()
-    return {"nav": sim["nav"], "states": st, "switches": switches, "share": share,
-            "turnover": float(sim["turnover"].sum()), "coverage_min": float(sim["coverage"].min())}
+    g = sim["guard"] if "guard" in sim else None
+    guard_pct = round(float(g[g.index >= pd.Timestamp(EVAL_START)].mean()) * 100, 1) if g is not None else None
+    trips = int((g.astype(int).diff() == 1).sum()) if g is not None else None
+    return {"nav": sim["nav"], "states": st, "switches": switches, "share": share, "guard_pct": guard_pct,
+            "guard_trips": trips, "turnover": float(sim["turnover"].sum()),
+            "coverage_min": float(sim["coverage"].min())}
 
 
 def run_all(data: dict, balanced: dict) -> dict:
@@ -283,7 +391,7 @@ def run_all(data: dict, balanced: dict) -> dict:
         runs[k] = run_candidate(k, data, balanced)
         navs[k] = runs[k]["nav"]
     summ = {k: summary(v) for k, v in navs.items()}
-    verdicts, trials = [], len(CANDIDATES)
+    verdicts, robust_n = [], 0
     robust_runs = {}
     for k in CANDIDATES:
         why = bar_check(summ[k], summ["SPY"])
@@ -295,7 +403,7 @@ def run_all(data: dict, balanced: dict) -> dict:
             for m in ROBUST_MAS:
                 rr = run_candidate(k, data, balanced, ma=m)
                 robust_runs[(k, m)] = rr
-                trials += 1
+                robust_n += 1
                 w2 = bar_check(summary(rr["nav"]), summ["SPY"])
                 if w2:
                     rob.append(f"MA {m}: " + "; ".join(w2))
@@ -305,10 +413,15 @@ def run_all(data: dict, balanced: dict) -> dict:
         row["years_beat_spy"] = f"{int((yr.c > yr.s).sum())} of {len(yr)}"
         row["worst_year_vs_spy_pts"] = round(float((yr.c - yr.s).min()), 1) if len(yr) else None
         row["switches"] = runs[k]["switches"]
+        row["episodes_10"] = dd_episodes(navs[k], -10.0)
+        row["episodes_15"] = dd_episodes(navs[k], -15.0)
+        row["guard_trips"] = runs[k].get("guard_trips")
+        row["guard_on_pct"] = runs[k].get("guard_pct")
         verdicts.append(row)
     years = pd.DataFrame({k: year_returns(v) for k, v in navs.items()}).round(1)
     return {"navs": navs, "summ": summ, "runs": runs, "robust": robust_runs,
-            "verdicts": pd.DataFrame(verdicts), "years": years, "trials": trials}
+            "verdicts": pd.DataFrame(verdicts), "years": years, "robust_n": robust_n,
+            "episodes_spy": (dd_episodes(navs["SPY"], -10.0), dd_episodes(navs["SPY"], -15.0))}
 
 
 def lev_accuracy(data: dict) -> pd.DataFrame:
@@ -358,12 +471,19 @@ def render(out: dict, acc: pd.DataFrame, data: dict, n_trials: int, dsr: dict, a
          f"Switches need {CONFIRM} closes and trade {LAG} session late; {COST_BPS:g}bp per unit of turnover. "
          f"Trials logged to date (incl. this run): **{n_trials}**.", "",
          "## Verdicts against the bar (fixed before the run)",
-         f"Bar: CAGR above SPY over the full window AND both halves, net of costs and lag; max drawdown no deeper "
-         f"than {BAR_DD_FRAC:.0%} of SPY's; and the same at the 150- and 250-day averages (robustness).", "",
-         "| Candidate | Verdict | Years beating SPY | Worst year vs SPY | Switches | Reasons (200-day) | Robustness |",
-         "|---|---|---|---|---|---|---|"]
+         f"Bar (v1.1, Matt 2026-11-13): CAGR above SPY over the full window AND both halves, net of costs and lag; "
+         f"max drawdown no deeper than −{BAR_MAX_DD:g}%; and the same at the 150- and 250-day averages (robustness). "
+         f"The goal behind it: pivot before a drawdown gets much past 8–10%.", "",
+         f"Drawdown episodes = distinct peak-to-new-peak declines reaching −10% / −15% "
+         f"(SPY: {out['episodes_spy'][0]} / {out['episodes_spy'][1]}).", "",
+         "| Candidate | Verdict | Years beating SPY | Worst year vs SPY | Episodes ≤ −10% / −15% | Guard trips (time on) | "
+         "Switches | Reasons (200-day) | Robustness |",
+         "|---|---|---|---|---|---|---|---|---|"]
     for _, r in out["verdicts"].iterrows():
+        gt = r.get("guard_trips")
+        guard = f"{int(gt)} ({_f(r.get('guard_on_pct'), 0)}%)" if gt == gt and gt is not None else "—"
         L.append(f"| {NAMES[r.candidate]} | **{r.verdict}** | {r.years_beat_spy} | {_f(r.worst_year_vs_spy_pts, 1)} pts | "
+                 f"{r.episodes_10} / {r.episodes_15} | {guard} | "
                  f"{r.switches} | {r.reasons_200} | {r.get('robustness') or '—'} |")
     L += ["", "## Full window and halves", "",
           "| Book | CAGR full / 05–15 / 16–26 % | Max DD full % | Vol % | Sharpe | Calmar | DSR | Time in Offense / Balanced / Defense |",
@@ -411,7 +531,17 @@ def write(out: dict, data: dict, asof: str) -> dict:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     tl = OUT_DIR / "trial_log.csv"
-    prior = int(pd.read_csv(tl)["trials"].sum()) if tl.exists() else 0
+    log = pd.read_csv(tl) if tl.exists() else pd.DataFrame(columns=["date", "version", "trials", "note"])
+    prior = int(log["trials"].sum()) if len(log) else 0
+    seen = set()
+    for _, r in log.iterrows():
+        c = r.get("candidates")
+        if isinstance(c, str) and c:
+            seen |= set(c.split(","))
+        elif str(r.get("version")) == "v1.0":
+            seen |= PRIOR_V10
+    new = [k for k in CANDIDATES if k not in seen]
+    out["trials"] = len(new) + out.get("robust_n", 0)
     n_trials = prior + out["trials"]
     srs, info = [], {}
     for k in CANDIDATES:
@@ -435,8 +565,9 @@ def write(out: dict, data: dict, asof: str) -> dict:
     acc.to_csv(OUT_DIR / "lev_accuracy.csv", index=False)
     pd.DataFrame({k: r["states"] for k, r in out["runs"].items()}).tail(30).to_csv(OUT_DIR / "states_recent.csv")
     row = pd.DataFrame([{"date": asof, "version": VERSION, "trials": out["trials"],
-                         "note": "O1-O5 at 200d; +2 robustness runs per passer"}])
-    (pd.concat([pd.read_csv(tl), row]) if tl.exists() else row).to_csv(tl, index=False)
+                         "note": f"new: {','.join(new) or 'none'}; robustness runs: {out.get('robust_n', 0)}",
+                         "candidates": ",".join(new)}])
+    pd.concat([log, row]).to_csv(tl, index=False)
     md = render(out, acc, data, n_trials, dsr, asof)
     path = LOG_DIR / f"{asof}_report.md"
     path.write_text(md)
@@ -531,13 +662,45 @@ def selftest() -> dict:
         f.append(f"three-mode never visited all states on a bull/bear history: {set(st.unique())}")
     # 6. bar logic
     spy = {"full": {"cagr_pct": 8.0, "max_dd_pct": -50.0}, "2005-15": {"cagr_pct": 6.0}, "2016-26": {"cagr_pct": 12.0}}
-    good = {"full": {"cagr_pct": 9.0, "max_dd_pct": -29.0}, "2005-15": {"cagr_pct": 7.0}, "2016-26": {"cagr_pct": 12.5}}
+    good = {"full": {"cagr_pct": 9.0, "max_dd_pct": -19.5}, "2005-15": {"cagr_pct": 7.0}, "2016-26": {"cagr_pct": 12.5}}
     if bar_check(good, spy):
         f.append(f"bar: a clear pass failed: {bar_check(good, spy)}")
-    if not bar_check(dict(good, full={"cagr_pct": 9.0, "max_dd_pct": -31.0}), spy):
-        f.append("bar: 31% drawdown vs a 30% limit passed")
+    if not bar_check(dict(good, full={"cagr_pct": 9.0, "max_dd_pct": -20.5}), spy):
+        f.append("bar v1.1: a −20.5% drawdown vs the −20% limit passed")
+    if bar_check(dict(good, full={"cagr_pct": 9.0, "max_dd_pct": -20.0}), spy):
+        f.append("bar v1.1: exactly −20% must pass")
     if not bar_check(dict(good, **{"2016-26": {"cagr_pct": 12.0}}), spy):
         f.append("bar: equal CAGR in a half must fail (strictly above)")
+    # 6b. v1.1 three-state O2: SPY down -> Defense, mixed -> Balanced, both up -> Offense
+    lv = pd.DataFrame({"SPY": np.r_[np.linspace(100, 200, 300), np.linspace(200, 120, 120)],
+                       "QQQ": np.r_[np.linspace(100, 200, 260), np.linspace(200, 150, 160)]})
+    s3 = states("two3", lv)
+    if s3.iloc[250] != "OFF" or "DEF" not in set(s3.iloc[300:]) or "BAL" not in set(s3.iloc[255:330]):
+        f.append(f"two3 states: {s3.iloc[[250, 280, 310, 419]].tolist()}")
+    # 6c. guards: a steady 1%/day fall trips at -8%, acts one session late, and the stop re-bases its peak
+    gd = pd.bdate_range("2020-01-01", periods=40)
+    gr = pd.DataFrame({"X": np.r_[np.zeros(5), np.full(12, -0.01), np.full(23, 0.01)], "SGOV": 0.0, "GLD": 0.0,
+                       "TLT": 0.0}, index=gd)
+    up50 = pd.Series([False] * 25 + [True] * 15, index=gd)
+    sb = sim_guarded(gd, gr, lambda d: {"X": 100.0}, "breaker", up50, cost=0.0)
+    trip = sb.index[sb["guard"]][0]
+    k = gd.get_loc(trip)
+    if not (sb["nav"].iloc[k] / sb["peak"].iloc[k] - 1) * 100 <= GUARD_TRIP:
+        f.append("breaker tripped before −8%")
+    if sb["w"].iloc[k].get("X") != 100.0 or abs(sb["w"].iloc[k + 1].get("X", 0) - 50.0) > 1e-9:
+        f.append("breaker must halve risk the session AFTER the trip close (lag 1)")
+    ss = sim_guarded(gd, gr, lambda d: {"X": 100.0}, "stop", up50, cost=0.0)
+    ks = gd.get_loc(ss.index[ss["guard"]][0])
+    if ss["w"].iloc[ks + 1] != DEFENSE:
+        f.append("the stop must move the whole book to DEFENSE the session after the trip")
+    rel = [i for i in range(1, len(ss)) if ss["guard"].iloc[i - 1] and not ss["guard"].iloc[i]]
+    if not rel or gd[rel[0]] < gd[26]:
+        f.append("the stop may only release after 2 closes above the 50-day")
+    elif abs(ss["peak"].iloc[rel[0]] - ss["nav"].iloc[rel[0]]) > 1e-9:
+        f.append("the stop must re-base its peak at the release")
+    if dd_episodes(pd.Series([100, 95, 89, 100, 101, 90, 85, 102], index=pd.bdate_range("2001-01-01", periods=8)),
+                   -10.0, "2000-01-01") != 2:
+        f.append("dd_episodes must count each peak-to-new-peak decline once")
     # 7. O1 in a market always above its average = SPY minus warm-up and costs
     up = {k: v for k, v in closes.items()}
     cal = data["cal"]
@@ -562,6 +725,12 @@ def selftest() -> dict:
             f.append("every candidate needs a verdict")
         if res["n_trials"] < len(CANDIDATES):
             f.append("trial count must include every candidate")
+        res2 = write(out, data, "SELFTEST2")
+        if res2["n_trials"] != res["n_trials"] + out.get("robust_n", 0):
+            f.append(f"a rerun must not re-count candidates already tried: {res['n_trials']} -> {res2['n_trials']}")
+        for k in ("O6", "O7", "O8"):
+            if k not in set(out["verdicts"]["candidate"]):
+                f.append(f"{k} missing from the verdicts")
         nav = out["navs"]["O5"]
         if not (nav > 0).all():
             f.append("2x engine NAV went non-positive")
