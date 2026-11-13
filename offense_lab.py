@@ -1,6 +1,15 @@
 """
-offense_lab.py  (v1.2 — 2026-11-13)
+offense_lab.py  (v1.3 — 2026-11-13)
 ───────────────────────────────────
+v1.3: no new candidates. O9 (best so far: −19.3% max DD, Sharpe 0.79, missed
+  2005–15 and, by 0.02 pts, 2016–26) gets the sensitivity check the bar would
+  have run had it passed, widened to every parameter it has: the trend average
+  (150 / 250), the fast-exit average (40 / 60), the Offense stop (−6 / −10%)
+  and the cooldown (10 / 30 sessions), one at a time. Each run is a logged
+  trial (8). Read it as "does O9's profile — drawdown inside −20%, CAGR above
+  SPY over the full window — survive nearby settings?", not as a new search:
+  the best cell is NOT adopted for being best.
+
 v1.2: fast out, slow back in. v1.1's O7 was the best engine (beat SPY full
   and 2016–26, Sharpe 0.73) but its −25.7% came from one episode (2000: QQQ
   crashed while still above its 200-day), and O8's −8% stop with a quick
@@ -103,7 +112,7 @@ import pandas as pd
 import hedge_lab as hl
 import model_book as mb
 
-VERSION = "v1.2"
+VERSION = "v1.3"
 HISTORY_START = "1998-01-01"
 EVAL_START = "2000-01-03"
 HALVES = (("2005-15", "2005-01-03", "2015-12-31"), ("2016-26", "2016-01-01", None))
@@ -129,6 +138,8 @@ GUARD_CLOSES = 2
 FAST_SMA = 50              # O9/O10: QQQ below its 50-day for 2 closes ends Offense
 FAST_STOP = -8.0           # O9/O10: Offense book % from its high since entry
 COOLDOWN = 20              # O9/O10: sessions after a fast exit before Offense may resume
+DIAGNOSE = {"O9": [("ma", 150), ("ma", 250), ("fast_sma", 40), ("fast_sma", 60),
+                   ("fast_stop", -6.0), ("fast_stop", -10.0), ("cooldown", 10), ("cooldown", 30)]}
 OUT_DIR = Path("data/offense_lab")
 LOG_DIR = Path("logs/offense_lab")
 
@@ -215,10 +226,11 @@ def _two_down(s: pd.Series) -> pd.Series:
     return x & x.shift(1, fill_value=False)
 
 
-def states_fast(levels: pd.DataFrame, rets: pd.DataFrame, ma: int = MA) -> pd.Series:
+def states_fast(levels: pd.DataFrame, rets: pd.DataFrame, ma: int = MA, fast_sma: int = FAST_SMA,
+                fast_stop: float = FAST_STOP, cooldown: int = COOLDOWN) -> pd.Series:
     """O9/O10 state machine: OFF / BAL / DEF / OUT (fast-exited). Value at d uses data <= d only."""
     spy_up, qqq_up = above_ma(levels["SPY"], ma), above_ma(levels["QQQ"], ma)
-    q50 = above_ma(levels["QQQ"], FAST_SMA)
+    q50 = above_ma(levels["QQQ"], fast_sma)
     known = spy_up.notna() & qqq_up.notna() & q50.notna()
     spy_dn2, qqq_dn2, q50_dn2 = _two_down(spy_up).to_numpy(), _two_down(qqq_up).to_numpy(), _two_down(q50).to_numpy()
     entry = (_two_up(spy_up) & _two_up(qqq_up) & _two_up(q50)).to_numpy()
@@ -234,11 +246,11 @@ def states_fast(levels: pd.DataFrame, rets: pd.DataFrame, ma: int = MA) -> pd.Se
             state = "DEF"
         elif state == "OFF":
             peak = max(peak, idx[i])
-            if q50_dn2[i] or (idx[i] / peak - 1) * 100 <= FAST_STOP:
+            if q50_dn2[i] or (idx[i] / peak - 1) * 100 <= fast_stop:
                 state, out_i = "OUT", i
             elif qqq_dn2[i]:
                 state = "BAL"
-        elif entry[i] and (state != "OUT" or i - out_i >= COOLDOWN):
+        elif entry[i] and (state != "OUT" or i - out_i >= cooldown):
             state, peak = "OFF", idx[i]
         elif state == "DEF" and spy_up2[i]:
             state = "BAL"
@@ -247,9 +259,9 @@ def states_fast(levels: pd.DataFrame, rets: pd.DataFrame, ma: int = MA) -> pd.Se
 
 
 def states(kind: str, levels: pd.DataFrame, ma: int = MA, n_confirm: int = CONFIRM,
-           rets: Optional[pd.DataFrame] = None) -> pd.Series:
+           rets: Optional[pd.DataFrame] = None, **fast) -> pd.Series:
     if kind == "fast":
-        return states_fast(levels, rets, ma)
+        return states_fast(levels, rets, ma, **fast)
     spy_up = above_ma(levels["SPY"], ma)
     if kind == "spy":
         raw = spy_up.map(lambda x: None if x != x else ("OFF" if x else "CASH"))
@@ -425,9 +437,9 @@ def dd_episodes(nav: pd.Series, depth: float, start=EVAL_START) -> int:
     return n
 
 
-def run_candidate(key: str, data: dict, balanced: dict, ma: int = MA, lag: int = LAG) -> dict:
+def run_candidate(key: str, data: dict, balanced: dict, ma: int = MA, lag: int = LAG, **fast) -> dict:
     cand = CANDIDATES[key]
-    st = states(cand["kind"], data["levels"], ma, rets=data["rets"])
+    st = states(cand["kind"], data["levels"], ma, rets=data["rets"], **fast)
     days = data["cal"][data["cal"] >= pd.Timestamp(EVAL_START) - pd.Timedelta(days=10)]
     if cand.get("guard"):
         sim = sim_guarded(days, data["rets"], weights_fn(st, cand, balanced, lag), cand["guard"],
@@ -490,10 +502,35 @@ def run_all(data: dict, balanced: dict) -> dict:
         row["guard_trips"] = runs[k].get("guard_trips")
         row["guard_on_pct"] = runs[k].get("guard_pct")
         verdicts.append(row)
+    robust_keys = [f"{k}@ma{m}" for (k, m) in robust_runs]
+    diag = []
+    for k, grid in DIAGNOSE.items():
+        if k not in CANDIDATES:
+            continue
+        base = summ[k]
+        diag.append({"candidate": k, "setting": "base (200 / 50 / −8% / 20)", **_diag_row(base, summ["SPY"]),
+                     "episodes_15": dd_episodes(navs[k], -15.0)})
+        for prm, val in grid:
+            kw = {"ma": val} if prm == "ma" else {prm: val}
+            rr = run_candidate(k, data, balanced, **kw)
+            robust_keys.append(f"{k}@{prm}={val}")
+            diag.append({"candidate": k, "setting": f"{prm} = {val}", **_diag_row(summary(rr["nav"]), summ["SPY"]),
+                         "episodes_15": dd_episodes(rr["nav"], -15.0)})
     years = pd.DataFrame({k: year_returns(v) for k, v in navs.items()}).round(1)
-    return {"navs": navs, "summ": summ, "runs": runs, "robust": robust_runs,
+    return {"navs": navs, "summ": summ, "runs": runs, "robust": robust_runs, "diag": pd.DataFrame(diag),
+            "robust_keys": robust_keys,
             "verdicts": pd.DataFrame(verdicts), "years": years, "robust_n": robust_n,
             "episodes_spy": (dd_episodes(navs["SPY"], -10.0), dd_episodes(navs["SPY"], -15.0))}
+
+
+def _diag_row(st: dict, spy: dict) -> dict:
+    f, a, b = st.get("full") or {}, st.get("2005-15") or {}, st.get("2016-26") or {}
+    why = bar_check(st, spy)
+    profile = (f.get("max_dd_pct") is not None and abs(f["max_dd_pct"]) <= BAR_MAX_DD
+               and (f.get("cagr_pct") or -99) > ((spy.get("full") or {}).get("cagr_pct") or 99))
+    return {"cagr_full": f.get("cagr_pct"), "cagr_05_15": a.get("cagr_pct"), "cagr_16_26": b.get("cagr_pct"),
+            "max_dd": f.get("max_dd_pct"), "sharpe": f.get("sharpe"), "calmar": f.get("calmar"),
+            "keeps_profile": bool(profile), "bar": "PASS" if not why else "FAIL", "misses": "; ".join(why)}
 
 
 def lev_accuracy(data: dict) -> pd.DataFrame:
@@ -557,6 +594,19 @@ def render(out: dict, acc: pd.DataFrame, data: dict, n_trials: int, dsr: dict, a
         L.append(f"| {NAMES[r.candidate]} | **{r.verdict}** | {r.years_beat_spy} | {_f(r.worst_year_vs_spy_pts, 1)} pts | "
                  f"{r.episodes_10} / {r.episodes_15} | {guard} | "
                  f"{r.switches} | {r.reasons_200} | {r.get('robustness') or '—'} |")
+    dg = out.get("diag")
+    if dg is not None and len(dg):
+        L += ["", "## Sensitivity (v1.3): does the best candidate's profile survive nearby settings?",
+              "One parameter moved at a time. Profile = max drawdown inside −20% AND full-window CAGR above SPY. "
+              "The best cell is not adopted for being best.", "",
+              "| Candidate | Setting | CAGR full / 05–15 / 16–26 % | Max DD % | Sharpe | Calmar | Episodes ≤ −15% | "
+              "Keeps profile | Bar | Misses |", "|---|---|---|---|---|---|---|---|---|---|"]
+        for _, r in dg.iterrows():
+            L.append(f"| {r.candidate} | {r.setting} | {_f(r.cagr_full)} / {_f(r.cagr_05_15)} / {_f(r.cagr_16_26)} | "
+                     f"{_f(r.max_dd)} | {_f(r.sharpe)} | {_f(r.calmar)} | {r.episodes_15} | "
+                     f"{'yes' if r.keeps_profile else 'no'} | {r.bar} | {r.misses or '—'} |")
+        n_ok = int(dg["keeps_profile"].iloc[1:].sum())
+        L.append(f"\nProfile held in **{n_ok} of {len(dg) - 1}** nearby settings.")
     L += ["", "## Full window and halves", "",
           "| Book | CAGR full / 05–15 / 16–26 % | Max DD full % | Vol % | Sharpe | Calmar | DSR | Time in Offense / Balanced / Defense |",
           "|---|---|---|---|---|---|---|---|"]
@@ -612,8 +662,8 @@ def write(out: dict, data: dict, asof: str) -> dict:
             seen |= set(c.split(","))
         elif str(r.get("version")) == "v1.0":
             seen |= PRIOR_V10
-    new = [k for k in CANDIDATES if k not in seen]
-    out["trials"] = len(new) + out.get("robust_n", 0)
+    new = [k for k in [*CANDIDATES, *out.get("robust_keys", [])] if k not in seen]
+    out["trials"] = len(new)
     n_trials = prior + out["trials"]
     srs, info = [], {}
     for k in CANDIDATES:
@@ -633,11 +683,13 @@ def write(out: dict, data: dict, asof: str) -> dict:
     v = out["verdicts"].copy(); v["dsr"] = v["candidate"].map(dsr)
     v.to_csv(OUT_DIR / "verdicts.csv", index=False)
     out["years"].to_csv(OUT_DIR / "years.csv")
+    if len(out.get("diag", [])):
+        out["diag"].to_csv(OUT_DIR / "sensitivity.csv", index=False)
     pd.DataFrame(out["navs"]).round(4).to_csv(OUT_DIR / "nav.csv")
     acc.to_csv(OUT_DIR / "lev_accuracy.csv", index=False)
     pd.DataFrame({k: r["states"] for k, r in out["runs"].items()}).tail(30).to_csv(OUT_DIR / "states_recent.csv")
     row = pd.DataFrame([{"date": asof, "version": VERSION, "trials": out["trials"],
-                         "note": f"new: {','.join(new) or 'none'}; robustness runs: {out.get('robust_n', 0)}",
+                         "note": f"new: {','.join(new) or 'none'}",
                          "candidates": ",".join(new)}])
     pd.concat([log, row]).to_csv(tl, index=False)
     md = render(out, acc, data, n_trials, dsr, asof)
@@ -845,8 +897,16 @@ def selftest() -> dict:
         if res["n_trials"] < len(CANDIDATES):
             f.append("trial count must include every candidate")
         res2 = write(out, data, "SELFTEST2")
-        if res2["n_trials"] != res["n_trials"] + out.get("robust_n", 0):
+        if res2["n_trials"] != res["n_trials"]:
             f.append(f"a rerun must not re-count candidates already tried: {res['n_trials']} -> {res2['n_trials']}")
+        dg = out["diag"]
+        if len(dg) != 1 + len(DIAGNOSE["O9"]) or "Sensitivity (v1.3)" not in md:
+            f.append(f"sensitivity grid: {len(dg)} rows")
+        if res["n_trials"] != len(CANDIDATES) + len(out["robust_keys"]):
+            f.append(f"each sensitivity run is a trial: {res['n_trials']}")
+        alt = run_candidate("O9", data, bal, cooldown=200)["states"]
+        if alt.equals(out["runs"]["O9"]["states"]):
+            f.append("the cooldown parameter must reach the state machine")
         for k in ("O6", "O7", "O8", "O9", "O10"):
             if k not in set(out["verdicts"]["candidate"]):
                 f.append(f"{k} missing from the verdicts")
