@@ -1,6 +1,20 @@
 """
-swing_backtest.py  (v1.2 — 2026-11-12)
+swing_backtest.py  (v1.3 — 2026-11-13)
 ──────────────────────────────────────
+v1.3: idle-cash test (fix_status N57). The swing book averages ~60% cash,
+      which earned nothing in v1.2. Same trades (M0 + SPY>200d filter, stop B,
+      the live configuration); only what the idle cash holds changes:
+        CASH0   0% (v1.2 baseline)
+        TBILL   3-month T-bill yield (^IRX), accrued daily on idle cash
+        SPY     idle cash swept into SPY; sold at the open to fund entries
+        SPY200  idle cash in SPY only while SPY closed above its 200-day SMA
+                the previous session, else T-bills
+      Sweep trades at the open, 3bp a side; cash raised by today's exits is
+      swept at the next open (no same-day reuse). Uninvested cash earns the
+      T-bill rate in every mode but CASH0.
+      BAR (fixed 2026-11-11, before this run): CAGR above SPY's over the full
+      window AND in both halves, net of costs, AND max drawdown no deeper
+      than 60% of SPY's over the same window. 3 new trials (TBILL/SPY/SPY200).
 v1.2: portfolio sizing set to the APPROVED live rule (Matt 2026-11-12): 1% of
       equity on a 3-of-3 trade, 0.5% on 2-of-3, halved after 3 straight
       losses until 2 straight wins; 2% is the ceiling. No regime multiple.
@@ -80,7 +94,7 @@ import pandas as pd
 
 import swing_desk as sd
 
-VERSION = "1.2"
+VERSION = "1.3"
 
 # ── FROZEN parameters (changing any of these is a new trial; log it) ────────
 START = "2004-01-01"            # data start; first signals need ~320 bars
@@ -106,6 +120,10 @@ EPS = 1e-9
 # Pass bar, fixed before the first run (risk_policy.md §5)
 BAR = {"min_trades": 100, "min_per_half": 30, "min_pf": 1.3}
 FILTER_SETUPS = ("M0", "PB")      # market-trend test (v1.2)
+SWEEP_MODES = ("CASH0", "TBILL", "SPY", "SPY200")   # idle-cash test (v1.3)
+SWEEP_BAR = {"dd_frac_of_spy": 0.60}               # plus CAGR > SPY full + both halves
+SWEEP_MIN_TRADE = 50.0                             # $: smaller sweep rebalances are skipped
+SWEEP_CONFIG = ("B", "M0")                         # the live configuration (stop B, M0 + filter)
 FILTER_DD_CUT = 1 / 3              # bar: max DD at least a third shallower
 MKT_SMA = 200
 
@@ -560,11 +578,23 @@ def series_stats(eq: pd.Series) -> dict:
 
 def run_portfolio(trades: list, signals_unfilled: list, data: dict, cal: pd.DatetimeIndex,
                   sector_of: dict, start_equity: float = START_EQUITY,
-                  heat_cap_pct: float = HEAT_CAP_PCT) -> dict:
+                  heat_cap_pct: float = HEAT_CAP_PCT, sweep: Optional[dict] = None) -> dict:
     """Daily walk. Orders are allocated to slots BEFORE their fill is known:
     an order that does not fill still used its slot that day (no look-ahead
     in selection). Exits at the open and intraday stops on held positions
-    settle before new entries."""
+    settle before new entries.
+
+    sweep (v1.3, None = CASH0): {"mode", "open", "close", "rate", "ok"}, numpy
+    arrays aligned to `cal`. rate = T-bill yield per day (fraction); ok = SPY
+    above its 200-day at that close. Day k uses rate[k-1] and ok[k-1] only."""
+    mode = (sweep or {}).get("mode", "CASH0")
+    s_open = s_close = s_rate = s_ok = None
+    if mode != "CASH0":
+        s_open, s_close = sweep["open"], sweep["close"]
+        s_rate, s_ok = sweep["rate"], sweep["ok"]
+    sw_cost = COST_BPS["etf"] / 1e4
+    units = 0.0                        # SPY shares held by the sweep
+    sweep_val, sweep_trades, sweep_cost_paid, interest = [], 0, 0.0, 0.0
     cal_pos = {d: i for i, d in enumerate(cal)}
     idx_maps = {tk: data[tk]["index"] for tk in data}
 
@@ -591,6 +621,21 @@ def run_portfolio(trades: list, signals_unfilled: list, data: dict, cal: pd.Date
     reduced = False
     taken = []
     for k, day in enumerate(cal):
+        # 0. sweep at the open, decided on yesterday's close only
+        carried = cash                                  # cash held overnight (prior close)
+        want_in = False
+        if mode != "CASH0" and k > 0:
+            r = s_rate[k - 1]
+            if np.isfinite(r) and r > 0 and cash > 0:
+                interest += cash * r
+                cash += cash * r
+                carried = cash
+            want_in = mode == "SPY" or (mode == "SPY200" and bool(s_ok[k - 1]))
+            px_o = s_open[k]
+            if units > 0 and not want_in and np.isfinite(px_o):
+                cash += units * px_o * (1 - sw_cost); sweep_cost_paid += units * px_o * sw_cost
+                units, sweep_trades = 0.0, sweep_trades + 1
+                carried = cash
         # 1. events on held positions (exits/trims at open, stops intraday)
         for pid in list(pos):
             p = pos[pid]
@@ -645,10 +690,20 @@ def run_portfolio(trades: list, signals_unfilled: list, data: dict, cal: pd.Date
             shares = math.floor(equity_prev * risk_pct / 100 / rps)
             shares = min(shares, math.floor(equity_prev * MAX_POSITION_PCT / 100 / tr.entry))
             bps = COST_BPS[tr.asset]
-            shares = min(shares, math.floor(cash / (tr.entry * (1 + bps / 1e4))))
+            liquid = cash
+            if units > 0 and np.isfinite(s_open[k]):
+                liquid += units * s_open[k] * (1 - sw_cost)
+            shares = min(shares, math.floor(liquid / (tr.entry * (1 + bps / 1e4))))
             if shares < 1 or (heat + shares * rps) > equity_prev * heat_cap_pct / 100 + 1e-6:
                 continue
-            cash -= shares * tr.entry * (1 + bps / 1e4)
+            need = shares * tr.entry * (1 + bps / 1e4)
+            if need > cash + 1e-9 and units > 0:      # fund the entry from the sweep, at the open
+                sell = min(units, (need - cash) / (s_open[k] * (1 - sw_cost)))
+                cash += sell * s_open[k] * (1 - sw_cost); sweep_cost_paid += sell * s_open[k] * sw_cost
+                units -= sell; sweep_trades += 1
+                carried = min(carried, cash)
+            cash -= need
+            carried = min(carried, cash)
             heat += shares * rps
             ev, sc = {}, {}
             for e in tr.events:
@@ -682,6 +737,14 @@ def run_portfolio(trades: list, signals_unfilled: list, data: dict, cal: pd.Date
                 if losses >= STREAK_LOSSES:
                     reduced = True
                 del pos[pid]
+        # 2b. sweep idle cash carried from last night (not today's exit proceeds)
+        if want_in and np.isfinite(s_open[k]):
+            buy = min(cash, carried)
+            if buy >= SWEEP_MIN_TRADE:
+                u = buy * (1 - sw_cost) / s_open[k]
+                units += u; cash -= buy; sweep_cost_paid += buy * sw_cost; sweep_trades += 1
+        if units < -1e-9:
+            raise AssertionError(f"sweep units went negative on {day}: {units}")
         # 3. mark to market at the close
         mv = 0.0
         for p in pos.values():
@@ -690,7 +753,9 @@ def run_portfolio(trades: list, signals_unfilled: list, data: dict, cal: pd.Date
             if not np.isfinite(px):
                 px = p["entry"]
             mv += p["shares"] * px
-        eq = cash + mv
+        sv = units * s_close[k] if units > 0 and np.isfinite(s_close[k]) else 0.0
+        sweep_val.append(sv)
+        eq = cash + mv + sv
         if cash < -1e-6:
             raise AssertionError(f"cash went negative on {day}: {cash}")
         eq_curve.append(eq)
@@ -706,7 +771,32 @@ def run_portfolio(trades: list, signals_unfilled: list, data: dict, cal: pd.Date
             "trades_taken": len(taken), "taken": taken,
             "months_le_-10pct": int((monthly <= -0.10).sum()),
             "hwm_-20pct_breached": bool((dd <= -0.20).any()),
-            "stats": series_stats(eq_s)}
+            "stats": series_stats(eq_s), "sweep_mode": mode, "sweep_value": pd.Series(sweep_val, index=cal),
+            "sweep_avg_pct": round(float(np.mean(np.array(sweep_val) / np.maximum(np.array(eq_curve), EPS))) * 100, 1),
+            "sweep_trades": sweep_trades, "sweep_cost": round(sweep_cost_paid, 2), "interest": round(interest, 2)}
+
+
+def half_stats(eq: pd.Series, start: pd.Timestamp) -> dict:
+    """series_stats over the full window from `start` and over each half."""
+    eq = eq[eq.index >= start]
+    return {"full": series_stats(eq), "2005-15": series_stats(eq[eq.index < HALF_SPLIT]),
+            "2016-26": series_stats(eq[eq.index >= HALF_SPLIT])}
+
+
+def sweep_inputs(ohlcv: dict, rates: Optional[dict], cal: pd.DatetimeIndex) -> tuple:
+    """Arrays aligned to cal for the sweep, plus a list of data gaps."""
+    gaps = []
+    spy = ohlcv["SPY"].reindex(cal)
+    rate = np.zeros(len(cal))
+    irx = (rates or {}).get("^IRX")
+    if irx is None or not len(irx):
+        gaps.append("^IRX (T-bill yield) missing: TBILL and the cash leg of SPY/SPY200 earn 0%")
+    else:
+        y = irx["Close"].reindex(cal).ffill()
+        rate = (y / 100.0 / 252.0).clip(lower=0).fillna(0.0).to_numpy(dtype=float)
+    ok = market_ok(ohlcv["SPY"]["Close"]).reindex(cal).ffill().fillna(False).to_numpy(dtype=bool)
+    return ({"open": spy["Open"].to_numpy(dtype=float), "close": spy["Close"].ffill().to_numpy(dtype=float),
+             "rate": rate, "ok": ok}, gaps)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -838,7 +928,7 @@ def run(ohlcv: dict, etfs: list, stocks: list, sector_of: dict, setups=SETUPS,
     return {"signals": sigs, "trades": trades, "unfilled": unfilled, "data": data, "cal": cal}
 
 
-def summarise(res: dict, sector_of: dict, ohlcv: dict) -> dict:
+def summarise(res: dict, sector_of: dict, ohlcv: dict, rates: Optional[dict] = None) -> dict:
     rows = []
     cal = res["cal"]
     data = res["data"]
@@ -925,6 +1015,41 @@ def summarise(res: dict, sector_of: dict, ohlcv: dict) -> dict:
             row["verdict"] = "PASS" if not why else "FAIL"
             row["reasons"] = "; ".join(why) or "meets bar"
             filt.append(row)
+    # v1.3 idle-cash test: same trades as the live configuration, four uses of the idle cash
+    cash_rows, sweep_gaps = [], []
+    v0, s0 = SWEEP_CONFIG
+    if "SPY" in ohlcv and v0 in res["trades"]:
+        sw, sweep_gaps = sweep_inputs(ohlcv, rates, cal)
+        sel = [t for t in res["trades"][v0] if t.setup == s0 and t.mkt_ok]
+        uf = [g for g in res["unfilled"] if g.setup == s0 and g.mkt_ok]
+        start = cal[WINDOW] if len(cal) > WINDOW else cal[0]
+        spy_h = half_stats(ohlcv["SPY"]["Close"].reindex(cal).ffill(), start)
+        for m in SWEEP_MODES:
+            p = run_portfolio(sel, uf, data, cal, sector_of, sweep=None if m == "CASH0" else {"mode": m, **sw})
+            ports[(v0, f"{s0}+F/{m}")] = p
+            h = half_stats(p["equity"], start)
+            why = []
+            for nm in ("full", "2005-15", "2016-26"):
+                c, cs = h[nm].get("cagr_pct"), spy_h[nm].get("cagr_pct")
+                if c is None or cs is None or not c > cs:
+                    why.append(f"{nm} CAGR {c}% ≤ SPY {cs}%")
+            dd, dds = h["full"].get("max_dd_pct"), spy_h["full"].get("max_dd_pct")
+            lim = abs(dds or 0) * SWEEP_BAR["dd_frac_of_spy"]
+            if dd is None or abs(dd) > lim:
+                why.append(f"max DD {dd}% deeper than {lim:.1f}% (60% of SPY's {dds}%)")
+            cash_rows.append({"mode": m, **{f"cagr_{k}": h[k].get("cagr_pct") for k in h},
+                              **{f"dd_{k}": h[k].get("max_dd_pct") for k in h},
+                              "sharpe": h["full"].get("sharpe"), "calmar": h["full"].get("calmar"),
+                              "swing_exposure_pct": p["exposure_avg_pct"], "sweep_avg_pct": p["sweep_avg_pct"],
+                              "sweep_trades": p["sweep_trades"], "sweep_cost": p["sweep_cost"],
+                              "interest": p["interest"], "trades_taken": p["trades_taken"],
+                              "months_le_-10pct": p["months_le_-10pct"],
+                              "hwm_-20pct_breached": p["hwm_-20pct_breached"],
+                              "verdict": "PASS" if not why else "FAIL", "reasons": "; ".join(why) or "meets bar"})
+        cash_rows.append({"mode": "SPY buy&hold", **{f"cagr_{k}": spy_h[k].get("cagr_pct") for k in spy_h},
+                          **{f"dd_{k}": spy_h[k].get("max_dd_pct") for k in spy_h},
+                          "sharpe": spy_h["full"].get("sharpe"), "calmar": spy_h["full"].get("calmar"),
+                          "verdict": "benchmark", "reasons": ""})
     stop_choice = []
     for s in SETUPS:
         def ex(v, half):
@@ -938,6 +1063,8 @@ def summarise(res: dict, sector_of: dict, ohlcv: dict) -> dict:
     # deflated Sharpe across the portfolio trials run in this pass
     srs, info = [], {}
     for key, p in ports.items():
+        if str(key[1]).endswith("/CASH0"):
+            continue                                   # same equity as (B, M0+F): not a new trial
         r = p["equity"].pct_change().dropna()
         r = r[r.index >= cal[WINDOW]] if len(cal) > WINDOW else r
         if len(r) > 10 and r.std() > 0:
@@ -948,6 +1075,9 @@ def summarise(res: dict, sector_of: dict, ohlcv: dict) -> dict:
     n_trials = prior_trials() + len(info)
     for key, (sr, nobs, sk, ku) in info.items():
         ports[key]["dsr"] = round(deflated_sharpe(sr, nobs, sk, ku, sr_var, n_trials), 3)
+    for key in ports:
+        if str(key[1]).endswith("/CASH0") and (key[0], key[1].split("/")[0]) in ports:
+            ports[key]["dsr"] = ports[(key[0], key[1].split("/")[0])].get("dsr")
     bench = {}
     for b in ("SPY", "QQQ"):
         if b in ohlcv:
@@ -956,7 +1086,8 @@ def summarise(res: dict, sector_of: dict, ohlcv: dict) -> dict:
             bench[b] = series_stats(s)
     return {"table": table, "verdicts": pd.DataFrame(verdicts), "ports": ports,
             "bench": bench, "n_trials": n_trials, "trials_this_run": len(info),
-            "filter": pd.DataFrame(filt), "stop_choice": pd.DataFrame(stop_choice)}
+            "filter": pd.DataFrame(filt), "stop_choice": pd.DataFrame(stop_choice),
+            "cash_test": pd.DataFrame(cash_rows), "sweep_gaps": sweep_gaps}
 
 
 def prior_trials() -> int:
@@ -996,6 +1127,7 @@ def write_outputs(res: dict, summ: dict, ohlcv: dict, stamp: str) -> str:
     summ["verdicts"].to_csv(os.path.join(OUT_DATA, "verdicts.csv"), index=False)
     summ["filter"].to_csv(os.path.join(OUT_DATA, "filter_test.csv"), index=False)
     summ["stop_choice"].to_csv(os.path.join(OUT_DATA, "stop_choice.csv"), index=False)
+    summ["cash_test"].to_csv(os.path.join(OUT_DATA, "cash_test.csv"), index=False)
     prow = []
     eqs = {}
     for (v, s), p in summ["ports"].items():
@@ -1008,7 +1140,8 @@ def write_outputs(res: dict, summ: dict, ohlcv: dict, stamp: str) -> str:
     pd.DataFrame(eqs).round(2).to_csv(os.path.join(OUT_DATA, "equity.csv"))
     tl = os.path.join(OUT_DATA, "trial_log.csv")
     row = pd.DataFrame([{"date": stamp, "version": VERSION, "trials": summ["trials_this_run"],
-                         "note": "5 setups + ALL x stop A/B portfolios + SPY>200d filter on M0, PB x A/B"}])
+                         "note": "5 setups + ALL x stop A/B portfolios + SPY>200d filter on M0, PB x A/B"
+                                 + (" + idle cash CASH0/TBILL/SPY/SPY200 on M0+F B" if len(summ.get("cash_test", [])) else "")}])
     prev = pd.concat([pd.read_csv(tl), row]) if os.path.exists(tl) else row
     prev.to_csv(tl, index=False)
     md = render_report(res, summ, ohlcv, stamp)
@@ -1065,6 +1198,27 @@ def render_report(res: dict, summ: dict, ohlcv: dict, stamp: str) -> str:
         L.append(f"| {r.variant} | {SETUP_NAMES[r.setup]} | {_fmt(r.dd_base)}% → {_fmt(r.dd_filtered)}% | "
                  f"{_fmt(r.cagr_base)}% → {_fmt(r.cagr_filtered)}% | {_fmt(r['exp_2005-15_base'], 3)} → {_fmt(r['exp_2005-15_filtered'], 3)} | "
                  f"{_fmt(r['exp_2016-26_base'], 3)} → {_fmt(r['exp_2016-26_filtered'], 3)} | **{r.verdict}** | {r.reasons} |")
+    ct = summ.get("cash_test")
+    if ct is not None and len(ct):
+        L += ["", "## Idle-cash test (v1.3, pre-declared): what should the swing book's idle cash hold?", "",
+              f"Same trades: {SETUP_NAMES[SWEEP_CONFIG[1]]} + SPY>200d, stop {SWEEP_CONFIG[0]} (the live configuration). "
+              "Bar (fixed 2026-11-11): CAGR above SPY's over the full window AND both halves, net of costs, "
+              f"AND max drawdown no deeper than {SWEEP_BAR['dd_frac_of_spy']:.0%} of SPY's.", ""]
+        for g in summ.get("sweep_gaps") or []:
+            L.append(f"- DATA GAP: {g}")
+        L += ["| Idle cash | CAGR full / 05–15 / 16–26 % | Max DD full / 05–15 / 16–26 % | Sharpe | Calmar | "
+              "Swing exp. % | Sweep % | Sweep cost $ | Interest $ | Months ≤ −10% | −20% HWM | Verdict | Reasons |",
+              "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+        for _, r in ct.iterrows():
+            L.append(f"| {r['mode']} | {_fmt(r.get('cagr_full'))} / {_fmt(r.get('cagr_2005-15'))} / {_fmt(r.get('cagr_2016-26'))} | "
+                     f"{_fmt(r.get('dd_full'))} / {_fmt(r.get('dd_2005-15'))} / {_fmt(r.get('dd_2016-26'))} | "
+                     f"{_fmt(r.get('sharpe'))} | {_fmt(r.get('calmar'))} | {_fmt(r.get('swing_exposure_pct'), 1)} | "
+                     f"{_fmt(r.get('sweep_avg_pct'), 1)} | {_fmt(r.get('sweep_cost'), 0)} | {_fmt(r.get('interest'), 0)} | "
+                     f"{_fmt(r.get('months_le_-10pct'), 0)} | {r.get('hwm_-20pct_breached') if r['mode'] != 'SPY buy&hold' else '—'} | "
+                     f"**{r['verdict']}** | {r.get('reasons') or ''} |")
+        L += ["", "Read: a PASS here is a statement about the whole book (swing trades + where the idle cash sits), "
+              "not about the setup. The SPY legs hold SPY inside the swing account; the T-bill leg proxies a "
+              "money-market sweep or SGOV."]
     L += ["", "## Stop method chosen by the pre-set rule (B only if its ETF expectancy ≥ A's in both halves)", "",
           "| Setup | Chosen | A 2005–15 | B 2005–15 | A 2016–26 | B 2016–26 |", "|---|---|---|---|---|---|"]
     for _, r in summ["stop_choice"].iterrows():
@@ -1119,12 +1273,17 @@ def main() -> int:
     if "SPY" not in ohlcv:
         print("[swing_backtest] DATA FAILURE: no SPY history; nothing written.")
         return 1
+    rates = fetch_ohlcv(["^IRX"])
+    print(f"[swing_backtest] ^IRX T-bill history: {'ok' if rates.get('^IRX') is not None else 'MISSING'}")
     res = run(ohlcv, etfs, stocks, sector_of)
-    summ = summarise(res, sector_of, ohlcv)
+    summ = summarise(res, sector_of, ohlcv, rates)
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     path = write_outputs(res, summ, ohlcv, stamp)
     print(f"[swing_backtest] report: {path}")
     print(summ["verdicts"].to_string(index=False))
+    if len(summ.get("cash_test", [])):
+        print(summ["cash_test"][["mode", "cagr_full", "cagr_2005-15", "cagr_2016-26", "dd_full", "verdict"]]
+              .to_string(index=False))
     return 0
 
 
@@ -1383,6 +1542,56 @@ def selftest() -> dict:
         p2 = run_portfolio(trs, [], pdata, cal, sec, heat_cap_pct=0.5)
         if p2["heat_max_pct"] > 0.5 + 1e-6 or p2["trades_taken"] == 0:
             f.append(f"heat {p2['heat_max_pct']}% vs a 0.5% cap ({p2['trades_taken']} taken)")
+    # 4e. v1.3 idle-cash sweep (N57)
+    n_ = len(cal)
+    px = 100.0 * np.cumprod(np.full(n_, 1.001))
+    pxc = px * 1.002                                   # close differs from open: marks must use the close
+    swb = {"open": px.copy(), "close": pxc, "rate": np.zeros(n_), "ok": np.ones(n_, dtype=bool)}
+    c_ = COST_BPS["etf"] / 1e4
+    e0 = run_portfolio([], [], pdata, cal, sec)["equity"]
+    if not np.allclose(e0.to_numpy(), START_EQUITY):
+        f.append("CASH0 with no trades must stay flat (v1.2 behaviour)")
+    r_ = 0.0001
+    et = run_portfolio([], [], pdata, cal, sec, sweep={"mode": "TBILL", **swb, "rate": np.full(n_, r_)})["equity"]
+    if abs(et.iloc[-1] - START_EQUITY * (1 + r_) ** (n_ - 1)) > 1e-6:
+        f.append(f"T-bill accrual wrong: {et.iloc[-1]:.6f}")
+    if abs(et.iloc[0] - START_EQUITY) > 1e-9:
+        f.append("no interest may accrue on day 0 (needs yesterday's rate)")
+    rr = np.zeros(n_); rr[5] = 0.01
+    e5 = run_portfolio([], [], pdata, cal, sec, sweep={"mode": "TBILL", **swb, "rate": rr})["equity"]
+    if abs(e5.iloc[5] - START_EQUITY) > 1e-9 or abs(e5.iloc[6] - START_EQUITY * 1.01) > 1e-6:
+        f.append("the day-5 yield must be earned overnight into day 6, not on day 5 (look-ahead)")
+    es = run_portfolio([], [], pdata, cal, sec, sweep={"mode": "SPY", **swb})
+    want = START_EQUITY * (1 - c_) * pxc[-1] / px[1]
+    if abs(es["equity"].iloc[-1] - want) > 1e-6 or es["sweep_value"].iloc[0] != 0:
+        f.append(f"SPY sweep: bought at day-1 open with cost: {es['equity'].iloc[-1]:.4f} vs {want:.4f}")
+    ok2 = np.zeros(n_, dtype=bool); ok2[10:] = True
+    e2 = run_portfolio([], [], pdata, cal, sec, sweep={"mode": "SPY200", **swb, "ok": ok2})
+    if e2["sweep_value"].iloc[10] != 0 or e2["sweep_value"].iloc[11] <= 0:
+        f.append("SPY200 must act on YESTERDAY's close above the 200-day (first SPY day = day 11)")
+    ok3 = ok2.copy(); ok3[20] = False
+    e3 = run_portfolio([], [], pdata, cal, sec, sweep={"mode": "SPY200", **swb, "ok": ok3})
+    if not np.allclose(e3["equity"].iloc[:21], e2["equity"].iloc[:21]) or np.allclose(e3["equity"].iloc[21:], e2["equity"].iloc[21:]):
+        f.append("a change in the 200-day state at day 20 may only affect day 21 onward (look-ahead)")
+    ef = run_portfolio([], [], pdata, cal, sec, sweep={"mode": "SPY200", **swb, "ok": np.zeros(n_, dtype=bool),
+                                                   "rate": np.full(n_, r_)})["equity"]
+    if not np.allclose(ef.to_numpy(), et.to_numpy()):
+        f.append("SPY200 with SPY always below its 200-day must equal T-bills")
+    pc = run_portfolio(trs, [], pdata, cal, sec)
+    ps = run_portfolio(trs, [], pdata, cal, sec, sweep={"mode": "SPY", **swb})
+    if ps["trades_taken"] != pc["trades_taken"]:
+        f.append(f"the sweep must not block swing entries: {ps['trades_taken']} vs {pc['trades_taken']} taken")
+    spent = sum(sh * tr.entry for tr, sh in ps["taken"])
+    if spent > ps["equity"].iloc[4] * 1.0001 + 1:
+        f.append("entries funded beyond total equity (sweep liquidation)")
+    if not (ps["sweep_value"].iloc[5] < ps["sweep_value"].iloc[4] * (pxc[5] / pxc[4]) - 1):
+        f.append("entries on day 5 must be funded by selling sweep units at the open")
+    # exit proceeds on day 30 sit in cash until the day-31 open
+    sv = ps["sweep_value"]
+    if not (abs(sv.iloc[30] - sv.iloc[29] * pxc[30] / pxc[29]) < 1e-6 and sv.iloc[31] > sv.iloc[30] * pxc[31] / pxc[30] + 1):
+        f.append("exit proceeds must be swept at the NEXT open, not the same day")
+    if ps["sweep_cost"] <= 0 or ps["sweep_trades"] < 3:
+        f.append("sweep trades must pay costs")
     # 4c. rotation leg = Money Flow's default RRG (rotation_math v3), checked by hand
     rng = np.random.default_rng(3)
     idx = pd.bdate_range("2015-01-01", periods=400)
