@@ -1,7 +1,7 @@
 {
-  "published_at": "2026-11-12T02:31:44+00:00",
+  "published_at": "2026-11-13T02:08:48+00:00",
   "window": 20,
-  "data_through": "2026-11-11",
+  "data_through": "2026-11-12",
   "coverage": {
     "measured": 51,
     "total": 58
@@ -9,9 +9,9 @@
   "asset_classes": [
     {
       "asset_class": "US equity",
-      "flow_usd": 18534402251.192444,
-      "aum": 2333172756088.2314,
-      "pct_aum": 0.7943861937710517,
+      "flow_usd": 27695539142.767445,
+      "aum": 2317748494225.26,
+      "pct_aum": 1.1949328933562773,
       "measured": 39,
       "total": 39,
       "missing": [],
@@ -20,9 +20,9 @@
     },
     {
       "asset_class": "International equity",
-      "flow_usd": 1555208450.5,
-      "aum": 29298108118.0,
-      "pct_aum": 5.308221419063302,
+      "flow_usd": 1578231227.5,
+      "aum": 29005693006.0,
+      "pct_aum": 5.441108499540189,
       "measured": 2,
       "total": 5,
       "missing": [
@@ -35,9 +35,9 @@
     },
     {
       "asset_class": "Treasuries",
-      "flow_usd": -1844472480.0,
-      "aum": 62308793373.0,
-      "pct_aum": -2.960212162926039,
+      "flow_usd": -2732320757.0,
+      "aum": 62804034945.0,
+      "pct_aum": -4.3505497049557444,
       "measured": 2,
       "total": 2,
       "missing": [],
@@ -46,9 +46,9 @@
     },
     {
       "asset_class": "Credit",
-      "flow_usd": 4929492828.0,
-      "aum": 59035625709.0,
-      "pct_aum": 8.35003062777481,
+      "flow_usd": 5107406861.0,
+      "aum": 59615000727.0,
+      "pct_aum": 8.567318290221582,
       "measured": 3,
       "total": 3,
       "missing": [],
@@ -57,9 +57,9 @@
     },
     {
       "asset_class": "Cash-like",
-      "flow_usd": 762868380.0,
-      "aum": 20785456620.0,
-      "pct_aum": 3.670202651530684,
+      "flow_usd": 670060620.0,
+      "aum": 20880737220.0,
+      "pct_aum": 3.208989284909932,
       "measured": 1,
       "total": 2,
       "missing": [
@@ -70,9 +70,9 @@
     },
     {
       "asset_class": "Gold & commodities",
-      "flow_usd": 690899752.5,
-      "aum": 39210604928.0,
-      "pct_aum": 1.7620226817940103,
+      "flow_usd": 633822088.5,
+      "aum": 39976236620.0,
+      "pct_aum": 1.5854971405259808,
       "measured": 3,
       "total": 6,
       "missing": [
@@ -85,9 +85,9 @@
     },
     {
       "asset_class": "Alternatives",
-      "flow_usd": 3936561.3999999985,
+      "flow_usd": 3280561.3999999985,
       "aum": 577208000.0,
-      "pct_aum": 0.6820004920236723,
+      "pct_aum": 0.5683499535695968,
       "measured": 1,
       "total": 1,
       "missing": [],
@@ -97,51 +97,41 @@
   ],
   "themes": [
     {
-      "group": "Small & mid caps",
-      "asset_class": "US equity",
-      "risk": "risk-on",
-      "flow_usd": -1954738924.087553,
-      "pct_aum": -1.6543610576015346,
-      "measured": 3,
-      "total": 3,
-      "tickers": "IWM, MDY, IWO"
-    },
-    {
       "group": "Treasuries & TIPS",
       "asset_class": "Treasuries",
       "risk": "risk-off",
-      "flow_usd": -1844472480.0,
-      "pct_aum": -2.960212162926039,
+      "flow_usd": -2732320757.0,
+      "pct_aum": -4.3505497049557444,
       "measured": 2,
       "total": 2,
       "tickers": "TLT, TIP"
     },
     {
+      "group": "Small & mid caps",
+      "asset_class": "US equity",
+      "risk": "risk-on",
+      "flow_usd": -1447371041.137553,
+      "pct_aum": -1.2315675524156526,
+      "measured": 3,
+      "total": 3,
+      "tickers": "IWM, MDY, IWO"
+    },
+    {
       "group": "Communication",
       "asset_class": "US equity",
       "risk": "risk-on",
-      "flow_usd": -856862768.3,
-      "pct_aum": -3.5834702821922373,
+      "flow_usd": -724029542.8499998,
+      "pct_aum": -3.08494683559608,
       "measured": 1,
       "total": 1,
       "tickers": "XLC"
     },
     {
-      "group": "Financials",
-      "asset_class": "US equity",
-      "risk": "risk-on",
-      "flow_usd": -386853804.64999986,
-      "pct_aum": -0.6647814786005919,
-      "measured": 4,
-      "total": 4,
-      "tickers": "XLF, IAI, KBE, KRE"
-    },
-    {
       "group": "Industrials",
       "asset_class": "US equity",
       "risk": "risk-on",
-      "flow_usd": -359044042.61999995,
-      "pct_aum": -0.6338524967579147,
+      "flow_usd": -297612978.56999993,
+      "pct_aum": -0.5298147280683827,
       "measured": 4,
       "total": 4,
       "tickers": "ITA, PAVE, XTN, XLI"
@@ -150,28 +140,18 @@
       "group": "Consumer cyclical",
       "asset_class": "US equity",
       "risk": "risk-on",
-      "flow_usd": -221193002.7500001,
-      "pct_aum": -0.9256811176359098,
+      "flow_usd": -271338317.29999995,
+      "pct_aum": -1.1451182680906313,
       "measured": 3,
       "total": 3,
       "tickers": "XLY, XHB, XRT"
     },
     {
-      "group": "Broad US market",
-      "asset_class": "US equity",
-      "risk": "risk-on",
-      "flow_usd": -174779011.85000038,
-      "pct_aum": -0.02123086572093478,
-      "measured": 1,
-      "total": 1,
-      "tickers": "SPY"
-    },
-    {
       "group": "Biotech",
       "asset_class": "US equity",
       "risk": "risk-on",
-      "flow_usd": -94448045.30000012,
-      "pct_aum": -0.45819112385699146,
+      "flow_usd": -135247387.5250001,
+      "pct_aum": -0.650656022732641,
       "measured": 2,
       "total": 2,
       "tickers": "XBI, IBB"
@@ -180,8 +160,8 @@
       "group": "Trend / managed futures",
       "asset_class": "Alternatives",
       "risk": "neutral",
-      "flow_usd": 3936561.3999999985,
-      "pct_aum": 0.6820004920236723,
+      "flow_usd": 3280561.3999999985,
+      "pct_aum": 0.5683499535695968,
       "measured": 1,
       "total": 1,
       "tickers": "KMLM"
@@ -191,7 +171,7 @@
       "asset_class": "Gold & commodities",
       "risk": "neutral",
       "flow_usd": 10425999.999999996,
-      "pct_aum": 0.1320763990901347,
+      "pct_aum": 0.1309475409782532,
       "measured": 1,
       "total": 3,
       "tickers": "PDBC"
@@ -200,8 +180,8 @@
       "group": "Real estate",
       "asset_class": "US equity",
       "risk": "neutral",
-      "flow_usd": 191856628.39999998,
-      "pct_aum": 2.4771117989962783,
+      "flow_usd": 154583712.4,
+      "pct_aum": 2.0095543452158187,
       "measured": 1,
       "total": 1,
       "tickers": "XLRE"
@@ -210,18 +190,28 @@
       "group": "Energy & materials",
       "asset_class": "US equity",
       "risk": "risk-on",
-      "flow_usd": 514133557.7499999,
-      "pct_aum": 0.7270542940049229,
+      "flow_usd": 192009340.04999992,
+      "pct_aum": 0.26998972002536675,
       "measured": 5,
       "total": 5,
-      "tickers": "AMLP, OIH, XLB, XOP, XLE"
+      "tickers": "AMLP, XOP, XLB, OIH, XLE"
+    },
+    {
+      "group": "Financials",
+      "asset_class": "US equity",
+      "risk": "risk-on",
+      "flow_usd": 260777608.84999967,
+      "pct_aum": 0.4576970677800209,
+      "measured": 4,
+      "total": 4,
+      "tickers": "XLF, IAI, KBE, KRE"
     },
     {
       "group": "Gold & metals",
       "asset_class": "Gold & commodities",
       "risk": "risk-off",
-      "flow_usd": 680473752.5,
-      "pct_aum": 2.1728789849542296,
+      "flow_usd": 623396088.5,
+      "pct_aum": 1.9472444503639437,
       "measured": 2,
       "total": 3,
       "tickers": "RING, SLV"
@@ -230,48 +220,58 @@
       "group": "Cash-like",
       "asset_class": "Cash-like",
       "risk": "risk-off",
-      "flow_usd": 762868380.0,
-      "pct_aum": 3.670202651530684,
+      "flow_usd": 670060620.0,
+      "pct_aum": 3.208989284909932,
       "measured": 1,
       "total": 2,
       "tickers": "USFR"
     },
     {
-      "group": "High-yield & EM credit",
-      "asset_class": "Credit",
-      "risk": "risk-on",
-      "flow_usd": 1458035308.0,
-      "pct_aum": 4.780974723366822,
-      "measured": 2,
-      "total": 2,
-      "tickers": "HYG, EMB"
-    },
-    {
       "group": "International",
       "asset_class": "International equity",
       "risk": "risk-on",
-      "flow_usd": 1555208450.5,
-      "pct_aum": 5.308221419063302,
+      "flow_usd": 1578231227.5,
+      "pct_aum": 5.441108499540189,
       "measured": 2,
       "total": 5,
       "tickers": "INDA, EWJ"
     },
     {
+      "group": "High-yield & EM credit",
+      "asset_class": "Credit",
+      "risk": "risk-on",
+      "flow_usd": 1619902983.0,
+      "pct_aum": 5.315901174700638,
+      "measured": 2,
+      "total": 2,
+      "tickers": "HYG, EMB"
+    },
+    {
       "group": "Defensives",
       "asset_class": "US equity",
       "risk": "risk-off",
-      "flow_usd": 2140595943.6000001,
-      "pct_aum": 1.0736673529498553,
+      "flow_usd": 2949227809.9500003,
+      "pct_aum": 1.4676123021416547,
       "measured": 7,
       "total": 7,
       "tickers": "XLU, XLP, PPH, PBJ, IHI, XLV, SCHD"
     },
     {
+      "group": "Broad US market",
+      "asset_class": "US equity",
+      "risk": "risk-on",
+      "flow_usd": 3298945207.8999987,
+      "pct_aum": 0.40590559038826907,
+      "measured": 1,
+      "total": 1,
+      "tickers": "SPY"
+    },
+    {
       "group": "IG credit",
       "asset_class": "Credit",
       "risk": "neutral",
-      "flow_usd": 3471457520.0,
-      "pct_aum": 12.163901483236735,
+      "flow_usd": 3487503878.0,
+      "pct_aum": 11.967187281617358,
       "measured": 1,
       "total": 1,
       "tickers": "LQD"
@@ -280,77 +280,71 @@
       "group": "Tech & growth",
       "asset_class": "US equity",
       "risk": "risk-on",
-      "flow_usd": 19735735720.999992,
-      "pct_aum": 2.120535466337496,
+      "flow_usd": 23715594731.0,
+      "pct_aum": 2.5593531820040822,
       "measured": 8,
       "total": 8,
-      "tickers": "IGV, SKYY, HACK, XLK, SOXX, VGT, SMH, QQQ"
+      "tickers": "IGV, SKYY, HACK, XLK, VGT, SMH, SOXX, QQQ"
     }
   ],
   "risk_split": {
-    "risk-on": 19215193437.69244,
-    "risk-off": 1739465596.1000001,
-    "neutral": 3677676709.8
+    "risk-on": 27789861830.917446,
+    "risk-off": 1510363761.4500003,
+    "neutral": 3655794151.8
   },
   "verdict": {
     "kind": "into_stocks",
-    "verdict": "Money moved from safety into stocks: stocks +$18.53B (+0.79% of measured assets); Treasuries + cash \u2212$1.08B (-1.30%)",
+    "verdict": "Money moved from safety into stocks: stocks +$27.70B (+1.19% of measured assets); Treasuries + cash \u2212$2.06B (-2.46%)",
     "evidence": [
-      "US equity: +$18.53B (+0.79%, in) \u2014 39 of 39 funds",
-      "International equity: +$1.56B (+5.31%, in) \u2014 2 of 5 funds; not measured: EEM, EFA, FXI \u2014 THIN: under half its funds measured, so this reading rests on 2 funds, is indicative only, and is left out of the verdict",
-      "Treasuries: \u2212$1.84B (-2.96%, out) \u2014 2 of 2 funds",
-      "Credit: +$4.93B (+8.35%, in) \u2014 3 of 3 funds",
-      "Cash-like: +$763M (+3.67%, in) \u2014 1 of 2 funds; not measured: SGOV",
-      "Gold & commodities: +$691M (+1.76%, in) \u2014 3 of 6 funds; not measured: DBA, GLD, USO",
-      "Alternatives: +$4M (+0.68%, in) \u2014 1 of 1 funds",
-      "With the thin class included the stock reading would be +0.85% (in)",
-      "Sensitivity: stocks without the hedging vehicles (HYG, IWM, KBE, KRE, QQQ, SMH, SPY, XBI, XHB, XOP, XRT) +0.57% (in) \u2014 agrees",
-      "Stock reading, last 5 sessions: 11-05 +0.82%, 11-06 +0.83%, 11-09 +0.73%, 11-10 +0.86%, 11-11 +0.79%; typical day 0.43 points; 1.3 typical days from the line",
-      "Within stocks: out of Small & mid caps (\u2212$1.95B), Communication (\u2212$857M); into Tech & growth (+$19.74B), Defensives (+$2.14B), International (+$1.56B)",
-      "\u2020 QQQ is among the largest moves and is a hedging vehicle: share counts also move with short selling and market-maker hedging, not only investor money"
+      "US equity: +$27.70B (+1.19%, in) \u2014 39 of 39 funds",
+      "International equity: +$1.58B (+5.44%, in) \u2014 2 of 5 funds; not measured: EEM, EFA, FXI \u2014 THIN: under half its funds measured, so this reading rests on 2 funds, is indicative only, and is left out of the verdict",
+      "Treasuries: \u2212$2.73B (-4.35%, out) \u2014 2 of 2 funds",
+      "Credit: +$5.11B (+8.57%, in) \u2014 3 of 3 funds",
+      "Cash-like: +$670M (+3.21%, in) \u2014 1 of 2 funds; not measured: SGOV",
+      "Gold & commodities: +$634M (+1.59%, in) \u2014 3 of 6 funds; not measured: DBA, GLD, USO",
+      "Alternatives: +$3M (+0.57%, in) \u2014 1 of 1 funds",
+      "With the thin class included the stock reading would be +1.25% (in)",
+      "Sensitivity: stocks without the hedging vehicles (HYG, IWM, KBE, KRE, QQQ, SMH, SPY, XBI, XHB, XOP, XRT) +1.31% (in) \u2014 agrees",
+      "Stock reading, last 5 sessions: 11-06 +0.83%, 11-09 +0.73%, 11-10 +0.86%, 11-11 +1.00%, 11-12 +1.19%; typical day 0.33 points; 2.8 typical days from the line",
+      "Within stocks: out of Small & mid caps (\u2212$1.45B), Communication (\u2212$724M); into Tech & growth (+$23.72B), Broad US market (+$3.30B), Defensives (+$2.95B)",
+      "\u2020 QQQ, SMH are among the largest moves and are hedging vehicles: share counts also move with short selling and market-maker hedging, not only investor money"
     ],
     "rule": "Net 20-session ETF creations minus redemptions, from trusted share counts only (integrity test passed and at least 80% of sessions measured). A bucket counts as in or out when its net flow is at least 0.25% of its measured assets. Stocks = US + international equity; safety = Treasuries + cash-like; a class with under 50% of its funds measured is shown but left out of the verdict. A reading within 1 typical day of the \u00b10.25% line is borderline (a typical day = one standard deviation of the reading's daily change over the last 20 sessions, each recomputed as of that day). ETF data shows where money left and where it arrived, not which dollar went where.",
     "changes_if": "Stock funds turning net negative while safe assets take money in.",
     "borderline": false,
     "state": "into_stocks",
-    "sessions_in_state": 3,
+    "sessions_in_state": 4,
     "prev_state": "into_stocks",
     "steps": [
       "Model portfolio: flow confirms money entering stocks. That confirms a risk-on regime tilt; it never raises equity weights on its own (flow does not override the regime).",
       "Swing book: supports long candidates whose own fund shows creations. Each Tier A leg is still scored per ticker.",
-      "Invalidated when the stock reading falls below +0.68% (back to borderline); today +0.79%.",
+      "Invalidated when the stock reading falls below +0.58% (back to borderline); today +1.19%.",
       "Readmission would change the reading: not measured in stocks or safety: EEM, EFA, FXI, SGOV."
     ],
     "record": {
-      "date": "2026-11-11",
-      "published_at": "2026-11-12T02:31:44+00:00",
+      "date": "2026-11-12",
+      "published_at": "2026-11-13T02:08:48+00:00",
       "measured": 51,
       "total": 58,
-      "stocks_pct": 0.7943861937710517,
-      "stocks_all_pct": 0.8503643793483298,
-      "stocks_ex_hedge_pct": 0.567424142310108,
-      "safety_pct": -1.301659380873064,
-      "stocks_flow_usd": 18534402251.192444,
-      "safety_flow_usd": -1081604100.0,
-      "typical_day": 0.4270875683421959,
+      "stocks_pct": 1.1949328933562773,
+      "stocks_all_pct": 1.2474152823310878,
+      "stocks_ex_hedge_pct": 1.310671899339574,
+      "safety_pct": -2.464319473719631,
+      "stocks_flow_usd": 27695539142.767445,
+      "safety_flow_usd": -2062260137.0,
+      "typical_day": 0.333059091737414,
       "line": 0.25,
-      "distance_pts": 0.5443861937710517,
-      "margin_days": 1.2746477165892884,
+      "distance_pts": 0.9449328933562773,
+      "margin_days": 2.8371328595985865,
       "kind": "into_stocks",
       "borderline": false,
       "state": "into_stocks",
-      "sessions_in_state": 3,
+      "sessions_in_state": 4,
       "prev_state": "into_stocks",
       "thin_classes": "International equity",
       "hedge_agrees": true
     },
     "history": [
-      {
-        "date": "2026-10-14",
-        "stocks": 1.4053863967391955,
-        "safety": null,
-        "kind": "unavailable"
-      },
       {
         "date": "2026-10-15",
         "stocks": 2.5621105382430316,
@@ -467,19 +461,25 @@
       },
       {
         "date": "2026-11-11",
-        "stocks": 0.7943861937710517,
+        "stocks": 0.9987881659432161,
         "safety": -1.301659380873064,
+        "kind": "into_stocks"
+      },
+      {
+        "date": "2026-11-12",
+        "stocks": 1.1949328933562773,
+        "safety": -2.464319473719631,
         "kind": "into_stocks"
       }
     ]
   },
   "excluded": {
     "DBA": "not verified \u2014 thirdparty_stockanalysis: shares never changed",
-    "EEM": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 27 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
-    "EFA": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 24 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
-    "FXI": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 13 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
-    "GLD": "building history \u2014 7 of 20 sessions measured (needs 16)",
-    "SGOV": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 13 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+    "EEM": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 28 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+    "EFA": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 25 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+    "FXI": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 14 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
+    "GLD": "building history \u2014 8 of 20 sessions measured (needs 16)",
+    "SGOV": "not verified \u2014 thirdparty_stockanalysis: shares unchanged for the last 14 sessions (issuer feeds never went more than 4) \u2014 treated as frozen until the count moves again",
     "USO": "not verified \u2014 thirdparty_stockanalysis: shares never changed"
   }
 }
