@@ -4,3 +4,4 @@ date,version,trials,note,candidates
 2026-11-13,v1.2,2,"new: O9,O10; robustness runs: 0","O9,O10"
 2026-11-13,v1.3,8,"new: O9@ma=150,O9@ma=250,O9@fast_sma=40,O9@fast_sma=60,O9@fast_stop=-6.0,O9@fast_stop=-10.0,O9@cooldown=10,O9@cooldown=30","O9@ma=150,O9@ma=250,O9@fast_sma=40,O9@fast_sma=60,O9@fast_stop=-6.0,O9@fast_stop=-10.0,O9@cooldown=10,O9@cooldown=30"
 2026-11-13,v1.4,1,new: O11,O11
+2026-11-13,v1.5,8,"new: O11@ma=150,O11@ma=250,O11@fast_sma=40,O11@fast_sma=60,O11@fast_stop=-6.0,O11@fast_stop=-10.0,O11@cooldown=10,O11@cooldown=30","O11@ma=150,O11@ma=250,O11@fast_sma=40,O11@fast_sma=60,O11@fast_stop=-6.0,O11@fast_stop=-10.0,O11@cooldown=10,O11@cooldown=30"
