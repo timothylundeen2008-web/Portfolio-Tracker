@@ -1,6 +1,9 @@
-candidate,label,reasons_200,verdict,years_beat_spy,worst_year_vs_spy_pts,switches,dsr
-O1,SPY trend (SPY or T-bills),full CAGR 7.48% ≤ SPY 8.2%; 2005-15 CAGR 4.8% ≤ SPY 7.06%; 2016-26 CAGR 11.74% ≤ SPY 14.77%,FAIL,10 of 27,-14.4,100,0.998
-O2,"Two-mode: growth when SPY & QQQ > 200d, else Balanced",max DD -45.01% deeper than 33.1% (60% of SPY's -55.19%),FAIL,14 of 27,-9.7,108,0.999
-O3,Three-mode 1x (trend + breadth),full CAGR 7.42% ≤ SPY 8.2%; 2005-15 CAGR 5.77% ≤ SPY 7.06%; 2016-26 CAGR 13.35% ≤ SPY 14.77%; max DD -38.21% deeper than 33.1% (60% of SPY's -55.19%),FAIL,10 of 27,-12.9,209,0.993
-O4,Three-mode 1.5x offense,2005-15 CAGR 6.53% ≤ SPY 7.06%; max DD -49.56% deeper than 33.1% (60% of SPY's -55.19%),FAIL,15 of 27,-23.7,209,0.986
-O5,Three-mode 2x offense,2005-15 CAGR 6.91% ≤ SPY 7.06%; max DD -59.81% deeper than 33.1% (60% of SPY's -55.19%),FAIL,16 of 27,-34.0,209,0.979
+candidate,label,reasons_200,verdict,years_beat_spy,worst_year_vs_spy_pts,switches,episodes_10,episodes_15,guard_trips,guard_on_pct,dsr
+O1,SPY trend (SPY or T-bills),full CAGR 7.47% ≤ SPY 8.18%; 2005-15 CAGR 4.8% ≤ SPY 7.06%; 2016-26 CAGR 11.7% ≤ SPY 14.72%; max DD -21.73% deeper than −20%,FAIL,9 of 27,-14.4,100,11,5,,,0.998
+O2,"Two-mode: growth when SPY & QQQ > 200d, else Balanced",max DD -45.01% deeper than −20%,FAIL,14 of 27,-9.7,108,15,6,,,0.998
+O3,Three-mode 1x (trend + breadth),full CAGR 7.4% ≤ SPY 8.18%; 2005-15 CAGR 5.77% ≤ SPY 7.06%; 2016-26 CAGR 13.28% ≤ SPY 14.72%; max DD -38.21% deeper than −20%,FAIL,10 of 27,-12.9,209,11,8,,,0.991
+O4,Three-mode 1.5x offense,2005-15 CAGR 6.53% ≤ SPY 7.06%; max DD -49.56% deeper than −20%,FAIL,15 of 27,-23.7,209,21,11,,,0.982
+O5,Three-mode 2x offense,2005-15 CAGR 6.91% ≤ SPY 7.06%; max DD -59.81% deeper than −20%,FAIL,16 of 27,-34.0,209,24,14,,,0.973
+O6,O2 + production −8% breaker,full CAGR 6.57% ≤ SPY 8.18%; 2005-15 CAGR 3.81% ≤ SPY 7.06%; 2016-26 CAGR 12.1% ≤ SPY 14.72%; max DD -24.73% deeper than −20%,FAIL,7 of 27,-19.4,108,13,3,27.0,57.5,0.994
+O7,Three-state O2: Offense / Balanced (mixed) / Defense (SPY < 200d),2005-15 CAGR 5.6% ≤ SPY 7.06%; max DD -25.69% deeper than −20%,FAIL,10 of 27,-13.0,141,19,5,,,0.999
+O8,O7 + −8% portfolio stop to Defense,full CAGR 7.54% ≤ SPY 8.18%; 2005-15 CAGR 4.39% ≤ SPY 7.06%; max DD -33.58% deeper than −20%,FAIL,10 of 27,-19.7,141,12,7,35.0,9.1,0.995

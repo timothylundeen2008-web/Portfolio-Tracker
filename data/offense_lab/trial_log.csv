@@ -1,2 +1,3 @@
-date,version,trials,note
-2026-11-13,v1.0,5,O1-O5 at 200d; +2 robustness runs per passer
+date,version,trials,note,candidates
+2026-11-13,v1.0,5,O1-O5 at 200d; +2 robustness runs per passer,
+2026-11-13,v1.1,3,"new: O6,O7,O8; robustness runs: 0","O6,O7,O8"
