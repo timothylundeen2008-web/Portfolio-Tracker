@@ -1,8 +1,10 @@
 {
   "date": "2026-11-12",
-  "generated_at": "2026-11-13T02:00:54+00:00",
+  "generated_at": "2026-11-13T02:28:35+00:00",
   "annotated": false,
-  "refusals": [],
+  "refusals": [
+    "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it."
+  ],
   "data_gaps": [],
   "regime": {
     "key": "transition_ambiguous",
@@ -17,7 +19,7 @@
     ],
     "fed_posture": null,
     "tripwires": [],
-    "bridge_age_hours": 4.4,
+    "bridge_age_hours": 4.9,
     "regime_read": null
   },
   "exposure": {
@@ -55,24 +57,24 @@
         "feeds": "M0 rotation reclaim / M2 breakout (early phase)"
       },
       {
-        "ticker": "XLRE",
-        "quadrant": "Improving",
-        "direction": "Weakening",
-        "stealth": null,
-        "feeds": "M0 rotation reclaim / M2 breakout (early phase)"
-      },
-      {
         "ticker": "XLY",
         "quadrant": "Improving",
         "direction": "Bottoming",
-        "stealth": null,
+        "stealth": "Stealth",
+        "feeds": "M0 rotation reclaim / M2 breakout (early phase)"
+      },
+      {
+        "ticker": "XLRE",
+        "quadrant": "Improving",
+        "direction": "Weakening",
+        "stealth": "Stealth",
         "feeds": "M0 rotation reclaim / M2 breakout (early phase)"
       },
       {
         "ticker": "XLV",
         "quadrant": "Leading",
         "direction": "Strengthening",
-        "stealth": null,
+        "stealth": "Stealth",
         "feeds": "M1 VCP (confirmed leaders)"
       }
     ],
@@ -87,28 +89,28 @@
       {
         "ticker": "XLC",
         "quadrant": "Improving",
-        "accumulation": -22.36,
-        "why": "price rotating in, money not (accumulation -22.36)"
+        "accumulation": -20.82,
+        "why": "price rotating in, money not (accumulation -20.82)"
       }
     ],
     "short_watch": [
       {
         "ticker": "XLI",
         "quadrant": "Lagging",
-        "accumulation": 56.57,
-        "why": "price rotating out, money not leaving (accumulation 56.57)"
-      },
-      {
-        "ticker": "XLE",
-        "quadrant": "Weakening",
-        "accumulation": 5.74,
-        "why": "price rotating out, money not leaving (accumulation 5.74)"
+        "accumulation": 54.77,
+        "why": "price rotating out, money not leaving (accumulation 54.77)"
       },
       {
         "ticker": "XLP",
         "quadrant": "Weakening",
-        "accumulation": 5.85,
-        "why": "price rotating out, money not leaving (accumulation 5.85)"
+        "accumulation": 16.8,
+        "why": "price rotating out, money not leaving (accumulation 16.8)"
+      },
+      {
+        "ticker": "XLE",
+        "quadrant": "Weakening",
+        "accumulation": 18.46,
+        "why": "price rotating out, money not leaving (accumulation 18.46)"
       }
     ],
     "watchlist": [],
@@ -226,19 +228,19 @@
   },
   "data_health": {
     "requested": 120,
-    "missing": [
-      "PLTR"
-    ],
+    "missing": [],
     "stale": [],
     "nan_last_cleaned": [],
     "last_bar": "2026-11-11",
-    "bad_fraction": 0.008,
-    "failed": false
+    "expected_session": "2026-11-12",
+    "session_missing": true,
+    "bad_fraction": 0.0,
+    "failed": true
   },
   "breadth": {
-    "pct_above_200": 68.5,
-    "n": 108,
-    "source": "108-name sector-constituent proxy (not the full S&P 500)",
+    "pct_above_200": 68.8,
+    "n": 109,
+    "source": "109-name sector-constituent proxy (not the full S&P 500)",
     "size_cut": false,
     "read": "tailwind"
   },
@@ -335,8 +337,8 @@
         "atr14": 4.3157
       },
       "disaster_stop": 224.58,
-      "entry_permitted": true,
-      "entry_block_reason": null,
+      "entry_permitted": false,
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -396,8 +398,8 @@
         "atr14": 0.6064
       },
       "disaster_stop": 42.07,
-      "entry_permitted": true,
-      "entry_block_reason": null,
+      "entry_permitted": false,
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -457,8 +459,8 @@
         "atr14": 1.8357
       },
       "disaster_stop": 89.25,
-      "entry_permitted": true,
-      "entry_block_reason": null,
+      "entry_permitted": false,
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -519,7 +521,7 @@
       },
       "disaster_stop": 43.53,
       "entry_permitted": false,
-      "entry_block_reason": "sector cap: already 2 in XLU (max 2)",
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -580,7 +582,7 @@
       },
       "disaster_stop": 77.12,
       "entry_permitted": false,
-      "entry_block_reason": "sector cap: already 2 in XLU (max 2)",
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -640,8 +642,8 @@
         "atr14": 0.7276
       },
       "disaster_stop": 42.44,
-      "entry_permitted": true,
-      "entry_block_reason": null,
+      "entry_permitted": false,
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -702,7 +704,7 @@
       },
       "disaster_stop": 122.31,
       "entry_permitted": false,
-      "entry_block_reason": "over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) \u2014 watch, or close something first",
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -763,7 +765,7 @@
       },
       "disaster_stop": 55.63,
       "entry_permitted": false,
-      "entry_block_reason": "over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) \u2014 watch, or close something first",
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -824,7 +826,7 @@
       },
       "disaster_stop": 317.5,
       "entry_permitted": false,
-      "entry_block_reason": "over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) \u2014 watch, or close something first",
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -885,7 +887,7 @@
       },
       "disaster_stop": 80.96,
       "entry_permitted": false,
-      "entry_block_reason": "over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) \u2014 watch, or close something first",
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -946,7 +948,7 @@
       },
       "disaster_stop": 261.89,
       "entry_permitted": false,
-      "entry_block_reason": "over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) \u2014 watch, or close something first",
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -1007,7 +1009,7 @@
       },
       "disaster_stop": 231.33,
       "entry_permitted": false,
-      "entry_block_reason": "over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) \u2014 watch, or close something first",
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -1068,7 +1070,7 @@
       },
       "disaster_stop": 102.57,
       "entry_permitted": false,
-      "entry_block_reason": "over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) \u2014 watch, or close something first",
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -1129,7 +1131,7 @@
       },
       "disaster_stop": 326.56,
       "entry_permitted": false,
-      "entry_block_reason": "over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) \u2014 watch, or close something first",
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -1190,7 +1192,7 @@
       },
       "disaster_stop": 33.48,
       "entry_permitted": false,
-      "entry_block_reason": "over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) \u2014 watch, or close something first",
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -1251,7 +1253,7 @@
       },
       "disaster_stop": 263.04,
       "entry_permitted": false,
-      "entry_block_reason": "over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) \u2014 watch, or close something first",
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -1314,7 +1316,7 @@
       },
       "disaster_stop": 123.35,
       "entry_permitted": false,
-      "entry_block_reason": "over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) \u2014 watch, or close something first",
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -1377,7 +1379,7 @@
       },
       "disaster_stop": 64.77,
       "entry_permitted": false,
-      "entry_block_reason": "over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) \u2014 watch, or close something first",
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -1440,7 +1442,7 @@
       },
       "disaster_stop": 325.15,
       "entry_permitted": false,
-      "entry_block_reason": "over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) \u2014 watch, or close something first",
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -1503,7 +1505,7 @@
       },
       "disaster_stop": 113.67,
       "entry_permitted": false,
-      "entry_block_reason": "over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) \u2014 watch, or close something first",
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -1566,7 +1568,7 @@
       },
       "disaster_stop": 249.09,
       "entry_permitted": false,
-      "entry_block_reason": "over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) \u2014 watch, or close something first",
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -1629,7 +1631,7 @@
       },
       "disaster_stop": 376.44,
       "entry_permitted": false,
-      "entry_block_reason": "over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) \u2014 watch, or close something first",
+      "entry_block_reason": "DATA FAILURE: the price feed has no bar for the 2026-11-12 session (latest 2026-11-11). Levels would be a day old. No cards; re-run later \u2014 Yahoo usually restores it.",
       "why_note": null,
       "what_would_make_this_wrong": null,
       "instrument_note": null,
@@ -1648,7 +1650,7 @@
       "side": "long",
       "confluence": "3-of-3",
       "ground": "short_watch",
-      "reason": "M0 Rotation long (3-of-3) demoted \u2014 long card from a short hunting ground (XLI Lagging, accumulation 56.57) \u2014 the setup fights the sector rotation; watch only"
+      "reason": "M0 Rotation long (3-of-3) demoted \u2014 long card from a short hunting ground (XLI Lagging, accumulation 54.77) \u2014 the setup fights the sector rotation; watch only"
     },
     {
       "ticker": "PEP",
@@ -1660,7 +1662,19 @@
       "side": "long",
       "confluence": "2-of-3",
       "ground": "short_watch",
-      "reason": "M0 Rotation long (2-of-3) demoted \u2014 long card from a short hunting ground (XLP Weakening, accumulation 5.85) \u2014 the setup fights the sector rotation; watch only"
+      "reason": "M0 Rotation long (2-of-3) demoted \u2014 long card from a short hunting ground (XLP Weakening, accumulation 16.8) \u2014 the setup fights the sector rotation; watch only"
+    },
+    {
+      "ticker": "PLTR",
+      "sector": "XLK",
+      "sector_quadrant": "Weakening",
+      "from_watchlist": false,
+      "close": 172.4,
+      "setup": "M0 Rotation",
+      "side": "long",
+      "confluence": "2-of-3",
+      "ground": "short",
+      "reason": "M0 Rotation long (2-of-3) demoted \u2014 long card from a short hunting ground (XLK Weakening, accumulation -43.85) \u2014 the setup fights the sector rotation; watch only"
     },
     {
       "ticker": "RTX",
@@ -1672,7 +1686,7 @@
       "side": "long",
       "confluence": "3-of-3",
       "ground": "short_watch",
-      "reason": "M0 Rotation long (3-of-3) demoted \u2014 long card from a short hunting ground (XLI Lagging, accumulation 56.57) \u2014 the setup fights the sector rotation; watch only"
+      "reason": "M0 Rotation long (3-of-3) demoted \u2014 long card from a short hunting ground (XLI Lagging, accumulation 54.77) \u2014 the setup fights the sector rotation; watch only"
     },
     {
       "ticker": "UPS",
@@ -1684,7 +1698,7 @@
       "side": "long",
       "confluence": "3-of-3",
       "ground": "short_watch",
-      "reason": "M0 Rotation long (3-of-3) demoted \u2014 long card from a short hunting ground (XLI Lagging, accumulation 56.57) \u2014 the setup fights the sector rotation; watch only"
+      "reason": "M0 Rotation long (3-of-3) demoted \u2014 long card from a short hunting ground (XLI Lagging, accumulation 54.77) \u2014 the setup fights the sector rotation; watch only"
     },
     {
       "ticker": "VZ",
@@ -1696,7 +1710,7 @@
       "side": "long",
       "confluence": "3-of-3",
       "ground": "long_watch",
-      "reason": "M0 Rotation long (3-of-3) demoted \u2014 flow does not confirm the ground: XLC Improving \u2014 price rotating in, money not (accumulation -22.36); watch until accumulation turns positive"
+      "reason": "M0 Rotation long (3-of-3) demoted \u2014 flow does not confirm the ground: XLC Improving \u2014 price rotating in, money not (accumulation -20.82); watch until accumulation turns positive"
     }
   ],
   "avoid": [
@@ -2430,12 +2444,7 @@
       "reason": "Not a setup. M2 universe filter: ADR 2.48% < 3.5%; price not above 20 & 50 SMA | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 1 price > 50/150/200 MA, 7 RS rank >= 70, 8 price > 50 MA"
     }
   ],
-  "errors": [
-    {
-      "ticker": "PLTR",
-      "error": "insufficient history"
-    }
-  ],
+  "errors": [],
   "unconfirmed_from_prior": [
     {
       "ticker": "SPG",
