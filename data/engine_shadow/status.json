@@ -1,0 +1,47 @@
+{
+  "version": "v1.0",
+  "asof": "2026-11-12",
+  "start": "2026-12-01",
+  "error": null,
+  "generated_at": "2026-11-13T21:11:24+00:00",
+  "last_bar": "2026-11-13",
+  "reads": [
+    {
+      "engine": "O9",
+      "state": "OUT",
+      "word": "FAST-EXIT",
+      "since": "2026-10-16",
+      "switched_today": false,
+      "previous": "OUT",
+      "book_next": {
+        "VGT": 17.0,
+        "SCHD": 14.0,
+        "GLD": 10.0,
+        "SGOV": 8.0,
+        "USFR": 7.0,
+        "TLT": 7.0,
+        "KMLM": 7.0,
+        "XLE": 5.0,
+        "XLV": 5.0,
+        "SLV": 4.0,
+        "RING": 4.0,
+        "SMH": 3.0,
+        "QQQ": 3.0,
+        "PDBC": 3.0,
+        "XLU": 3.0
+      }
+    },
+    {
+      "engine": "O7",
+      "state": "OFF",
+      "word": "OFFENSE",
+      "since": "2026-11-11",
+      "switched_today": false,
+      "previous": "OFF",
+      "book_next": {
+        "QQQ": 50.0,
+        "SPY": 50.0
+      }
+    }
+  ]
+}
