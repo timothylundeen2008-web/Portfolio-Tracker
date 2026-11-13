@@ -159,7 +159,9 @@ def _breadth_proxy(ohlcv: dict, universe: list[str]) -> dict:
 
 def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple] = None,
                 today: Optional[date] = None, earnings_lookup: Optional[Callable] = None,
-                macro_lookup: Optional[Callable] = None) -> dict:
+                macro_lookup: Optional[Callable] = None,
+                history: Optional[list] = None) -> dict:
+    """history: [(YYYY-MM-DD, equity_mtm), ...] from prior briefs; None = read logs/swing (tests pass it)."""
     fetch = fetch_ohlcv or _default_fetch
     if today is None:
         try:
@@ -288,6 +290,19 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
         brief["data_gaps"].append("Market filter unknown: SPY history missing or short — new entries blocked "
                                   "(a data gap is not a signal).")
 
+    # ── 9 (moved ahead of the scan, build #3). Manage opens, then loss limits ─
+    sq = {tk: quad_of_sector.get(sector_of.get(tk, tk)) for tk in opens}
+    brief["open_positions"] = swing_exits.manage(opens, ohlcv, regime_key, sq)
+    rs = risk_state(today, eq["equity"], eq["starting_equity"], brief["open_positions"],
+                    _equity_history(today) if history is None else history, sj.last_restart_date(journal))
+    brief["risk_state"] = rs
+    if rs["missing_prices"]:
+        brief["data_gaps"].append("Loss limits: no price for open " + ", ".join(rs["missing_prices"])
+                                  + " — marked at entry, so the stand-down check may understate the loss.")
+    for k in ("monthly", "high_water"):
+        if rs[k]["active"]:
+            brief["refusals"].append(rs[k]["refusal"]); cards_allowed = False
+
     # ── 6. Events ──────────────────────────────────────────────────────────
     import event_calendar as ec
     macro = (macro_lookup or ec.upcoming_macro)(2)
@@ -395,10 +410,6 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
                    int(cfg["max_positions"]))
     brief["cards"], brief["watch"], brief["avoid"], brief["errors"] = cards, watch, avoid, errors
 
-    # ── 9. Manage opens ────────────────────────────────────────────────────
-    sq = {tk: quad_of_sector.get(sector_of.get(tk, tk)) for tk in opens}
-    brief["open_positions"] = swing_exits.manage(opens, ohlcv, regime_key, sq)
-
     # ── carry-over: what you never answered ────────────────────────────────
     brief["unconfirmed_from_prior"] = _pending_from_prior(journal, today)
     brief["question_of_the_day"] = None
@@ -430,6 +441,98 @@ def allocate_slots(cards: list, slots_open: int, open_sectors: list, max_per_sec
             per_sec[sec] = per_sec.get(sec, 0) + 1
 
 
+# ── Loss limits (build #3, risk_policy §5) ─────────────────────────────────
+MONTHLY_STANDDOWN_PCT = -10.0   # worst mark-to-market equity this month vs month start: no new entries rest of month
+HWM_STANDDOWN_PCT = -20.0       # vs running high-water since start/RESTART: latched until Matt journals a RESTART
+
+
+def _equity_history(today: date, log_dir: Optional[Path] = None) -> list:
+    """[(date, equity)] from prior swing briefs: risk_state.equity_mtm, else realized exposure.equity."""
+    d = log_dir or LOG_DIR
+    if not d.exists():
+        return []
+    out = []
+    for p in sorted(d.glob("*_brief.json")):
+        if p.name[:10] >= today.isoformat():
+            continue
+        try:
+            b = json.loads(p.read_text())
+        except Exception:
+            continue
+        v = (b.get("risk_state") or {}).get("equity_mtm")
+        if v is None:
+            v = (b.get("exposure") or {}).get("equity")
+        if v is not None:
+            out.append((p.name[:10], float(v)))
+    return out
+
+
+def risk_state(today: date, equity_realized: Optional[float], starting_equity: Optional[float],
+               managed: list, history: list, restart_date: Optional[str] = None) -> dict:
+    """
+    Mark-to-market swing equity and the two stand-downs. Equity_mtm = realized
+    equity + open P&L at tonight's close. History is the nightly series from
+    prior briefs; the high-water mark restarts after a journaled RESTART.
+    A missing price marks that position at entry and is named, never guessed.
+    """
+    t = today.isoformat()
+    unreal, missing = 0.0, []
+    for p in managed or []:
+        if p.get("recommendation") == "NO DATA" or p.get("current") is None:
+            missing.append(p.get("ticker")); continue
+        sign = 1 if p.get("side", "long") == "long" else -1
+        unreal += sign * (float(p["current"]) - float(p["entry"])) * float(p["shares"])
+    off = {"active": False, "refusal": None}
+    if equity_realized is None:
+        return {"equity_mtm": None, "unrealized": round(unreal, 2), "missing_prices": missing,
+                "monthly": {**off, "note": "equity unset"}, "high_water": {**off, "note": "equity unset"},
+                "restart_date": restart_date}
+    mtm = round(float(equity_realized) + unreal, 2)
+    hist = sorted((d, float(v)) for d, v in (history or []) if d < t and v is not None)
+    if restart_date:
+        hist = [(d, v) for d, v in hist if d > restart_date]
+        base = []                                     # the restart re-bases: first point after it is the start
+    else:
+        base = [("start", float(starting_equity))] if starting_equity is not None else []
+    series = base + hist + [(t, mtm)]
+
+    # high-water: latched once any point since start/RESTART was <= -20% from the running peak
+    peak, worst_dd, trip_on, peak_at_trip = None, 0.0, None, None
+    for d, v in series:
+        peak = v if peak is None else max(peak, v)
+        dd = (v / peak - 1) * 100 if peak else 0.0
+        if dd < worst_dd:
+            worst_dd = dd
+        if trip_on is None and dd <= HWM_STANDDOWN_PCT:
+            trip_on, peak_at_trip = d, peak
+    hw_now = round((mtm / peak - 1) * 100, 2) if peak else 0.0
+    hw = {"active": trip_on is not None, "peak": round(peak, 2) if peak else None, "dd_pct": hw_now,
+          "worst_dd_pct": round(worst_dd, 2), "tripped_on": trip_on, "limit_pct": HWM_STANDDOWN_PCT,
+          "refusal": None}
+    if hw["active"]:
+        hw["refusal"] = (f"HIGH-WATER STAND-DOWN: swing equity fell {HWM_STANDDOWN_PCT:g}% from its peak "
+                         f"${peak_at_trip:,.0f} on {trip_on}. No new entries; close remaining risk in an orderly "
+                         f"way; write the incident review; restart only with Matt's approval (journal a RESTART).")
+
+    # monthly: worst point this month vs the last equity before the 1st
+    m0 = t[:7]
+    before = [v for d, v in series if d[:7] < m0 or d == "start"]
+    month_pts = [(d, v) for d, v in series if d[:7] == m0]
+    month_start = before[-1] if before else month_pts[0][1]
+    wd, wv = min(month_pts, key=lambda x: x[1])
+    m_dd = round((wv / month_start - 1) * 100, 2) if month_start else 0.0
+    mo = {"active": m_dd <= MONTHLY_STANDDOWN_PCT, "month": m0, "month_start_equity": round(month_start, 2),
+          "worst_equity": round(wv, 2), "worst_on": wd, "dd_pct": m_dd,
+          "now_pct": round((mtm / month_start - 1) * 100, 2) if month_start else 0.0,
+          "limit_pct": MONTHLY_STANDDOWN_PCT, "refusal": None}
+    if mo["active"]:
+        mo["refusal"] = (f"MONTHLY STAND-DOWN: swing equity reached {m_dd:+.1f}% vs the {m0} start "
+                         f"(${month_start:,.0f}) on {wd}. No new entries for the rest of {m0}; open positions "
+                         f"are managed as normal.")
+    return {"equity_mtm": mtm, "unrealized": round(unreal, 2), "missing_prices": missing,
+            "monthly": mo, "high_water": hw, "restart_date": restart_date, "points": len(series)}
+
+
 def _pending_from_prior(journal: pd.DataFrame, today: date) -> list[dict]:
     if not LOG_DIR.exists():
         return []
@@ -445,6 +548,16 @@ def _pending_from_prior(journal: pd.DataFrame, today: date) -> list[dict]:
 
 # ── Output ──────────────────────────────────────────────────────────────────
 
+def _rs_line(rs: Optional[dict]) -> str:
+    if not rs or rs.get("equity_mtm") is None:
+        return "**Loss limits:** not computed (equity unset)"
+    m, h = rs["monthly"], rs["high_water"]
+    state = ("STAND-DOWN (high-water)" if h["active"] else "STAND-DOWN (monthly)" if m["active"] else "clear")
+    return (f"**Loss limits:** {state} · equity ${rs['equity_mtm']:,.0f} marked to market "
+            f"(open P&L {rs['unrealized']:+,.0f}) · month {m['now_pct']:+.1f}% (worst {m['dd_pct']:+.1f}%, "
+            f"limit {m['limit_pct']:g}%) · from peak {h['dd_pct']:+.1f}% (limit {h['limit_pct']:g}%, latched)")
+
+
 def render_md(b: dict) -> str:
     r, x = b["regime"], b["exposure"]
     L = [f"# Swing Desk brief — {b['date']}", "",
@@ -455,7 +568,7 @@ def render_md(b: dict) -> str:
          if x["equity"] is not None else "**Equity:** not set — desk cannot size",
          (f"**Breadth (proxy):** {b['breadth']['pct_above_200']}% above 200-day — {b['breadth']['read']} (context only; does not size)"
           if b["breadth"]["pct_above_200"] is not None else "**Breadth (proxy):** no price data this run"),
-         _mf_line(b.get("market_filter")), ""]
+         _mf_line(b.get("market_filter")), _rs_line(b.get("risk_state")), ""]
     if r.get("regime_read"):
         L += [r["regime_read"], ""]
     if b["refusals"]:
@@ -745,6 +858,45 @@ def selftest() -> dict:
     if not over or "higher-ranked" not in over[0]["entry_block_reason"]:
         f.append("over-cap cards must say the slots went to higher-ranked cards (N20 wording)")
     sj.save_config(max_positions=4)
+    # build #3: loss-limit stand-downs (risk_policy §5) — unit
+    D = date(2026, 11, 12)
+    r0 = risk_state(D, 10_000.0, 10_000.0, [], [])
+    if r0["monthly"]["active"] or r0["high_water"]["active"] or r0["equity_mtm"] != 10_000.0:
+        f.append(f"fresh book: no stand-down, mtm 10k: {r0}")
+    pos = [{"ticker": "AAA", "recommendation": "HOLD", "side": "long", "entry": 100.0, "current": 90.0, "shares": 100}]
+    if risk_state(D, 10_000.0, 10_000.0, pos, [])["equity_mtm"] != 9_000.0:
+        f.append("mtm must include open P&L (100 sh x -10 = -1000)")
+    rm = risk_state(D, 10_000.0, 10_000.0, [{"ticker": "BBB", "recommendation": "NO DATA"}], [])
+    if rm["missing_prices"] != ["BBB"]:
+        f.append("a position with no price must be named, not guessed")
+    h_m = [("2026-10-31", 10_000.0), ("2026-11-05", 8_950.0)]       # -10.5% intra-month, since recovered
+    r1 = risk_state(D, 9_500.0, 10_000.0, [], h_m)
+    if not r1["monthly"]["active"] or "MONTHLY STAND-DOWN" not in (r1["monthly"]["refusal"] or ""):
+        f.append(f"-10.5% this month must stand down for the rest of the month even after recovering: {r1['monthly']}")
+    if risk_state(date(2026, 12, 1), 9_500.0, 10_000.0, [], h_m + [("2026-11-12", 9_500.0)])["monthly"]["active"]:
+        f.append("the monthly stand-down must lift on the 1st (new month, new base)")
+    if not risk_state(D, 9_000.0, 10_000.0, [], [("2026-10-31", 10_000.0)])["monthly"]["active"]:
+        f.append("exactly -10.0% is the limit and must stand down")
+    if risk_state(D, 9_001.0, 10_000.0, [], [("2026-10-31", 10_000.0)])["monthly"]["active"]:
+        f.append("-9.99% must not stand down")
+    h_h = [("2026-09-01", 12_000.0), ("2026-10-15", 9_500.0), ("2026-10-31", 11_000.0)]   # -20.8% from 12k
+    r2 = risk_state(D, 11_000.0, 10_000.0, [], h_h)
+    if not r2["high_water"]["active"] or r2["high_water"]["tripped_on"] != "2026-10-15":
+        f.append(f"-20.8% from the high-water mark must latch even after a recovery: {r2['high_water']}")
+    if risk_state(D, 11_000.0, 10_000.0, [], h_h, restart_date="2026-10-20")["high_water"]["active"]:
+        f.append("a journaled RESTART must re-base the high-water mark and lift the latch")
+    if risk_state(D, 9_700.0, 10_000.0, [], [("2026-09-01", 12_000.0)])["high_water"]["active"]:
+        f.append("-19.2% from peak must not latch")
+    # integration: an active stand-down blocks every card and says why
+    bm = build_brief(fetch, (markets, rotation), D, no_earn, no_macro, history=h_m)
+    if any(c["entry_permitted"] for c in bm["cards"]) or not any("MONTHLY STAND-DOWN" in r for r in bm["refusals"]):
+        f.append("monthly stand-down must block every new entry with a refusal")
+    if not any("MONTHLY STAND-DOWN" in (c["entry_block_reason"] or "") for c in bm["cards"]):
+        f.append("blocked cards must name the stand-down")
+    if "STAND-DOWN (monthly)" not in render_md(bm) or "Loss limits:" not in render_md(b):
+        f.append("render must show the loss-limit line")
+    if not b.get("risk_state") or b["risk_state"]["monthly"]["active"]:
+        f.append("the plain brief must carry a clear risk_state")
     # open position management + pending carry-over
     sj.record_take("chat", "XOM", 80.0, 30, 77.0, setup="M2 Breakout", side="long", planned_entry=80,
                    regime="goldilocks", confluence="3-of-3", trail="10 EMA", card_date="2026-09-14")
@@ -754,6 +906,9 @@ def selftest() -> dict:
         f.append("open XOM must be managed")
     if b5["exposure"]["open_count"] != 1 or b5["exposure"]["slots_open"] != 3:
         f.append(f"slots must reflect the journal: {b5['exposure']}")
+    xp = b5["open_positions"][0] if b5["open_positions"] else {}
+    if xp.get("current") is not None and abs(b5["risk_state"]["unrealized"] - (xp["current"] - 80.0) * 30) > 0.05:
+        f.append(f"risk_state must mark the open XOM to market: {b5['risk_state']['unrealized']}")
     if not any(p["ticker"] == "XLF" for p in b5["unconfirmed_from_prior"]):
         f.append("undecided XLF card from 09-14 must carry over as UNCONFIRMED")
     # validator: annotation may touch only LLM fields

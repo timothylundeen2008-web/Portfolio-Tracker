@@ -47,10 +47,11 @@ WATCHLIST = "swing_watchlist.csv"
 COLUMNS = ["event_id", "ts", "source", "ticker", "event", "setup", "side",
            "price", "shares", "stop", "planned_entry", "risk_per_share",
            "realized_pnl", "exit_trigger", "regime_at_entry", "confluence",
-           "trail", "card_date", "note", "disaster_stop"]
+           "trail", "card_date", "note", "disaster_stop", "asset"]
 
 EVENTS = {"TAKE", "TRIM", "EXIT", "STOP_HIT", "TIGHTEN", "PASS", "WATCH",
-          "DECLINE", "RESET"}
+          "DECLINE", "RESET", "RESTART"}
+ASSETS = {"etf", "stock"}   # build #3: ETF and stock results are scored separately (risk_policy §5, §8)
 HUMAN_SOURCES = {"tab", "chat"}
 
 # Risk per trade — v2 (decided 2026-11-12, risk_policy.md §5).
@@ -111,10 +112,14 @@ def load() -> pd.DataFrame:
         if c not in df.columns:
             df[c] = None
     df = df[COLUMNS].copy()
-    df["ts"] = pd.to_datetime(df["ts"], utc=True, errors="coerce")
+    # N62 (build #3): rows written after the first append carry "YYYY-MM-DD HH:MM:SS+00:00"
+    # (pandas' CSV form of a parsed timestamp) while the new row carries ISO "T". Without
+    # format="ISO8601", pandas infers one format from the first row and turns the rest to
+    # NaT, which silently broke trade order, durations and RESET dating.
+    df["ts"] = pd.to_datetime(df["ts"], utc=True, errors="coerce", format="ISO8601")
     for c in ("price", "shares", "stop", "planned_entry", "risk_per_share", "realized_pnl", "disaster_stop"):
         df[c] = pd.to_numeric(df[c], errors="coerce")
-    return df.sort_values("ts").reset_index(drop=True)
+    return df.sort_values("ts", kind="mergesort").reset_index(drop=True)   # stable: same-second rows keep write order
 
 
 def _append(row: dict, df: Optional[pd.DataFrame] = None) -> pd.DataFrame:
@@ -128,6 +133,10 @@ def _append(row: dict, df: Optional[pd.DataFrame] = None) -> pd.DataFrame:
     base["event_id"] = base["event_id"] or uuid.uuid4().hex[:12]
     base["ts"] = base["ts"] or datetime.now(timezone.utc).isoformat(timespec="seconds")
     df = load() if df is None else df
+    df = df.copy()
+    if not df.empty:      # N62: one timestamp format on disk, whatever pandas parsed it into
+        df["ts"] = pd.to_datetime(df["ts"], utc=True, errors="coerce", format="ISO8601").map(
+            lambda t: t.isoformat(timespec="seconds") if pd.notna(t) else None)
     df = pd.concat([df, pd.DataFrame([base])], ignore_index=True)
     write_df(JOURNAL, df, f"swing_journal: {base['event']} {base['ticker'] or ''}")
     return df
@@ -138,9 +147,11 @@ def _append(row: dict, df: Optional[pd.DataFrame] = None) -> pd.DataFrame:
 def record_take(source: str, ticker: str, price: float, shares: float, stop: float, *,
                 setup: str, side: str, planned_entry: float, regime: str,
                 confluence: str, trail: str, card_date: str, note: str = "",
-                disaster_stop: Optional[float] = None) -> pd.DataFrame:
+                disaster_stop: Optional[float] = None, asset: Optional[str] = None) -> pd.DataFrame:
     if shares <= 0 or price <= 0:
         raise ValueError("shares and price must be positive")
+    if asset is not None and asset not in ASSETS:
+        raise ValueError(f"asset must be one of {sorted(ASSETS)}, got {asset!r}")
     if (side == "long" and stop >= price) or (side == "short" and stop <= price):
         raise ValueError(f"stop {stop} is on the wrong side of a {side} entry at {price}")
     return _append({"source": source, "ticker": ticker.upper(), "event": "TAKE",
@@ -148,7 +159,7 @@ def record_take(source: str, ticker: str, price: float, shares: float, stop: flo
                     "stop": stop, "planned_entry": planned_entry,
                     "risk_per_share": abs(price - stop), "regime_at_entry": regime,
                     "confluence": confluence, "trail": trail, "card_date": card_date,
-                    "note": note, "disaster_stop": disaster_stop})
+                    "note": note, "disaster_stop": disaster_stop, "asset": asset})
 
 
 def record_exit(source: str, ticker: str, price: float, shares: Optional[float] = None, *,
@@ -191,6 +202,27 @@ def record_decision(source: str, ticker: str, decision: str, card_date: str, not
         raise ValueError(decision)
     return _append({"source": source, "ticker": ticker.upper(), "event": decision,
                     "card_date": card_date, "note": note})
+
+
+def record_restart(source: str, note: str = "") -> pd.DataFrame:
+    """
+    Matt's approval to restart after the high-water -20% stand-down (risk_policy §5).
+    The high-water mark is re-based from the first brief after this date. It does
+    NOT clear the losing-streak halving; that only clears on 2 winners.
+    """
+    if not (note or "").strip():
+        raise ValueError("a restart needs a note: what the incident review found")
+    return _append({"source": source, "ticker": None, "event": "RESTART", "note": note})
+
+
+def last_restart_date(df: Optional[pd.DataFrame] = None) -> Optional[str]:
+    """ET calendar date (YYYY-MM-DD) of the latest RESTART, or None."""
+    df = load() if df is None else df
+    r = df[df["event"] == "RESTART"]["ts"].dropna() if not df.empty else pd.Series(dtype=object)
+    if r.empty:
+        return None
+    ts = pd.to_datetime(r.max(), utc=True)
+    return ts.tz_convert("America/New_York").date().isoformat()
 
 
 def record_reset(source: str, note: str = "") -> pd.DataFrame:
@@ -249,6 +281,8 @@ def closed_trades(df: Optional[pd.DataFrame] = None) -> pd.DataFrame:
         if r["event"] == "TAKE":
             t = live.get(tk) or {"ticker": tk, "setup": r["setup"], "side": r["side"],
                                  "regime": r["regime_at_entry"], "confluence": r["confluence"],
+                                 "asset": (r.get("asset") if isinstance(r.get("asset"), str) and r.get("asset") in ASSETS
+                                           else "unknown"),
                                  "opened": r["ts"], "shares": 0.0, "shares_taken": 0.0,
                                  "planned_risk": 0.0, "realized_pnl": 0.0, "slippage": []}
             t["shares"] += r["shares"]; t["shares_taken"] += r["shares"]
@@ -368,29 +402,52 @@ def heat_used_pct(df: Optional[pd.DataFrame] = None) -> dict:
             "slots_open": max(0, int(load_config()["max_positions"]) - len(pos))}
 
 
-def expectancy_by_setup(regime_key: Optional[str] = None, df: Optional[pd.DataFrame] = None) -> pd.DataFrame:
-    """Per setup: n, hit rate, avg win R, avg loss R, expectancy R, avg loss vs 1R, slippage. Flags thin samples."""
-    closed = closed_trades(load() if df is None else df)
+EXPECTANCY_COLS = ["n", "hit_rate", "avg_win_R", "avg_loss_R", "expectancy_R", "profit_factor",
+                   "net_pnl", "stops_honored", "avg_slippage_pct", "evidence"]
+
+
+def _expectancy(closed: pd.DataFrame, by: str) -> pd.DataFrame:
+    """Per group: n, hit rate, avg win/loss R, expectancy R, profit factor, net $, stops honored, slippage."""
     if closed.empty:
-        return pd.DataFrame(columns=["setup", "n", "hit_rate", "avg_win_R", "avg_loss_R",
-                                     "expectancy_R", "stops_honored", "avg_slippage_pct", "evidence"])
-    if regime_key:
-        closed = closed[closed["regime"] == regime_key]
+        return pd.DataFrame(columns=[by] + EXPECTANCY_COLS)
     min_n = int(load_config()["min_sample_per_setup"])
     rows = []
-    for setup, g in closed.groupby("setup"):
+    for key, g in closed.groupby(by):
         R = g["R"].dropna()
         wins, losses = R[R > 0], R[R <= 0]
-        rows.append({"setup": setup, "n": int(len(R)),
+        pnl = pd.to_numeric(g["realized_pnl"], errors="coerce").fillna(0)
+        gross_loss = -pnl[pnl < 0].sum()
+        rows.append({by: key, "n": int(len(R)),
                      "hit_rate": round(len(wins) / len(R), 3) if len(R) else None,
                      "avg_win_R": round(wins.mean(), 2) if len(wins) else None,
                      "avg_loss_R": round(losses.mean(), 2) if len(losses) else None,
                      "expectancy_R": round(R.mean(), 3) if len(R) else None,
+                     "profit_factor": (round(pnl[pnl > 0].sum() / gross_loss, 2) if gross_loss > 0
+                                       else (None if not (pnl > 0).any() else float("inf"))),
+                     "net_pnl": round(float(pnl.sum()), 2),
                      # if the average loser is worse than -1R, stops are not being honored
                      "stops_honored": bool(losses.mean() >= -1.05) if len(losses) else None,
                      "avg_slippage_pct": round(g["slippage_pct"].dropna().mean(), 3) if g["slippage_pct"].notna().any() else None,
                      "evidence": "yes" if len(R) >= min_n else f"no (n<{min_n})"})
     return pd.DataFrame(rows).sort_values("n", ascending=False).reset_index(drop=True)
+
+
+def expectancy_by_setup(regime_key: Optional[str] = None, df: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+    """Per setup. Flags thin samples."""
+    closed = closed_trades(load() if df is None else df)
+    if regime_key and not closed.empty:
+        closed = closed[closed["regime"] == regime_key]
+    return _expectancy(closed, "setup")
+
+
+def expectancy_by_asset(df: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+    """
+    ETF vs stock, scored separately from the first trade (risk_policy §5, §8).
+    M0's backtest PASS is on ETFs; the stock edge is unproven. If live stock
+    expectancy is negative over 20+ trades, the monthly review sets
+    live_stock_cards = false. Trades journaled before build #3 read 'unknown'.
+    """
+    return _expectancy(closed_trades(load() if df is None else df), "asset")
 
 
 def pending_from_brief(brief: dict, df: Optional[pd.DataFrame] = None) -> list[dict]:
@@ -528,6 +585,40 @@ def selftest() -> dict:
         record_exit("tab", "SSS", 90, trigger="ladder")
         if abs(closed_trades().iloc[-1]["R"] - 2.0) > 1e-6:
             f.append("short round trip R should be +2.0")
+        # build #3: ETF vs stock scored separately; legacy rows read 'unknown'
+        record_take("tab", "XLU", 80, 10, 78, setup="M0 Rotation", side="long", planned_entry=80,
+                    regime="goldilocks", confluence="3-of-3", trail="10 EMA", card_date="2026-09-18", asset="etf")
+        record_exit("tab", "XLU", 84, trigger="ladder")                      # +2R
+        record_take("tab", "NEE", 70, 10, 68, setup="M0 Rotation", side="long", planned_entry=70,
+                    regime="goldilocks", confluence="3-of-3", trail="10 EMA", card_date="2026-09-18", asset="stock")
+        record_exit("tab", "NEE", 68, trigger="structural")                  # -1R
+        ea = expectancy_by_asset().set_index("asset")
+        if set(ea.index) != {"etf", "stock", "unknown"}:
+            f.append(f"asset split must hold etf, stock and unknown (pre-build rows): {list(ea.index)}")
+        elif abs(ea.loc["etf", "expectancy_R"] - 2.0) > 1e-6 or abs(ea.loc["stock", "expectancy_R"] + 1.0) > 1e-6:
+            f.append(f"etf +2R and stock -1R must not mix: {ea[['n', 'expectancy_R']].to_dict()}")
+        elif ea.loc["etf", "n"] != 1 or ea.loc["stock", "n"] != 1:
+            f.append("each asset row must count only its own trades")
+        try:
+            record_take("tab", "ZZZ", 10, 1, 9, setup="M0 Rotation", side="long", planned_entry=10,
+                        regime="goldilocks", confluence="3-of-3", trail="10 EMA", card_date="2026-09-18", asset="crypto")
+            f.append("an unknown asset class was journaled")
+        except ValueError:
+            pass
+        # build #3: restart after the -20% stand-down needs a note; dated in ET
+        if last_restart_date() is not None:
+            f.append("no restart recorded yet")
+        try:
+            record_restart("tab", ""); f.append("restart without a review note was accepted")
+        except ValueError:
+            pass
+        record_restart("tab", "incident review done: stops honored, regime call wrong")
+        if last_restart_date() is None:
+            f.append("restart date must be readable after record_restart")
+        # N62: every row keeps its timestamp across appends, so order and durations are real
+        _j = load()
+        if _j["ts"].isna().any():
+            f.append(f"{int(_j['ts'].isna().sum())} of {len(_j)} journal rows lost their timestamp")
         # watchlist
         watchlist_add("chat", "pltr", "EP candidate on contract news")
         if "PLTR" not in set(watchlist()["ticker"]):

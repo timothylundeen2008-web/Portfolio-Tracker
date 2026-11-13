@@ -140,6 +140,15 @@ def render(st, fetch_ohlcv=None):
                 (st.success if mf.get("ok") is True else st.error)(
                     f"**Market filter:** SPY {mf.get('spy_close')} vs 200-day {mf.get('spy_sma')} → {state}")
 
+            rs = brief.get("risk_state")
+            if rs and rs.get("equity_mtm") is not None:
+                _m, _h = rs["monthly"], rs["high_water"]
+                _txt = (f"**Loss limits:** equity ${rs['equity_mtm']:,.0f} marked to market "
+                        f"(open P&L {rs['unrealized']:+,.0f}) · this month {_m['now_pct']:+.1f}% "
+                        f"(worst {_m['dd_pct']:+.1f}%, stand-down at {_m['limit_pct']:g}%) · from peak "
+                        f"{_h['dd_pct']:+.1f}% (stand-down at {_h['limit_pct']:g}%, latched)")
+                (st.error if (_m["active"] or _h["active"]) else st.caption)(
+                    ("🛑 STAND-DOWN — " if (_m["active"] or _h["active"]) else "") + _txt)
             if brief.get("refusals"):
                 st.error("**Refused:** " + " · ".join(brief["refusals"]))
             if brief.get("unconfirmed_from_prior"):
@@ -217,7 +226,8 @@ def render(st, fetch_ohlcv=None):
                                            setup=c["setup"], side=c["side"], planned_entry=float(c["entry"]),
                                            regime=brief["regime"]["key"], confluence=c["confluence"],
                                            trail=c["trail"], card_date=brief["date"], note=note,
-                                           disaster_stop=c.get("disaster_stop"))
+                                           disaster_stop=c.get("disaster_stop"),
+                                           asset="etf" if c.get("is_etf") else "stock")
                             st.success(f"Journaled TAKE {c['ticker']} {sh} @ {px}, stop {c['stop']}.")
                             st.rerun()
                         except Exception as e:
@@ -272,11 +282,19 @@ def render(st, fetch_ohlcv=None):
                 except Exception as e:
                     st.error(f"Not journaled: {e}")
 
-        if live_pe["step"] == 0:
-            st.markdown("#### Reset")
-            st.warning(live_pe["why"])
-            if st.button("Acknowledge reset → step 1"):
-                sj.record_reset("tab", "acknowledged in tab"); st.rerun()
+        _hw = ((brief or {}).get("risk_state") or {}).get("high_water") or {}
+        if _hw.get("active"):
+            # risk_policy §5: restart only with Matt's approval, after the incident review
+            st.markdown("#### Restart after the high-water stand-down")
+            st.warning(_hw.get("refusal") or "High-water stand-down is latched.")
+            with st.form("restart_form", border=False):
+                why = st.text_input("Incident review finding (required)")
+                if st.form_submit_button("Approve restart"):
+                    try:
+                        sj.record_restart("tab", why); st.success("RESTART journaled: the high-water mark "
+                                                                  "re-bases from the next brief."); st.rerun()
+                    except Exception as e:
+                        st.error(f"Not journaled: {e}")
 
         st.markdown("#### Watchlist")
         wl = sj.watchlist()
@@ -309,6 +327,11 @@ def render(st, fetch_ohlcv=None):
             st.markdown("#### Expectancy by setup")
             st.dataframe(sj.expectancy_by_setup(None, journal), use_container_width=True, hide_index=True)
             st.caption("`evidence` = no until n ≥ %d per setup. Below that the numbers are numbers, not evidence." % cfg["min_sample_per_setup"])
+            st.markdown("#### ETF vs stock")
+            st.dataframe(sj.expectancy_by_asset(journal), use_container_width=True, hide_index=True)
+            st.caption("Scored separately because M0's backtest pass is on ETFs; the stock edge is unproven. "
+                       "If stock expectancy is negative over 20+ trades, the monthly review sets "
+                       "live_stock_cards = false. 'unknown' = journaled before this split existed.")
         else:
             st.info("No closed trades yet. The review populates itself from your first round trip.")
         with st.expander("Raw journal (append-only)"):
