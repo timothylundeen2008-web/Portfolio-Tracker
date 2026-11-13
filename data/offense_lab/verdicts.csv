@@ -1,11 +1,12 @@
 candidate,label,reasons_200,verdict,years_beat_spy,worst_year_vs_spy_pts,switches,episodes_10,episodes_15,guard_trips,guard_on_pct,dsr
-O1,SPY trend (SPY or T-bills),full CAGR 7.48% ≤ SPY 8.2%; 2005-15 CAGR 4.8% ≤ SPY 7.06%; 2016-26 CAGR 11.74% ≤ SPY 14.77%; max DD -21.73% deeper than −20%,FAIL,9 of 27,-14.4,100,11,5,,,0.996
-O2,"Two-mode: growth when SPY & QQQ > 200d, else Balanced",max DD -45.01% deeper than −20%,FAIL,14 of 27,-9.7,108,15,6,,,0.996
-O3,Three-mode 1x (trend + breadth),full CAGR 7.42% ≤ SPY 8.2%; 2005-15 CAGR 5.77% ≤ SPY 7.06%; 2016-26 CAGR 13.34% ≤ SPY 14.77%; max DD -38.21% deeper than −20%,FAIL,10 of 27,-12.9,209,11,8,,,0.984
-O4,Three-mode 1.5x offense,2005-15 CAGR 6.53% ≤ SPY 7.06%; max DD -49.56% deeper than −20%,FAIL,15 of 27,-23.7,209,21,11,,,0.968
-O5,Three-mode 2x offense,2005-15 CAGR 6.91% ≤ SPY 7.06%; max DD -59.81% deeper than −20%,FAIL,16 of 27,-34.0,209,24,14,,,0.954
-O6,O2 + production −8% breaker,full CAGR 6.58% ≤ SPY 8.2%; 2005-15 CAGR 3.81% ≤ SPY 7.06%; 2016-26 CAGR 12.12% ≤ SPY 14.77%; max DD -24.73% deeper than −20%,FAIL,7 of 27,-19.4,108,13,3,27.0,57.5,0.989
-O7,Three-state O2: Offense / Balanced (mixed) / Defense (SPY < 200d),2005-15 CAGR 5.6% ≤ SPY 7.06%; max DD -25.69% deeper than −20%,FAIL,10 of 27,-13.0,141,19,5,,,0.998
-O8,O7 + −8% portfolio stop to Defense,full CAGR 7.54% ≤ SPY 8.2%; 2005-15 CAGR 4.39% ≤ SPY 7.06%; max DD -33.58% deeper than −20%,FAIL,10 of 27,-19.7,141,12,7,35.0,9.1,0.99
+O1,SPY trend (SPY or T-bills),full CAGR 7.48% ≤ SPY 8.2%; 2005-15 CAGR 4.8% ≤ SPY 7.06%; 2016-26 CAGR 11.74% ≤ SPY 14.77%; max DD -21.73% deeper than −20%,FAIL,8 of 27,-14.4,100,11,5,,,0.994
+O2,"Two-mode: growth when SPY & QQQ > 200d, else Balanced",max DD -45.01% deeper than −20%,FAIL,14 of 27,-9.7,108,15,6,,,0.994
+O3,Three-mode 1x (trend + breadth),full CAGR 7.42% ≤ SPY 8.2%; 2005-15 CAGR 5.77% ≤ SPY 7.06%; 2016-26 CAGR 13.34% ≤ SPY 14.77%; max DD -38.21% deeper than −20%,FAIL,10 of 27,-12.9,209,11,8,,,0.979
+O4,Three-mode 1.5x offense,2005-15 CAGR 6.53% ≤ SPY 7.06%; max DD -49.56% deeper than −20%,FAIL,15 of 27,-23.7,209,21,11,,,0.96
+O5,Three-mode 2x offense,2005-15 CAGR 6.91% ≤ SPY 7.06%; max DD -59.81% deeper than −20%,FAIL,16 of 27,-34.0,209,24,14,,,0.943
+O6,O2 + production −8% breaker,full CAGR 6.58% ≤ SPY 8.2%; 2005-15 CAGR 3.81% ≤ SPY 7.06%; 2016-26 CAGR 12.12% ≤ SPY 14.77%; max DD -24.73% deeper than −20%,FAIL,7 of 27,-19.4,108,13,3,27.0,57.5,0.985
+O7,Three-state O2: Offense / Balanced (mixed) / Defense (SPY < 200d),2005-15 CAGR 5.6% ≤ SPY 7.06%; max DD -25.69% deeper than −20%,FAIL,10 of 27,-13.0,141,19,5,,,0.997
+O8,O7 + −8% portfolio stop to Defense,full CAGR 7.54% ≤ SPY 8.2%; 2005-15 CAGR 4.39% ≤ SPY 7.06%; max DD -33.58% deeper than −20%,FAIL,10 of 27,-19.7,141,12,7,35.0,9.1,0.987
 O9,"O7, fast exit (QQQ < 50d or −8%) to Balanced, slow re-entry",2005-15 CAGR 4.64% ≤ SPY 7.06%; 2016-26 CAGR 14.73% ≤ SPY 14.77%,FAIL,9 of 27,-14.9,251,11,3,76.0,23.7,0.999
-O10,O9 with the fast exit to Defense,full CAGR 6.84% ≤ SPY 8.2%; 2005-15 CAGR 3.69% ≤ SPY 7.06%; 2016-26 CAGR 10.73% ≤ SPY 14.77%,FAIL,8 of 27,-24.5,251,10,4,76.0,23.7,0.994
+O10,O9 with the fast exit to Defense,full CAGR 6.84% ≤ SPY 8.2%; 2005-15 CAGR 3.69% ≤ SPY 7.06%; 2016-26 CAGR 10.73% ≤ SPY 14.77%,FAIL,8 of 27,-24.5,251,10,4,76.0,23.7,0.993
+O11,"O9, 50-day exit only when credit confirms (−8% stop unconditional)",2005-15 CAGR 5.29% ≤ SPY 7.06%,FAIL,10 of 27,-14.7,203,12,2,44.0,13.3,0.999
