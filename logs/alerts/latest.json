@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-13T02:01:47+00:00",
+  "generated_at": "2026-11-13T02:29:26+00:00",
   "date": "2026-11-12",
   "version": "alerts v1 (build #3, 2026-11-12)",
   "selftest_ok": true,
@@ -11,12 +11,19 @@
     "SWING",
     "TEST"
   ],
-  "findings": [],
+  "findings": [
+    {
+      "key": "DATA_FAIL",
+      "severity": "alert",
+      "state": "active",
+      "title": "Data failure: 1 input(s) block decisions"
+    }
+  ],
   "actions": [
     {
-      "action": "close",
-      "key": "TEST",
-      "number": 7
+      "action": "open",
+      "key": "DATA_FAIL",
+      "number": 8
     }
   ],
   "error": null
