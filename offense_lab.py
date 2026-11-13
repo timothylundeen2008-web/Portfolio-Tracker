@@ -1,6 +1,11 @@
 """
-offense_lab.py  (v1.4 — 2026-11-13)
+offense_lab.py  (v1.5 — 2026-11-13)
 ───────────────────────────────────
+v1.5: no new candidate. O11 (v1.4: 9.51 / 5.29 / 14.92% vs SPY 8.20 / 7.06 /
+  14.77%, −19.3% max DD, Sharpe 0.81, the best of 11) gets the same 8-setting
+  sensitivity grid O9 got in v1.3, so the two can be compared on robustness
+  before either is chosen. 8 trials (27 total).
+
 v1.4: one new candidate, using a dashboard input that has real history.
   v1.3 showed O9's profile (drawdown inside −20%, CAGR above SPY full) holds
   in 7 of 8 nearby settings, but 2005–15 lags SPY in all 9 (3.5–6.2% vs
@@ -128,7 +133,7 @@ import pandas as pd
 import hedge_lab as hl
 import model_book as mb
 
-VERSION = "v1.4"
+VERSION = "v1.5"
 HISTORY_START = "1998-01-01"
 EVAL_START = "2000-01-03"
 HALVES = (("2005-15", "2005-01-03", "2015-12-31"), ("2016-26", "2016-01-01", None))
@@ -154,8 +159,9 @@ GUARD_CLOSES = 2
 FAST_SMA = 50              # O9/O10: QQQ below its 50-day for 2 closes ends Offense
 FAST_STOP = -8.0           # O9/O10: Offense book % from its high since entry
 COOLDOWN = 20              # O9/O10: sessions after a fast exit before Offense may resume
-DIAGNOSE = {"O9": [("ma", 150), ("ma", 250), ("fast_sma", 40), ("fast_sma", 60),
-                   ("fast_stop", -6.0), ("fast_stop", -10.0), ("cooldown", 10), ("cooldown", 30)]}
+_GRID = [("ma", 150), ("ma", 250), ("fast_sma", 40), ("fast_sma", 60),
+         ("fast_stop", -6.0), ("fast_stop", -10.0), ("cooldown", 10), ("cooldown", 30)]
+DIAGNOSE = {"O9": _GRID, "O11": _GRID}
 OUT_DIR = Path("data/offense_lab")
 LOG_DIR = Path("logs/offense_lab")
 
@@ -541,13 +547,13 @@ def run_all(data: dict, balanced: dict) -> dict:
             continue
         base = summ[k]
         diag.append({"candidate": k, "setting": "base (200 / 50 / −8% / 20)", **_diag_row(base, summ["SPY"]),
-                     "episodes_15": dd_episodes(navs[k], -15.0)})
+                     "episodes_15": dd_episodes(navs[k], -15.0), "is_base": True})
         for prm, val in grid:
             kw = {"ma": val} if prm == "ma" else {prm: val}
             rr = run_candidate(k, data, balanced, **kw)
             robust_keys.append(f"{k}@{prm}={val}")
             diag.append({"candidate": k, "setting": f"{prm} = {val}", **_diag_row(summary(rr["nav"]), summ["SPY"]),
-                         "episodes_15": dd_episodes(rr["nav"], -15.0)})
+                         "episodes_15": dd_episodes(rr["nav"], -15.0), "is_base": False})
     years = pd.DataFrame({k: year_returns(v) for k, v in navs.items()}).round(1)
     return {"navs": navs, "summ": summ, "runs": runs, "robust": robust_runs, "diag": pd.DataFrame(diag),
             "robust_keys": robust_keys,
@@ -637,8 +643,12 @@ def render(out: dict, acc: pd.DataFrame, data: dict, n_trials: int, dsr: dict, a
             L.append(f"| {r.candidate} | {r.setting} | {_f(r.cagr_full)} / {_f(r.cagr_05_15)} / {_f(r.cagr_16_26)} | "
                      f"{_f(r.max_dd)} | {_f(r.sharpe)} | {_f(r.calmar)} | {r.episodes_15} | "
                      f"{'yes' if r.keeps_profile else 'no'} | {r.bar} | {r.misses or '—'} |")
-        n_ok = int(dg["keeps_profile"].iloc[1:].sum())
-        L.append(f"\nProfile held in **{n_ok} of {len(dg) - 1}** nearby settings.")
+        L.append("")
+        for k in dg["candidate"].unique():
+            g = dg[(dg.candidate == k) & (~dg.is_base)]
+            L.append(f"- **{k}**: profile held in **{int(g.keeps_profile.sum())} of {len(g)}** nearby settings; "
+                     f"full CAGR {g.cagr_full.min():.2f}–{g.cagr_full.max():.2f}%, max DD {g.max_dd.min():.1f} to "
+                     f"{g.max_dd.max():.1f}%, 2005–15 {g.cagr_05_15.min():.2f}–{g.cagr_05_15.max():.2f}%.")
     L += ["", "## Full window and halves", "",
           "| Book | CAGR full / 05–15 / 16–26 % | Max DD full % | Vol % | Sharpe | Calmar | DSR | Time in Offense / Balanced / Defense |",
           "|---|---|---|---|---|---|---|---|"]
@@ -949,7 +959,7 @@ def selftest() -> dict:
         if res2["n_trials"] != res["n_trials"]:
             f.append(f"a rerun must not re-count candidates already tried: {res['n_trials']} -> {res2['n_trials']}")
         dg = out["diag"]
-        if len(dg) != 1 + len(DIAGNOSE["O9"]) or "Sensitivity (v1.3)" not in md:
+        if len(dg) != sum(1 + len(v) for v in DIAGNOSE.values()) or "Sensitivity (v1.3)" not in md:
             f.append(f"sensitivity grid: {len(dg)} rows")
         if res["n_trials"] != len(CANDIDATES) + len(out["robust_keys"]):
             f.append(f"each sensitivity run is a trial: {res['n_trials']}")

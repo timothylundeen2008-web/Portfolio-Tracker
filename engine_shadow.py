@@ -50,9 +50,9 @@ import pandas as pd
 import hedge_lab as hl
 import offense_lab as ol
 
-VERSION = "v1.0.1"   # v1.0.1 (N66): drop bars after the expected session (no intraday reads)
+VERSION = "v1.1"     # v1.0.1 (N66): drop bars after the expected session; v1.1: O11 added
 SHADOW_START = "2026-12-01"
-ENGINES = ("O9", "O7")
+ENGINES = ("O11", "O9", "O7")     # O11 = best of the lab (v1.4); O9 and O7 for comparison
 FETCH_DAYS = 700                      # >= 200-day average + warm-up + slack
 OUT_DIR = Path("data/engine_shadow")
 LOG_DIR = Path("logs/engine_shadow")
@@ -168,6 +168,8 @@ def render(status: dict, reads: list, summ: dict, regime: str, asof: str) -> str
          f"Live regime inside Balanced: `{regime}`.", ""]
     if status.get("error"):
         L += [f"**DATA FAILURE — nothing booked today:** {status['error']}", ""]
+    if status.get("warning"):
+        L += [f"**Data gap:** {status['warning']}", ""]
     L += ["## What each engine says", "", "| Engine | State | Since | Switch today | Holds from the next session |",
           "|---|---|---|---|---|"]
     for r in reads:
@@ -210,6 +212,9 @@ def build(closes: dict, book: Optional[pd.DataFrame], expected: Optional[date], 
     if missing:
         status["error"] = f"signal inputs missing: {', '.join(missing)}"
     data = ol.build_data(closes) if not missing else None
+    if data is not None and data["levels"]["CREDIT"].dropna().empty:
+        status["warning"] = ("credit pair (VWEHX/VFITX) missing: O11 used the plain 50-day exit today, "
+                             "so its record matches O9's for this session")
     if data is not None:
         last = data["levels"][["SPY", "QQQ"]].dropna().index[-1].date()
         status["last_bar"] = last.isoformat()
@@ -297,6 +302,13 @@ def selftest() -> dict:
     if r3["status"].get("last_bar") != exp.isoformat() or r3["status"]["error"] or \
             not r3["nav"].equals(nav) or [x["state"] for x in r3["reads"]] != [x["state"] for x in r["reads"]]:
         f.append(f"a partial bar after the expected session must be dropped: {r3['status'].get('last_bar')}")
+    # v1.1: O11 is tracked; a missing credit pair is flagged, not hidden
+    if "O11" not in nav or "O11" not in [x["engine"] for x in r["reads"]]:
+        f.append("O11 must be in the shadow")
+    c4 = {t: v for t, v in closes.items() if t not in ol.CREDIT_PAIR}
+    r4 = build(c4, book, exp, "T", start=start)
+    if r4["status"]["error"] or not r4["status"].get("warning") or "Data gap" not in r4["md"]:
+        f.append("a missing credit pair must warn (O11 falls back to O9's exit), not fail the run")
     # pre-start: reads, no NAV
     r0 = build(closes, book, exp, "T", start=(cal[-1] + pd.Timedelta(days=30)).date().isoformat())
     if len(r0["nav"]) or not r0["reads"] or "starts on" not in r0["md"]:
