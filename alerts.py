@@ -16,6 +16,9 @@ RULES                                           severity   clears when
   LT_DD_15     model book <= -15% from peak     ALARM      above -13%
   LT_BREAKER   breaker WARN (-5%)               alert      warn off
   LT_BREAKER_ON  breaker ON (-8%)               ALARM      breaker off
+                 (both skipped once the engine runs the book: breaker = "ENGINE")
+  LT_ENGINE    the O11 engine switched state    alert      the next run (one push per switch)
+               at tonight's close
   HY_OVERRIDE  regime = liquidity_crisis        ALARM      regime changes
   SWING_MONTH  swing monthly stand-down         alert      new month
   SWING_HWM    swing high-water stand-down      ALARM      journaled RESTART
@@ -58,7 +61,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-VERSION = "alerts v1 (build #3, 2026-11-12)"
+VERSION = "alerts v1.1 (engine layer, 2026-11-13)"
 ROOT = Path(os.environ.get("ALERTS_ROOT", "."))
 OUT_DIR = Path("logs/alerts")
 
@@ -165,7 +168,9 @@ def evaluate(src: dict, today: date) -> tuple[list[dict], set]:
                         state="active" if dd <= LT_ALERT else "hold"))
             brk = str(mb.get("breaker") or "").upper()
             warn = str(mb.get("warn") or "").strip().lower() in ("true", "1", "yes", "warn")
-            if brk == "ON":
+            if brk == "ENGINE":
+                pass            # the engine replaced the breaker; the −10% / −15% alarms above still apply
+            elif brk == "ON":
                 out.append(finding("LT_BREAKER_ON", "alarm", "Model-book breaker ON — risk sleeves halved into SGOV",
                     line + "\n\nThe −8% breaker tripped (risk_policy §3, `model_book.py`): risk sleeves halved into "
                     "SGOV. Release above −5% with SPY > 50-day on 2 closes. Daily authority item 3."))
@@ -182,6 +187,13 @@ def evaluate(src: dict, today: date) -> tuple[list[dict], set]:
         data.append(f"daily brief {src.get('daily_date')} is {dage} days old — regime/HY override unknown")
     else:
         fams.add("HY")
+        er = (daily.get("model") or {}).get("engine") or {}
+        if er.get("available") and er.get("switched"):
+            out.append(finding("LT_ENGINE", "alert",
+                f"Engine {er.get('engine')} → {er.get('word')} (from {er.get('previous')})",
+                f"{er.get('conclusion')}\n\nThe model book follows at the next session (risk_policy §3, "
+                f"engine layer). Model portfolio only — no real money follows it yet.",
+                fp=_fp("LT_ENGINE", er.get("asof"), er.get("state"))))
         rk = (daily.get("regime") or {}).get("key")
         if rk == "liquidity_crisis":
             out.append(finding("HY_OVERRIDE", "alarm", "HY crisis override: regime liquidity_crisis",
@@ -398,6 +410,18 @@ def selftest() -> dict:
         f.append("inside the hysteresis band with no open issue, nothing may be opened")
     if keys(_src(warn="True")) != ["LT_BREAKER"] or keys(_src(breaker="ON", warn="True")) != ["LT_BREAKER_ON"]:
         f.append("breaker WARN -> alert; ON -> alarm only")
+    if keys(_src(warn="True", breaker="ENGINE", dd=-6.0)) != []:
+        f.append("in engine mode the breaker WARN/ON alerts are retired")
+    if keys(_src(breaker="ENGINE", dd=-10.5)) != ["LT_DD_10"]:
+        f.append("in engine mode the −10% drawdown alert still fires")
+    sw_src = _src(); sw_src["daily"]["model"] = {"engine": {"available": True, "switched": True, "engine": "O11",
+                                                           "word": "DEFENSE", "previous": "OFF", "state": "DEF",
+                                                           "asof": "2026-11-12", "conclusion": "switched"}}
+    if keys(sw_src) != ["LT_ENGINE"]:
+        f.append(f"an engine switch must raise LT_ENGINE: {keys(sw_src)}")
+    sw_src["daily"]["model"]["engine"]["switched"] = False
+    if keys(sw_src) != []:
+        f.append("no switch, no engine alert")
     if keys(_src(regime="liquidity_crisis")) != ["HY_OVERRIDE"]:
         f.append("liquidity_crisis must raise the HY override alarm")
     bad = _src(health=[{"input": "FRED DGS10", "status": "MISSING", "asof": None}])

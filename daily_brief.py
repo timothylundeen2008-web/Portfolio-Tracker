@@ -535,6 +535,18 @@ def gather(today_et: Optional[datetime] = None, fred_key: str = "",
         inp["prices"] = (fetch_prices or _default_prices)(tickers)
     except Exception as e:
         inp["prices"] = {}; errors.append(f"price fetch failed: {type(e).__name__}: {e}")
+    # v1.7 engine layer (O11, adopted 2026-11-13): its state is path-dependent, so it
+    # needs a longer history than the brief's 2y for its own four tickers.
+    inp["engine_prices"] = {}
+    try:
+        import engine_layer as _el
+        _fp = fetch_prices or _default_prices
+        try:
+            inp["engine_prices"] = _fp(list(_el.TICKERS), period=_el.HISTORY) or {}
+        except TypeError:                                    # injected fetchers without a period
+            inp["engine_prices"] = _fp(list(_el.TICKERS)) or {}
+    except Exception as e:
+        errors.append(f"engine price fetch failed: {type(e).__name__}: {e}")
     # FRED's VIXCLS and DCOILWTICO lag the market by 1-3 sessions; splice the
     # yfinance closes after FRED's last date so the level is current but the
     # 1-year history (percentile, σ) stays FRED's.
@@ -1918,6 +1930,9 @@ def portfolio_section(inp: dict, targets: dict, regime_key: Optional[str], force
 
 # ── Model portfolio (what you SHOULD hold) ──────────────────────────────────
 
+ENGINE_LIVE = True      # v1.7 (2026-11-13): O11 switching layer on the model book (Matt: "option 2")
+
+
 def model_section(inp: dict, rg: dict) -> dict:
     """The framework's answer, every session: regime targets after the entry
     gate and the portfolio circuit breaker, tracked as a model book."""
@@ -1963,8 +1978,24 @@ def model_section(inp: dict, rg: dict) -> dict:
         if today_w is None:
             today_w = rc.target_weights(key, None, sig, gate=False)
     path = Path(inp.get("data_dir") or "data") / "model_book.csv"
+    # v1.7: the adopted engine (O11) decides Offense / Balanced / Defense; Balanced is the
+    # gated regime book above. ENGINE_LIVE = False restores breaker mode (rollback switch).
+    engine, eread = None, None
+    if ENGINE_LIVE:
+        try:
+            import engine_layer as el
+            ep = {**{t: prices[t] for t in el.TICKERS if t in prices}, **(inp.get("engine_prices") or {})}
+            est = el.states(ep)
+            eread = el.read(est, ep)
+            engine = {"state_for": lambda d, _s=est: el.state_for(_s, d), "overlay": el.overlay}
+        except Exception as e:
+            eread = {"available": False, "conclusion": f"Engine layer failed: {type(e).__name__}: {e} — "
+                                                       f"yesterday's engine state is held."}
+            engine = {"state_for": lambda d: None, "overlay": (lambda s_, bw: dict(bw))}
+    out["engine"] = eread
     try:
-        book = mbk.advance(mbk.load(path), inp["session"], regime_by_date, prices, weights_fn, key, today_w)
+        book = mbk.advance(mbk.load(path), inp["session"], regime_by_date, prices, weights_fn, key, today_w,
+                           engine=engine)
     except Exception as e:
         out["conclusion"] = f"Model book failed: {type(e).__name__}: {e}"
         return out
@@ -2005,11 +2036,25 @@ def model_section(inp: dict, rg: dict) -> dict:
     if sm["changes"] and not actions:
         moved = ", ".join(f"{c['ticker']} {c['change']:+.1f}" for c in sm["changes"][:8])
         weekend.append(f"Model portfolio changed today ({moved}) — execute at the weekend review if following it")
-    c = (f"You SHOULD hold the `{key}` model above"
+    _ew = {"OFF": "OFFENSE (50% QQQ / 50% SPY)", "DEF": "DEFENSE (SGOV / GLD / TLT)",
+           "BAL": f"BALANCED (the `{key}` regime book)", "OUT": f"FAST-EXIT → BALANCED (the `{key}` regime book)"}
+    if sm.get("engine"):
+        if sm.get("engine_changed"):
+            actions.append(f"ENGINE SWITCH — the model book moved to {_ew.get(sm['engine'], sm['engine'])} "
+                           f"(was {_ew.get(sm['engine_previous'], sm['engine_previous'])}); weekday-authorized, "
+                           f"like a stop")
+        if eread and eread.get("switched"):
+            weekend.append(f"Engine {eread.get('engine')} switched at today's close to {eread.get('word')}: "
+                           f"the model book moves at the NEXT session")
+    c = ((f"Engine {(eread or {}).get('engine', 'O11')}: the book holds {_ew.get(sm['engine'], sm['engine'])}. "
+          if sm.get("engine") else "")
+         + f"You SHOULD hold the {'book' if sm.get('engine') else f'`{key}` model'} above"
          + (" — with the CIRCUIT BREAKER ON (risk sleeves halved)" if sm["breaker"] == "ON" else "")
          + f". Model book {sm['nav']:.2f} ({sm['drawdown_pct']:+.1f}% from peak"
          + (f"; 20d {sm['ret_20d']:+.1f}%" if sm.get("ret_20d") is not None else "") + "). ")
-    if sm["warn"] and sm["breaker"] != "ON":
+    if sm["warn"] and sm["breaker"] == "ENGINE":
+        c += f"⚠ Drawdown past {mbk.WARN_DD:.0f}% — the engine's −8% Offense stop and trend rules are the control. "
+    elif sm["warn"] and sm["breaker"] != "ON":
         c += f"⚠ Drawdown past the {mbk.WARN_DD:.0f}% warning line — the breaker trips at {mbk.TRIGGER_DD:.0f}%. "
     if sm["breaker"] == "ON":
         c += (f"Release needs drawdown back above {mbk.RELEASE_DD:.0f}% and SPY above its 50-day on "
@@ -2044,6 +2089,10 @@ def model_section(inp: dict, rg: dict) -> dict:
     except Exception as e:
         out["attribution"] = out["ai_exposure"] = out["vol_target"] = out["risk_by_group"] = {
             "available": False, "conclusion": f"book_risk unavailable: {type(e).__name__}: {e}"}
+    if eread and eread.get("switched") is not None:
+        c += " " + eread["conclusion"]
+    elif eread and not eread.get("available"):
+        c += " ⚠ " + eread["conclusion"]
     out.update(available=True, summary=sm, rows=rows, actions=actions, weekend=weekend,
                conclusion=c.strip(), _book=book, path=str(path), regime_held=failed_regime)
     return out
@@ -2404,7 +2453,8 @@ def risk_alerts_section(b: dict, inp: dict) -> dict:
           if sm.get("drawdown_pct") is not None else None)
     sf = inp.get("swing_file")
     src = {"model_book": mb, "model_book_error": None if mb else "model summary unavailable in this brief",
-           "daily": {"regime": {"key": (b.get("regime") or {}).get("key")}, "data_health": b.get("data_health") or []},
+           "daily": {"regime": {"key": (b.get("regime") or {}).get("key")}, "data_health": b.get("data_health") or [],
+                     "model": {"engine": (b.get("model") or {}).get("engine")}},
            "daily_date": b.get("session"),
            "swing": inp.get("swing") or None, "swing_date": str(sf)[:10] if sf else None}
     try:
@@ -3411,6 +3461,14 @@ def selftest() -> dict:
             f.append(f"model portfolio section missing: {mdl.get('conclusion')}")
         elif abs(sum(r["weight"] for r in mdl["rows"]) - 100) > 1.0:
             f.append(f"model weights must sum to ~100: {sum(r['weight'] for r in mdl['rows'])}")
+        # v1.7 engine layer: every brief reads the engine and books in engine mode
+        _er = mdl.get("engine") or {}
+        if not _er.get("conclusion") or mdl["summary"].get("breaker") != "ENGINE" or not mdl["summary"].get("engine"):
+            f.append(f"engine mode: read + book state required: {_er.get('conclusion')}, {mdl['summary'].get('breaker')}")
+        elif _er.get("available") and mdl["summary"]["engine"] not in ("OFF", "BAL", "DEF", "OUT"):
+            f.append("engine state must be one of OFF/BAL/DEF/OUT")
+        if "Engine O11" not in mdl.get("conclusion", ""):
+            f.append("the model conclusion must say what the engine holds")
         for r_ in mdl.get("rows") or []:
             if r_["gate"] in ("BLOCKED", "UNAVAILABLE") and r_["change"] > 0.05:
                 f.append(f"{r_['ticker']} shows a BLOCKED add yet the model weight rose {r_['change']:+.1f}")

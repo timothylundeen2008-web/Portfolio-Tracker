@@ -1652,19 +1652,31 @@ with tab4:
     if _mdl.get("available"):
         _sm = _mdl["summary"]
         _brk = _sm.get("breaker") == "ON"
+        _eng = _sm.get("engine") if _sm.get("breaker") == "ENGINE" else None     # v1.7 engine layer (O11)
+        _ew = {"OFF": "OFFENSE", "BAL": "BALANCED", "DEF": "DEFENSE", "OUT": "FAST-EXIT → Balanced"}
         c1, c2, c3, c4 = st.columns(4)
         c1.metric("Regime", _sm.get("regime", "—"))
-        c2.metric("Circuit breaker", "ON — risk halved" if _brk else "OFF")
+        if _eng:
+            c2.metric("Engine O11", _ew.get(_eng, _eng),
+                      help="Offense = 50% QQQ / 50% SPY · Balanced = the regime book · Defense = SGOV/GLD/TLT. "
+                           "Replaces the circuit breaker as the book's drawdown control (2026-11-13).")
+        else:
+            c2.metric("Circuit breaker", "ON — risk halved" if _brk else "OFF")
         c3.metric("Model drawdown", f"{_sm.get('drawdown_pct', 0):+.1f}%",
-                  help="Model book vs its running peak. Warning at -5%, breaker trips at -8%.")
+                  help=("Model book vs its running peak. Alerts at -10% and -15%." if _eng else
+                        "Model book vs its running peak. Warning at -5%, breaker trips at -8%."))
         c4.metric("Model 20-day", f"{_sm['ret_20d']:+.2f}%" if _sm.get("ret_20d") is not None else "—",
                   help=(f"Since inception ({_sm.get('since')}): {_sm['since_inception_pct']:+.2f}%"
                         if _sm.get("since_inception_pct") is not None else None))
         if _brk:
             st.error("Circuit breaker ON: every risk sleeve is halved and the freed weight is in SGOV. "
                      "Release needs drawdown back above -5% and SPY above its 50-day on 2 closes.")
+        elif _sm.get("warn") and _eng:
+            st.warning("Model drawdown is past -5%; the engine's -8% Offense stop and trend rules are the control.")
         elif _sm.get("warn"):
             st.warning("Model drawdown is past the -5% warning line; the breaker trips at -8%.")
+        if _eng and (_mdl.get("engine") or {}).get("conclusion"):
+            st.caption(_mdl["engine"]["conclusion"])
         _rows = pd.DataFrame(_mdl.get("rows") or [])
         if not _rows.empty:
             _rows = _rows.rename(columns={"ticker": "Sleeve", "weight": "Should hold %", "change": "Change today",

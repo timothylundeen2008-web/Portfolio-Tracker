@@ -52,6 +52,18 @@ PRICE INTEGRITY  (v1.1 — Oct 2026)
       record of what was decided and are never rewritten; only NAV, peak,
       drawdown and warn are recomputed.
 
+ENGINE LAYER  (v1.2 — 2026-11-13, Matt: "option 2")
+  When the caller passes `engine`, the book's weights come from the adopted
+  Offense / Balanced / Defense engine (engine_layer.py, O11): OFFENSE 50/50
+  QQQ/SPY, DEFENSE SGOV/GLD/TLT, and the live regime book (gated, exactly as
+  before) in BALANCED and after a fast exit. In engine mode the circuit
+  breaker is RETIRED for the book (breaker column = "ENGINE"): the engine is
+  the drawdown control, as tested — the breaker on top of a switching engine
+  latched 58% of the time and cost ~3 pts/yr (offense lab O6). The −10% / −15%
+  drawdown alarms are unchanged. If the engine has no state for a day (data
+  gap), the previous row's engine state is held, never guessed. Rows booked
+  before the engine went live keep their record (decisions are never rewritten).
+
 PERSISTENCE
   data/model_book.csv, one row per session (idempotent per session). On the
   first run it is RECONSTRUCTED from logs/daily_log.csv (the regime each
@@ -83,7 +95,8 @@ COVERAGE_MIN = 0.95     # share of held weight that must have a valid return to 
 REMARK_WINDOW = 30      # trailing rows re-marked from stored weights every run
 
 COLS = ["date", "regime", "nav", "peak", "drawdown_pct", "breaker", "release_count",
-        "warn", "source", "weights"]
+        "warn", "source", "weights", "engine"]
+ENGINE_STATES = {"OFF", "BAL", "DEF", "OUT"}
 
 
 # ── pure pieces ─────────────────────────────────────────────────────────────
@@ -197,14 +210,17 @@ def pending_session(book: pd.DataFrame, session) -> bool:
 # ── the engine ──────────────────────────────────────────────────────────────
 
 def advance(book: pd.DataFrame, session: date, regime_by_date: dict, prices: dict,
-            weights_fn: Callable, today_regime: str, today_weights: Optional[dict] = None) -> pd.DataFrame:
+            weights_fn: Callable, today_regime: str, today_weights: Optional[dict] = None,
+            engine: Optional[dict] = None) -> pd.DataFrame:
     """Roll the book forward to `session`.
 
     regime_by_date: {date: regime_key} (any calendar dates; the latest on or
     before each trading day applies). weights_fn(regime_key, asof_date) ->
     gated should-hold weights using only data up to asof_date.
     today_weights overrides weights_fn for `session` (the live, fully-signalled
-    targets)."""
+    targets).
+    engine (v1.2): {"state_for": f(day) -> state or None (already one session
+    late), "overlay": f(state, regime_weights) -> weights}. None = breaker mode."""
     closes = {t: _close(prices, t) for t in prices}
     spy = closes.get("SPY")
     cal = sorted(set(spy.index)) if spy is not None and not spy.empty else []
@@ -247,17 +263,30 @@ def advance(book: pd.DataFrame, session: date, regime_by_date: dict, prices: dic
                 break           # deferred: never book an unmeasured day as a 0% return
             nav = float(prev["nav"]) * (1 + r)
             peak = max(float(prev["peak"]), nav)
-            state, rc = next_breaker(prev["breaker"], int(prev["release_count"]),
-                                     (nav / peak - 1) * 100, _spy_above_50(closes, d))
+            if engine is None:
+                state, rc = next_breaker(prev["breaker"] if prev["breaker"] in ("ON", "OFF") else "OFF",
+                                         int(prev["release_count"]), (nav / peak - 1) * 100,
+                                         _spy_above_50(closes, d))
+            else:
+                state, rc = "ENGINE", 0
         else:
-            nav, peak, state, rc = START_NAV, START_NAV, "OFF", 0
+            nav, peak, state, rc = START_NAV, START_NAV, ("ENGINE" if engine is not None else "OFF"), 0
         dd = (nav / peak - 1) * 100
         base_w = today_weights if (is_today and today_weights) else weights_fn(reg, d)
-        w = apply_breaker(base_w, reg) if state == "ON" else dict(base_w)
+        est = None
+        if engine is not None:
+            est = engine["state_for"](d)
+            if est not in ENGINE_STATES:                      # data gap: hold yesterday's state, never guess
+                pe = rows[-1].get("engine") if rows else None
+                est = pe if pe in ENGINE_STATES else "BAL"
+            w = engine["overlay"](est, base_w)
+        else:
+            w = apply_breaker(base_w, reg) if state == "ON" else dict(base_w)
         rows.append({"date": d, "regime": reg, "nav": round(nav, 4), "peak": round(peak, 4),
                      "drawdown_pct": round(dd, 2), "breaker": state, "release_count": rc,
                      "warn": dd <= WARN_DD, "source": "live" if is_today else source,
-                     "weights": json.dumps({k: round(float(v), 2) for k, v in w.items()})})
+                     "weights": json.dumps({k: round(float(v), 2) for k, v in w.items()}),
+                     "engine": est})
     out = pd.DataFrame(rows, columns=COLS)
     out["date"] = pd.to_datetime(out["date"]).dt.strftime("%Y-%m-%d")
     return out
@@ -292,6 +321,10 @@ def summary(book: pd.DataFrame) -> dict:
     def ret(n):
         return round((nav.iloc[-1] / nav.iloc[-1 - n] - 1) * 100, 2) if len(nav) > n else None
     prev_state = b.iloc[-2]["breaker"] if len(b) > 1 else "OFF"
+    eng = t.get("engine") if "engine" in b else None
+    eng = eng if isinstance(eng, str) and eng in ENGINE_STATES else None
+    peng = b.iloc[-2].get("engine") if ("engine" in b and len(b) > 1) else None
+    peng = peng if isinstance(peng, str) and peng in ENGINE_STATES else None
     return {"available": True, "date": t["date"], "regime": t["regime"], "weights": w,
             "nav": float(t["nav"]), "peak": float(t["peak"]), "drawdown_pct": float(t["drawdown_pct"]),
             "breaker": t["breaker"], "breaker_changed": t["breaker"] != prev_state,
@@ -301,7 +334,8 @@ def summary(book: pd.DataFrame) -> dict:
             # be false precision), so the honest long-run number is inception.
             "since_inception_pct": round((float(nav.iloc[-1]) / float(nav.iloc[0]) - 1) * 100, 2) if len(nav) > 1 else None,
             "since": b.iloc[0]["date"], "reconstructed_sessions": int((b["source"] == "reconstructed").sum()),
-            "changes": changes}
+            "changes": changes, "engine": eng, "engine_previous": peng,
+            "engine_changed": bool(eng and peng and eng != peng)}
 
 
 # ── selftest ────────────────────────────────────────────────────────────────
@@ -389,6 +423,35 @@ def selftest() -> dict:
     deferred = advance(stale, late.date(), {}, p4, wf, "credit_stress")
     if len(deferred) != len(stale):
         f.append("a day with < COVERAGE_MIN of held weight measurable must be deferred, not booked")
+    # ── v1.2 engine mode ─────────────────────────────────────────────────
+    st_map = {d: ("OFF" if i < 70 else "OUT") for i, d in enumerate(idx)}
+    st_map[idx[100]] = None                                              # a data gap
+    eng = {"state_for": lambda d: st_map.get(pd.Timestamp(d)),
+           "overlay": lambda s_, bw: {"QQQ": 50.0, "SPY": 50.0} if s_ == "OFF" else dict(bw)}
+    prices_e = {**prices, "QQQ": prices["VGT"]}
+    eb = advance(pd.DataFrame(), idx[-1].date(), {idx[0]: "restrictive_tightening"}, prices_e, wf,
+                 "restrictive_tightening", engine=eng)
+    if set(eb["breaker"]) != {"ENGINE"}:
+        f.append(f"engine mode retires the breaker: {set(eb['breaker'])}")
+    if json.loads(eb["weights"].iloc[10]) != {"QQQ": 50.0, "SPY": 50.0} or eb["engine"].iloc[10] != "OFF":
+        f.append("OFFENSE rows must hold the engine's offense book")
+    if json.loads(eb["weights"].iloc[90]) != {"VGT": 80.0, "SGOV": 10.0, "KMLM": 10.0}:
+        f.append("FAST-EXIT rows hold the regime book (no breaker halving)")
+    if eb["engine"].iloc[100] != eb["engine"].iloc[99]:
+        f.append("a data gap must hold the previous engine state")
+    if eb["drawdown_pct"].min() > -20:
+        f.append("engine mode must not apply the breaker even in a crash (the engine is the control)")
+    se = summary(eb)
+    if se["engine"] != "OUT" or se["breaker"] != "ENGINE":
+        f.append(f"summary must carry the engine state: {se.get('engine')}")
+    # switching from breaker mode to engine mode keeps the old record
+    mixed = advance(book, nxt.date(), {}, p2, wf, "credit_stress", today_weights={"SGOV": 60.0, "VGT": 40.0},
+                    engine={"state_for": lambda d: "DEF", "overlay": lambda s_, bw: {"SGOV": 100.0}})
+    if not mixed.iloc[:-1][["nav", "breaker", "weights"]].astype(str).equals(
+            book[["nav", "breaker", "weights"]].astype(str).reset_index(drop=True)):
+        f.append("turning the engine on must not rewrite earlier rows")
+    if mixed["breaker"].iloc[-1] != "ENGINE" or json.loads(mixed["weights"].iloc[-1]) != {"SGOV": 100.0}:
+        f.append("the first engine row must use the engine's book")
     return {"ok": not f, "failures": f}
 
 
