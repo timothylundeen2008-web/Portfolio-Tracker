@@ -1,6 +1,6 @@
 {
  "session": "2026-11-13",
- "generated_et": "Nov 14, 2026 07:45 AM EST",
+ "generated_et": "Nov 15, 2026 05:25 PM EST",
  "scoreboard": {
   "rows": [
    {
@@ -149,12 +149,12 @@
    },
    {
     "name": "WTI crude",
-    "value": 88.51155202725538,
+    "value": 88.50545868516691,
     "unit": "$",
     "kind": "index",
-    "d1": -0.27458470183340244,
-    "d5": -2.5525154211839207,
-    "d20": -12.719111694178299,
+    "d1": -0.2814500324756497,
+    "d5": -2.5592239337520417,
+    "d20": -12.725120314500183,
     "d1_txt": "-0.3%",
     "d5_txt": "-2.6%",
     "d20_txt": "-12.7%",
@@ -563,10 +563,10 @@
   ],
   "flip_error": null,
   "guards": [
-   "cape: 39.95 (live, as of 2026-11-14)",
-   "top20 concentration pct: 48.55 (live, as of 2026-11-14) \u2014 top 20 SPY weights summed",
+   "cape: 39.95 (live, as of 2026-11-15)",
+   "top20 concentration pct: 48.55 (live, as of 2026-11-15) \u2014 top 20 SPY weights summed",
    "fed bs expanding: False (live, as of 2026-11-11) \u2014 flat / neutral: 4-wk avg +0.8B/wk, 13-wk avg -0.1B/wk",
-   "deficit gt 5pct gdp: True (manual, as of 2026-08-13, 93d old)"
+   "deficit gt 5pct gdp: True (manual, as of 2026-08-13, 94d old)"
   ],
   "guard_warnings": [],
   "repression": {
@@ -579,6 +579,18 @@
     "from": "transition_ambiguous",
     "to": "credit_stress",
     "rows": [
+     {
+      "ticker": "DBMF",
+      "from": 5.0,
+      "to": 0.0,
+      "change": -5.0,
+      "step": "1 cut",
+      "now": -5.0,
+      "pending": 0.0,
+      "gate": "\u2014",
+      "trigger": null,
+      "detail": "cuts are never gated"
+     },
      {
       "ticker": "TLT",
       "from": 7.0,
@@ -688,18 +700,6 @@
       "detail": "+11.8% vs rising 200d, +5.5% vs 50d \u2014 full add"
      },
      {
-      "ticker": "USFR",
-      "from": 7.0,
-      "to": 9.0,
-      "change": 2.0,
-      "step": "3 add",
-      "now": 2.0,
-      "pending": 0.0,
-      "gate": "EXEMPT",
-      "trigger": null,
-      "detail": "cash \u2014 no trend gate (gated adds park here)"
-     },
-     {
       "ticker": "XLV",
       "from": 5.0,
       "to": 7.0,
@@ -710,6 +710,18 @@
       "gate": "CONFIRMED",
       "trigger": null,
       "detail": "+18.5% vs rising 200d, +8.0% vs 50d \u2014 full add"
+     },
+     {
+      "ticker": "USFR",
+      "from": 2.0,
+      "to": 9.0,
+      "change": 7.0,
+      "step": "3 add",
+      "now": 7.0,
+      "pending": 0.0,
+      "gate": "EXEMPT",
+      "trigger": null,
+      "detail": "cash \u2014 no trend gate (gated adds park here)"
      },
      {
       "ticker": "SGOV",
@@ -729,11 +741,33 @@
     "half": [
      "KMLM"
     ],
-    "summary": "transition_ambiguous -> credit_stress: 7 cuts, 5 adds; half-size on pullback: KMLM; 0.5pt parked",
+    "summary": "transition_ambiguous -> credit_stress: 8 cuts, 5 adds; half-size on pullback: KMLM; 0.5pt parked",
     "title": "Contingency \u2014 if `credit_stress` confirms on two closes"
    }
   ],
   "gates_today": {
+   "DBMF": {
+    "ticker": "DBMF",
+    "state": "CONFIRMED",
+    "fraction": 1.0,
+    "close": 32.42,
+    "ma50": 32.33,
+    "ma200": 30.94,
+    "ma200_rising": true,
+    "detail": "+4.8% vs rising 200d, +0.3% vs 50d \u2014 full add",
+    "trigger": null
+   },
+   "SCHP": {
+    "ticker": "SCHP",
+    "state": "BLOCKED",
+    "fraction": 0.0,
+    "close": 25.18,
+    "ma50": 25.35,
+    "ma200": 25.68,
+    "ma200_rising": false,
+    "detail": "-2.0% vs a FALLING 200d (25.68) \u2014 downtrend; add parked in SGOV",
+    "trigger": "close above a flat-or-rising 200-day (25.68)"
+   },
    "KMLM": {
     "ticker": "KMLM",
     "state": "PULLBACK",
@@ -1534,8 +1568,8 @@
  },
  "flow_map": {
   "available": true,
-  "stale": false,
-  "age_hours": 11.0,
+  "stale": true,
+  "age_hours": 44.6,
   "published_at": "2026-11-14T01:46:39+00:00",
   "data_through": "2026-11-13",
   "window": 20,
@@ -2091,7 +2125,7 @@
  },
  "model": {
   "available": true,
-  "conclusion": "Engine O11: the book holds FAST-EXIT \u2192 BALANCED (the `transition_ambiguous` regime book). You SHOULD hold the book above. Model book 97.18 (-4.7% from peak; 20d -2.8%). No change today. Since 2026-08-12: model -2.82% vs SPY -2.10% and 60/40 -1.74%. \u26a0 AI / growth tech carries 54% of book risk \u2265 40% (PROPOSED limit). Engine O11: FAST-EXIT (Balanced) since 2026-10-16.",
+  "conclusion": "Engine O11: the book holds FAST-EXIT \u2192 BALANCED (the `transition_ambiguous` regime book). You SHOULD hold the book above. Model book 97.18 (-4.7% from peak; 20d -2.8%). 2 weight change(s) vs the prior session. Since 2026-08-12: model -2.82% vs SPY -2.10% and 60/40 -1.74%. \u26a0 AI / growth tech carries 55% of book risk \u2265 40% (PROPOSED limit). Engine O11: FAST-EXIT (Balanced) since 2026-10-16.",
   "engine": {
    "available": true,
    "engine": "O11",
@@ -2255,13 +2289,6 @@
      "ai_pct": 0.0
     },
     {
-     "ticker": "USFR",
-     "weight": 7.0,
-     "b_mkt": 0.0,
-     "b_ai": 0.0,
-     "ai_pct": 0.0
-    },
-    {
      "ticker": "TLT",
      "weight": 7.0,
      "b_mkt": 0.25,
@@ -2288,6 +2315,13 @@
      "b_mkt": 0.9,
      "b_ai": -0.34,
      "ai_pct": -1.69
+    },
+    {
+     "ticker": "DBMF",
+     "weight": 5.0,
+     "b_mkt": -0.22,
+     "b_ai": 0.18,
+     "ai_pct": 0.9
     },
     {
      "ticker": "SLV",
@@ -2330,20 +2364,27 @@
      "b_mkt": 0.34,
      "b_ai": -0.13,
      "ai_pct": -0.39
+    },
+    {
+     "ticker": "USFR",
+     "weight": 2.0,
+     "b_mkt": 0.0,
+     "b_ai": 0.0,
+     "ai_pct": 0.0
     }
    ],
    "lookback": 60,
    "flag_exposure_pct": 12.0,
    "flag_risk_share_pct": 40.0,
    "status": "PROPOSED limits",
-   "ai_exposure_pct": 4.55,
-   "market_beta_pct": 56.8,
-   "ai_risk_share_pct": 2.3,
+   "ai_exposure_pct": 5.44,
+   "market_beta_pct": 55.7,
+   "ai_risk_share_pct": 3.3,
    "direct_growth_pct": 23.0,
    "covered_pct": 100.0,
    "asof": "2026-11-13",
    "flags": [],
-   "conclusion": "The book carries 4.5% of an SMH-over-SPY position (direct AI/growth sleeves 23%); the AI factor is 2% of the book's daily variance over 60 sessions; market beta 0.57. Within the PROPOSED limits."
+   "conclusion": "The book carries 5.4% of an SMH-over-SPY position (direct AI/growth sleeves 23%); the AI factor is 3% of the book's daily variance over 60 sessions; market beta 0.56. Within the PROPOSED limits."
   },
   "vol_target": {
    "available": true,
@@ -2352,7 +2393,7 @@
    "applied": false,
    "realized_pct": 14.35,
    "scale": 0.63,
-   "freed_to_sgov_pct": 29.1,
+   "freed_to_sgov_pct": 31.0,
    "scaled_weights": {
     "VGT": 10.66,
     "SMH": 1.88,
@@ -2365,12 +2406,14 @@
     "SCHD": 8.78,
     "XLV": 3.13,
     "XLU": 1.88,
-    "SGOV": 38.6,
-    "USFR": 7.0,
+    "SGOV": 40.47,
+    "USFR": 2.0,
     "TLT": 4.39,
-    "KMLM": 5.5
+    "KMLM": 5.5,
+    "DBMF": 3.13,
+    "SCHP": 0.0
    },
-   "conclusion": "Book volatility over 20 sessions 14.4% vs a 9% target: a volatility target would hold risk sleeves at 0.63\u00d7 and park 29.1% in SGOV. Display only \u2014 not applied until the hedge lab tests it (V4)."
+   "conclusion": "Book volatility over 20 sessions 14.4% vs a 9% target: a volatility target would hold risk sleeves at 0.63\u00d7 and park 31.0% in SGOV. Display only \u2014 not applied until the hedge lab tests it (V4)."
   },
   "risk_by_group": {
    "available": true,
@@ -2381,9 +2424,9 @@
     {
      "group": "AI / growth tech",
      "weight_pct": 23.0,
-     "risk_pct": 53.7,
+     "risk_pct": 54.8,
      "vol_pct": 29.9,
-     "corr_rest": 0.32,
+     "corr_rest": 0.36,
      "tickers": [
       "VGT",
       "SMH",
@@ -2393,9 +2436,9 @@
     {
      "group": "Precious metals",
      "weight_pct": 18.0,
-     "risk_pct": 39.9,
+     "risk_pct": 38.8,
      "vol_pct": 31.9,
-     "corr_rest": 0.28,
+     "corr_rest": 0.25,
      "tickers": [
       "GLD",
       "RING",
@@ -2405,9 +2448,9 @@
     {
      "group": "Dividend & defensive equity",
      "weight_pct": 22.0,
-     "risk_pct": 7.5,
+     "risk_pct": 6.8,
      "vol_pct": 12.1,
-     "corr_rest": 0.05,
+     "corr_rest": 0.02,
      "tickers": [
       "SCHD",
       "XLV",
@@ -2417,19 +2460,19 @@
     {
      "group": "Duration",
      "weight_pct": 7.0,
-     "risk_pct": 1.5,
+     "risk_pct": 1.2,
      "vol_pct": 10.8,
-     "corr_rest": 0.15,
+     "corr_rest": 0.1,
      "tickers": [
       "TLT"
      ]
     },
     {
      "group": "Cash",
-     "weight_pct": 16.5,
-     "risk_pct": -0.1,
+     "weight_pct": 11.5,
+     "risk_pct": -0.0,
      "vol_pct": 0.2,
-     "corr_rest": -0.2,
+     "corr_rest": -0.09,
      "tickers": [
       "SGOV",
       "USFR"
@@ -2438,9 +2481,9 @@
     {
      "group": "Energy & commodities",
      "weight_pct": 8.0,
-     "risk_pct": -0.7,
+     "risk_pct": -0.2,
      "vol_pct": 20.4,
-     "corr_rest": -0.19,
+     "corr_rest": -0.16,
      "tickers": [
       "XLE",
       "PDBC"
@@ -2448,11 +2491,12 @@
     },
     {
      "group": "Trend (managed futures)",
-     "weight_pct": 5.5,
-     "risk_pct": -1.9,
-     "vol_pct": 15.4,
-     "corr_rest": -0.32,
+     "weight_pct": 10.5,
+     "risk_pct": -1.5,
+     "vol_pct": 13.3,
+     "corr_rest": -0.24,
      "tickers": [
+      "DBMF",
       "KMLM"
      ]
     }
@@ -2461,57 +2505,62 @@
     {
      "ticker": "VGT",
      "weight_pct": 17.0,
-     "risk_pct": 38.2
+     "risk_pct": 38.9
     },
     {
      "ticker": "GLD",
      "weight_pct": 10.0,
-     "risk_pct": 15.7
+     "risk_pct": 15.2
     },
     {
      "ticker": "RING",
      "weight_pct": 4.0,
-     "risk_pct": 12.5
+     "risk_pct": 12.0
     },
     {
      "ticker": "SLV",
      "weight_pct": 4.0,
-     "risk_pct": 11.8
+     "risk_pct": 11.5
     },
     {
      "ticker": "SMH",
      "weight_pct": 3.0,
-     "risk_pct": 9.9
+     "risk_pct": 10.1
     },
     {
      "ticker": "QQQ",
      "weight_pct": 3.0,
-     "risk_pct": 5.7
+     "risk_pct": 5.8
     },
     {
      "ticker": "SCHD",
      "weight_pct": 14.0,
-     "risk_pct": 4.7
+     "risk_pct": 4.4
     },
     {
      "ticker": "XLV",
      "weight_pct": 5.0,
-     "risk_pct": 2.0
+     "risk_pct": 1.9
     },
     {
      "ticker": "TLT",
      "weight_pct": 7.0,
-     "risk_pct": 1.5
+     "risk_pct": 1.2
     },
     {
      "ticker": "XLU",
      "weight_pct": 3.0,
-     "risk_pct": 0.7
+     "risk_pct": 0.6
     },
     {
      "ticker": "XLE",
      "weight_pct": 5.0,
-     "risk_pct": 0.2
+     "risk_pct": 0.5
+    },
+    {
+     "ticker": "DBMF",
+     "weight_pct": 5.0,
+     "risk_pct": 0.1
     },
     {
      "ticker": "SGOV",
@@ -2520,27 +2569,27 @@
     },
     {
      "ticker": "USFR",
-     "weight_pct": 7.0,
-     "risk_pct": -0.1
+     "weight_pct": 2.0,
+     "risk_pct": -0.0
     },
     {
      "ticker": "PDBC",
      "weight_pct": 3.0,
-     "risk_pct": -0.8
+     "risk_pct": -0.7
     },
     {
      "ticker": "KMLM",
      "weight_pct": 5.5,
-     "risk_pct": -1.9
+     "risk_pct": -1.6
     }
    ],
    "flags": [
-    "AI / growth tech carries 54% of book risk \u2265 40% (PROPOSED limit)"
+    "AI / growth tech carries 55% of book risk \u2265 40% (PROPOSED limit)"
    ],
    "book_vol_pct": 10.6,
    "missing": [],
    "asof": "2026-11-13",
-   "conclusion": "AI / growth tech is 23% of the book's weight and 54% of its risk over 60 sessions (book volatility 10.6%). \u26a0 AI / growth tech carries 54% of book risk \u2265 40% (PROPOSED limit). Negative = the group offset book risk."
+   "conclusion": "AI / growth tech is 23% of the book's weight and 55% of its risk over 60 sessions (book volatility 10.6%). \u26a0 AI / growth tech carries 55% of book risk \u2265 40% (PROPOSED limit). Negative = the group offset book risk."
   },
   "summary": {
    "available": true,
@@ -2559,9 +2608,11 @@
     "XLV": 5.0,
     "XLU": 3.0,
     "SGOV": 9.5,
-    "USFR": 7.0,
+    "USFR": 2.0,
     "TLT": 7.0,
-    "KMLM": 5.5
+    "KMLM": 5.5,
+    "DBMF": 5.0,
+    "SCHP": 0.0
    },
    "nav": 97.1818,
    "peak": 101.9895,
@@ -2576,7 +2627,20 @@
    "since_inception_pct": -2.82,
    "since": "2026-08-12",
    "reconstructed_sessions": 36,
-   "changes": [],
+   "changes": [
+    {
+     "ticker": "DBMF",
+     "from": 0.0,
+     "to": 5.0,
+     "change": 5.0
+    },
+    {
+     "ticker": "USFR",
+     "from": 7.0,
+     "to": 2.0,
+     "change": -5.0
+    }
+   ],
    "engine": "OUT",
    "engine_previous": null,
    "engine_changed": false
@@ -2631,18 +2695,6 @@
     "vs_spy_3m": 3.07
    },
    {
-    "ticker": "USFR",
-    "weight": 7.0,
-    "change": 0.0,
-    "gate": null,
-    "gate_trigger": null,
-    "hold_trend": "cash",
-    "ret_1m": 0.34,
-    "ret_3m": 0.99,
-    "ret_12_1": 3.76,
-    "vs_spy_3m": 3.12
-   },
-   {
     "ticker": "TLT",
     "weight": 7.0,
     "change": 0.0,
@@ -2689,6 +2741,18 @@
     "ret_3m": 13.48,
     "ret_12_1": 17.88,
     "vs_spy_3m": 15.61
+   },
+   {
+    "ticker": "DBMF",
+    "weight": 5.0,
+    "change": 5.0,
+    "gate": "CONFIRMED",
+    "gate_trigger": null,
+    "hold_trend": "CONFIRMED UPTREND",
+    "ret_1m": -1.25,
+    "ret_3m": 3.25,
+    "ret_12_1": 19.89,
+    "vs_spy_3m": 5.38
    },
    {
     "ticker": "SLV",
@@ -2761,18 +2825,32 @@
     "ret_3m": 0.42,
     "ret_12_1": -4.72,
     "vs_spy_3m": 2.55
+   },
+   {
+    "ticker": "USFR",
+    "weight": 2.0,
+    "change": -5.0,
+    "gate": null,
+    "gate_trigger": null,
+    "hold_trend": "cash",
+    "ret_1m": 0.34,
+    "ret_3m": 0.99,
+    "ret_12_1": 3.76,
+    "vs_spy_3m": 3.12
    }
   ],
   "actions": [],
-  "weekend": [],
+  "weekend": [
+   "Model portfolio changed today (DBMF +5.0, USFR -5.0) \u2014 execute at the weekend review if following it"
+  ],
   "path": "data/model_book.csv",
   "regime_held": false
  },
  "portfolio": {
   "available": false,
   "active": false,
-  "ledger_age_days": 111,
-  "conclusion": "Ledger last touched 111 days ago \u2014 not tracking real positions, so it is not used. The model portfolio (section 8) is what you SHOULD hold."
+  "ledger_age_days": 112,
+  "conclusion": "Ledger last touched 112 days ago \u2014 not tracking real positions, so it is not used. The model portfolio (section 8) is what you SHOULD hold."
  },
  "swing": {
   "available": true,
@@ -4653,10 +4731,18 @@
  "next48": {
   "horizon": "2026-11-17",
   "events": [],
-  "next_event": null,
-  "if_then": [],
+  "next_event": {
+   "event": "PCE",
+   "date": "2026-11-25",
+   "days_away": 10,
+   "affects": "Rates-sensitive sleeves",
+   "blackout": false
+  },
+  "if_then": [
+   "PCE \u2014 hot core PCE pushes DFII10 up. Cool PCE with DFII10 reversing lower:"
+  ],
   "calendar_asof": "2026-11-01",
-  "conclusion": "No scheduled binary event in the next two sessions \u2014 the event block is clear."
+  "conclusion": "No scheduled binary event in the next two sessions \u2014 the event block is clear. Next: PCE on 2026-11-25 (10 days)."
  },
  "alerts": [
   {
@@ -4891,7 +4977,7 @@
     "price_at_signal": null,
     "benchmark_at_signal": null,
     "context": "regime=transition_ambiguous",
-    "notes": "{\"weights\": {\"VGT\": 17.0, \"SMH\": 3.0, \"QQQ\": 3.0, \"GLD\": 10.0, \"SLV\": 4.0, \"RING\": 4.0, \"XLE\": 5.0, \"PDBC\": 3.0, \"SCHD\": 14.0, \"XLV\": 5.0, \"XLU\": 3.0, \"SGOV\": 9.5, \"USFR\": 7.0, \"TLT\": 7.0, \"KMLM\": 5.5}, \"bench_weights\": {\"VGT\": 20, \"SMH\": 4, \"QQQ\": 4, \"GLD\": 12, \"SLV\": 5, \"RING\": 5, \"XLE\": 5, \"PDBC\": 3, \"SCHD\": 13, \"XLV\": 4, \"XLU\": 3, \"SGOV\": 5, \"USFR\": 3, \"TLT\": 10, \"KMLM\": 4}, \"bench\": \"BASE\"}",
+    "notes": "{\"weights\": {\"VGT\": 17.0, \"SMH\": 3.0, \"QQQ\": 3.0, \"GLD\": 10.0, \"SLV\": 4.0, \"RING\": 4.0, \"XLE\": 5.0, \"PDBC\": 3.0, \"SCHD\": 14.0, \"XLV\": 5.0, \"XLU\": 3.0, \"SGOV\": 9.5, \"USFR\": 2.0, \"TLT\": 7.0, \"KMLM\": 5.5, \"DBMF\": 5.0, \"SCHP\": 0.0}, \"bench_weights\": {\"VGT\": 20, \"SMH\": 4, \"QQQ\": 4, \"GLD\": 12, \"SLV\": 5, \"RING\": 5, \"XLE\": 5, \"PDBC\": 3, \"SCHD\": 13, \"XLV\": 4, \"XLU\": 3, \"SGOV\": 5, \"USFR\": 3, \"TLT\": 10, \"KMLM\": 4}, \"bench\": \"BASE\"}",
     "source": "daily_log"
    },
    {
@@ -5357,7 +5443,7 @@
      "confluence_3of3",
      "flow_divergence"
     ],
-    "weeks_of_history": 13.1,
+    "weeks_of_history": 13.3,
     "since": "2026-08-14",
     "ready": true,
     "message": "2 signal type(s) have 20+ observations. Overlapping horizons are correlated \u2014 treat early readings as directional."
@@ -5680,7 +5766,7 @@
    "asof": "2026-11-13",
    "age_days": 0,
    "status": "OK",
-   "note": "one series of front-month settles: Yahoo CL=F daily for completed sessions, latest 5 rebuilt from 1-min bars (VWAP 14:28\u201314:30 ET); method check \u2014 Yahoo daily vs rebuilt on 4 earlier session(s): max $0.07; FRED spot minus settle on 2026-11-11: +3.16 (market spread, not an error); front-month expiry 2026-10-20 (Nov 2026 contract) inside the 20-day window \u2014 changes spanning it include the roll"
+   "note": "one series of front-month settles: Yahoo CL=F daily for completed sessions, latest 4 rebuilt from 1-min bars (VWAP 14:28\u201314:30 ET); method check \u2014 Yahoo daily vs rebuilt on 3 earlier session(s): max $0.08; FRED spot minus settle on 2026-11-11: +3.17 (market spread, not an error); front-month expiry 2026-10-20 (Nov 2026 contract) inside the 20-day window \u2014 changes spanning it include the roll"
   },
   {
    "input": "Regime assessment",
@@ -5692,7 +5778,7 @@
   {
    "input": "Money Flow bridge",
    "asof": "2026-11-14",
-   "age_days": 0,
+   "age_days": 1,
    "status": "OK",
    "note": ""
   },
@@ -5706,15 +5792,15 @@
   {
    "input": "Flow map summary",
    "asof": "2026-11-14",
-   "age_days": 0,
+   "age_days": 1,
    "status": "OK",
    "note": ""
   },
   {
    "input": "Markets bridge",
    "asof": "2026-11-13",
-   "age_days": 1,
-   "status": "OK",
+   "age_days": 2,
+   "status": "STALE",
    "note": ""
   },
   {
@@ -5727,16 +5813,16 @@
   {
    "input": "Position ledger",
    "asof": "2026-07-26",
-   "age_days": 111,
+   "age_days": 112,
    "status": "UNUSED",
    "note": "not tracking real positions \u2014 the model portfolio (section 8) is the reference"
   },
   {
    "input": "Daily log row",
-   "asof": "2026-11-13",
-   "age_days": 0,
+   "asof": "2026-11-15",
+   "age_days": -2,
    "status": "OK",
-   "note": ""
+   "note": "today's daily log not written yet \u2014 alerts section uses no row"
   },
   {
    "input": "COT (freshest)",
@@ -5750,7 +5836,7 @@
    "asof": "2026-11-13",
    "age_days": 0,
    "status": "OK",
-   "note": "SPY calendar; 143/143 tickers have that bar"
+   "note": "SPY calendar; 145/145 tickers have that bar"
   },
   {
    "input": "Event calendar",
@@ -5774,21 +5860,31 @@
   "XLV": 5.0,
   "XLU": 3.0,
   "SGOV": 9.5,
-  "USFR": 7.0,
+  "USFR": 2.0,
   "TLT": 7.0,
-  "KMLM": 5.5
+  "KMLM": 5.5,
+  "DBMF": 5.0,
+  "SCHP": 0.0
  },
  "headline": [
+  "\ud83d\udd14 **Risk alerts:** ALERT Data failure: 1 input(s) block decisions. Pushed to the phone by tonight's Alerts run (GitHub issues).",
   "Biggest moves: 10Y Treasury +12bp to 5.10% (+2.7\u03c3, 93th pctile, print dated 11-12); 2Y Treasury +13bp to 4.86% (+2.6\u03c3, 98th pctile, print dated 11-12).",
   "Regime `transition_ambiguous` (session 20); cross-asset majority CALM; nearest flip is HY OAS +1.30pp to `credit_stress` (~24 typical days).",
-  "Model portfolio: `transition_ambiguous`, drawdown -4.7%, no change today. Swing: 4 entry-permitted cards."
+  "Model portfolio: `transition_ambiguous`, drawdown -4.7%, 2 weight change(s) today. Swing: 4 entry-permitted cards."
  ],
  "risk_alerts": {
   "available": true,
-  "items": [],
-  "live": 0,
-  "line": null,
-  "conclusion": "No risk alert is live (risk_policy \u00a79)."
+  "items": [
+   {
+    "key": "DATA_FAIL",
+    "severity": "alert",
+    "state": "active",
+    "title": "Data failure: 1 input(s) block decisions"
+   }
+  ],
+  "live": 1,
+  "line": "\ud83d\udd14 **Risk alerts:** ALERT Data failure: 1 input(s) block decisions. Pushed to the phone by tonight's Alerts run (GitHub issues).",
+  "conclusion": "\ud83d\udd14 **Risk alerts:** ALERT Data failure: 1 input(s) block decisions. Pushed to the phone by tonight's Alerts run (GitHub issues)."
  },
  "conclusions": {
   "base_case": "Base case: `transition_ambiguous` holds. Cross-asset: CALM majority, dissent from rates, fx. Money is confirming only XLV, XLU, XLF, XLRE, XLY.",
@@ -5796,6 +5892,8 @@
    "HY OAS 3.20pp \u2192 4.50pp flips to `credit_stress` (~24 typical days)",
    "Short real rate 0.14pp \u2192 0.26pp flips to `restrictive_tightening` \u2014 \u22480.5 \u00d7 a 25bp policy move, or the CPI equivalent"
   ],
-  "weekend": []
+  "weekend": [
+   "Model portfolio changed today (DBMF +5.0, USFR -5.0) \u2014 execute at the weekend review if following it"
+  ]
  }
 }
