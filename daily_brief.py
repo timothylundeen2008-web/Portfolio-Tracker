@@ -155,6 +155,18 @@ FLOW_MAP_MAX_AGE_H = 36                      # one missed daily publish is toler
 
 BAND = 0.25                      # regime_bands.TRANSITION_BAND
 CASH_SLEEVES = {"SGOV", "USFR", "BIL", "SHV"}   # ATR stops do not apply to cash
+
+
+def model_sleeves(rc) -> set:
+    """Every ticker the model book can hold: the base sleeves plus anything a
+    regime overlay adds (C3 put DBMF and SCHP in the transition book without a
+    base weight). The brief must price all of them, or the entry gate reads
+    UNAVAILABLE and the add never leaves SGOV."""
+    out = set(rc.BASE_WEIGHTS)
+    for r in rc.REGIMES.values():
+        for k in ("overlay", "overlay_flight"):
+            out |= set(r.get(k) or {})
+    return out
 HEAT_CAP_PCT = 15.0
 DRIFT_BAND_REL = 0.20
 LEDGER_STALE_DAYS = 7
@@ -519,7 +531,7 @@ def gather(today_et: Optional[datetime] = None, fred_key: str = "",
     ledger_tk = sorted(set(inp["ledger"]["ticker"].astype(str))) if not inp["ledger"].empty else []
     try:
         import regime_classifier as _rc
-        sleeves = set(_rc.BASE_WEIGHTS)
+        sleeves = model_sleeves(_rc)
     except Exception:
         sleeves = set()
     inp["spy_holdings"], inp["spy_holdings_error"] = [], None
@@ -2999,7 +3011,7 @@ def selftest() -> dict:
                           dxy_20d_change_pct=1.0, stock_bond_corr_60d=0.48, asof=None,
                           cpi_yoy=3.4, cpi_3m_saar=0.2, cpi_mom_sa=0.4, eff_funds=3.88, ig_oas=0.9, dxy=120)
     import regime_classifier as rc
-    for _t in rc.BASE_WEIGHTS:           # every sleeve priced, as in production
+    for _t in model_sleeves(rc):         # every sleeve priced, as in production
         prices.setdefault(_t, px(100))
     reg = rc.classify_regime(sig, fetch_prices=None, cape=40.0, top20_concentration_pct=49.0)
     assessment = {"signals": sig, "regime": reg, "repression": {"score": 3, "band": "Tightening cycle", "hollow": True},
@@ -3658,6 +3670,35 @@ def selftest() -> dict:
         md5 = render_md(b5)
         if _at.get("available") and "Where the return came from" not in md5:
             f.append("the brief must render the attribution table")
+        # C3 (2026-11-15): DBMF and SCHP sit in the transition book with no base weight. They must be
+        # priced by the brief, gated like any other add, and parked in SGOV when blocked or unpriced.
+        _need = {t for r_ in rc.REGIMES.values() for k_ in ("overlay", "overlay_flight") for t in (r_.get(k_) or {})}
+        if not (_need | set(rc.BASE_WEIGHTS)) <= model_sleeves(rc):
+            f.append(f"model_sleeves must cover every overlay ticker: missing {sorted(_need - model_sleeves(rc))}")
+        _asked = []
+        gather(today_et=now, fetch_fred=fetch_fred, fetch_holdings=lambda: [],
+               fetch_prices=lambda tks: (_asked.extend(tks) or {t: prices[t] for t in tks if t in prices}),
+               assess=lambda: assessment, macro_lookup=lambda d: [])
+        if not {"DBMF", "SCHP"} <= set(_asked):
+            f.append("the brief must fetch prices for DBMF and SCHP (overlay-only sleeves)")
+        _i3 = pd.bdate_range(end="2026-09-25", periods=520)
+        _up = pd.Series(np.linspace(80.0, 120.0, 520), index=_i3)
+        _dn = pd.Series(np.linspace(120.0, 80.0, 520), index=_i3)
+        _w = rc.target_weights("transition_ambiguous", lambda t, p="2y": _up)
+        if (_w.get("DBMF"), _w.get("SCHP"), _w.get("SGOV"), _w.get("USFR")) != (5.0, 5.0, 3.0, 2.0) or \
+                abs(sum(_w.values()) - 100) > 0.05:
+            f.append(f"C3 with both gates open must hold DBMF 5 / SCHP 5 / SGOV 3 / USFR 2: {_w}")
+        _w = rc.target_weights("transition_ambiguous", lambda t, p="2y": _dn if t == "SCHP" else _up)
+        if (_w.get("DBMF"), _w.get("SCHP"), _w.get("SGOV")) != (5.0, 0.0, 8.0) or abs(sum(_w.values()) - 100) > 0.05:
+            f.append(f"a blocked SCHP add must park its 5 points in SGOV: {_w}")
+        _w = rc.target_weights("transition_ambiguous",
+                               lambda t, p="2y": pd.Series(dtype=float) if t in ("DBMF", "SCHP") else _up)
+        if (_w.get("DBMF"), _w.get("SCHP"), _w.get("SGOV"), _w.get("USFR")) != (0.0, 0.0, 13.0, 2.0) or \
+                abs(sum(_w.values()) - 100) > 0.05:
+            f.append(f"unpriced DBMF/SCHP must stay in SGOV (data failure is not a buy): {_w}")
+        for _k in rc.REGIMES:
+            if _k != "transition_ambiguous" and ({"DBMF", "SCHP"} & set(rc.target_weights(_k, gate=False))):
+                f.append(f"C3 applies to transition_ambiguous only, not {_k}")
     finally:
         os.chdir(cwd)
     return {"ok": not f, "failures": f}

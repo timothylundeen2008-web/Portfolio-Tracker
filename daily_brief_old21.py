@@ -1,6 +1,75 @@
 """
-daily_brief.py  (v1.1 — October 2026)
-─────────────────────────────────────
+daily_brief.py  (v1.6.2 — November 2026)
+───────────────────────────────────────
+v1.6.2 (2026-11-07): model section adds book_risk.risk_by_group (share of
+  book variance by group, PROPOSED 40% line); SPY and 60/40 benchmarks now
+  come from model_vs_spy.build_frame, the function the app's chart uses.
+v1.6 (2026-11-07, fix_status N12/N37-N41): cross-asset lanes get 20-session
+  credit and real-yield momentum (credit WATCH at +30bp/20 sessions; rates
+  note shows both horizons). Model section adds book_risk.py readings:
+  attribution by sleeve and bucket (5 / 20 sessions / since inception), AI-
+  factor exposure (regression on SPY and SMH − SPY, PROPOSED limits 12% /
+  40% of variance), and a volatility-target readout (9% target, display
+  only, not applied). Scoreboard adds the market-implied policy path
+  (2Y − fed funds, 3M bill − fed funds; FRED DFF, DTB3).
+v1.5.4 (2026-11-01, fix_status N33): WTI is ONE price series throughout —
+  the NYMEX front-month settle — instead of FRED's EIA Cushing spot for the
+  history plus futures for the last 1-3 days. On 10/27 the two differed by
+  $3.50 (steep backwardation), so the 5-day change spanned two price
+  definitions. Now: Yahoo's daily CL=F bars for completed sessions (Yahoo
+  overwrites them with the settle), the rebuilt 14:28-14:30 VWAP for the
+  latest; the latest daily bar is never used on its own (it can still be a
+  last trade) and partial next-day bars are dropped. Front-month expiries
+  (NYMEX rule) are named when a change spans a roll. With no futures history
+  the series is FRED spot ONLY — futures are never spliced onto spot again.
+  The data-health note reports Yahoo daily vs the rebuilt settle on earlier
+  sessions (the method check) and FRED spot minus settle (a market spread).
+v1.5.3 (2026-11-01, fix_status N29): WTI after FRED's last date is the
+  NYMEX settlement, rebuilt from Yahoo 1-minute CL=F bars as the volume-
+  weighted price from 2:28 to 2:30pm ET (how NYMEX settles WTI), for sessions
+  whose 2:30pm has passed. The daily CL=F "close" it replaces is the last
+  trade (to 5pm, and a partial next-day bar after the 6pm reopen): 10/30
+  printed 102.95 against a 104.12 settle. With no minute bars, nothing is
+  spliced and FRED's own last value shows with its real age. Each run notes
+  the rebuilt settle's gap to FRED on days both exist.
+v1.5.2 (2026-11-01, N23): the "Event calendar" data-health row reports
+  event_calendar.coverage() (OK / WARN 45 days before a typed schedule runs
+  out / STALE) instead of a fixed OK, and US elections (computed by the
+  calendar) get a pre-committed line in "Next 48 hours".
+v1.5.1 (2026-11-01, N32): the top-10 verdict says "Driven by the top 10"
+  (was "Carried by", which read oddly for a decline).
+v1.5 (2026-11-01): section 7 gains two tables.
+  * Breadth trend: % of the constituent proxy above its 50- and 200-day, and
+    52-week highs minus lows, today and 5 / 20 / 60 sessions ago, each from
+    closes up to that session. A 10-point move in 20 sessions is a trend; a
+    falling trend under a rising SPY is flagged as narrowing.
+  * Top-10 contribution: SPY's 10 largest holdings (State Street daily file),
+    their 1- and 20-day returns and points contributed, with the rest of the
+    index's return backed out. Verdict: carried by the top 10 / in line /
+    leaders lagging, by their share of the move versus their weight.
+v1.4 (2026-11-01): section 6A carries the Flow Map v1.2 verdict as published:
+  firm or BORDERLINE (within one typical day of the ±0.25% line), the
+  recommended steps for the model portfolio and the swing book, and a regime
+  cross-check (does flow confirm, contradict, or say nothing about the
+  regime's tilt, taken from swing_desk.REGIME_DIRECTION). A firm flow call is
+  logged to signal_outcomes (flow_into_stocks / flow_out_of_stocks) so it is
+  scored; borderline days are not signals.
+v1.3 (2026-10-31): section 6A "Where the money went". Reads
+  flow_map_summary.json (published by Money_Flow publish_to_checklist v1.1):
+  20-session net ETF creations minus redemptions by asset class, trusted
+  funds only, with the Flow Map's verdict / evidence / rule / what would
+  change it. Funds that fail the integrity test are listed as not measured,
+  never counted as zero. A missing or stale (>36h) summary is said plainly,
+  and is a data-health row.
+v1.2 (2026-10-31): section 1A "Market read". Four diagnoses, each printed as
+  verdict / evidence (numbers with their dates) / the rule applied / what
+  would change it: what moved long yields (10Y split exactly into real +
+  breakeven), concentrated or broad (cap vs equal weight vs Nasdaq-100,
+  breadth), de-risking or rotation (stocks, gold, Treasuries, VIX, credit),
+  and distance to stress (credit and VIX vs the cross-asset lanes' own lines,
+  in typical days). Built only from data the brief already gathers.
+  Thresholds are named READ_* / LANE_*; the selftest asserts the LANE_* lines
+  match cross_asset.py.
 v1.1 (2026-10-31): section 4 prints each cross-asset lane's full "why" note.
   v1 cut it at 160 characters, which dropped the rates lane's term-premium
   diagnosis mid-sentence. Selftest now asserts the full note is rendered.
@@ -66,6 +135,14 @@ import numpy as np
 import pandas as pd
 
 import market_time as mt
+try:                                   # v1.6.1: load-time import (the selftest chdirs to a temp folder)
+    import book_risk as _book_risk
+except Exception:                      # the brief still runs; the model section says what is missing
+    _book_risk = None
+try:                                   # v1.6.2: one benchmark method for the brief and the app
+    import model_vs_spy as _model_vs_spy
+except Exception:
+    _model_vs_spy = None
 
 SUMMARY_DIR = Path("logs/summaries")
 STATE_DIR = Path("logs/brief")
@@ -73,6 +150,8 @@ DAILY_CSV = Path("logs/daily_log.csv")
 SWING_DIR = Path("logs/swing")
 ROTATION_FILE = "rotation_summary.json"
 MARKETS_FILE = "markets_summary.json"
+FLOW_MAP_FILE = "flow_map_summary.json"      # Money_Flow flow_map.SUMMARY_FILE
+FLOW_MAP_MAX_AGE_H = 36                      # one missed daily publish is tolerated, two is stale
 
 BAND = 0.25                      # regime_bands.TRANSITION_BAND
 CASH_SLEEVES = {"SGOV", "USFR", "BIL", "SHV"}   # ATR stops do not apply to cash
@@ -94,9 +173,12 @@ FRED_SCORE = [
     ("VIX", "VIXCLS", "", "level"),
     ("WTI crude", "DCOILWTICO", "$", "index"),
 ]
-EXTRA_FRED = ["DGS30"]
+EXTRA_FRED = ["DGS30", "DFF", "DTB3"]   # v1.6: DFF/DTB3 for the market-implied policy path (N12)
 BENCH_TICKERS = ("SPY", "AGG")   # model-book benchmarks: SPY and a 60/40 (60% SPY / 40% AGG)
-FRESHER = {"VIXCLS": "^VIX", "DCOILWTICO": "CL=F"}      # yfinance splices for lagging FRED series
+FRESHER = {"VIXCLS": "^VIX"}                           # yfinance close splices for lagging FRED series
+# v1.5.3 (N29): WTI is spliced from the rebuilt NYMEX settle, never the daily CL=F last trade
+OIL_SID, OIL_TICKER = "DCOILWTICO", "CL=F"
+SETTLE_START, SETTLE_END = (14, 28), (14, 30)           # NYMEX WTI settlement window, ET (VWAP)
 FRED_MAX_AGE = {"DTWEXBGS": 10}                         # H.10 dollar index is published weekly
 PRICE_SCORE = [("S&P 500 (SPY)", "SPY"), ("Nasdaq 100 (QQQ)", "QQQ"),
                ("Gold (GLD)", "GLD"), ("Long Treasuries (TLT)", "TLT")]
@@ -238,6 +320,106 @@ def _default_prices(tickers: list[str], period: str = "2y") -> dict:
     return swing_agent._default_fetch(tickers, period=period)
 
 
+def _intraday_default(ticker: str) -> pd.DataFrame:
+    import yfinance as yf
+    return yf.download(ticker, period="5d", interval="1m", auto_adjust=False, progress=False, prepost=True)
+
+
+def settle_series(bars: Optional[pd.DataFrame], now_et) -> pd.Series:
+    """Daily WTI settlement rebuilt from 1-minute bars: volume-weighted close
+    of the bars stamped 14:28 and 14:29 ET (covering 14:28:00-14:30:00), one
+    value per session whose 14:30 has passed. Empty when the bars are missing,
+    so the caller never falls back to an after-hours last trade."""
+    if bars is None or getattr(bars, "empty", True):
+        return pd.Series(dtype=float)
+    df = bars.copy()
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0)
+    if "Close" not in df.columns:
+        return pd.Series(dtype=float)
+    idx = pd.DatetimeIndex(df.index)
+    idx = idx.tz_localize("UTC") if idx.tz is None else idx
+    df.index = idx.tz_convert("America/New_York")
+    now = pd.Timestamp(now_et)
+    now = now.tz_localize("America/New_York") if now.tzinfo is None else now.tz_convert("America/New_York")
+    t = df.index.hour * 60 + df.index.minute
+    lo, hi = SETTLE_START[0] * 60 + SETTLE_START[1], SETTLE_END[0] * 60 + SETTLE_END[1]
+    win = df[(t >= lo) & (t < hi)]
+    out = {}
+    for day, g in win.groupby(win.index.date):
+        if now < pd.Timestamp(day).tz_localize("America/New_York") + pd.Timedelta(minutes=hi):
+            continue
+        c = pd.to_numeric(g["Close"], errors="coerce")
+        v = pd.to_numeric(g["Volume"], errors="coerce") if "Volume" in g.columns else pd.Series(np.nan, index=g.index)
+        ok = c.notna()
+        if not ok.any():
+            continue
+        vv = v[ok].fillna(0)
+        out[pd.Timestamp(day)] = float((c[ok] * vv).sum() / vv.sum()) if vv.sum() > 0 else float(c[ok].mean())
+    return pd.Series(out, dtype=float).sort_index()
+
+
+def cl_expiry(year: int, month: int) -> date:
+    """Last trading day of the NYMEX WTI contract for delivery (year, month):
+    3 business days before the 25th of the prior month, or 4 if the 25th is
+    not a business day. NYSE holidays stand in for CME's (they match on the
+    days that matter here)."""
+    py, pm = (year, month - 1) if month > 1 else (year - 1, 12)
+    d = date(py, pm, 25)
+    n = 3 if mt.is_trading_day(d) else 4
+    k = 0
+    while k < n:
+        d -= timedelta(days=1)
+        if mt.is_trading_day(d):
+            k += 1
+    return d
+
+
+def cl_expiries_between(start: date, end: date) -> list:
+    out = []
+    y, m = start.year, start.month
+    for _ in range(30):
+        e = cl_expiry(y, m)
+        if start <= e <= end:
+            out.append((e, date(y, m, 1).strftime("%b %Y")))
+        if e > end:
+            break
+        y, m = (y, m + 1) if m < 12 else (y + 1, 1)
+    return sorted(out)
+
+
+def wti_settle_series(daily: pd.Series, settle: pd.Series, session: date) -> pd.Series:
+    """One series of front-month settles: daily closes for completed sessions
+    up to `session`, overridden by the rebuilt settle wherever it exists. The
+    latest daily bar is dropped unless a rebuilt settle replaces it."""
+    if daily is None or not len(daily):
+        return pd.Series(dtype=float)
+    d = daily.copy()
+    d.index = pd.to_datetime(d.index).normalize()
+    d = d[d.index <= pd.Timestamp(session)]
+    st_ = settle[settle.index <= pd.Timestamp(session)] if settle is not None and len(settle) else pd.Series(dtype=float)
+    if len(d) and d.index[-1] not in st_.index:
+        d = d.iloc[:-1]
+    out = d.copy()
+    for k, v in st_.items():
+        out.loc[pd.Timestamp(k)] = v
+    return out.sort_index()
+
+
+def settle_vs_fred(settle: pd.Series, fred: pd.Series) -> Optional[dict]:
+    """Gap between the rebuilt settle and FRED's WTI on the days both exist
+    (FRED's DCOILWTICO is EIA's Cushing spot, which tracks the settle)."""
+    if settle is None or fred is None or not len(settle) or not len(fred):
+        return None
+    f = fred.copy()
+    f.index = pd.to_datetime(f.index).normalize()
+    both = pd.concat([settle, f], axis=1, join="inner").dropna()
+    if both.empty:
+        return None
+    d = (both.iloc[:, 0] - both.iloc[:, 1]).abs()
+    return {"n": int(len(d)), "max_abs": float(d.max()), "mean_abs": float(d.mean())}
+
+
 def _memo_prices(fetch: Callable) -> Callable:
     cache: dict = {}
 
@@ -252,7 +434,8 @@ def _memo_prices(fetch: Callable) -> Callable:
 def gather(today_et: Optional[datetime] = None, fred_key: str = "",
            fetch_fred: Optional[Callable] = None, fetch_prices: Optional[Callable] = None,
            assess: Optional[Callable] = None, macro_lookup: Optional[Callable] = None,
-           data_dir: Optional[str] = None) -> dict:
+           data_dir: Optional[str] = None, fetch_holdings: Optional[Callable] = None,
+           fetch_intraday: Optional[Callable] = None) -> dict:
     """Collect every input. Failures are recorded, never raised."""
     now = today_et or mt.now_et()
     session = mt.last_trading_day(now.date())
@@ -316,6 +499,7 @@ def gather(today_et: Optional[datetime] = None, fred_key: str = "",
     inp["data_dir"] = data_dir
     inp["rotation"] = _read_json_file(ROTATION_FILE, data_dir)
     inp["markets"] = _read_json_file(MARKETS_FILE, data_dir)
+    inp["flow_map"] = _read_json_file(FLOW_MAP_FILE, data_dir)
     try:
         inp["daily_log"] = pd.read_csv(DAILY_CSV) if DAILY_CSV.exists() else pd.DataFrame()
     except Exception as e:
@@ -338,13 +522,31 @@ def gather(today_et: Optional[datetime] = None, fred_key: str = "",
         sleeves = set(_rc.BASE_WEIGHTS)
     except Exception:
         sleeves = set()
+    inp["spy_holdings"], inp["spy_holdings_error"] = [], None
+    try:
+        inp["spy_holdings"] = (fetch_holdings or _holdings_default)() or []
+    except Exception as e:
+        inp["spy_holdings_error"] = f"{type(e).__name__}: {str(e)[:120]}"
     tickers = sorted(set(universe) | set(comp) | set(ledger_tk) | {t for _, t in PRICE_SCORE}
-                     | set(FRESHER.values()) | sleeves | set(BENCH_TICKERS))
+                     | set(FRESHER.values()) | sleeves | set(BENCH_TICKERS)
+                     | {t for t, _ in inp["spy_holdings"]} | {OIL_TICKER})
     inp["universe"] = universe
     try:
         inp["prices"] = (fetch_prices or _default_prices)(tickers)
     except Exception as e:
         inp["prices"] = {}; errors.append(f"price fetch failed: {type(e).__name__}: {e}")
+    # v1.7 engine layer (O11, adopted 2026-11-13): its state is path-dependent, so it
+    # needs a longer history than the brief's 2y for its own four tickers.
+    inp["engine_prices"] = {}
+    try:
+        import engine_layer as _el
+        _fp = fetch_prices or _default_prices
+        try:
+            inp["engine_prices"] = _fp(list(_el.TICKERS), period=_el.HISTORY) or {}
+        except TypeError:                                    # injected fetchers without a period
+            inp["engine_prices"] = _fp(list(_el.TICKERS)) or {}
+    except Exception as e:
+        errors.append(f"engine price fetch failed: {type(e).__name__}: {e}")
     # FRED's VIXCLS and DCOILWTICO lag the market by 1-3 sessions; splice the
     # yfinance closes after FRED's last date so the level is current but the
     # 1-year history (percentile, σ) stays FRED's.
@@ -355,6 +557,46 @@ def gather(today_et: Optional[datetime] = None, fred_key: str = "",
             tail = ys[ys.index > fs.index[-1]] if len(fs) else ys
             hist[sid] = pd.concat([fs, tail]).sort_index()
             inp["fred_src"][sid] = f"FRED + yfinance {yf_tk} after {fs.index[-1].date() if len(fs) else 'n/a'}"
+    # v1.5.4 (N33): WTI = one series of NYMEX front-month settles; never spot and futures mixed
+    inp.setdefault("series_label", {})
+    try:
+        fs = hist.get(OIL_SID, pd.Series(dtype=float))
+        daily = _price_close(inp["prices"], OIL_TICKER)
+        try:
+            st_ = settle_series((fetch_intraday or _intraday_default)(OIL_TICKER), now)
+        except Exception:
+            st_ = pd.Series(dtype=float)
+        ws = wti_settle_series(daily, st_, session)
+        if len(ws) >= 260:
+            hist[OIL_SID] = ws
+            inp["series_label"][OIL_SID] = "WTI (NYMEX front-month settle)"
+            dn = daily.copy(); dn.index = pd.to_datetime(dn.index).normalize()
+            chk = settle_vs_fred(st_[st_.index < ws.index[-1]], dn) if len(st_) else None   # method check: settled daily bars vs rebuild
+            sp = settle_vs_fred(ws, fs)                                         # market spread: spot vs settle
+            last_shared = None
+            if sp:
+                f2 = fs.copy(); f2.index = pd.to_datetime(f2.index).normalize()
+                both = pd.concat([ws, f2], axis=1, join="inner").dropna()
+                if len(both):
+                    last_shared = (both.index[-1].date(), float(both.iloc[-1, 1] - both.iloc[-1, 0]))
+            rolls = cl_expiries_between((ws.index[-21] if len(ws) > 21 else ws.index[0]).date(), ws.index[-1].date())
+            n_reb = int(st_.index.isin(ws.index).sum()) if len(st_) else 0
+            inp["fred_src"][OIL_SID] = (
+                f"one series of front-month settles: Yahoo CL=F daily for completed sessions, latest {n_reb} rebuilt "
+                f"from 1-min bars (VWAP 14:28–14:30 ET)"
+                + (f"; method check — Yahoo daily vs rebuilt on {chk['n']} earlier session(s): max ${chk['max_abs']:.2f}" if chk else "")
+                + (f"; FRED spot minus settle on {last_shared[0]}: {last_shared[1]:+.2f} (market spread, not an error)"
+                   if last_shared else "")
+                + ("; front-month expiry " + ", ".join(f"{e} ({lab} contract)" for e, lab in rolls)
+                   + " inside the 20-day window — changes spanning it include the roll" if rolls else "")
+                + ("" if n_reb else "; no settlement-window bars today, so the latest session is not shown yet"))
+        else:
+            inp["series_label"][OIL_SID] = "WTI (FRED DCOILWTICO, EIA Cushing spot)"
+            inp["fred_src"][OIL_SID] = ("FRED spot only — futures history unavailable; futures are never spliced onto spot "
+                                        "(different prices); lags the market 1–3 sessions")
+    except Exception as e:
+        inp["series_label"][OIL_SID] = "WTI (FRED DCOILWTICO, EIA Cushing spot)"
+        inp["fred_src"][OIL_SID] = f"FRED spot only — futures series failed ({type(e).__name__})"
     missing = [t for t in tickers if t not in inp["prices"]]
     if missing:
         errors.append(f"prices missing for {len(missing)} of {len(tickers)} tickers"
@@ -365,8 +607,9 @@ def gather(today_et: Optional[datetime] = None, fred_key: str = "",
         import event_calendar as ec
         inp["events"] = (macro_lookup or (lambda d: ec.upcoming_macro(d, today=now.date())))(10)
         inp["calendar_asof"] = getattr(ec, "CALENDAR_ASOF", None)
+        inp["calendar_coverage"] = ec.coverage(now.date()) if hasattr(ec, "coverage") else None
     except Exception as e:
-        inp["events"] = []; inp["calendar_asof"] = None
+        inp["events"] = []; inp["calendar_asof"] = None; inp["calendar_coverage"] = None
         errors.append(f"event calendar: {e}")
     return inp
 
@@ -440,7 +683,7 @@ def scoreboard(inp: dict) -> dict:
     rows = []
     for label, sid, unit, kind in FRED_SCORE:
         s = inp["fred"].get(sid, pd.Series(dtype=float))
-        rows.append(_score_row(label, s, unit, kind, source=f"FRED {sid}"))
+        rows.append(_score_row(label, s, unit, kind, source=(inp.get("series_label") or {}).get(sid, f"FRED {sid}")))
     # short real rate: from the live signal, deltas from the logged history
     sig = (inp.get("assessment") or {}).get("signals")
     srr = _f(getattr(sig, "short_real_rate", None)) if sig is not None else None
@@ -455,6 +698,20 @@ def scoreboard(inp: dict) -> dict:
                        source="classifier + daily log", pctile_ok=False)
         r["asof"] = "live (EFFR − latest CPI)"
         rows.insert(0, r)
+    # v1.6 (N12): market-implied policy path, crude: 2Y and 3-month bill yields minus the
+    # effective fed funds rate on the same dates. Positive = the market prices policy HIGHER.
+    _fd = inp.get("fred") or {}
+    _dff = _fd.get("DFF", pd.Series(dtype=float)).dropna()
+    for _lab, _sid in (("Market-implied path: 2Y − fed funds", "DGS2"), ("Market-implied path: 3M bill − fed funds", "DTB3")):
+        _y = _fd.get(_sid, pd.Series(dtype=float)).dropna()
+        if len(_y) and len(_dff):
+            _sp = (_y - _dff.reindex(_y.index, method="ffill")).dropna()
+            if len(_sp) > 1:
+                _rw = _score_row(_lab, _sp, "%", "rate", source=f"FRED {_sid} − DFF")
+                _rw["note"] = ("≈ {:+.1f} × 25bp moves priced{}; includes term premium, so read the direction, "
+                               "not the exact count").format(
+                    float(_sp.iloc[-1]) / 0.25, " over ~2 years" if _sid == "DGS2" else " over ~3 months")
+                rows.append(_rw)
     for label, tk in PRICE_SCORE:
         rows.append(_score_row(label, _price_close(inp["prices"], tk), "$", "index", source="yfinance"))
     rsp, spy = _price_close(inp["prices"], "RSP"), _price_close(inp["prices"], "SPY")
@@ -782,7 +1039,13 @@ def cross_asset_section(inp: dict, regime_key: Optional[str]) -> dict:
     vix_s = fred.get("VIXCLS", pd.Series(dtype=float))
     n30 = fred.get("DGS30", pd.Series(dtype=float))
     g = lambda n: _f(getattr(sig, n, None)) if sig is not None else None
+    # v1.6 (N37/N38): 20-session momentum for credit and long real yields
+    _hy = fred.get("BAMLH0A0HYM2", pd.Series(dtype=float)).dropna()
+    _r10 = fred.get("DFII10", pd.Series(dtype=float)).dropna()
+    hy20 = _f(_hy.iloc[-1] - _hy.iloc[-21]) if len(_hy) > 20 else None
+    r10_20 = _f(_r10.iloc[-1] - _r10.iloc[-21]) if len(_r10) > 20 else None
     d = ca.divergence(hy_oas=g("hy_oas"), hy_mom_2w=g("hy_oas_mom_2w"),
+                      hy_mom_20d=hy20, long_real_mom_20d=r10_20,
                       long_real=g("long_real_yield"), long_real_mom_3m=g("long_real_mom_3m"),
                       breakeven=g("breakeven_10y"),
                       nom_30y=_f(n30.iloc[-1]) if len(n30) else None,
@@ -898,6 +1161,96 @@ def compass(prices: dict) -> list[dict]:
 
 # ── Flow ───────────────────────────────────────────────────────────────────
 
+def _hours_since(iso: Optional[str], now) -> Optional[float]:
+    """Hours from a UTC ISO timestamp to the brief's ET clock (naive = ET)."""
+    if not iso:
+        return None
+    try:
+        t = pd.Timestamp(iso)
+        if pd.isna(t):
+            return None
+        t = t.tz_localize("UTC") if t.tzinfo is None else t
+        n = pd.Timestamp(now)
+        n = n.tz_localize("America/New_York") if n.tzinfo is None else n
+        return round((n - t).total_seconds() / 3600.0, 1)
+    except Exception:
+        return None
+
+
+FLOW_INTO = ("new_money", "into_stocks")
+FLOW_OUT = ("out_of_stocks", "leaving_both")
+
+
+def regime_tilt(key: Optional[str]) -> Optional[str]:
+    """risk-on / risk-off / none, from the swing desk's books-open table:
+    long-only regimes lean risk-on, short-only lean risk-off, both = no tilt."""
+    try:
+        from swing_desk import REGIME_DIRECTION
+    except Exception:
+        return None
+    if not key or key not in REGIME_DIRECTION:
+        return None
+    return {"long": "risk-on", "short": "risk-off"}.get(REGIME_DIRECTION[key][0], "none")
+
+
+def flow_regime_check(state: Optional[str], key: Optional[str]) -> str:
+    """Does market-wide flow confirm the regime's tilt? Checklist v4 Step 5:
+    flow never overrides the regime; a contradiction is logged and watched."""
+    tilt = regime_tilt(key)
+    if state in (None, "unavailable"):
+        return "Flow is unavailable, so Level 2 cannot confirm or contradict the regime (a data gap, not a signal)."
+    if state == "borderline":
+        return f"Borderline flow neither confirms nor contradicts `{key}`."
+    if tilt is None:
+        return f"Regime `{key}` has no tilt on record; flow is context only."
+    side = "into" if state in FLOW_INTO else "out" if state in FLOW_OUT else None
+    move = {"into": "into stocks", "out": "out of stocks"}.get(side)
+    if side is None:
+        return f"No market-wide flow signal; `{key}` stands on Level 1 alone."
+    if tilt == "none":
+        return (f"`{key}` has no directional tilt (swing books both ways), so money moving {move} is "
+                f"context, not confirmation.")
+    agrees = (side == "into") == (tilt == "risk-on")
+    return (f"Money moving {move} {'CONFIRMS' if agrees else 'CONTRADICTS'} `{key}`'s {tilt} tilt."
+            + ("" if agrees else " Log the contradiction and watch it; flow does not override the regime (Step 5)."))
+
+
+def flow_map_section(inp: dict, regime_key: Optional[str] = None) -> dict:
+    """6A: where the money went, by asset class (Money_Flow flow_map_summary.json).
+    Shown as published; this module does not recompute or re-judge it."""
+    s = inp.get("flow_map") or {}
+    if not s.get("asset_classes") or not (s.get("verdict") or {}).get("verdict"):
+        return {"available": False,
+                "message": "Flow map summary not published yet — Money_Flow's Daily Poll and Publish writes "
+                           f"{FLOW_MAP_FILE}. Without it the brief cannot say where money moved by asset class; "
+                           "that blocks the de-risking-versus-rotation call from flows (prices in 1A still apply)."}
+    age = _hours_since(s.get("published_at"), inp["now_et"])
+    stale = age is None or age > FLOW_MAP_MAX_AGE_H
+    v = s["verdict"]
+    rows = [{"asset_class": r.get("asset_class"), "flow_usd": _f(r.get("flow_usd")), "pct_aum": _f(r.get("pct_aum")),
+             "direction": r.get("direction") or "n/a", "measured": r.get("measured"), "total": r.get("total"),
+             "missing": list(r.get("missing") or []), "thin": bool(r.get("thin"))} for r in s["asset_classes"]]
+    cov = s.get("coverage") or {}
+    return {"available": True, "stale": stale, "age_hours": age, "published_at": s.get("published_at"),
+            "data_through": s.get("data_through"), "window": s.get("window"),
+            "measured": cov.get("measured"), "total": cov.get("total"), "rows": rows,
+            "kind": v.get("kind"), "verdict": v.get("verdict"), "evidence": list(v.get("evidence") or []),
+            "rule": v.get("rule", ""), "changes_if": v.get("changes_if", ""),
+            "excluded": s.get("excluded") or {},
+            "state": v.get("state"), "borderline": v.get("borderline"),
+            "sessions_in_state": v.get("sessions_in_state"), "steps": list(v.get("steps") or []),
+            "regime_check": flow_regime_check(v.get("state"), regime_key) if v.get("state") else None}
+
+
+def _usd(x) -> str:
+    x = _f(x)
+    if x is None:
+        return "n/a"
+    sign = "+" if x > 0 else ("−" if x < 0 else "")
+    a = abs(x)
+    return sign + (f"${a / 1e9:.2f}B" if a >= 1e9 else f"${a / 1e6:.0f}M")
+
+
 def flow_section(inp: dict) -> dict:
     rot = inp.get("rotation") or {}
     divs = rot.get("flow_divergences") or []
@@ -956,6 +1309,16 @@ def breadth_section(inp: dict) -> dict:
     spy20 = float(spy.iloc[-1] / spy.iloc[-21] - 1) * 100 if len(spy) > 21 else None
     rsp20 = float(rsp.iloc[-1] / rsp.iloc[-21] - 1) * 100 if len(rsp) > 21 else None
     out["spy_20d"], out["rsp_20d"] = spy20, rsp20
+    try:
+        out["trend"] = breadth_trend(prices, uni)
+    except Exception as e:
+        out["trend"] = {"available": False, "reason": f"{type(e).__name__}: {e}"}
+    try:
+        out["top10"] = top10_contribution(prices, inp.get("spy_holdings") or [])
+    except Exception as e:
+        out["top10"] = {"available": False, "reason": f"{type(e).__name__}: {e}"}
+    if inp.get("spy_holdings_error") and not out["top10"].get("available"):
+        out["top10"]["reason"] = f"SPY holdings file failed: {inp['spy_holdings_error']}"
     if p50 is None:
         out["conclusion"] = "Breadth unavailable — constituent prices did not load."
         return out
@@ -974,6 +1337,447 @@ def breadth_section(inp: dict) -> dict:
         c += "Participation is mixed."
     out["conclusion"] = c
     return out
+
+
+# ── v1.5: top-10 contribution and breadth trend (section 7) ──────────────────
+# Top 10: how much of SPY's move came from its 10 largest holdings, and what
+# the other ~490 names did. Weights come from State Street's daily SPY
+# holdings file (the same file macro_flags reads for top-20 concentration).
+# Start-of-window weights are backed out exactly for a buy-and-hold window:
+#   w0_i = w_now_i x (1 + R_spy) / (1 + r_i)
+# contribution_i = w0_i x r_i (points of SPY return); the rest of the index
+# returned (R_spy - sum contributions) / (1 - sum w0).
+TOP_N = 10
+CONC_TOP_HEAVY = 1.5      # top-10 share of SPY's move / their weight share at or above this = carried by the top 10
+CONC_BROAD = 0.67         # at or below this = the top 10 lagged the rest of the index
+CONC_MIN_MOVE = 0.5       # % — a SPY move smaller than this is too small to split into shares
+TOP_MIN_COVER = 0.90      # share of the top-10 weight that must be priced, or the split is not reported
+# Breadth trend: % of the constituent proxy above its 50-day, as a series.
+BREADTH_TREND_PTS = 10.0  # pp change over 20 sessions that counts as a trend (~11 names on a 109-name universe)
+BREADTH_LOOKBACK = 60     # sessions of history shown
+_TICKER_RE = None
+
+
+def spy_top_holdings(raw: bytes, n: int = TOP_N) -> list:
+    """[(yfinance ticker, weight %)] for the n largest SPY holdings, from an
+    SSGA daily-holdings workbook. Raises ValueError on an unrecognised layout."""
+    import io, re
+    grid = pd.read_excel(io.BytesIO(raw), header=None)
+    hdr = None
+    for i in range(min(len(grid), 40)):
+        cells = [str(c).strip().lower() for c in grid.iloc[i].tolist()]
+        if "weight" in cells and "ticker" in cells:
+            hdr = i
+            break
+    if hdr is None:
+        raise ValueError("no header row with 'Weight' and 'Ticker' in the first 40 rows")
+    df = grid.iloc[hdr + 1:].copy()
+    df.columns = [str(c).strip().lower() for c in grid.iloc[hdr].tolist()]
+    df["weight"] = pd.to_numeric(df["weight"], errors="coerce")
+    df["ticker"] = df["ticker"].astype(str).str.strip().str.upper()
+    df = df[df["weight"] > 0]
+    if len(df) < 100:
+        raise ValueError(f"only {len(df)} weighted holdings parsed — not the full SPY basket")
+    if df["weight"].sum() < 1.5:                     # fractions, not percent
+        df["weight"] = df["weight"] * 100
+    ok = df["ticker"].str.match(r"^[A-Z]{1,5}([.\-/][A-Z]{1,2})?$")
+    df = df[ok].sort_values("weight", ascending=False).head(n)
+    return [(re.sub(r"[./]", "-", t), round(float(w), 4)) for t, w in zip(df["ticker"], df["weight"])]
+
+
+def _holdings_default() -> list:
+    import macro_flags as _mf
+    return spy_top_holdings(_mf._get(_mf.SPY_HOLDINGS_URL).content)
+
+
+def top10_contribution(prices: dict, holdings: list, windows=(1, 5, 20)) -> dict:
+    out = {"available": False, "rows": [], "windows": {}, "holdings_n": len(holdings or [])}
+    spy = _price_close(prices, "SPY")
+    if not holdings or len(spy) < max(windows) + 1:
+        out["reason"] = "SPY holdings unavailable" if not holdings else "SPY price history too short"
+        return out
+    total_w = sum(w for _, w in holdings)
+    closes = {t: _price_close(prices, t) for t, _ in holdings}
+    priced = [(t, w) for t, w in holdings if len(closes[t]) > max(windows)]
+    out["missing"] = [t for t, _ in holdings if len(closes[t]) <= max(windows)]
+    out["cover"] = sum(w for _, w in priced) / total_w if total_w else 0.0
+    out["weight_now"] = round(total_w, 2)
+    out["asof"] = spy.index[-1].date().isoformat()
+    if out["cover"] < TOP_MIN_COVER:
+        out["reason"] = (f"only {out['cover']:.0%} of the top-{len(holdings)} weight is priced "
+                         f"(missing {', '.join(out['missing'])})")
+        return out
+    for t, w in priced:
+        c = closes[t]
+        out["rows"].append({"ticker": t, "weight": w,
+                            **{f"r{n}": float(c.iloc[-1] / c.iloc[-1 - n] - 1) * 100 for n in windows}})
+    for n in windows:
+        R = float(spy.iloc[-1] / spy.iloc[-1 - n] - 1)
+        contrib = w0_sum = 0.0
+        for row in out["rows"]:
+            r = row[f"r{n}"] / 100
+            w0 = row["weight"] / 100 * (1 + R) / (1 + r)
+            row[f"c{n}"] = w0 * r * 100               # points of SPY return
+            contrib += row[f"c{n}"]; w0_sum += w0
+        rest = (R * 100 - contrib) / (1 - w0_sum) if w0_sum < 1 else None
+        share = contrib / (R * 100) if abs(R * 100) >= CONC_MIN_MOVE else None
+        ratio = share / w0_sum if share is not None and w0_sum else None
+        out["windows"][n] = {"spy": R * 100, "top_contrib": contrib, "top_w0": w0_sum * 100, "rest": rest,
+                             "share": share, "ratio": ratio}
+    w = out["windows"][max(windows)]
+    n = max(windows)
+    rule = (f"Weights: State Street's daily SPY holdings file. Start-of-window weights are backed out for a "
+            f"buy-and-hold window (w0 = w_now x (1+R_SPY)/(1+r)); contribution = w0 x r. The top {len(out['rows'])} "
+            f"carry the move when their share of SPY's {n}-day return is at least {CONC_TOP_HEAVY}x their weight; "
+            f"they lag when it is {CONC_BROAD}x or less. SPY moves under {CONC_MIN_MOVE}% are not split.")
+    k = len(out["rows"])
+    if w["share"] is None:
+        verdict = (f"Over {n} days SPY moved {w['spy']:+.2f}%, too little to split: the top {k} contributed "
+                   f"{w['top_contrib']:+.2f} points and the other names returned {w['rest']:+.2f}%")
+        kind = "small_move"
+    else:
+        kind = ("top_heavy" if w["ratio"] >= CONC_TOP_HEAVY else "leaders_lag" if w["ratio"] <= CONC_BROAD
+                else "in_line")
+        lead = {"top_heavy": f"Driven by the top {k}", "leaders_lag": f"The top {k} lagged",
+                "in_line": f"The top {k} moved in line with their weight"}[kind]
+        verdict = (f"{lead}: over {n} days SPY {w['spy']:+.2f}%, of which the top {k} ({w['top_w0']:.1f}% of the "
+                   f"index) supplied {w['top_contrib']:+.2f} points ({w['share']:.0%} of the move, "
+                   f"{w['ratio']:.1f}x their weight); the other names returned {w['rest']:+.2f}%")
+        if (w["spy"] > 0) != (w["rest"] > 0):
+            verdict += " — the rest of the index moved the OTHER way"
+    out.update(available=True, kind=kind, verdict=verdict, rule=rule,
+               changes_if=f"The top {k}'s share of the {n}-day move crossing {CONC_TOP_HEAVY}x or {CONC_BROAD}x their weight.")
+    out["rows"].sort(key=lambda r: -abs(r[f"c{n}"]))
+    return out
+
+
+def breadth_trend(prices: dict, universe: list, lookback: int = BREADTH_LOOKBACK) -> dict:
+    """% of the constituent proxy above its 50-day and 200-day, and 52-week
+    highs minus lows, for each of the last `lookback` sessions. Each session
+    uses only closes up to that session."""
+    out = {"available": False}
+    spy = _price_close(prices, "SPY")
+    cols = {t: _price_close(prices, t) for t in universe}
+    cols = {t: s for t, s in cols.items() if len(s) >= 50}
+    if len(spy) < lookback + 21 or len(cols) < 20:
+        out["reason"] = "not enough constituent history"
+        return out
+    cal = spy.index[-(lookback + 260):]
+    px = pd.DataFrame({t: s.reindex(cal) for t, s in cols.items()})
+    ma50, ma200 = px.rolling(50, min_periods=50).mean(), px.rolling(200, min_periods=200).mean()
+    hi, lo = px.rolling(252, min_periods=252).max(), px.rolling(252, min_periods=252).min()
+    has = px.notna()
+    p50 = ((px > ma50) & ma50.notna() & has).sum(1) / (ma50.notna() & has).sum(1).replace(0, np.nan) * 100
+    p200 = ((px > ma200) & ma200.notna() & has).sum(1) / (ma200.notna() & has).sum(1).replace(0, np.nan) * 100
+    hl = ((px >= hi) & hi.notna()).sum(1) - ((px <= lo) & lo.notna()).sum(1)
+    hl = hl.where(hi.notna().sum(1) > 0)
+    ser = pd.DataFrame({"p50": p50, "p200": p200, "hl": hl}).iloc[-lookback:]
+    pts = {}
+    for lab, k in (("today", 1), ("5d", 6), ("20d", 21), ("60d", lookback)):
+        if len(ser) >= k:
+            r = ser.iloc[-k]
+            pts[lab] = {"date": ser.index[-k].date().isoformat(),
+                        **{c: (None if pd.isna(r[c]) else round(float(r[c]), 1)) for c in ("p50", "p200", "hl")}}
+    if pts.get("today", {}).get("p50") is None:
+        out["reason"] = "latest session has no 50-day reading"
+        return out
+    d20 = None if pts.get("20d", {}).get("p50") is None else pts["today"]["p50"] - pts["20d"]["p50"]
+    spy20 = float(spy.iloc[-1] / spy.iloc[-21] - 1) * 100
+    trend = ("improving" if d20 is not None and d20 >= BREADTH_TREND_PTS else
+             "deteriorating" if d20 is not None and d20 <= -BREADTH_TREND_PTS else "flat")
+    if trend == "deteriorating" and spy20 > 0:
+        verdict = (f"Narrowing: SPY is up {spy20:+.1f}% over 20 sessions while the share of names above their "
+                   f"50-day fell {d20:+.0f} points to {pts['today']['p50']:.0f}% — fewer stocks are carrying the index")
+    elif trend == "improving" and spy20 < 0:
+        verdict = (f"Broadening under a falling index: SPY {spy20:+.1f}% over 20 sessions, yet the share above the "
+                   f"50-day rose {d20:+.0f} points to {pts['today']['p50']:.0f}%")
+    elif d20 is None:
+        verdict = f"Breadth: {pts['today']['p50']:.0f}% above the 50-day; not enough history for a 20-session trend"
+    elif trend == "flat":
+        verdict = (f"Breadth flat: {pts['today']['p50']:.0f}% above the 50-day, {d20:+.0f} points over 20 sessions "
+                   f"(SPY {spy20:+.1f}%)")
+    else:
+        verdict = (f"Breadth {trend} with the index: {pts['today']['p50']:.0f}% above the 50-day, {d20:+.0f} points "
+                   f"over 20 sessions (SPY {spy20:+.1f}%)")
+    rule = (f"Share of the {len(cols)}-name constituent proxy closing above its 50-day average, each session from "
+            f"closes up to that session. A change of {BREADTH_TREND_PTS:.0f} points or more over 20 sessions "
+            f"(about {BREADTH_TREND_PTS / 100 * len(cols):.0f} names) is a trend; a falling trend under a rising SPY is "
+            f"narrowing. Proxy, not the full S&P 500.")
+    out.update(available=True, points=pts, d20=d20, spy20=spy20, trend=trend, verdict=verdict, rule=rule,
+               n=len(cols), series=[{"date": d.date().isoformat(), "p50": None if pd.isna(v) else round(float(v), 1)}
+                                    for d, v in ser["p50"].items()])
+    return out
+
+
+# ── Market read (v1.2): verdict / evidence / rule / what would change it ──
+# Every verdict below is a rule applied to numbers the brief already holds.
+# Thresholds are named here so the rule text printed in the brief and the
+# code that applies it cannot drift apart.
+READ_RATE_NOISE_BP = 5.0     # a 20-day move in the 10Y smaller than this is noise
+READ_RATE_SHARE = 2 / 3      # a component "drives" the move when it supplies at least this share
+READ_DAY_MOVE = 0.5          # % — an index day smaller than this is quiet
+READ_BIG_DAY = 1.0           # % — a risk-on / risk-off day for the cross-asset read
+READ_CONC_GAP = 0.5          # pp — equal-weight vs cap-weight gap that marks a concentrated day
+READ_GROWTH_TILT = 1.0       # % — growth-vs-value 20-day move that counts as a tilt
+READ_NEAR_DAYS = 3.0         # within this many typical days of a WATCH line = "close" (a move seen a few times a year)
+# The cross-asset lanes' own lines (cross_asset.credit_lane / vol_lane); the
+# selftest asserts these match, so a change there cannot silently desync here.
+LANE_HY_WATCH, LANE_HY_STRESS, LANE_HY_MOM = 3.5, 5.0, 0.5
+LANE_HY_MOM_20D = 0.30       # v1.6 (N37): cross_asset.HY_MOM_20D_WATCH
+LANE_VIX_WATCH, LANE_VIX_STRESS = 21.0, 30.0
+
+
+def _ret1(prices: dict, tk: str) -> tuple:
+    """(last-session % change, as-of date) from adjusted closes, or (None, None)."""
+    s = _price_close(prices, tk)
+    if len(s) < 2 or not float(s.iloc[-2]):
+        return None, None
+    return float(s.iloc[-1] / s.iloc[-2] - 1) * 100, pd.to_datetime(s.index[-1]).date().isoformat()
+
+
+def _rate_split(fred: dict, n: int) -> Optional[dict]:
+    """10Y change over n sessions split into real (DFII10) + breakeven, on the
+    two series' common dates, so nominal = real + breakeven exactly."""
+    n10, r10 = fred.get("DGS10"), fred.get("DFII10")
+    if n10 is None or r10 is None or not len(n10) or not len(r10):
+        return None
+    c = pd.concat([n10.rename("n"), r10.rename("r")], axis=1).dropna()
+    if len(c) <= n:
+        return None
+    nom = float(c["n"].iloc[-1] - c["n"].iloc[-1 - n])
+    real = float(c["r"].iloc[-1] - c["r"].iloc[-1 - n])
+    return {"nom_bp": nom * 100, "real_bp": real * 100, "be_bp": (nom - real) * 100,
+            "level": float(c["n"].iloc[-1]), "real_level": float(c["r"].iloc[-1]),
+            "asof": pd.to_datetime(c.index[-1]).date().isoformat()}
+
+
+def read_rates(s20: Optional[dict], s1: Optional[dict], growth_r20: Optional[float]) -> dict:
+    topic = "What moved long yields"
+    rule = (f"Breakeven = 10Y nominal − 10Y real (DFII10) on the same date, so the parts add up exactly. "
+            f"A part drives the 20-day move when it supplies at least two-thirds of it; a 20-day move under "
+            f"{READ_RATE_NOISE_BP:.0f}bp is noise. (Section 4's rates lane uses 3-month momentum, so the two can "
+            f"point different ways over different horizons.)")
+    if not s20:
+        return {"topic": topic, "verdict": "unavailable — 10Y or DFII10 history missing", "evidence": [],
+                "rule": rule, "changes_if": "Restoring the FRED DGS10 and DFII10 series.", "driver": None}
+    nom, real, be = s20["nom_bp"], s20["real_bp"], s20["be_bp"]
+    ev = [f"10Y {s20['level']:.2f}% (FRED, {s20['asof']}): 20-day {nom:+.0f}bp = real {real:+.0f}bp + breakeven {be:+.0f}bp"]
+    if s1:
+        ev.append(f"Last FRED session: {s1['nom_bp']:+.0f}bp = real {s1['real_bp']:+.0f}bp + breakeven {s1['be_bp']:+.0f}bp")
+    if abs(nom) < READ_RATE_NOISE_BP:
+        driver, verdict = None, f"Long yields little changed over 20 days ({nom:+.0f}bp)"
+        changes = f"A 20-day move of {READ_RATE_NOISE_BP:.0f}bp or more in either direction."
+    else:
+        up = nom > 0
+        if real / nom >= READ_RATE_SHARE:
+            driver = "real"
+            verdict = ("Over 20 days, long yields ROSE on real yields, not inflation expectations — a discount-rate squeeze on "
+                       "long-duration assets (growth, tech, long bonds)" if up else
+                       "Over 20 days, long yields FELL on real yields — discount-rate pressure on long-duration assets is easing")
+            changes = "Breakevens supplying two-thirds of the 20-day move would make it an inflation story."
+        elif be / nom >= READ_RATE_SHARE:
+            driver = "breakeven"
+            verdict = ("Over 20 days, long yields ROSE on inflation expectations — favours real assets over long bonds and growth"
+                       if up else "Over 20 days, long yields FELL on lower inflation expectations — a disinflation or growth-worry signal")
+            changes = "Real yields supplying two-thirds of the 20-day move would make it a discount-rate story."
+        else:
+            driver = "both"
+            verdict = f"Over 20 days, long yields {'ROSE' if up else 'FELL'} on both real yields and inflation expectations"
+            changes = "Either part supplying two-thirds of the 20-day move."
+        if growth_r20 is not None:
+            ev.append(f"Growth vs value (VUG/VTV) {growth_r20:+.1f}% over 20 days")
+            if driver == "real" and not up and growth_r20 <= -READ_GROWTH_TILT:
+                ev.append("⚠ Growth is lagging value even though real yields fell, so the drag on growth is coming from "
+                          "something other than rates (check earnings and company news), not from the discount rate")
+            elif driver == "real" and up and growth_r20 <= -READ_GROWTH_TILT:
+                ev.append("Consistent: growth lagging value, as rising real yields would predict")
+            elif driver == "real" and not up and growth_r20 >= READ_GROWTH_TILT:
+                ev.append("Consistent: growth leading value, as falling real yields would predict")
+    return {"topic": topic, "verdict": verdict, "evidence": ev, "rule": rule, "changes_if": changes, "driver": driver}
+
+
+def read_breadth(spy1, rsp1, qqq1, p50, ecw20, asof) -> dict:
+    topic = "Concentrated or broad"
+    rule = (f"A down day is megacap-led when equal-weight (RSP) beats cap-weight (SPY) by {READ_CONC_GAP}pp or more, "
+            f"and broad when most names are below their 50-day. Index days under ±{READ_DAY_MOVE}% are quiet.")
+    if spy1 is None or rsp1 is None:
+        return {"topic": topic, "verdict": "unavailable — SPY or RSP prices missing", "evidence": [], "rule": rule,
+                "changes_if": "Restoring SPY and RSP prices.", "kind": None}
+    gap = rsp1 - spy1
+    ev = [f"SPY {spy1:+.1f}% · equal-weight RSP {rsp1:+.1f}%"
+          + (f" · Nasdaq-100 QQQ {qqq1:+.1f}%" if qqq1 is not None else "") + f" ({asof})"]
+    if p50 is not None:
+        ev.append(f"{p50:.0f}% of the 109-name proxy universe above its 50-day")
+    if ecw20 is not None:
+        ev.append(f"Equal vs cap weight over 20 days {ecw20:+.1f}% "
+                  f"({'participation broadening' if ecw20 > 1 else 'leadership narrowing' if ecw20 < -1 else 'no clear trend'})")
+    if spy1 <= -READ_DAY_MOVE:
+        if gap >= READ_CONC_GAP:
+            kind, verdict = "megacap_down", "Megacap-led decline: the cap-weighted index fell more than the average stock"
+            changes = "Equal-weight falling as much as cap-weight, or under half of names above their 50-day, would make it a broad sell-off."
+        elif p50 is not None and p50 < 50:
+            kind, verdict = "broad_selloff", "Broad sell-off: the average stock fell with the index and most names are below their 50-day"
+            changes = f"Equal-weight holding up by {READ_CONC_GAP}pp or more would narrow it to the megacaps."
+        else:
+            kind, verdict = "broad_down", "Broad decline, but most names are still above their 50-day"
+            changes = "Under half of names above their 50-day would make it a broad sell-off."
+    elif spy1 >= READ_DAY_MOVE:
+        if -gap >= READ_CONC_GAP:
+            kind, verdict = "narrow_up", "Narrow rally: carried by the megacaps, the average stock lagged"
+            changes = "Equal-weight keeping pace with cap-weight would make it a broad rally."
+        else:
+            kind, verdict = "broad_up", "Broad rally: the average stock kept pace with the index"
+            changes = f"Equal-weight lagging by {READ_CONC_GAP}pp or more would make it megacap-led."
+    else:
+        kind, verdict = "quiet", f"Quiet index day ({spy1:+.1f}%)"
+        if qqq1 is not None and abs(qqq1 - rsp1) >= 2 * READ_CONC_GAP:
+            verdict += f", with a split underneath (Nasdaq-100 {qqq1:+.1f}% vs equal-weight {rsp1:+.1f}%)"
+        changes = f"An index move of ±{READ_DAY_MOVE}% or more."
+    return {"topic": topic, "verdict": verdict, "evidence": ev, "rule": rule, "changes_if": changes, "kind": kind}
+
+
+def read_cross(spy1, gld1, tlt1, vix, vix_d, hy, hy_d, hy_asof, asof) -> dict:
+    topic = "De-risking or rotation"
+    rule = (f"A risk day is an index move of ±{READ_BIG_DAY}% or more. De-risking = stocks AND gold both down "
+            f"{READ_BIG_DAY}%+ with long Treasuries up; flight to quality = stocks down, Treasuries up, gold holding; "
+            f"stocks and Treasuries down together = a rates or inflation scare.")
+    if spy1 is None or tlt1 is None:
+        return {"topic": topic, "verdict": "unavailable — SPY or TLT prices missing", "evidence": [], "rule": rule,
+                "changes_if": "Restoring SPY and TLT prices.", "kind": None}
+    ev = [f"SPY {spy1:+.1f}%" + (f" · gold (GLD) {gld1:+.1f}%" if gld1 is not None else "")
+          + f" · long Treasuries (TLT) {tlt1:+.1f}%"
+          + (f" · VIX {vix:.1f} ({vix_d:+.1f})" if vix is not None and vix_d is not None else "") + f" ({asof})"]
+    if hy is not None:
+        ev.append(f"HY OAS {hy:.2f}%" + (f" ({hy_d:+.0f}bp)" if hy_d is not None else "")
+                  + f" (FRED print dated {hy_asof}, one session behind prices)")
+    g = gld1 if gld1 is not None else 0.0
+    if spy1 <= -READ_BIG_DAY:
+        if tlt1 > 0 and g <= -READ_BIG_DAY:
+            kind, verdict = "liquidity", "Liquidity de-risking: stocks AND gold were sold while Treasuries were bought — investors raising cash"
+        elif tlt1 > 0:
+            kind, verdict = "flight", "Flight to quality: stocks down, Treasuries up, gold holding"
+        else:
+            kind, verdict = "rates_scare", "Rates or inflation scare: stocks and long Treasuries fell together"
+        changes = "Credit joining (HY OAS widening) would turn this from de-risking into stress; see the next read for the distance."
+    elif spy1 >= READ_BIG_DAY:
+        kind, verdict = (("risk_on", "Risk-on: stocks bought, long Treasuries sold") if tlt1 < 0
+                         else ("relief", "Relief rally: stocks and long Treasuries up together (falling-rate relief)"))
+        changes = f"An index day of −{READ_BIG_DAY}% or worse."
+    else:
+        kind, verdict = "none", f"No cross-asset risk event: the index moved less than ±{READ_BIG_DAY}% ({spy1:+.1f}%)"
+        changes = f"An index move of ±{READ_BIG_DAY}% or more."
+    return {"topic": topic, "verdict": verdict, "evidence": ev, "rule": rule, "changes_if": changes, "kind": kind}
+
+
+def _tdays(x: float) -> str:
+    return f"about {x:.0f} typical day{'s' if round(x) != 1 else ''}"
+
+
+def read_stress(hy, hy_mom, hy_sd, hy_asof, vix, vix_sd, flips, hy_mom20=None) -> dict:
+    topic = "Distance to stress"
+    rule = (f"Lines are the cross-asset lanes' own thresholds: credit WATCH above {LANE_HY_WATCH:.2f}% HY OAS or a "
+            f"2-week widening above +{LANE_HY_MOM * 100:.0f}bp or a 20-session widening of +{LANE_HY_MOM_20D * 100:.0f}bp "
+            f"or more, STRESS above {LANE_HY_STRESS:.2f}%; vol WATCH at VIX "
+            f"{LANE_VIX_WATCH:.0f}, STRESS at {LANE_VIX_STRESS:.0f}. A typical day is one standard deviation of that "
+            f"series' daily change over the past year; within {READ_NEAR_DAYS:.0f} typical days counts as close.")
+    ev, states, near = [], {}, []
+    if hy is not None:
+        if hy > LANE_HY_STRESS:
+            states["credit"] = "STRESS"
+        elif (hy > LANE_HY_WATCH or (hy_mom or 0) > LANE_HY_MOM
+              or (hy_mom20 is not None and hy_mom20 >= LANE_HY_MOM_20D)):
+            states["credit"] = "WATCH"
+        else:
+            states["credit"] = "CALM"
+            dist = LANE_HY_WATCH - hy
+            days = dist / hy_sd if hy_sd else None
+            if days is not None and days <= READ_NEAR_DAYS:
+                near.append(("credit", days))
+        e = f"Credit: HY OAS {hy:.2f}% (FRED, {hy_asof}) — {states['credit']}"
+        if states["credit"] == "CALM":
+            e += f"; WATCH above {LANE_HY_WATCH:.2f}% is {(LANE_HY_WATCH - hy) * 100:.0f}bp away"
+            if hy_sd:
+                e += f" ({_tdays((LANE_HY_WATCH - hy) / hy_sd)})"
+        if hy_mom is not None:
+            e += f"; 2-week change {hy_mom * 100:+.0f}bp (WATCH above +{LANE_HY_MOM * 100:.0f}bp)"
+        if hy_mom20 is not None:
+            e += f"; 20-session change {hy_mom20 * 100:+.0f}bp (WATCH at +{LANE_HY_MOM_20D * 100:.0f}bp)"
+        ev.append(e)
+    if vix is not None:
+        if vix >= LANE_VIX_STRESS:
+            states["vol"] = "STRESS"
+        elif vix >= LANE_VIX_WATCH:
+            states["vol"] = "WATCH"
+        else:
+            states["vol"] = "CALM"
+            days = (LANE_VIX_WATCH - vix) / vix_sd if vix_sd else None
+            if days is not None and days <= READ_NEAR_DAYS:
+                near.append(("vol", days))
+        e = f"Vol: VIX {vix:.1f} — {states['vol']}"
+        if states["vol"] == "CALM":
+            e += f"; WATCH at {LANE_VIX_WATCH:.0f} is {LANE_VIX_WATCH - vix:.1f} points away"
+            if vix_sd:
+                e += f" ({_tdays((LANE_VIX_WATCH - vix) / vix_sd)})"
+        ev.append(e)
+    for fl in (flips or [])[:1]:
+        td = fl.get("typical_days")
+        ev.append(f"Regime: nearest flip is {fl.get('label')} {_fmt(fl.get('now'), 2)} → {_fmt(fl.get('at'), 2)}"
+                  f"{fl.get('unit', '')} → `{fl.get('to')}`" + (f" ({_tdays(td)})" if td is not None else ""))
+    if not states:
+        return {"topic": topic, "verdict": "unavailable — HY OAS and VIX missing", "evidence": ev, "rule": rule,
+                "changes_if": "Restoring HY OAS and VIX.", "states": states}
+    hot = [k for k, v in states.items() if v == "STRESS"]
+    warm = [k for k, v in states.items() if v == "WATCH"]
+    if hot:
+        verdict = f"STRESS in {', '.join(hot)}"
+        changes = "The lane falling back below its STRESS line."
+    elif warm:
+        verdict = f"WATCH in {', '.join(warm)}: risk is being repriced"
+        changes = "The lane falling back inside its CALM range, or credit crossing its STRESS line."
+    elif near:
+        near.sort(key=lambda x: x[1])
+        verdict = "Calm, but close: " + " and ".join(
+            f"{k} is {_tdays(d_)}" for k, d_ in near) + \
+            f" from {'its' if len(near) == 1 else 'their'} WATCH line{'s' if len(near) > 1 else ''}"
+        changes = "Crossing either WATCH line flips that lane's vote, and with it the brief's cross-asset majority."
+    else:
+        verdict = "Calm, with room: neither credit nor vol is near its WATCH line"
+        changes = f"Either line coming within {READ_NEAR_DAYS:.0f} typical days."
+    return {"topic": topic, "verdict": verdict, "evidence": ev, "rule": rule, "changes_if": changes, "states": states}
+
+
+def market_read_section(inp: dict, ctx: dict) -> dict:
+    """Four diagnoses from data the brief already holds. ctx carries the
+    already-built breadth, rotation (compass) and regime (flips) sections."""
+    prices, fred = inp.get("prices") or {}, inp.get("fred") or {}
+    spy1, asof = _ret1(prices, "SPY")
+    rsp1, _ = _ret1(prices, "RSP")
+    qqq1, _ = _ret1(prices, "QQQ")
+    gld1, _ = _ret1(prices, "GLD")
+    tlt1, _ = _ret1(prices, "TLT")
+    comp = {c["name"]: c.get("r20") for c in ((ctx.get("rotation") or {}).get("compass") or [])}
+    br = ctx.get("breadth") or {}
+    vix_s = fred.get("VIXCLS", pd.Series(dtype=float))
+    vix = _f(vix_s.iloc[-1]) if len(vix_s) else None
+    vix_d = _f(vix_s.iloc[-1] - vix_s.iloc[-2]) if len(vix_s) > 1 else None
+    vix_sd = _f(vix_s.diff().dropna().iloc[-252:].std()) if len(vix_s) > 41 else None
+    hy_s = fred.get("BAMLH0A0HYM2", pd.Series(dtype=float))
+    hy = _f(hy_s.iloc[-1]) if len(hy_s) else None
+    hy_d = _f((hy_s.iloc[-1] - hy_s.iloc[-2]) * 100) if len(hy_s) > 1 else None
+    hy_mom = _f(hy_s.iloc[-1] - hy_s.iloc[-11]) if len(hy_s) > 10 else None
+    hy_mom20 = _f(hy_s.iloc[-1] - hy_s.iloc[-21]) if len(hy_s) > 20 else None
+    hy_sd = _f(hy_s.diff().dropna().iloc[-252:].std()) if len(hy_s) > 41 else None
+    hy_asof = pd.to_datetime(hy_s.index[-1]).date().isoformat() if len(hy_s) else None
+    s20, s1 = _rate_split(fred, 20), _rate_split(fred, 1)
+    items = [read_rates(s20, s1, comp.get("Growth vs value")),
+             read_breadth(spy1, rsp1, qqq1, br.get("pct_above_50"), comp.get("Equal vs cap weight"), asof),
+             read_cross(spy1, gld1, tlt1, vix, vix_d, hy, hy_d, hy_asof, asof),
+             read_stress(hy, hy_mom, hy_sd, hy_asof, vix, vix_sd, (ctx.get("regime") or {}).get("flips"),
+                         hy_mom20)]
+    fred_asof = s20["asof"] if s20 else hy_asof
+    note = (f"Prices as of {asof or 'n/a'}; FRED rates and credit as of {fred_asof or 'n/a'}"
+            + (" (FRED runs one session behind prices)." if asof and fred_asof and fred_asof < asof else "."))
+    return {"items": items, "dates_note": note, "price_asof": asof, "fred_asof": fred_asof}
 
 
 # ── Portfolio ──────────────────────────────────────────────────────────────
@@ -1126,6 +1930,9 @@ def portfolio_section(inp: dict, targets: dict, regime_key: Optional[str], force
 
 # ── Model portfolio (what you SHOULD hold) ──────────────────────────────────
 
+ENGINE_LIVE = True      # v1.7 (2026-11-13): O11 switching layer on the model book (Matt: "option 2")
+
+
 def model_section(inp: dict, rg: dict) -> dict:
     """The framework's answer, every session: regime targets after the entry
     gate and the portfolio circuit breaker, tracked as a model book."""
@@ -1171,8 +1978,24 @@ def model_section(inp: dict, rg: dict) -> dict:
         if today_w is None:
             today_w = rc.target_weights(key, None, sig, gate=False)
     path = Path(inp.get("data_dir") or "data") / "model_book.csv"
+    # v1.7: the adopted engine (O11) decides Offense / Balanced / Defense; Balanced is the
+    # gated regime book above. ENGINE_LIVE = False restores breaker mode (rollback switch).
+    engine, eread = None, None
+    if ENGINE_LIVE:
+        try:
+            import engine_layer as el
+            ep = {**{t: prices[t] for t in el.TICKERS if t in prices}, **(inp.get("engine_prices") or {})}
+            est = el.states(ep)
+            eread = el.read(est, ep)
+            engine = {"state_for": lambda d, _s=est: el.state_for(_s, d), "overlay": el.overlay}
+        except Exception as e:
+            eread = {"available": False, "conclusion": f"Engine layer failed: {type(e).__name__}: {e} — "
+                                                       f"yesterday's engine state is held."}
+            engine = {"state_for": lambda d: None, "overlay": (lambda s_, bw: dict(bw))}
+    out["engine"] = eread
     try:
-        book = mbk.advance(mbk.load(path), inp["session"], regime_by_date, prices, weights_fn, key, today_w)
+        book = mbk.advance(mbk.load(path), inp["session"], regime_by_date, prices, weights_fn, key, today_w,
+                           engine=engine)
     except Exception as e:
         out["conclusion"] = f"Model book failed: {type(e).__name__}: {e}"
         return out
@@ -1213,11 +2036,25 @@ def model_section(inp: dict, rg: dict) -> dict:
     if sm["changes"] and not actions:
         moved = ", ".join(f"{c['ticker']} {c['change']:+.1f}" for c in sm["changes"][:8])
         weekend.append(f"Model portfolio changed today ({moved}) — execute at the weekend review if following it")
-    c = (f"You SHOULD hold the `{key}` model above"
+    _ew = {"OFF": "OFFENSE (50% QQQ / 50% SPY)", "DEF": "DEFENSE (SGOV / GLD / TLT)",
+           "BAL": f"BALANCED (the `{key}` regime book)", "OUT": f"FAST-EXIT → BALANCED (the `{key}` regime book)"}
+    if sm.get("engine"):
+        if sm.get("engine_changed"):
+            actions.append(f"ENGINE SWITCH — the model book moved to {_ew.get(sm['engine'], sm['engine'])} "
+                           f"(was {_ew.get(sm['engine_previous'], sm['engine_previous'])}); weekday-authorized, "
+                           f"like a stop")
+        if eread and eread.get("switched"):
+            weekend.append(f"Engine {eread.get('engine')} switched at today's close to {eread.get('word')}: "
+                           f"the model book moves at the NEXT session")
+    c = ((f"Engine {(eread or {}).get('engine', 'O11')}: the book holds {_ew.get(sm['engine'], sm['engine'])}. "
+          if sm.get("engine") else "")
+         + f"You SHOULD hold the {'book' if sm.get('engine') else f'`{key}` model'} above"
          + (" — with the CIRCUIT BREAKER ON (risk sleeves halved)" if sm["breaker"] == "ON" else "")
          + f". Model book {sm['nav']:.2f} ({sm['drawdown_pct']:+.1f}% from peak"
          + (f"; 20d {sm['ret_20d']:+.1f}%" if sm.get("ret_20d") is not None else "") + "). ")
-    if sm["warn"] and sm["breaker"] != "ON":
+    if sm["warn"] and sm["breaker"] == "ENGINE":
+        c += f"⚠ Drawdown past {mbk.WARN_DD:.0f}% — the engine's −8% Offense stop and trend rules are the control. "
+    elif sm["warn"] and sm["breaker"] != "ON":
         c += f"⚠ Drawdown past the {mbk.WARN_DD:.0f}% warning line — the breaker trips at {mbk.TRIGGER_DD:.0f}%. "
     if sm["breaker"] == "ON":
         c += (f"Release needs drawdown back above {mbk.RELEASE_DD:.0f}% and SPY above its 50-day on "
@@ -1236,6 +2073,26 @@ def model_section(inp: dict, rg: dict) -> dict:
              f"{sm.get('date')} and books {inp['session']} on the next run (never as a 0% day). " + c)
     if failed_regime := bool(((inp.get("assessment") or {}).get("regime") or {}).get("data_failure")):
         c = "⚠ Regime HELD through a data failure — these weights are yesterday's call, not a new one. " + c
+    # v1.6 (N39-N41): attribution, AI-factor exposure, volatility-target readout (display only)
+    try:
+        _br = _book_risk
+        if _br is None:
+            raise ImportError("book_risk.py not found next to daily_brief.py")
+        out["attribution"] = _br.attribution(book, closes)
+        out["ai_exposure"] = _br.ai_exposure(sm["weights"], closes)
+        out["vol_target"] = _br.vol_target(book)
+        out["risk_by_group"] = _br.risk_by_group(sm["weights"], closes)
+        if (out["ai_exposure"] or {}).get("flags"):
+            c += " ⚠ " + "; ".join(out["ai_exposure"]["flags"]) + "."
+        if (out["risk_by_group"] or {}).get("flags"):
+            c += " ⚠ " + "; ".join(out["risk_by_group"]["flags"]) + "."
+    except Exception as e:
+        out["attribution"] = out["ai_exposure"] = out["vol_target"] = out["risk_by_group"] = {
+            "available": False, "conclusion": f"book_risk unavailable: {type(e).__name__}: {e}"}
+    if eread and eread.get("switched") is not None:
+        c += " " + eread["conclusion"]
+    elif eread and not eread.get("available"):
+        c += " ⚠ " + eread["conclusion"]
     out.update(available=True, summary=sm, rows=rows, actions=actions, weekend=weekend,
                conclusion=c.strip(), _book=book, path=str(path), regime_held=failed_regime)
     return out
@@ -1243,28 +2100,25 @@ def model_section(inp: dict, rg: dict) -> dict:
 
 def _model_benchmarks(book: pd.DataFrame, closes: dict) -> dict:
     """Model NAV vs SPY and a daily-rebalanced 60/40 (SPY/AGG), over the book's
-    own dates. Display only — never a rule input."""
+    own dates. Display only — never a rule input. v1.6.2: computed by
+    model_vs_spy.build_frame, the same function the app's chart uses."""
     out = {"since": None, "model_pct": None, "spy_pct": None, "sixty_forty_pct": None}
     try:
         if book is None or book.empty:
             return out
         b = book.assign(date=pd.to_datetime(book["date"]).dt.normalize()).sort_values("date")
-        d0, d1 = b["date"].iloc[0], b["date"].iloc[-1]
-        out["since"] = d0.date().isoformat()
+        out["since"] = b["date"].iloc[0].date().isoformat()
         out["model_pct"] = round((float(b["nav"].iloc[-1]) / float(b["nav"].iloc[0]) - 1) * 100, 2)
-
-        def _s(t):
-            s = closes.get(t, pd.Series(dtype=float)).dropna()
-            if getattr(s.index, "tz", None) is not None:
-                s.index = s.index.tz_localize(None)
-            s.index = pd.to_datetime(s.index).normalize()
-            return s[(s.index >= d0) & (s.index <= d1)]
-        spy, agg = _s("SPY"), _s("AGG")
-        if len(spy) > 1 and spy.index[0] == d0:
-            out["spy_pct"] = round((float(spy.iloc[-1]) / float(spy.iloc[0]) - 1) * 100, 2)
-        if len(spy) > 1 and len(agg) > 1 and spy.index[0] == d0 and agg.index[0] == d0:
-            r = (0.6 * spy.pct_change() + 0.4 * agg.pct_change()).dropna()
-            out["sixty_forty_pct"] = round((float((1 + r).prod()) - 1) * 100, 2)
+        if _model_vs_spy is None:
+            return out
+        f, inf = _model_vs_spy.build_frame(book, closes.get("SPY"), closes.get("AGG"))
+        if f is None or f.empty:
+            return out
+        st = inf["stats"]
+        out["spy_pct"] = round(st["SPY"]["ret"], 2)
+        if "60/40" in st:
+            out["sixty_forty_pct"] = round(st["60/40"]["ret"], 2)
+        out["through"] = st.get("last")
     except Exception:
         pass
     return out
@@ -1364,6 +2218,10 @@ def _if_then(ev: str, srr, flips: dict) -> str:
         return ("GDP — a weak print with weak consumer data moves the growth composite toward CONTRACTING "
                 "(the growth_scare path needs price confirmation: cyclicals lagging defensives by 3pp+). "
                 "A strong print with hot core PCE (same morning) pushes DFII10 up." + lm_txt(+1))
+    if ev == "ELECTION":
+        return ("Election — results arrive after the close, so the next session can gap through stops; that is why "
+                "it is a blackout. It changes no regime input on the day; any effect reaches the regime through "
+                "long real yields (the fiscal path), so watch DFII10 over the following sessions." + lm_txt(+1))
     return f"{ev} — no pre-committed rule."
 
 
@@ -1408,7 +2266,8 @@ def data_health(inp: dict) -> list[dict]:
         note = (inp.get("fred_src") or {}).get(sid, "")
         if sid in FRED_MAX_AGE:
             note = (note + "; " if note else "") + "weekly release (Mondays) — a week's lag is normal"
-        add(f"FRED {sid}", s.index[-1].date().isoformat() if len(s) else None, FRED_MAX_AGE.get(sid, 4), note)
+        add((inp.get("series_label") or {}).get(sid, f"FRED {sid}"), s.index[-1].date().isoformat() if len(s) else None,
+            FRED_MAX_AGE.get(sid, 4), note)
     a = inp.get("assessment")
     _reg = (a or {}).get("regime") or {}
     if a and _reg.get("data_failure"):
@@ -1427,6 +2286,15 @@ def data_health(inp: dict) -> list[dict]:
         pass
     rot = inp.get("rotation") or {}
     add("Money Flow bridge", (rot.get("published_at") or "")[:10] or None, 1, ref=wall)
+    if inp.get("spy_holdings"):
+        out.append({"input": "SPY holdings (top 10)", "asof": today.isoformat(), "age_days": 0, "status": "OK",
+                    "note": f"{len(inp['spy_holdings'])} largest weights, State Street daily file"})
+    else:
+        out.append({"input": "SPY holdings (top 10)", "asof": None, "age_days": None, "status": "MISSING",
+                    "note": inp.get("spy_holdings_error") or "not fetched — blocks the top-10 contribution table"})
+    fm_ = inp.get("flow_map") or {}
+    add("Flow map summary", (fm_.get("published_at") or "")[:10] or None, 1, ref=wall,
+        note="" if fm_ else "not published yet (Money_Flow publish v1.1)")
     mk = inp.get("markets") or {}
     add("Markets bridge", (mk.get("published_at") or "")[:10] or None, 1, ref=wall)
     b = inp.get("swing") or {}
@@ -1466,8 +2334,10 @@ def data_health(inp: dict) -> list[dict]:
             + ("" if ref is None or pd.to_datetime(ref).date() >= today else
                " — this session's closes were NOT published when the brief ran"))
     if inp.get("calendar_asof"):
-        out.append({"input": "Event calendar", "asof": inp["calendar_asof"], "age_days": None, "status": "OK",
-                    "note": "hardcoded dates; re-verify every January"})
+        cov = inp.get("calendar_coverage") or {}
+        out.append({"input": "Event calendar", "asof": inp["calendar_asof"], "age_days": None,
+                    "status": cov.get("status") or "UNKNOWN",
+                    "note": cov.get("note") or "coverage check unavailable (event_calendar older than v1.2)"})
     return out
 
 
@@ -1496,7 +2366,11 @@ def signals_section(inp: dict, mdl: dict) -> dict:
             cards = pd.DataFrame()
         rows = (so.from_daily_log(inp.get("daily_log"), d, book)
                 + so.from_swing_cards(cards, d, existing)
-                + so.from_rotation(inp.get("rotation") or {}, d, existing))
+                + so.from_rotation(inp.get("rotation") or {}, d, existing)
+                + (so.from_flow_map(inp.get("flow_map") or {}, existing,
+                                    stale=(_hours_since((inp.get("flow_map") or {}).get("published_at"), inp["now_et"])
+                                           or 1e9) > FLOW_MAP_MAX_AGE_H)
+                   if hasattr(so, "from_flow_map") else []))
         known = set(existing["signal_id"]) if not existing.empty else set()
         out["new"] = rows
         out["new_today"] = [r for r in rows if r["signal_id"] not in known]
@@ -1536,7 +2410,9 @@ def build(inp: dict) -> dict:
     xa = cross_asset_section(inp, rg.get("key"))
     ro = rotation_section(inp)
     fl = flow_section(inp)
+    fm = flow_map_section(inp, rg.get("key"))
     br = breadth_section(inp)
+    mr = market_read_section(inp, {"breadth": br, "rotation": ro, "regime": rg})
     targets = a.get("targets") or (inp.get("markets") or {}).get("regime_targets") or {}
     pf = portfolio_section(inp, targets, rg.get("key"))
     mdl = model_section(inp, rg)
@@ -1546,13 +2422,59 @@ def build(inp: dict) -> dict:
     sg = signals_section(inp, mdl)
     dh = data_health(inp)
     brief = {"session": inp["session"].isoformat(), "generated_et": mt.fmt_et(inp["now_et"]),
-             "scoreboard": sb, "regime": rg, "cross_asset": xa, "rotation": ro, "flow": fl,
-             "breadth": br, "model": mdl, "portfolio": pf, "swing": sw, "next48": nx, "alerts": al,
+             "scoreboard": sb, "market_read": mr, "regime": rg, "cross_asset": xa, "rotation": ro, "flow": fl,
+             "flow_map": fm, "breadth": br, "model": mdl, "portfolio": pf, "swing": sw, "next48": nx, "alerts": al,
              "signals": sg,
              "data_health": dh, "errors": inp.get("errors", []), "targets": targets}
     brief["headline"] = headline(brief)
+    ra = risk_alerts_section(brief, inp)
+    brief["risk_alerts"] = ra
+    if ra.get("line"):
+        brief["headline"].insert(0, ra["line"])       # risk_policy §9: the alert line leads the brief
     brief["conclusions"] = conclusions(brief)
     return brief
+
+
+def risk_alerts_section(b: dict, inp: dict) -> dict:
+    """
+    The conditions tonight's Alerts run will push to the phone (risk_policy §9),
+    computed here from this brief's own inputs with alerts.py's rules, so the
+    brief leads with the same line. alerts.py stays the delivery (GitHub issue
+    → phone) and the record; this section never opens or closes an issue.
+    """
+    try:
+        import alerts as _al
+    except Exception as e:
+        return {"available": False, "items": [], "line": None,
+                "conclusion": f"Risk alerts unavailable: alerts.py did not import ({type(e).__name__})."}
+    sm = (b.get("model") or {}).get("summary") or {}
+    mb = ({"date": sm.get("date"), "nav": sm.get("nav"), "peak": sm.get("peak"),
+           "drawdown_pct": sm.get("drawdown_pct"), "breaker": sm.get("breaker"), "warn": str(bool(sm.get("warn")))}
+          if sm.get("drawdown_pct") is not None else None)
+    sf = inp.get("swing_file")
+    src = {"model_book": mb, "model_book_error": None if mb else "model summary unavailable in this brief",
+           "daily": {"regime": {"key": (b.get("regime") or {}).get("key")}, "data_health": b.get("data_health") or [],
+                     "model": {"engine": (b.get("model") or {}).get("engine")}},
+           "daily_date": b.get("session"),
+           "swing": inp.get("swing") or None, "swing_date": str(sf)[:10] if sf else None}
+    try:
+        found, _ = _al.evaluate(src, inp["now_et"].date())
+    except Exception as e:
+        return {"available": False, "items": [], "line": None,
+                "conclusion": f"Risk alerts not evaluated: {type(e).__name__}: {e}"}
+    order = {"alarm": 0, "alert": 1}
+    items = sorted(({k: x[k] for k in ("key", "severity", "state", "title")} for x in found),
+                   key=lambda x: (x["state"] != "active", order.get(x["severity"], 2), x["key"]))
+    live = [x for x in items if x["state"] == "active"]
+    held = [x for x in items if x["state"] == "hold"]
+    line = None
+    if live or held:
+        parts = [f"{x['severity'].upper()} {x['title']}" for x in live]
+        parts += [f"still open, recovering: {x['title']}" for x in held]
+        line = ("🔔 **Risk alerts:** " + "; ".join(parts)
+                + ". Pushed to the phone by tonight's Alerts run (GitHub issues).")
+    return {"available": True, "items": items, "live": len(live), "line": line,
+            "conclusion": line or "No risk alert is live (risk_policy §9)."}
 
 
 def headline(b: dict) -> list[str]:
@@ -1655,12 +2577,24 @@ def render_md(b: dict) -> str:
          f"applied to it. Desk research, not personalized advice.*", ""]
     L += ["## 1 · Headline", *[f"{s}" for s in b["headline"]], ""]
 
+    mr = b.get("market_read") or {}
+    if mr.get("items"):
+        L += ["## 1A · Market read — what the data says, and why",
+              f"*{mr.get('dates_note', '')} Each verdict is a rule applied to the numbers listed under it.*", ""]
+        for it in mr["items"]:
+            L.append(f"**{it['topic']}: {it['verdict']}**")
+            L += [f"- {e}" for e in it.get("evidence", [])]
+            L += [f"- *Rule:* {it['rule']}", f"- *Would change if:* {it['changes_if']}", ""]
+
     sb = b["scoreboard"]
     L += ["## 2 · Scoreboard", "| Metric | Value | Δ1d | Δ5d | Δ20d | 1-yr pctile | Today in σ | As of |",
           "|---|---|---|---|---|---|---|---|"]
     for r in sb["rows"]:
         L.append(f"| {r['name']} | {_fmt(r['value'], 2)}{r['unit'] if r['unit'] == '%' else ''} | {r['d1_txt']} | {r['d5_txt']} | "
                  f"{r['d20_txt']} | {_fmt(r['pctile_1y'], 0)} | {_fmt(r['z1d'], 1, 'σ', True) if r['z1d'] is not None else 'n/a'} | {r['asof'] or 'n/a'} |")
+    _notes = [f"{r['name']}: {r['note']}" for r in sb["rows"] if r.get("note")]
+    if _notes:
+        L += [""] + [f"_{x}_" for x in _notes]
     L += ["", f"**Conclusion:** {sb['conclusion']}", ""]
 
     rg = b["regime"]
@@ -1753,12 +2687,71 @@ def render_md(b: dict) -> str:
             L.append(f"| {c['contract']} | {c['sleeve']} | {c['report_date']} | {_fmt(c['age_days'], 0)}d{' STALE' if c['stale'] else ''} | {c['flag']} |")
     L += ["", f"**Conclusion:** {fl['conclusion']}", ""]
 
+    fm = b.get("flow_map") or {}
+    L += [f"## 6A · Where the money went (Tier A ETF flows, {fm.get('window') or 20} sessions)"]
+    if not fm.get("available"):
+        L += [f"*{fm.get('message', 'Flow map summary unavailable.')}*", ""]
+    else:
+        when = f"published {str(fm.get('published_at') or '')[:16].replace('T', ' ')} UTC"
+        L.append(f"*Data through {fm.get('data_through') or 'n/a'} · {when} · {fm.get('measured')} of {fm.get('total')} "
+                 f"funds measured (trusted share counts only).*"
+                 + (f" **STALE — {_fmt(fm.get('age_hours'), 0)}h old; treat as last known, not today's flows.**"
+                    if fm.get("stale") else ""))
+        L += ["", "| Asset class | Net flow | % of assets | Direction | Funds measured | Not measured |",
+              "|---|---|---|---|---|---|"]
+        for r in fm["rows"]:
+            L.append(f"| {r['asset_class']} | {_usd(r['flow_usd'])} | {_fmt(r['pct_aum'], 2, '%', True)} | "
+                     f"{r['direction']}{' (thin)' if r['thin'] else ''} | "
+                     f"{r['measured']} of {r['total']} | {', '.join(r['missing']) or '—'} |")
+        if any(r["thin"] for r in fm["rows"]):
+            L.append("\n*(thin) = under half the class's funds measured; that row is indicative only.*")
+        L += ["", f"**Verdict: {fm['verdict']}**"]
+        L += [f"- {str(e).replace(chr(10), ' ')}" for e in fm["evidence"]]
+        L += [f"- *Rule:* {fm['rule']}", f"- *Would change if:* {fm['changes_if']}", ""]
+        if fm.get("steps"):
+            L.append("**What to do with it**" + (" *(stale summary: last known reading, re-check before acting)*"
+                                                if fm.get("stale") else ""))
+            L += [f"{i}. {x}" for i, x in enumerate(fm["steps"], 1)]
+            L.append("")
+        if fm.get("regime_check"):
+            L += [f"**Regime cross-check:** {fm['regime_check']}", ""]
+
     br = b["breadth"]
     L += ["## 7 · Breadth & internals",
           f"- % above 50-day: **{_fmt(br.get('pct_above_50'), 0)}%** · above 200-day: **{_fmt(br.get('pct_above_200'), 0)}%** "
           f"· 52-wk highs/lows: {br.get('new_highs', 'n/a')}/{br.get('new_lows', 'n/a')} · universe: {br.get('universe')}",
           f"- SPY 20d {_fmt(br.get('spy_20d'), 1, '%', True)} vs RSP (equal weight) 20d {_fmt(br.get('rsp_20d'), 1, '%', True)}",
           "", f"**Conclusion:** {br['conclusion']}", ""]
+    bt = br.get("trend") or {}
+    if bt.get("available"):
+        pts = bt["points"]
+        labs = [(k, h) for k, h in (("today", "Today"), ("5d", "5 sessions ago"), ("20d", "20 sessions ago"),
+                                    ("60d", f"{BREADTH_LOOKBACK} sessions ago")) if k in pts]
+        L += ["**Breadth trend**", "", "| | " + " | ".join(f"{h} ({pts[k]['date'][5:]})" for k, h in labs) + " |",
+              "|---|" + "---|" * len(labs)]
+        for c, name, suf in (("p50", "% above 50-day", "%"), ("p200", "% above 200-day", "%"),
+                             ("hl", "52-wk highs minus lows", "")):
+            L.append(f"| {name} | " + " | ".join(
+                "n/a" if pts[k][c] is None else (f"{pts[k][c]:.0f}{suf}" if suf else f"{pts[k][c]:+.0f}") for k, _ in labs) + " |")
+        L += ["", f"**{bt['verdict']}**", f"- *Rule:* {bt['rule']}", ""]
+    else:
+        L += [f"*Breadth trend unavailable: {bt.get('reason', 'no data')}.*", ""]
+    tt = br.get("top10") or {}
+    if tt.get("available"):
+        k = len(tt["rows"])
+        L += [f"**Top-{k} contribution** *(SPY holdings weights; prices through {tt['asof']})*", "",
+              "| Holding | Weight | 1-day | 20-day | 20-day contribution |", "|---|---|---|---|---|"]
+        for r in tt["rows"]:
+            L.append(f"| {r['ticker']} | {r['weight']:.2f}% | {r['r1']:+.2f}% | {r['r20']:+.2f}% | {r['c20']:+.2f} pts |")
+        w1, w20 = tt["windows"][1], tt["windows"][20]
+        L.append(f"| **Top {k} together** | {tt['weight_now']:.1f}% | {w1['top_contrib']:+.2f} pts | | "
+                 f"**{w20['top_contrib']:+.2f} pts** |")
+        L.append(f"| **Rest of the index** | {100 - tt['weight_now']:.1f}% | {_fmt(w1['rest'], 2, '%', True)} | "
+                 f"{_fmt(w20['rest'], 2, '%', True)} | {w20['spy'] - w20['top_contrib']:+.2f} pts |")
+        L.append(f"| **SPY** | 100% | {w1['spy']:+.2f}% | {w20['spy']:+.2f}% | {w20['spy']:+.2f} pts |")
+        L += ["", f"**{tt['verdict']}**", f"- *Rule:* {tt['rule']}", f"- *Would change if:* {tt['changes_if']}", ""]
+    else:
+        L += [f"*Top-10 contribution unavailable: {tt.get('reason', 'no data')}.*", ""]
 
     pf = b["portfolio"]
     md_ = b.get("model") or {}
@@ -1800,6 +2793,51 @@ def render_md(b: dict) -> str:
         L.append(f"_Returns are display-only (dividend-adjusted closes), not a rule input. 1M = 21 sessions, "
                  f"3M = 63, **12-1** = the 12-month return excluding the latest month. SPY: 1M {_p(_s.get('ret_1m'))} · "
                  f"3M {_p(_s.get('ret_3m'))} · 12-1 {_p(_s.get('ret_12_1'))}. “—” = not enough history._")
+        # v1.6: where the return came from, AI exposure, volatility target (display only)
+        _at = md_.get("attribution") or {}
+        if _at.get("available"):
+            _wins = _at["windows"]
+            _labs = [k for k in ("5 sessions", "20 sessions", "since inception") if k in _wins]
+            _bks = sorted({b_ for k in _labs for b_ in _wins[k]["by_bucket"]},
+                          key=lambda b_: _wins[_labs[-1]]["by_bucket"].get(b_, 0.0))
+            L += ["", "**Where the return came from** (percentage points of book return; held weights × "
+                      "each session's return, summed)",
+                  "| Bucket | " + " | ".join(_labs) + " |", "|---|" + "---|" * len(_labs)]
+            for b_ in _bks:
+                L.append(f"| {b_} | " + " | ".join(f"{_wins[k]['by_bucket'].get(b_, 0.0):+.2f}" for k in _labs) + " |")
+            L.append("| **Sum** | " + " | ".join(f"**{_wins[k]['sum_pts']:+.2f}**" for k in _labs) + " |")
+            L.append("| Book NAV change | " + " | ".join(
+                (f"{_wins[k]['nav_pct']:+.2f}%" if _wins[k].get("nav_pct") is not None else "—") for k in _labs) + " |")
+            _w20 = _wins.get("20 sessions") or {}
+            if _w20.get("by_ticker"):
+                _tk = list(_w20["by_ticker"].items())
+                L.append("_Largest 20-session drags: " + ", ".join(f"{t} {v:+.2f}" for t, v in _tk[:3])
+                         + " · supports: " + ", ".join(f"{t} {v:+.2f}" for t, v in _tk[::-1][:3])
+                         + ". The sum differs slightly from the NAV change because the NAV compounds._")
+        _ai = md_.get("ai_exposure") or {}
+        if _ai.get("conclusion"):
+            L += ["", f"**AI exposure** ({_ai.get('lookback', 60)} sessions, vs SPY and SMH − SPY): {_ai['conclusion']}"]
+            if _ai.get("available"):
+                _r = [r for r in _ai["rows"] if r.get("ai_pct") not in (None, 0)]
+                _r = sorted(_r, key=lambda r: -abs(r["ai_pct"]))[:6]
+                if _r:
+                    L.append("_Largest contributors: " + ", ".join(
+                        f"{r['ticker']} {r['weight']:.0f}% × {r['b_ai']:+.2f} = {r['ai_pct']:+.1f}%" for r in _r)
+                        + f". Limits {_ai['flag_exposure_pct']:.0f}% exposure / {_ai['flag_risk_share_pct']:.0f}% "
+                          "of variance are PROPOSED._")
+        _rg = md_.get("risk_by_group") or {}
+        if _rg.get("conclusion"):
+            L += ["", f"**Risk by group** ({_rg.get('lookback', 60)} sessions; share of book variance, "
+                      "contributions add to 100%): " + _rg["conclusion"]]
+            if _rg.get("available"):
+                L += ["| Group | Weight % | Share of risk % | Group vol % | Corr. with rest |", "|---|---|---|---|---|"]
+                for g_ in _rg["groups"]:
+                    L.append(f"| {g_['group']} | {g_['weight_pct']:.1f} | {g_['risk_pct']:+.1f} | "
+                             + (f"{g_['vol_pct']:.1f}" if g_.get("vol_pct") is not None else "—") + " | "
+                             + (f"{g_['corr_rest']:+.2f}" if g_.get("corr_rest") is not None else "—") + " |")
+        _vt = md_.get("vol_target") or {}
+        if _vt.get("conclusion"):
+            L += ["", f"**Volatility target** (display only): {_vt['conclusion']}"]
         if md_.get("actions"):
             L += ["", "**Authorized today:**", *[f"- {x}" for x in md_["actions"]]]
         L.append("_Model: regime targets → entry gate (blocked adds parked in SGOV) → circuit breaker "
@@ -1938,11 +2976,13 @@ def selftest() -> dict:
     def walk(v0, sd):
         return pd.Series(v0 + np.cumsum(rng.normal(0, sd, len(idx))), index=idx)
     fred = {"DFII10": walk(2.0, 0.04), "DGS10": walk(4.0, 0.05), "DGS2": walk(3.7, 0.05), "T10YIE": walk(2.3, 0.02),
+            "DFF": walk(3.6, 0.0), "DTB3": walk(3.7, 0.01),
             "BAMLH0A0HYM2": walk(3.0, 0.03).clip(lower=2.5), "BAMLC0A0CM": walk(0.9, 0.01),
             "DTWEXBGS": walk(120, 0.3), "VIXCLS": walk(16, 0.6).clip(lower=10), "DCOILWTICO": walk(70, 1.0),
             "DGS30": walk(4.6, 0.05)}
     fred["DFII10"].iloc[-1] = fred["DFII10"].iloc[-2] + 0.20        # a 5σ day
     fred["VIXCLS"] = fred["VIXCLS"].iloc[:-2]                        # FRED lags the market
+    fred["DCOILWTICO"] = fred["DCOILWTICO"].iloc[:-2]                # ... and so does FRED's WTI
     fetch_fred = lambda sid, key="", start="": fred.get(sid, pd.Series(dtype=float))
 
     def px(v0, drift=0.0005):
@@ -1952,6 +2992,7 @@ def selftest() -> dict:
     prices = {t: px(100) for t in tickers}
     prices["TLT"] = px(100, drift=-0.001)
     prices["^VIX"] = px(16, drift=0.0)
+    prices["CL=F"] = pd.DataFrame({"Open": 69.0, "High": 69.0, "Low": 69.0, "Close": 69.0, "Volume": 1e6}, index=idx)  # after-hours last trade
 
     sig = SimpleNamespace(short_real_rate=0.48, long_real_yield=2.85, long_real_mom_3m=0.66, breakeven_10y=2.3,
                           hy_oas=2.8, hy_oas_mom_2w=0.1, spread_2s10s=0.3, spread_2s10s_mom_3m=0.0,
@@ -2007,12 +3048,367 @@ def selftest() -> dict:
         import importlib, storage_backend, position_ledger
         importlib.reload(storage_backend); importlib.reload(position_ledger)
         now = datetime(2026, 9, 25, 20, 0)
-        inp = gather(today_et=now, fetch_fred=fetch_fred, fetch_prices=lambda tks: {t: prices[t] for t in tks if t in prices},
+        def _mbars(_t):                     # 1-min CL=F bars for the last 3 sessions, around the settle window
+            rows_ = []
+            for d_ in pd.bdate_range(end="2026-09-25", periods=3):
+                for hh, mm, px_, vol in ((14, 27, 70.0, 100), (14, 28, 71.0, 300), (14, 29, 72.0, 100),
+                                         (14, 30, 75.0, 100), (16, 59, 69.0, 50)):
+                    rows_.append((pd.Timestamp(d_.date()).replace(hour=hh, minute=mm).tz_localize("America/New_York"),
+                                  px_, vol))
+            return pd.DataFrame({"Close": [r[1] for r in rows_], "Volume": [r[2] for r in rows_]},
+                                index=pd.DatetimeIndex([r[0] for r in rows_]))
+        inp = gather(today_et=now, fetch_fred=fetch_fred, fetch_holdings=lambda: [("NVDA", 7.5), ("AAPL", 6.8)],
+                     fetch_intraday=_mbars, fetch_prices=lambda tks: {t: prices[t] for t in tks if t in prices},
                      assess=lambda: assessment, macro_lookup=lambda d: [
                          {"event": "NFP", "date": "2026-10-02", "days_away": 7, "affects": "rates", "blackout": False}])
         b = build(inp)
         md = render_md(b)
         out = write(b)
+        # v1.2: Market read — each rule on hand-set numbers, thresholds vs cross_asset, rendering
+        sp = lambda nom, real, lvl=4.98: {"nom_bp": nom, "real_bp": real, "be_bp": nom - real, "level": lvl,
+                                          "real_level": 2.6, "asof": "2026-10-29"}
+        r_ = read_rates(sp(30, 28), sp(5, 4), None)
+        if r_["driver"] != "real" or "ROSE on real yields" not in r_["verdict"]:
+            f.append(f"read_rates: +30 = real +28 must be a real-yield rise: {r_['verdict']}")
+        if "20-day +30bp = real +28bp + breakeven +2bp" not in r_["evidence"][0]:
+            f.append(f"read_rates evidence must show the split that adds up: {r_['evidence'][0]}")
+        r_ = read_rates(sp(30, 5), None, None)
+        if r_["driver"] != "breakeven" or "inflation expectations" not in r_["verdict"]:
+            f.append(f"read_rates: +30 = breakeven +25 must be an inflation rise: {r_['verdict']}")
+        r_ = read_rates(sp(-31, -30), None, -11.1)
+        if r_["driver"] != "real" or "FELL on real yields" not in r_["verdict"] or \
+                not any("something other than rates" in e for e in r_["evidence"]):
+            f.append("read_rates: real-yield fall with growth lagging must flag a non-rate drag on growth")
+        r_ = read_rates(sp(18, 9), None, None)
+        if r_["driver"] != "both":
+            f.append(f"read_rates: an even split must read as both: {r_['driver']}")
+        if read_rates(sp(3, 3), None, None)["driver"] is not None:
+            f.append("read_rates: a move under the noise line must read as little changed")
+        b_ = read_breadth(-1.8, -0.8, -3.5, 66.0, 6.0, "2026-10-30")
+        if b_["kind"] != "megacap_down":
+            f.append(f"read_breadth: SPY −1.8 / RSP −0.8 must be megacap-led: {b_['kind']}")
+        for args, want in (((-1.5, -1.6, -1.4, 40.0, -2.0, "d"), "broad_selloff"),
+                           ((-1.5, -1.6, -1.4, 70.0, -2.0, "d"), "broad_down"),
+                           ((1.0, 0.2, 1.8, 60.0, -1.0, "d"), "narrow_up"),
+                           ((1.0, 0.9, 1.1, 60.0, 1.0, "d"), "broad_up"),
+                           ((0.1, 0.0, 0.2, 60.0, 0.0, "d"), "quiet")):
+            if read_breadth(*args)["kind"] != want:
+                f.append(f"read_breadth{args} must be {want}: {read_breadth(*args)['kind']}")
+        for args, want in (((-1.8, -3.5, 0.4), "liquidity"), ((-1.5, 0.5, 0.8), "flight"),
+                           ((-1.5, 0.0, -1.0), "rates_scare"), ((1.2, 0.3, -0.5), "risk_on"),
+                           ((1.2, 0.3, 0.6), "relief"), ((0.3, -0.2, 0.1), "none")):
+            got_k = read_cross(*args, 19.4, 2.2, 3.26, 12.0, "2026-10-29", "2026-10-30")["kind"]
+            if got_k != want:
+                f.append(f"read_cross{args} must be {want}: {got_k}")
+        s_ = read_stress(3.26, 0.03, 0.05, "2026-10-29", 19.4, 1.5, [])
+        if s_["verdict"] != "Calm, but close: vol is about 1 typical day from its WATCH line":
+            f.append(f"read_stress: VIX 19.4 (1.5-pt typical day) is ~1 day from WATCH, HY ~5 is not close: {s_['verdict']}")
+        s_ = read_stress(3.40, 0.03, 0.05, "2026-10-29", 19.4, 1.5, [])
+        if s_["verdict"] != "Calm, but close: vol is about 1 typical day and credit is about 2 typical days from their WATCH lines":
+            f.append(f"read_stress: both lanes close must both be named, nearest first: {s_['verdict']}")
+        if not read_stress(2.8, 0.0, 0.05, "d", 14.0, 1.5, [])["verdict"].startswith("Calm, with room"):
+            f.append("read_stress: HY 2.8 / VIX 14 must be calm with room")
+        if not read_stress(3.6, 0.0, 0.05, "d", 14.0, 1.5, [])["verdict"].startswith("WATCH in credit"):
+            f.append("read_stress: HY 3.6 must be WATCH")
+        if not read_stress(3.0, 0.0, 0.05, "d", 31.0, 1.5, [])["verdict"].startswith("STRESS in vol"):
+            f.append("read_stress: VIX 31 must be STRESS")
+        # the lines must be the cross-asset lanes' own lines, so the two cannot disagree
+        import cross_asset as _ca
+        for hy_, mom_, m20_ in ((3.49, 0.0, None), (3.51, 0.0, None), (3.0, 0.51, None), (3.0, 0.49, None),
+                                (5.01, 0.0, None), (4.9, 0.0, None), (3.48, 0.22, 0.33), (3.48, 0.22, 0.29),
+                                (3.2, 0.0, 0.30)):
+            lane = _ca.credit_lane(hy_, mom_, m20_)["state"]
+            mine = read_stress(hy_, mom_, 0.05, "d", None, None, [], m20_)["states"]["credit"]
+            if lane != mine:
+                f.append(f"credit line out of sync with cross_asset at HY {hy_}, 2wk {mom_}, 20d {m20_}: {mine} vs {lane}")
+        if abs(_ca.HY_MOM_20D_WATCH - LANE_HY_MOM_20D) > 1e-12:
+            f.append("the 20-session credit line must equal cross_asset.HY_MOM_20D_WATCH")
+        for v_ in (20.99, 21.0, 29.99, 30.0, 12.0):
+            lane = _ca.vol_lane(v_)["state"]
+            mine = read_stress(None, None, None, "d", v_, 1.5, [])["states"]["vol"]
+            if lane != mine:
+                f.append(f"vol line out of sync with cross_asset at VIX {v_}: {mine} vs {lane}")
+        # the section is built and rendered, every item with its evidence, rule and flip condition
+        mr_ = b.get("market_read") or {}
+        if len(mr_.get("items", [])) != 4 or "## 1A · Market read" not in md:
+            f.append("Market read section missing from the brief")
+        for it in mr_.get("items", []):
+            if f"**{it['topic']}: {it['verdict']}**" not in md or f"*Rule:* {it['rule']}" not in md \
+                    or f"*Would change if:* {it['changes_if']}" not in md:
+                f.append(f"Market read item not rendered in full: {it['topic']}")
+        if "## 1A · Market read" in md and md.index("## 1A · Market read") > md.index("## 2 · Scoreboard"):
+            f.append("Market read must sit between the headline and the scoreboard")
+        # _rate_split on real series: common dates only, and nominal = real + breakeven exactly
+        _d = pd.bdate_range("2026-09-01", periods=30)
+        _n10 = pd.Series(np.linspace(4.60, 4.98, 30), index=_d)
+        _r10 = pd.Series(np.linspace(2.40, 2.63, 30), index=_d).drop(_d[-1])      # DFII10 one day short
+        _sp = _rate_split({"DGS10": _n10, "DFII10": _r10}, 20)
+        _c = pd.concat([_n10, _r10], axis=1).dropna()
+        _want_nom = (_c.iloc[-1, 0] - _c.iloc[-21, 0]) * 100
+        _want_real = (_c.iloc[-1, 1] - _c.iloc[-21, 1]) * 100
+        if not _sp or _sp["asof"] != _d[-2].date().isoformat():
+            f.append(f"_rate_split must use the last COMMON date: {_sp and _sp['asof']}")
+        elif abs(_sp["nom_bp"] - _want_nom) > 1e-9 or abs(_sp["real_bp"] - _want_real) > 1e-9 \
+                or abs(_sp["nom_bp"] - _sp["real_bp"] - _sp["be_bp"]) > 1e-9:
+            f.append(f"_rate_split must give nominal = real + breakeven on common dates: {_sp}")
+        if _rate_split({"DGS10": _n10}, 20) is not None or _rate_split({"DGS10": _n10, "DFII10": _r10}, 40) is not None:
+            f.append("_rate_split must return None when a series or enough history is missing")
+
+        # v1.3: 6A Where the money went — missing, fresh, stale, unmeasured funds, placement
+        fm0 = b.get("flow_map") or {}
+        if fm0.get("available") or "## 6A · Where the money went" not in md or "not published yet" not in md:
+            f.append("6A must say plainly that the flow map summary is not published when the file is absent")
+        _dh = {r["input"]: r for r in b["data_health"]}
+        if (_dh.get("Flow map summary") or {}).get("status") != "MISSING":
+            f.append(f"data health must flag a missing flow map summary: {_dh.get('Flow map summary')}")
+        _fms = {"published_at": "2026-09-25T22:00:00+00:00", "window": 20, "data_through": "2026-09-25",
+                "coverage": {"measured": 4, "total": 6},
+                "asset_classes": [
+                    {"asset_class": "US equity", "flow_usd": 1.98e9, "aum": 2.1e12, "pct_aum": 0.09, "measured": 2,
+                     "total": 3, "missing": ["VGT"], "direction": "flat"},
+                    {"asset_class": "Treasuries", "flow_usd": -592e6, "aum": 6.0e10, "pct_aum": -0.98, "measured": 2,
+                     "total": 2, "missing": [], "direction": "out"},
+                    {"asset_class": "Cash-like", "flow_usd": None, "aum": None, "pct_aum": None, "measured": 0,
+                     "total": 1, "missing": ["SGOV"], "direction": "n/a", "thin": False},
+                    {"asset_class": "International equity", "flow_usd": 1.28e9, "aum": 2.3e10, "pct_aum": 5.53,
+                     "measured": 1, "total": 5, "missing": ["EEM", "EFA", "FXI", "INDA"], "direction": "in", "thin": True}],
+                "verdict": {"kind": "stocks_flat", "verdict": "No material net move in stocks: test",
+                            "evidence": ["US equity: +$1.98B", "Within stocks: out of SPY"],
+                            "rule": "Net 20-session creations minus redemptions (test rule).",
+                            "changes_if": "Stock funds net flow of ±0.25% or more of their assets."},
+                "excluded": {"VGT": "frozen relay", "SGOV": "frozen relay"}}
+        b1 = build(dict(inp, flow_map=_fms))
+        md1 = render_md(b1)
+        fm1 = b1["flow_map"]
+        if not fm1.get("available") or fm1.get("stale") or abs((fm1.get("age_hours") or -1) - 2.0) > 0.01:
+            f.append(f"6A fresh summary: available, not stale, 2.0h old expected: {fm1.get('stale')} {fm1.get('age_hours')}")
+        for want in ("| US equity | +$1.98B | +0.09% | flat | 2 of 3 | VGT |",
+                     "| Treasuries | −$592M | -0.98% | out | 2 of 2 | — |",
+                     "| Cash-like | n/a | n/a | n/a | 0 of 1 | SGOV |",
+                     "**Verdict: No material net move in stocks: test**", "- Within stocks: out of SPY",
+                     "*Rule:* Net 20-session creations minus redemptions (test rule).",
+                     "*Would change if:* Stock funds net flow of ±0.25% or more of their assets.",
+                     "4 of 6 funds measured",
+                     "| International equity | +$1.28B | +5.53% | in (thin) | 1 of 5 | EEM, EFA, FXI, INDA |",
+                     "*(thin) = under half the class's funds measured"):
+            if want not in md1:
+                f.append(f"6A render missing: {want}")
+        if "$0" in md1.split("## 6A")[1].split("## 7")[0]:
+            f.append("6A must never print an unmeasured bucket as $0")
+        if "| US equity | +$1.98B | +0.09% | flat (thin)" in md1:
+            f.append("6A must mark only thin rows as thin")
+        if "STALE" in md1.split("## 6A")[1].split("## 7")[0]:
+            f.append("6A must not flag a 2-hour-old summary as stale")
+        if not (md1.index("## 6 · Flow") < md1.index("## 6A · Where the money went") < md1.index("## 7 · Breadth")):
+            f.append("6A must sit between section 6 and section 7")
+        if ({r["input"]: r for r in b1["data_health"]}.get("Flow map summary") or {}).get("status") != "OK":
+            f.append("data health must show a fresh flow map summary as OK")
+        b2 = build(dict(inp, flow_map=dict(_fms, published_at="2026-09-24T08:00:00+00:00")))
+        if not b2["flow_map"].get("stale") or "STALE — 40h old" not in render_md(b2):
+            f.append(f"6A must flag a 40-hour-old summary as stale: {b2['flow_map'].get('age_hours')}")
+        if not flow_map_section(dict(inp, flow_map=dict(_fms, published_at=None))).get("stale"):
+            f.append("6A summary with no timestamp must be treated as stale")
+        if flow_map_section(dict(inp, flow_map=dict(_fms, verdict={}))).get("available"):
+            f.append("6A summary without a verdict must not render as available")
+        if _usd(-592e6) != "−$592M" or _usd(3.26e9) != "+$3.26B" or _usd(None) != "n/a" or _usd(float("nan")) != "n/a":
+            f.append(f"_usd formatting: {_usd(-592e6)} {_usd(3.26e9)} {_usd(None)} {_usd(float('nan'))}")
+
+        # v1.5.3 (N29): WTI after FRED = rebuilt NYMEX settle, never the after-hours last trade
+        _st = settle_series(_mbars("CL=F"), datetime(2026, 9, 25, 20, 0))
+        if len(_st) != 3 or abs(_st.iloc[-1] - (71.0 * 300 + 72.0 * 100) / 400) > 1e-9:
+            f.append(f"settle = volume-weighted close of the 14:28 and 14:29 bars only (71.25), one per session: {_st.to_dict()}")
+        if len(settle_series(_mbars("CL=F"), datetime(2026, 9, 25, 14, 29))) != 2:
+            f.append("a session whose 14:30 ET has not passed must not produce a settle")
+        _utc = _mbars("CL=F"); _utc.index = _utc.index.tz_convert("UTC")
+        if not settle_series(_utc, datetime(2026, 9, 25, 20, 0)).equals(_st):
+            f.append("bars stamped in UTC must give the same settle (times compared in New York time)")
+        if len(settle_series(pd.DataFrame(), datetime(2026, 9, 25, 20, 0))) or len(settle_series(None, datetime(2026, 9, 25, 20))):
+            f.append("no bars -> no settle (never a fallback)")
+        # v1.5.4 (N33): one series of settles; latest daily bar only via the rebuild; no next-day bar; no spot mixing
+        _oil = inp["fred"]["DCOILWTICO"]
+        _src = (inp.get("fred_src") or {}).get("DCOILWTICO", "")
+        if abs(float(_oil.iloc[-1]) - 71.25) > 1e-9 or _oil.index[-1] != pd.Timestamp("2026-09-25") \
+                or abs(float(_oil.iloc[-4]) - 69.0) > 1e-9 or "one series of front-month settles" not in _src:
+            f.append(f"WTI must be daily settles (69.00) then the rebuilt settle (71.25) for the last 3 sessions: "
+                     f"{_oil.tail(4).round(2).tolist()} | {_src}")
+        if float(_oil.iloc[-300:].min()) < 68.99 or len(_oil) < 260:
+            f.append("the WTI series must be futures throughout (no FRED spot values mixed in)")
+        _sb = next(r for r in b["scoreboard"]["rows"] if r["name"] == "WTI crude")
+        if _sb["source"] != "WTI (NYMEX front-month settle)" or \
+                "WTI (NYMEX front-month settle)" not in {r["input"] for r in b["data_health"]}:
+            f.append(f"scoreboard and data health must name the series as the NYMEX settle: {_sb['source']}")
+        if "front-month expiry 2026-09-22 (Oct 2026 contract)" not in _src:
+            f.append(f"a roll inside the 20-day window must be named (Oct 2026 contract expired 9/22): {_src}")
+        _px2 = dict(prices)
+        _cl = prices["CL=F"].copy()                    # two bars after the session (6pm reopen) — tests the cutoff itself
+        _cl.loc[pd.Timestamp("2026-09-28")] = _cl.iloc[-1] * 0 + 55.0
+        _cl.loc[pd.Timestamp("2026-09-29")] = _cl.iloc[-1] * 0 + 55.0
+        _px2["CL=F"] = _cl
+        _i3 = gather(today_et=now, fetch_fred=fetch_fred, fetch_holdings=lambda: [], fetch_intraday=_mbars,
+                     fetch_prices=lambda tks: {t: _px2[t] for t in tks if t in _px2}, assess=lambda: assessment,
+                     macro_lookup=lambda d: [])
+        if _i3["fred"]["DCOILWTICO"].index[-1] != pd.Timestamp("2026-09-25") or (_i3["fred"]["DCOILWTICO"] == 55.0).any():
+            f.append("a daily bar dated after the session (the 6pm reopen) must be dropped")
+        _i2 = gather(today_et=now, fetch_fred=fetch_fred, fetch_holdings=lambda: [], fetch_intraday=lambda t: pd.DataFrame(),
+                     fetch_prices=lambda tks: {t: prices[t] for t in tks if t in prices}, assess=lambda: assessment,
+                     macro_lookup=lambda d: [])
+        if _i2["fred"]["DCOILWTICO"].index[-1] != pd.Timestamp("2026-09-24") or \
+                "latest session is not shown yet" not in (_i2.get("fred_src") or {}).get("DCOILWTICO", ""):
+            f.append("without settlement bars the latest daily bar (maybe a last trade) must be left out, and say so")
+        _px4 = {t: v for t, v in prices.items() if t != "CL=F"}
+        _i4 = gather(today_et=now, fetch_fred=fetch_fred, fetch_holdings=lambda: [], fetch_intraday=_mbars,
+                     fetch_prices=lambda tks: {t: _px4[t] for t in tks if t in _px4}, assess=lambda: assessment,
+                     macro_lookup=lambda d: [])
+        if not _i4["fred"]["DCOILWTICO"].equals(fred["DCOILWTICO"]) or \
+                not (_i4.get("fred_src") or {}).get("DCOILWTICO", "").startswith("FRED spot only"):
+            f.append("with no futures history WTI must be FRED spot only — never a settle spliced onto spot")
+        for (y_, m_), want in (((2026, 11), date(2026, 10, 20)), ((2026, 12), date(2026, 11, 20)),
+                               ((2026, 10), date(2026, 9, 22)), ((2027, 1), date(2026, 12, 21))):
+            if cl_expiry(y_, m_) != want:
+                f.append(f"cl_expiry({y_}, {m_}) must be {want} (NYMEX rule): {cl_expiry(y_, m_)}")
+        _g = settle_vs_fred(pd.Series([71.0, 72.0], index=pd.to_datetime(["2026-09-24", "2026-09-25"])),
+                            pd.Series([70.5, 73.0], index=pd.to_datetime(["2026-09-24", "2026-09-25"])))
+        if not _g or _g["n"] != 2 or abs(_g["max_abs"] - 1.0) > 1e-9:
+            f.append(f"settle_vs_fred: max gap over shared days: {_g}")
+
+        # v1.5.2 (N23): calendar coverage in data health; elections get a pre-committed line
+        _dhc = {r["input"]: r for r in b["data_health"]}.get("Event calendar") or {}
+        if _dhc.get("status") not in ("OK", "WARN", "STALE"):
+            f.append(f"the Event calendar row must report coverage status, not a fixed OK: {_dhc}")
+        _bst = build(dict(inp, calendar_coverage={"status": "STALE", "note": "CPI has no date ahead — add the next year"}))
+        _rst = {r["input"]: r for r in _bst["data_health"]}.get("Event calendar") or {}
+        if _rst.get("status") != "STALE" or "CPI has no date ahead" not in _rst.get("note", ""):
+            f.append(f"a calendar with an expired schedule must show STALE with the reason: {_rst}")
+        if "no pre-committed rule" in _if_then("ELECTION", 0.1, {}) or "gap" not in _if_then("ELECTION", 0.1, {}):
+            f.append("an election must have its own pre-committed line")
+        import event_calendar as _ec
+        _el = [e for e in _ec.upcoming_macro(10, today=date(2026, 11, 1)) if e["event"] == "ELECTION"]
+        _nx = next48_section(dict(inp, events=_el, now_et=datetime(2026, 11, 1, 20, 0), session=date(2026, 10, 30)),
+                             b["regime"])
+        if not any(e["event"] == "ELECTION" for e in _nx.get("events", [])) or \
+                not any(l.startswith("Election") for l in _nx.get("if_then", [])):
+            f.append(f"the 11/3 election must sit inside next-48 on 11/1 with its pre-committed line: {_nx}")
+
+        # v1.5: SPY holdings parser, top-10 contribution maths, breadth trend
+        import io as _io
+        _rows = [["SPDR S&P 500 ETF Trust", None, None, None], ["Holdings: As of 30-Oct-2026", None, None, None],
+                 [None, None, None, None], ["Name", "Ticker", "Identifier", "Weight"],
+                 ["US DOLLAR", "CASH_USD", "X", 9.0], ["NVIDIA", "NVDA", "A", 7.9], ["APPLE", "AAPL", "B", 6.9],
+                 ["BERKSHIRE B", "BRK.B", "C", 1.7]]
+        _rows += [[f"N{i}", f"T{chr(65 + i % 26)}{chr(65 + i // 26 % 26)}", "Z", 0.15] for i in range(500)]
+        _buf = _io.BytesIO(); pd.DataFrame(_rows).to_excel(_buf, header=False, index=False)
+        _h = spy_top_holdings(_buf.getvalue(), n=3)
+        if _h != [("NVDA", 7.9), ("AAPL", 6.9), ("BRK-B", 1.7)]:
+            f.append(f"spy_top_holdings: top 3 by weight, cash row excluded, BRK.B -> BRK-B: {_h}")
+        _frac = [r if i < 4 else [r[0], r[1], r[2], r[3] / 100] for i, r in enumerate(_rows)]
+        _buf2 = _io.BytesIO(); pd.DataFrame(_frac).to_excel(_buf2, header=False, index=False)
+        if spy_top_holdings(_buf2.getvalue(), n=1) != [("NVDA", 7.9)]:
+            f.append("spy_top_holdings must read weights given as fractions as percent")
+        try:
+            _bad = _io.BytesIO(); pd.DataFrame([["Name", "Weight"], ["a", 1]]).to_excel(_bad, header=False, index=False)
+            spy_top_holdings(_bad.getvalue()); f.append("a holdings file without a Ticker column must raise")
+        except ValueError:
+            pass
+        # contribution: A is 30% of the index at the start, +10% over 20 days; the rest +1% -> SPY +3.7%
+        _cal = pd.bdate_range(end="2026-10-30", periods=30)
+        _a = pd.Series(np.r_[np.full(9, 100.0), np.linspace(100, 110, 21)], index=_cal)
+        _rest = pd.Series(np.r_[np.full(9, 100.0), np.linspace(100, 101, 21)], index=_cal)
+        _spy = 100 * (0.3 * _a / 100 + 0.7 * _rest / 100)
+        _px = {"SPY": pd.DataFrame({"Close": _spy}), "A": pd.DataFrame({"Close": _a})}
+        _wn = 0.3 * 1.10 / 1.037 * 100
+        _t = top10_contribution(_px, [("A", _wn)])
+        _w = (_t.get("windows") or {}).get(20) or {}
+        if not _t.get("available") or abs(_w["top_contrib"] - 3.0) > 1e-6 or abs(_w["rest"] - 1.0) > 1e-6 \
+                or abs(_w["top_w0"] - 30.0) > 1e-6 or _t["kind"] != "top_heavy" \
+                or abs(_w["ratio"] - (3.0 / 3.7) / 0.30) > 1e-6:
+            f.append(f"top10_contribution: A supplies 3.00 pts of SPY +3.70%, the rest +1.00%, start weight 30%, "
+                     f"top-heavy (ratio 2.7): {_w} {_t.get('kind')}")
+        if not _t.get("verdict", "").startswith("Driven by the top 1"):
+            f.append(f"top-heavy verdict must read 'Driven by the top N': {_t.get('verdict')}")
+        if top10_contribution(_px, [("A", _wn), ("MISSING", 40.0)]).get("available"):
+            f.append("top10_contribution must refuse when under 90% of the top weight is priced")
+        _flat = {"SPY": pd.DataFrame({"Close": pd.Series(np.r_[np.full(9, 100.0), np.linspace(100, 100.3, 21)],
+                                                         index=_cal)}), "A": _px["A"]}
+        if top10_contribution(_flat, [("A", 30.0)]).get("kind") != "small_move":
+            f.append("a SPY move under the minimum must not be split into shares")
+        # breadth trend: 40 names; 30 trend up throughout, 10 roll over in the last 20 sessions -> narrowing
+        _cal2 = pd.bdate_range(end="2026-10-30", periods=400)
+        _pxb = {"SPY": pd.DataFrame({"Close": pd.Series(np.linspace(100, 130, 400), index=_cal2)})}
+        for i_ in range(40):
+            base_ = np.linspace(50, 80, 400)
+            if i_ >= 26:          # 14 names fall hard over the last 15 sessions (inside the 20-session window)
+                base_[-15:] = np.linspace(base_[-16], base_[-16] * 0.7, 15)
+            _pxb[f"U{i_}"] = pd.DataFrame({"Close": pd.Series(base_, index=_cal2)})
+        _uni = [f"U{i_}" for i_ in range(40)]
+        _bt = breadth_trend(_pxb, _uni)
+        if not _bt.get("available") or _bt["trend"] != "deteriorating" or not _bt["verdict"].startswith("Narrowing"):
+            f.append(f"breadth_trend: names rolling over under a rising SPY must read narrowing: {_bt.get('verdict')}")
+        _gap = dict(_pxb); _gap.update({t: pd.DataFrame({"Close": _pxb[t]["Close"].iloc[:-1]}) for t in _uni})
+        if breadth_trend(_gap, _uni).get("available"):
+            f.append("breadth_trend must refuse (not crash) when the latest session has no constituent closes")
+        _bs = breadth_section({"prices": _pxb, "universe": _uni})
+        if _bt.get("available") and abs(_bt["points"]["today"]["p50"] - _bs["pct_above_50"]) > 0.05:
+            f.append(f"breadth_trend today must equal section 7's % above 50-day: {_bt['points']['today']['p50']} vs {_bs['pct_above_50']}")
+        _early = {t: pd.DataFrame({"Close": d["Close"].iloc[:-21]}) for t, d in _pxb.items()}
+        _bt_e = breadth_trend(_early, _uni)
+        if _bt.get("available") and _bt_e.get("available") and \
+                abs(_bt["points"]["20d"]["p50"] - _bt_e["points"]["today"]["p50"]) > 0.05:
+            f.append("breadth_trend must be point in time: the value 20 sessions ago equals a run cut off there")
+        # rendering and data health
+        sec7 = md.split("## 7 · Breadth")[1].split("## 8")[0]
+        if "**Top-2 contribution**" not in sec7 or "| **Rest of the index** |" not in sec7 or "| NVDA |" not in sec7:
+            f.append("section 7 must render the top-holdings contribution table")
+        if "Breadth trend unavailable" not in sec7:
+            f.append("with a 4-name universe the breadth trend must say it is unavailable, and why")
+        _dh5 = {r["input"]: r for r in b["data_health"]}
+        if (_dh5.get("SPY holdings (top 10)") or {}).get("status") != "OK":
+            f.append("data health must show the SPY holdings row")
+        _bf = build(dict(inp, spy_holdings=[], spy_holdings_error="ProxyError: blocked"))
+        if "SPY holdings file failed: ProxyError" not in render_md(_bf) or \
+                {r["input"]: r for r in _bf["data_health"]}["SPY holdings (top 10)"]["status"] != "MISSING":
+            f.append("a failed holdings fetch must be named in section 7 and in data health")
+
+        # v1.4: flow verdict state, steps, regime cross-check, scoring hook
+        from swing_desk import REGIME_DIRECTION as _RD
+        if any(regime_tilt(k_) not in ("risk-on", "risk-off", "none") for k_ in _RD):
+            f.append("regime_tilt must classify every swing_desk regime")
+        if "Money moving into stocks CONFIRMS" not in flow_regime_check("new_money", "goldilocks") or \
+                "money moving out of stocks is context" not in flow_regime_check("out_of_stocks", "neutral"):
+            f.append("regime check wording: 'Money moving into stocks' / 'out of stocks'")
+        for st_, key_, want in (("new_money", "goldilocks", "CONFIRMS"), ("into_stocks", "growth_scare", "CONTRADICTS"),
+                                ("out_of_stocks", "goldilocks", "CONTRADICTS"), ("leaving_both", "liquidity_crisis", "CONFIRMS"),
+                                ("new_money", "transition_ambiguous", "context, not confirmation"),
+                                ("borderline", "goldilocks", "neither confirms nor contradicts"),
+                                ("stocks_flat", "goldilocks", "No market-wide flow signal"),
+                                ("unavailable", "goldilocks", "a data gap, not a signal")):
+            if want not in flow_regime_check(st_, key_):
+                f.append(f"flow_regime_check({st_}, {key_}) must say '{want}': {flow_regime_check(st_, key_)}")
+        _v12 = dict(_fms["verdict"], state="borderline", borderline=True, sessions_in_state=3, prev_state="borderline",
+                    steps=["Model portfolio: treat Level 2 as unconfirmed.", "Resolves when the stock reading closes above +0.71%."],
+                    record={"date": "2026-09-25", "stocks_pct": 0.21, "margin_days": 0.1})
+        b3 = build(dict(inp, flow_map=dict(_fms, verdict=_v12)))
+        md3 = render_md(b3)
+        sec3 = md3.split("## 6A")[1].split("## 7")[0]
+        if "**What to do with it**" not in sec3 or "1. Model portfolio: treat Level 2 as unconfirmed." not in sec3 \
+                or "2. Resolves when the stock reading closes above +0.71%." not in sec3:
+            f.append("6A must render the recommended steps, numbered, in order")
+        if "**Regime cross-check:** Borderline flow neither confirms nor contradicts" not in sec3:
+            f.append(f"6A must render the regime cross-check: {b3['flow_map'].get('regime_check')}")
+        if "What to do with it" in md1.split("## 6A")[1].split("## 7")[0]:
+            f.append("a v1.1 summary (no steps) must render without a steps block")
+        if any(r["signal_type"].startswith("flow_") for r in b3["signals"].get("new", [])):
+            f.append("a borderline flow verdict must never become a scored signal")
+        _firm = dict(_v12, state="new_money", borderline=False, prev_state="borderline")
+        b4 = build(dict(inp, flow_map=dict(_fms, verdict=_firm)))
+        fs4 = [r for r in b4["signals"].get("new", []) if r["signal_type"] == "flow_into_stocks"]
+        if len(fs4) != 1 or fs4[0]["date"] != "2026-09-28":
+            f.append(f"a fresh firm new_money must log one flow_into_stocks dated the next session: {fs4}")
+        b5 = build(dict(inp, flow_map=dict(_fms, verdict=_firm, published_at="2026-09-23T22:00:00+00:00")))
+        if any(r["signal_type"].startswith("flow_") for r in b5["signals"].get("new", [])):
+            f.append("a stale flow summary must never be logged as a signal")
+        if "CONFIRMS" in (b4["flow_map"].get("regime_check") or "") and regime_tilt(b4["regime"].get("key")) != "risk-on":
+            f.append("regime cross-check must use the brief's own regime key")
+
         # v1.1: every cross-asset "why" must reach the markdown in full (v1 cut at 160 chars)
         for _lane, _v in (b["cross_asset"].get("lanes") or {}).items():
             _note = str(_v.get("note", "")).replace("|", "\\|").replace("\n", " ")
@@ -2065,6 +3461,14 @@ def selftest() -> dict:
             f.append(f"model portfolio section missing: {mdl.get('conclusion')}")
         elif abs(sum(r["weight"] for r in mdl["rows"]) - 100) > 1.0:
             f.append(f"model weights must sum to ~100: {sum(r['weight'] for r in mdl['rows'])}")
+        # v1.7 engine layer: every brief reads the engine and books in engine mode
+        _er = mdl.get("engine") or {}
+        if not _er.get("conclusion") or mdl["summary"].get("breaker") != "ENGINE" or not mdl["summary"].get("engine"):
+            f.append(f"engine mode: read + book state required: {_er.get('conclusion')}, {mdl['summary'].get('breaker')}")
+        elif _er.get("available") and mdl["summary"]["engine"] not in ("OFF", "BAL", "DEF", "OUT"):
+            f.append("engine state must be one of OFF/BAL/DEF/OUT")
+        if "Engine O11" not in mdl.get("conclusion", ""):
+            f.append("the model conclusion must say what the engine holds")
         for r_ in mdl.get("rows") or []:
             if r_["gate"] in ("BLOCKED", "UNAVAILABLE") and r_["change"] > 0.05:
                 f.append(f"{r_['ticker']} shows a BLOCKED add yet the model weight rose {r_['change']:+.1f}")
@@ -2118,6 +3522,41 @@ def selftest() -> dict:
         al = {a["rule"]: a for a in b["alerts"]}
         if al.get("short_real_band", {}).get("sessions") != 3 or al.get("cpi_mixed_signal", {}).get("repeat"):
             f.append(f"alert repetition counts wrong: {b['alerts']}")
+        # risk_policy §9: the alert line leads the brief (build #4)
+        ra = b.get("risk_alerts") or {}
+        if not ra.get("available") or not isinstance(ra.get("items"), list):
+            f.append(f"risk_alerts must be evaluated in every brief: {ra.get('conclusion')}")
+        elif ra.get("line") and b["headline"][0] != ra["line"]:
+            f.append("a live risk alert must be the first headline line")
+        elif not ra.get("line") and any("Risk alerts" in h for h in b["headline"]):
+            f.append("no live alert, no alert line")
+        _fake = {"session": "2026-11-12", "regime": {"key": "liquidity_crisis"},
+                 "data_health": [{"input": "FRED DGS10", "status": "MISSING"}],
+                 "model": {"summary": {"date": "2026-11-12", "nav": 88.0, "peak": 100.0, "drawdown_pct": -12.0,
+                                       "breaker": "ON", "warn": True}}}
+        _swb = {"risk_state": {"equity_mtm": 8900, "monthly": {"active": True, "month": "2026-11", "refusal": "x"},
+                               "high_water": {"active": False}}, "open_positions": [], "data_health": {"failed": False}}
+        _ra = risk_alerts_section(_fake, {"now_et": datetime(2026, 11, 12, 20, 0), "swing": _swb,
+                                          "swing_file": "2026-11-12_brief.json"})
+        _keys = [x["key"] for x in _ra["items"]]
+        if _keys != ["HY_OVERRIDE", "LT_BREAKER_ON", "DATA_FAIL", "LT_DD_10", "SWING_MONTH"]:
+            f.append(f"risk alerts must list alarms first, then alerts: {_keys}")
+        elif not _ra["line"].startswith("🔔 **Risk alerts:** ALARM HY crisis override") or _ra["live"] != 5:
+            f.append(f"the alert line must lead with the alarms: {_ra['line']}")
+        _calm = dict(_fake, regime={"key": "goldilocks"}, data_health=[{"input": "FRED DGS10", "status": "OK"}],
+                     model={"summary": {"date": "2026-11-12", "nav": 97.0, "peak": 100.0, "drawdown_pct": -3.0,
+                                        "breaker": "OFF", "warn": False}})
+        _swc = dict(_swb, risk_state={"equity_mtm": 10000, "monthly": {"active": False}, "high_water": {"active": False}})
+        _rc = risk_alerts_section(_calm, {"now_et": datetime(2026, 11, 12, 20, 0), "swing": _swc,
+                                          "swing_file": "2026-11-12_brief.json"})
+        if _rc["items"] or _rc["line"]:
+            f.append(f"a calm night must produce no alert line: {_rc['items']}")
+        _held = risk_alerts_section(dict(_calm, model={"summary": {"date": "2026-11-12", "nav": 91.0, "peak": 100.0,
+                                                                  "drawdown_pct": -9.0, "breaker": "OFF", "warn": True}}),
+                                    {"now_et": datetime(2026, 11, 12, 20, 0), "swing": _swc,
+                                     "swing_file": "2026-11-12_brief.json"})
+        if "still open, recovering" not in (_held["line"] or "") or _held["live"] != 1:
+            f.append(f"-9% must show the -10% alert as still open (recovering) plus the breaker warn: {_held}")
         nx = b["next48"]
         if nx["events"] or not nx["next_event"] or "NFP" not in nx["conclusion"]:
             f.append("no event in window must name the next one")
@@ -2193,6 +3632,32 @@ def selftest() -> dict:
         _bm = b5["model"].get("benchmarks") or {}
         if _bm.get("spy_pct") is None or _bm.get("sixty_forty_pct") is None:
             f.append(f"model benchmarks (SPY, 60/40) must be computed when priced: {_bm}")
+        # (e) v1.6: attribution, AI exposure, vol target, market-implied path
+        m5 = b5["model"]
+        if "attribution" not in m5 or "ai_exposure" not in m5 or "vol_target" not in m5 \
+                or "risk_by_group" not in m5:
+            f.append("the model section must carry attribution, ai_exposure, vol_target and risk_by_group")
+        elif (m5["risk_by_group"] or {}).get("available"):
+            _tot = sum(g_["risk_pct"] for g_ in m5["risk_by_group"]["groups"])
+            if abs(_tot - 100) > 1.0:
+                f.append(f"risk by group must add to 100%: {_tot}")
+            if "Risk by group" not in render_md(b5):
+                f.append("the brief must render the risk-by-group table")
+        elif (m5.get("attribution") or {}).get("available"):
+            f.append(f"risk by group must be available when attribution is: {m5['risk_by_group'].get('conclusion')}")
+        if (m5.get("vol_target") or {}).get("applied"):
+            f.append("the volatility target must never be applied to the book (display only)")
+        _at = m5.get("attribution") or {}
+        if _at.get("available"):
+            _si = _at["windows"].get("since inception") or {}
+            if _si.get("nav_pct") is None or abs(_si["sum_pts"] - _si["nav_pct"]) > max(0.5, abs(_si["nav_pct"]) * 0.2):
+                f.append(f"attribution must add up to about the NAV change: {_si.get('sum_pts')} vs {_si.get('nav_pct')}")
+        _names = [r["name"] for r in b5["scoreboard"]["rows"]]
+        if not any(n_.startswith("Market-implied path: 2Y") for n_ in _names):
+            f.append("the scoreboard must show the market-implied path (2Y − fed funds)")
+        md5 = render_md(b5)
+        if _at.get("available") and "Where the return came from" not in md5:
+            f.append("the brief must render the attribution table")
     finally:
         os.chdir(cwd)
     return {"ok": not f, "failures": f}

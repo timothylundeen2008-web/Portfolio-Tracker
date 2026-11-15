@@ -1509,6 +1509,8 @@ def c1_weights(base: dict) -> dict:
 
 def c3_weights(base: dict) -> dict:
     w = {k: float(v) for k, v in base.items()}
+    if w.get("DBMF", 0.0) > 0 or w.get("SCHP", 0.0) > 0:
+        return w            # C3 is already in the live book (adopted 2026-11-14): never apply it twice
     take = min(w.get("SGOV", 0.0), 5.0) + min(w.get("USFR", 0.0), 5.0)
     w["SGOV"] = w.get("SGOV", 0.0) - min(w.get("SGOV", 0.0), 5.0)
     w["USFR"] = w.get("USFR", 0.0) - min(w.get("USFR", 0.0), 5.0)
