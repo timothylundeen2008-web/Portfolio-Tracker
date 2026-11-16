@@ -1,6 +1,7 @@
 {
   "repo": "fja05680/sp500",
-  "file": "S&P 500 Historical Components & Changes.csv",
-  "fetched": "2026-11-15",
-  "rows": 2595
+  "file": "S&P 500 Historical Components & Changes (Updated).csv",
+  "fetched": "2026-11-16",
+  "rows": 2720,
+  "last_row": "2026-08-18"
 }
