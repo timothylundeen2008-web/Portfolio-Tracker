@@ -1,7 +1,9 @@
 name: Universe Probe
 
 # Point-in-time S&P 500 universe probe (universe_probe.py). Manual only.
-# Reports how much of each year's index membership Yahoo still has prices for.
+# Reports how much of each year's index membership has free price history:
+# Yahoo, then a rename map, then Stooq for what is still missing (v1.1).
+# Stooq caps daily requests; a capped run is resumed by running this again the next day.
 
 on:
   workflow_dispatch:
@@ -9,7 +11,7 @@ on:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 75
     permissions:
       contents: write
     steps:
