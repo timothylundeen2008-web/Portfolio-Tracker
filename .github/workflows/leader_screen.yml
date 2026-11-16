@@ -1,0 +1,95 @@
+name: Swing Leaders
+
+# Nightly leader screen for the SWING book (leader_screen.py). Ranks the S&P 500
+# and lists the 25 strongest stocks in a confirmed uptrend, with the setup each
+# is closest to. A watchlist: it writes data/leaders/ and logs/leaders/ and
+# NOTHING else. It never touches the swing journal or the long-term book.
+#
+# Twin crons cover both DST states (21:20 UTC = 5:20 PM EDT, 22:20 UTC = 5:20 PM
+# EST). The gate runs the first firing from 17:00 ET on a trading day and skips
+# once that session's list exists. A data failure (Yahoo short of the session)
+# fails the job and writes nothing: the previous list stays, with its own date.
+# Run it by hand to retry.
+
+on:
+  schedule:
+    - cron: '20 21 * * 1-5'
+    - cron: '20 22 * * 1-5'
+  workflow_dispatch:
+
+concurrency:
+  group: swing-leaders
+  cancel-in-progress: false
+
+jobs:
+  leaders:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Gate
+        id: gate
+        run: |
+          python - <<'PY'
+          import os, json, sys
+          sys.path.insert(0, '.')
+          import market_time as mt
+          dispatch = "${{ github.event_name }}" == "workflow_dispatch"
+          now = mt.now_et(); d = now.date().isoformat()
+          def done():
+              try: return json.load(open("data/leaders/latest.json")).get("session") == d
+              except Exception: return False
+          if dispatch:               proceed, why = True, "manual dispatch"
+          elif now.weekday() >= 5:   proceed, why = False, "weekend"
+          elif not mt.is_trading_day(now.date()): proceed, why = False, "holiday"
+          elif now.hour < 17:        proceed, why = False, f"before window ({now:%H:%M} ET)"
+          elif done():               proceed, why = False, "today's list already written"
+          else:                      proceed, why = True, f"first trigger in window ({now:%H:%M} ET)"
+          print(f"::notice::{'RUN' if proceed else 'SKIP'} — {why}")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"proceed={'true' if proceed else 'false'}\net={now:%Y-%m-%d %H:%M %Z}\n")
+          PY
+
+      - name: Install dependencies
+        if: steps.gate.outputs.proceed == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Selftest (offline)
+        if: steps.gate.outputs.proceed == 'true'
+        run: python leader_screen.py --selftest
+
+      - name: Run the leader screen
+        if: steps.gate.outputs.proceed == 'true'
+        run: python leader_screen.py
+
+      - name: Commit results
+        if: steps.gate.outputs.proceed == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/leaders/ logs/leaders/ 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No change."
+          else
+            git commit -m "swing leaders: ${{ steps.gate.outputs.et }}"
+            for i in 1 2 3; do
+              git pull --rebase --autostash origin main && git push && break
+              sleep 5
+            done
+          fi
+
+      - name: Publish to the run page
+        if: steps.gate.outputs.proceed == 'true'
+        run: |
+          if [ -f logs/leaders/latest.md ]; then cat logs/leaders/latest.md >> "$GITHUB_STEP_SUMMARY"; fi
