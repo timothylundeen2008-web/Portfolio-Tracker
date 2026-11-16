@@ -169,6 +169,8 @@ def render(st, fetch_ohlcv=None):
             if brief.get("events", {}).get("blackout"):
                 st.error("Event block: " + "; ".join(f"{e['event']} in {e['days_away']}d" for e in brief["events"]["blackout"]))
 
+            _leaders(st, brief.get("leaders"))
+
             st.markdown(f"#### Trade cards ({len(brief.get('cards', []))})")
             if not brief.get("cards"):
                 st.info("No card today. That is a valid answer, not a gap.")
@@ -383,6 +385,41 @@ def _trigger_of(rec: dict | None) -> str:
     return t
 
 
+def _leaders(st, ld: dict | None):
+    """The leader screen's list, as carried in the brief. Read-only: nothing here is a card."""
+    if not ld or not ld.get("available"):
+        return
+    rows = ld.get("rows") or []
+    with st.expander(f"⭐ Leaders ({len(rows)}) — strongest stocks in a confirmed uptrend · session {ld.get('session')}",
+                     expanded=False):
+        if ld.get("note"):
+            st.warning(ld["note"])
+        if not rows:
+            st.info("No stock passed the leader rules. With complete prices that is a real reading.")
+            return
+        fn = ld.get("funnel") or {}
+        if fn.get("universe_n"):
+            st.caption(f"{fn.get('universe_n')} ranked ({fn.get('ndx_extra_n') or 0} Nasdaq-100 names outside the S&P 500) → "
+                       f"{fn.get('trend_n')} in a confirmed uptrend → {fn.get('leaders_n')} leaders; top {len(rows)} shown.")
+        if ld.get("used"):
+            st.caption(f"All {len(rows)} were scanned with the desk's own rules for this brief. Any that qualified are in "
+                       "the trade cards below; the rest are a watchlist.")
+        import pandas as pd
+        df = pd.DataFrame([{
+            "#": r.get("rank"), "Stock": f"{r.get('ticker')}{'' if r.get('tested_universe', True) else ' †'}",
+            "Sector": r.get("sector") or "—", "Rotation": r.get("quadrant") or "—", "Close": r.get("close"),
+            "Strength": r.get("rs"), "From high %": r.get("from_high_pct"),
+            "Tight": ("✓ " if r.get("tight") else "") + ("" if r.get("tightness") is None else f"{r['tightness']:.2f}"),
+            "Nearest setup": r.get("setup") or "—", "Trigger": r.get("trigger"),
+            "Earnings": (f"⚠ {r['earnings']}" if r.get("earnings_48h") else (r.get("earnings") or "—")),
+            "Why": r.get("note") or ""} for r in rows])
+        st.dataframe(df, hide_index=True)
+        if any(not r.get("tested_universe", True) for r in rows):
+            st.caption("† Nasdaq-100 stock outside the S&P 500: outside the universe the historical stock test can cover.")
+        st.caption("The leader filter is not backtested. Nearest setups other than M0 are watch-only; "
+                   "a stock is tradeable only when it appears as a permitted card.")
+
+
 def _card(st, c: dict, decided: set, date: str):
     tag = "✅ entry permitted" if c["entry_permitted"] else f"⛔ {c['entry_block_reason']}"
     done = (c["ticker"], date) in decided
@@ -407,7 +444,9 @@ def _card(st, c: dict, decided: set, date: str):
                     + (f" · missing: {', '.join(legs.get('missing', []))}" if legs.get("missing") else ""))
         st.markdown(f"**Targets** 2R {c['targets']['2R']} · 4R {c['targets']['4R']} · 8R {c['targets']['8R']} · **trail** {c['trail']}")
         st.markdown(f"**Sector** {c.get('sector')} [{c.get('sector_quadrant')}] · close {c.get('close')} · ADR {c.get('adr_pct')}%"
-                    + (" · from watchlist" if c.get("from_watchlist") else ""))
+                    + (" · from watchlist" if c.get("from_watchlist") else "")
+                    + (f" · ⭐ leader #{c['leader_rank']}" if c.get("leader_rank") else "")
+                    + ("" if c.get("tested_universe", True) else " · † outside the tested universe"))
         st.markdown(f"**Why:** {c['why']}")
         st.markdown(f"**Trail read:** {c.get('trail_why')}")
         st.markdown(f"**Instrument:** {c['instrument']}")

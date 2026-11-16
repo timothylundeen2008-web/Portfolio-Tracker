@@ -198,11 +198,20 @@ def _breadth_proxy(ohlcv: dict, universe: list[str]) -> dict:
 def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple] = None,
                 today: Optional[date] = None, earnings_lookup: Optional[Callable] = None,
                 macro_lookup: Optional[Callable] = None,
-                history: Optional[list] = None, expected: Optional[date] = None) -> dict:
-    """history: [(YYYY-MM-DD, equity_mtm), ...] from prior briefs; None = read logs/swing (tests pass it).
+                history: Optional[list] = None, expected: Optional[date] = None,
+                leaders: Optional[dict] = None) -> dict:
+    """leaders: the leader screen's latest list (leader_screen.load_latest()). None on a live run
+    (today=None) = read data/leaders/latest.json; None when a test injects `today` = no leaders.
+    history: [(YYYY-MM-DD, equity_mtm), ...] from prior briefs; None = read logs/swing (tests pass it).
     expected: the session the prices must reach. None = from the market calendar on a live run
     (today=None); skipped when a test injects `today` without it."""
     fetch = fetch_ohlcv or _default_fetch
+    if leaders is None and today is None:
+        try:
+            import leader_screen
+            leaders = leader_screen.load_latest()
+        except Exception:
+            leaders = None
     if expected is None and today is None:
         expected = expected_session()          # live run: the calendar says which session must be in the data
     if today is None:
@@ -284,6 +293,13 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
         all_meta[tk] = {"sector": sec, "quadrant": quad_of_sector.get(sec), "accumulation_score": None,
                         "stealth": None, "tier_a": False, "is_etf": tk in quad_of_sector,
                         "watchlist_reason": w.get("reason")}
+    # leaders (build 2026-11-16): the leader screen's top stocks join the scan as coverage,
+    # exactly like the watchlist. They get no special treatment: the same setups, gates,
+    # slots and sector cap decide whether any of them becomes a card.
+    brief["leaders"] = merge_leaders(leaders, all_meta, sector_of, quad_of_sector,
+                                     (expected or today).isoformat())
+    if brief["leaders"]["note"]:
+        brief["data_gaps"].append("Leaders: " + brief["leaders"]["note"])
     brief["hunting_grounds"] = {"long": [{"ticker": s["ticker"], "quadrant": s.get("quadrant"),
                                           "direction": s.get("rotation_direction"), "stealth": s.get("stealth_label") if swing_screener.is_stealth(s.get("stealth_label")) else None,
                                           "feeds": "M1 VCP (confirmed leaders)" if s.get("quadrant") == "Leading"
@@ -380,7 +396,8 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
         except Exception as e:
             errors.append({"ticker": tk, "error": f"{type(e).__name__}: {e}"}); continue
         base = {"ticker": tk, "sector": m.get("sector"), "sector_quadrant": m.get("quadrant"),
-                "from_watchlist": "watchlist_reason" in m, "close": round(float(df["Close"].iloc[-1]), 2)}
+                "from_watchlist": "watchlist_reason" in m, "close": round(float(df["Close"].iloc[-1]), 2),
+                "leader_rank": m.get("leader_rank"), "tested_universe": m.get("tested_universe", True)}
         if not r["card"]:
             reason = r["avoid_reason"] or "no setup"
             (watch if "Watchlist only" in reason or "Watchlist it" in reason else avoid).append(
@@ -462,6 +479,50 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
     brief["question_of_the_day"] = None
     brief["review"] = None
     return brief
+
+
+LEADERS_MAX_AGE_NOTE = "the list is used only when it is for the same session as the brief"
+
+
+def merge_leaders(leaders: Optional[dict], all_meta: dict, sector_of: dict, quad_of_sector: dict,
+                  session: str) -> dict:
+    """Add the leader screen's stocks to the scan universe (in place) and return the section the
+    brief and the tab show. A list for another session is shown as stale and NOT scanned."""
+    out = {"available": False, "used": False, "session": None, "rows": [], "added": [], "note": None}
+    if not leaders or not leaders.get("leaders"):
+        out["note"] = None if leaders is None else "the leader list is empty"
+        if leaders:
+            out.update(available=True, session=leaders.get("session"), used=leaders.get("session") == session)
+        return out
+    out.update(available=True, session=leaders.get("session"), funnel={
+        k: leaders.get(k) for k in ("universe_n", "priced_n", "trend_n", "leaders_n", "ndx_extra_n")})
+    out["used"] = leaders.get("session") == session
+    if not out["used"]:
+        out["note"] = (f"leader list is for {leaders.get('session')}, the brief is for {session} — shown for "
+                       f"reference, not scanned ({LEADERS_MAX_AGE_NOTE})")
+    for x in leaders["leaders"]:
+        tk = x.get("ticker")
+        if not tk:
+            continue
+        etf = x.get("sector_etf")
+        row = {k: x.get(k) for k in ("rank", "ticker", "sector", "quadrant", "close", "rs", "from_high_pct",
+                                     "tightness", "tight", "setup", "trigger", "earnings", "earnings_48h", "note")}
+        row["tested_universe"] = x.get("tested_universe", True)
+        row["scanned"] = out["used"]
+        out["rows"].append(row)
+        if not out["used"]:
+            continue
+        if tk in all_meta:
+            all_meta[tk]["leader_rank"] = x.get("rank")
+            all_meta[tk].setdefault("tested_universe", x.get("tested_universe", True))
+            continue
+        all_meta[tk] = {"sector": etf, "quadrant": quad_of_sector.get(etf) if etf else None,
+                        "accumulation_score": None, "stealth": None, "tier_a": False, "is_etf": False,
+                        "leader_rank": x.get("rank"), "tested_universe": x.get("tested_universe", True)}
+        if etf:
+            sector_of.setdefault(tk, etf)
+        out["added"].append(tk)
+    return out
 
 
 def allocate_slots(cards: list, slots_open: int, open_sectors: list, max_per_sector: int,
@@ -650,6 +711,7 @@ def render_md(b: dict) -> str:
           "Watchlist: " + (", ".join(hg["watchlist"]) or "empty"), ""]
     if b["events"]["blackout"]:
         L += ["**Event block:** " + "; ".join(f"{e['event']} in {e['days_away']}d" for e in b["events"]["blackout"]), ""]
+    L += _leaders_md(b.get("leaders"))
     L += [f"## Trade cards ({len(b['cards'])})"]
     dh = b.get("data_health") or {}
     if not b["cards"] and dh.get("failed"):
@@ -669,7 +731,9 @@ def render_md(b: dict) -> str:
               f"Closing-basis stop **{tk_.get('closing_stop', c['stop'])}**: {tk_.get('closing_stop_rule', '')}",
               f"- Evidence: {c.get('evidence')}"]
         L += [
-              f"- Sector {c['sector']} [{c['sector_quadrant']}] · close {c['close']} · ADR {c['adr_pct']}%" + (" · from watchlist" if c["from_watchlist"] else ""),
+              f"- Sector {c['sector']} [{c['sector_quadrant']}] · close {c['close']} · ADR {c['adr_pct']}%" + (" · from watchlist" if c["from_watchlist"] else "")
+              + (f" · leader #{c['leader_rank']}" if c.get("leader_rank") else "")
+              + ("" if c.get("tested_universe", True) else " · † outside the tested universe"),
               f"- Entry trigger **{c['entry']}** · stop **{c['stop']}** ({c['stop_pct']}%) — never moved down",
               f"- Risk {c['risk_pct']}% → **{c['shares']} sh**, ${c['notional']:,.0f} ({c['notional_pct']}% of equity) · heat after {c['heat_after']}%",
               f"- Targets 2R {c['targets']['2R']} · 4R {c['targets']['4R']} · 8R {c['targets']['8R']} · trail {c['trail']}",
@@ -687,7 +751,8 @@ def render_md(b: dict) -> str:
         L += [""]
     if held:
         L += [f"## Cards not permitted today ({len(held)}) — one line each",
-              *[f"- {c['ticker']} {c['setup']} {c['confluence']}: {c['entry_block_reason']}" for c in held], ""]
+              *[f"- {c['ticker']}{' (leader #%s)' % c['leader_rank'] if c.get('leader_rank') else ''} "
+                f"{c['setup']} {c['confluence']}: {c['entry_block_reason']}" for c in held], ""]
     if b["watch"]:
         L += ["## Watch (1-of-3, regime-refused, or flow-unconfirmed ground)", *[f"- {w['ticker']} [{w['sector_quadrant']}]: {w['reason']}" for w in b["watch"]], ""]
     if b["avoid"]:
@@ -701,6 +766,32 @@ def render_md(b: dict) -> str:
         L += ["## Question of the day", b["question_of_the_day"], ""]
     L += ["---", "_Desk research, not personalized advice. Nothing here executes; confirm or decline from the tab or chat._"]
     return "\n".join(L)
+
+
+def _leaders_md(ld: Optional[dict]) -> list:
+    if not ld or not ld.get("available"):
+        return []
+    L = [f"## Leaders — strongest stocks in an uptrend (session {ld.get('session')})"]
+    if ld.get("note"):
+        L += [f"**{ld['note']}**"]
+    if not ld.get("rows"):
+        return L + ["No stock passed the leader rules. With complete prices that is a real reading.", ""]
+    if ld.get("used"):
+        L += [f"All {len(ld['rows'])} were scanned with the desk's own rules tonight "
+              f"({len(ld.get('added') or [])} were not already on the scan list). Any that qualify appear as cards below; "
+              "the rest are a watchlist."]
+    L += ["", "| # | Stock | Sector (rotation) | Close | Strength | From high | Nearest setup | Trigger |",
+          "|---|---|---|---|---|---|---|---|"]
+    for x in ld["rows"]:
+        sec = (x.get("sector") or "—") + (f" ({x['quadrant']})" if x.get("quadrant") else "")
+        trig = "—" if x.get("trigger") is None else f"{x['trigger']}"
+        dag = "" if x.get("tested_universe", True) else " †"
+        L.append(f"| {x.get('rank')} | **{x['ticker']}**{dag} | {sec} | {x.get('close')} | {x.get('rs')} | "
+                 f"{x.get('from_high_pct')}% | {x.get('setup') or '—'} | {trig} |")
+    if any(not x.get("tested_universe", True) for x in ld["rows"]):
+        L += ["", "† Nasdaq-100 stock outside the S&P 500: outside the universe the historical stock test can cover."]
+    L += ["", "_The leader filter is not backtested. Nearest setups other than M0 are watch-only._", ""]
+    return L
 
 
 def _mf_line(mf: Optional[dict]) -> str:
@@ -1022,6 +1113,58 @@ def selftest() -> dict:
         f.append("render missing regime line or open position")
     if not Path(out["json"]).exists() or not (LOG_DIR / "cards_history.csv").exists():
         f.append("brief files not written")
+    # ── leaders wiring (2026-11-16) ─────────────────────────────────────────
+    synth["LEAD1"] = swing_desk._synth("reclaim", seed=11)
+    synth["QA"] = swing_desk._synth("reclaim", seed=12)
+    def _lead(session):
+        mk = lambda rank, tk, etf, tested=True: {
+            "rank": rank, "ticker": tk, "sector": "Financials" if etf else "", "sector_etf": etf,
+            "quadrant": "Improving" if etf else None, "close": 50.0, "rs": 99.0 - rank, "from_high_pct": -1.0,
+            "tightness": 0.3, "tight": True, "setup": "Near pivot", "trigger": 51.0, "earnings": None,
+            "earnings_48h": False, "note": "n", "tested_universe": tested}
+        return {"ok": True, "session": session, "universe_n": 519, "priced_n": 519, "trend_n": 100, "leaders_n": 60,
+                "ndx_extra_n": 16, "leaders": [mk(1, "LEAD1", "XLF"), mk(2, "WFC", "XLF"), mk(3, "QA", None, False)]}
+    bl = build_brief(fetch, (markets, rotation), date(2026, 9, 15), no_earn, no_macro, leaders=_lead("2026-09-15"))
+    ld = bl["leaders"]
+    everything = {x["ticker"]: x for x in bl["cards"] + bl["watch"] + bl["avoid"]}
+    if not ld["used"] or ld["added"] != ["LEAD1", "QA"] or len(ld["rows"]) != 3 or not all(r["scanned"] for r in ld["rows"]):
+        f.append(f"leaders for the brief's session must be merged: {ld['used']} {ld['added']}")
+    if "LEAD1" not in everything or "QA" not in everything or "LEAD1" not in bl["hunting_grounds"]["candidates"]:
+        f.append("every leader must be scanned and accounted for (card, watch or not-a-setup)")
+    lc = {c["ticker"]: c for c in bl["cards"]}
+    if "LEAD1" in lc and (lc["LEAD1"]["leader_rank"] != 1 or lc["LEAD1"]["sector"] != "XLF" or lc["LEAD1"]["sector_quadrant"] != "Improving"):
+        f.append(f"a leader card carries its rank and its sector ETF (for the sector cap): {lc['LEAD1']}")
+    if "LEAD1" in lc and lc["LEAD1"]["is_etf"]:
+        f.append("a leader is a stock, never an ETF (earnings checks and the stock split depend on it)")
+    if "LEAD1" not in lc:
+        f.append("fixture: LEAD1 (a reclaim in an Improving sector) should produce a card")
+    if "WFC" in lc and lc["WFC"]["leader_rank"] != 2:
+        f.append("a stock already on the scan list keeps its meta and gains its leader rank")
+    if "QA" in lc and lc["QA"].get("tested_universe") is not False:
+        f.append("a Nasdaq-only leader's card is marked outside the tested universe")
+    in_xlf = [c for c in bl["cards"] if c["entry_permitted"] and c.get("sector") == "XLF"]
+    if len(in_xlf) > 2:
+        f.append(f"the sector cap must count leaders: {[c['ticker'] for c in in_xlf]} permitted in XLF")
+    mdl = render_md(bl)
+    if "## Leaders" not in mdl or "| 1 | **LEAD1** |" not in mdl or "**QA** †" not in mdl or "leader #" not in mdl:
+        f.append("the brief must show the leaders table and tag leader cards")
+    if not validate(bl, json.loads(json.dumps(bl))):
+        f.append("a brief with leaders must round-trip the validator")
+    bst = build_brief(fetch, (markets, rotation), date(2026, 9, 15), no_earn, no_macro, leaders=_lead("2026-09-14"))
+    if bst["leaders"]["used"] or bst["leaders"]["added"] or "LEAD1" in bst["hunting_grounds"]["candidates"] or \
+            not any(g.startswith("Leaders:") for g in bst["data_gaps"]) or any(r["scanned"] for r in bst["leaders"]["rows"]):
+        f.append("a leader list from another session is shown but never scanned")
+    if "not scanned" not in render_md(bst):
+        f.append("the brief must say a stale leader list was not scanned")
+    bno = build_brief(fetch, (markets, rotation), date(2026, 9, 15), no_earn, no_macro)
+    if bno["leaders"]["available"] or "## Leaders" in render_md(bno) or "LEAD1" in bno["hunting_grounds"]["candidates"]:
+        f.append("no leader list: nothing merged, no section")
+    if [c["ticker"] for c in bno["cards"]] != [c["ticker"] for c in b5["cards"]]:
+        f.append("without leaders the brief is unchanged")
+    bem = build_brief(fetch, (markets, rotation), date(2026, 9, 15), no_earn, no_macro,
+                      leaders={"ok": True, "session": "2026-09-15", "leaders": []})
+    if not bem["leaders"]["available"] or bem["leaders"]["rows"] or "No stock passed" not in render_md(bem):
+        f.append("an empty leader list is shown as a real reading")
     return {"ok": not f, "failures": f, "cards_day1": [(c["ticker"], c["setup"], c["confluence"], c["shares"]) for c in b["cards"]]}
 
 

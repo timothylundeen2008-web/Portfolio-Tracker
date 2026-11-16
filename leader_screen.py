@@ -1,5 +1,5 @@
 """
-leader_screen.py  (v1.1 — 2026-11-16)
+leader_screen.py  (v1.2 — 2026-11-16)
 ─────────────────────────────────────
 SWING BOOK ONLY. Each evening: rank the S&P 500 and list the 25 strongest
 stocks that are in a confirmed uptrend, with the setup each is closest to.
@@ -60,6 +60,18 @@ v1.1 (after the first real run, f14cda5, 2026-11-16 3:53 PM ET)
   3. EARNINGS. Yahoo returns the LAST report date for some stocks. A date in
      the past is no longer shown as if it were the next one.
 
+v1.2 (Matt, 2026-11-16: include the Nasdaq names)
+  The Nasdaq-100 members that are NOT in the S&P 500 (about 15, mostly foreign
+  companies listed in the US) join the ranking. They are marked † and
+  "outside the tested universe": the free record of past index membership
+  covers the S&P 500 only, so these can be watched and logged forward but
+  cannot be part of the historical stock test. Source: the constituents table
+  on Wikipedia's Nasdaq-100 page; a good copy is saved to
+  data/universe/ndx_members.csv and used when the page cannot be read. If
+  neither exists the screen runs on the S&P 500 alone and says so.
+  The list is also read by the nightly swing brief (swing_agent), which scans
+  each leader with the desk's own rules: see load_latest().
+
 Run:  python leader_screen.py            (Actions: needs network)
       python leader_screen.py --selftest (offline)
 """
@@ -78,7 +90,7 @@ from typing import Callable, Optional
 import numpy as np
 import pandas as pd
 
-VERSION = "v1.1"
+VERSION = "v1.2"
 MIN_PRICE = 10.0
 MIN_DOLLAR_VOL = 25_000_000.0
 NEAR_HIGH_PCT = 25.0           # within 25% of the 52-week closing high
@@ -99,13 +111,17 @@ LOG_DIR = Path("logs/leaders")
 MEMBERSHIP_CSV = Path("data/universe/sp500_membership.csv")
 SECTORS_CSV = Path("data/universe/sp500_sectors.csv")
 SECTORS_URL = "https://raw.githubusercontent.com/fja05680/sp500/master/sp500.csv"
+NDX_CSV = Path("data/universe/ndx_members.csv")
+NDX_URL = "https://en.wikipedia.org/wiki/Nasdaq-100"
+NDX_RANGE = (90, 110)          # a parsed Nasdaq-100 list outside this size is refused
+SP500, NDX = "S&P 500", "Nasdaq-100"
 
 SECTOR_ETF = {"information technology": "XLK", "technology": "XLK", "financials": "XLF", "health care": "XLV",
               "consumer discretionary": "XLY", "communication services": "XLC", "industrials": "XLI",
               "consumer staples": "XLP", "energy": "XLE", "utilities": "XLU", "real estate": "XLRE",
-              "materials": "XLB"}
+              "materials": "XLB", "telecommunications": "XLC", "basic materials": "XLB"}
 HIST_COLS = ["date", "rank", "ticker", "close", "rs", "tightness", "sector", "quadrant", "setup", "live",
-             "trigger", "stop", "spy_close", "market_ok", "version"]
+             "trigger", "stop", "spy_close", "market_ok", "version", "index"]
 
 
 # ── universe ────────────────────────────────────────────────────────────────
@@ -213,6 +229,136 @@ def apply_sectors(universe: list, sectors: dict) -> int:
         if not u.get("sector"):
             u["sector"] = sectors.get(u["ticker"], "")
     return sum(1 for u in universe if u.get("sector"))
+
+
+# ── Nasdaq-100 add-ons ──────────────────────────────────────────────────────
+
+def parse_ndx_html(html: str) -> list:
+    """[{ticker, sector}] from the constituents table of Wikipedia's Nasdaq-100 page.
+    Picks the table whose header has a Ticker/Symbol column and whose size is a
+    plausible Nasdaq-100. Raises ValueError when no such table exists."""
+    from html.parser import HTMLParser
+
+    class T(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.tables, self.cur, self.row, self.cell, self.depth = [], None, None, None, 0
+
+        def handle_starttag(self, tag, attrs):
+            if tag == "table":
+                self.depth += 1
+                if self.depth == 1:
+                    self.cur = []
+            elif self.depth == 1 and tag == "tr":
+                self.row = []
+            elif self.depth == 1 and tag in ("td", "th") and self.row is not None:
+                self.cell = []
+            elif tag == "br" and self.cell is not None:
+                self.cell.append(" ")
+
+        def handle_endtag(self, tag):
+            if tag == "table":
+                if self.depth == 1 and self.cur is not None:
+                    self.tables.append(self.cur)
+                    self.cur = None
+                self.depth = max(self.depth - 1, 0)
+            elif self.depth == 1 and tag in ("td", "th") and self.cell is not None and self.row is not None:
+                self.row.append(" ".join("".join(self.cell).split()))
+                self.cell = None
+            elif self.depth == 1 and tag == "tr" and self.row is not None:
+                if self.row:
+                    self.cur.append(self.row)
+                self.row = None
+
+        def handle_data(self, data):
+            if self.cell is not None:
+                self.cell.append(data)
+
+    p = T()
+    p.feed(html or "")
+    for tb in p.tables:
+        if len(tb) < NDX_RANGE[0]:
+            continue
+        head = [c.lower() for c in tb[0]]
+        ti = next((i for i, c in enumerate(head) if c in ("ticker", "symbol", "ticker symbol")), None)
+        if ti is None:
+            continue
+        si = next((i for i, c in enumerate(head) if "sector" in c and "sub" not in c), None)
+        if si is None:
+            si = next((i for i, c in enumerate(head) if "industry" in c and "sub" not in c), None)
+        rows = []
+        for r in tb[1:]:
+            if len(r) <= ti:
+                continue
+            t = r[ti].strip().upper()
+            if re.match(r"^[A-Z]{1,5}([.\-][A-Z]{1,2})?$", t):
+                rows.append({"ticker": re.sub(r"[./]", "-", t),
+                             "sector": r[si].strip() if si is not None and len(r) > si else ""})
+        tick = {r["ticker"] for r in rows}
+        if NDX_RANGE[0] <= len(tick) <= NDX_RANGE[1]:
+            seen, out = set(), []
+            for r in rows:
+                if r["ticker"] not in seen:
+                    seen.add(r["ticker"]); out.append(r)
+            return out
+    raise ValueError(f"no constituents table of {NDX_RANGE[0]}-{NDX_RANGE[1]} tickers found "
+                     f"({len(p.tables)} tables on the page)")
+
+
+def load_ndx(fetch_html: Optional[Callable] = None, path: Path = NDX_CSV, refresh: bool = True) -> tuple:
+    """-> (rows, note). Live page first (a good parse is saved); then the saved copy; then nothing.
+    Never raises: without it the screen runs on the S&P 500 alone and the note says so."""
+    why = "refresh off"
+    if refresh:
+        try:
+            if fetch_html is None:
+                import urllib.request
+                req = urllib.request.Request(NDX_URL, headers={
+                    "User-Agent": "portfolio-tracker-leader-screen/1.2 (personal research; github actions)"})
+                with urllib.request.urlopen(req, timeout=30) as r:
+                    html = r.read().decode("utf-8", errors="replace")
+            else:
+                html = fetch_html()
+            rows = parse_ndx_html(html)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            pd.DataFrame(rows, columns=["ticker", "sector"]).assign(fetched=date.today().isoformat()).to_csv(
+                path, index=False)
+            return rows, f"Nasdaq-100: Wikipedia, read today ({len(rows)} names)"
+        except Exception as e:
+            why = f"{type(e).__name__}: {str(e)[:70]}"
+    try:
+        df = pd.read_csv(path, dtype=str).fillna("")
+        rows = [{"ticker": t, "sector": s} for t, s in zip(df["ticker"], df["sector"])]
+        if not (NDX_RANGE[0] <= len(rows) <= NDX_RANGE[1]):
+            raise ValueError(f"{len(rows)} rows")
+        asof = df["fetched"].iloc[0] if "fetched" in df.columns else "unknown date"
+        return rows, f"Nasdaq-100: saved copy from {asof} ({len(rows)} names; live read failed: {why})"
+    except Exception:
+        return [], f"Nasdaq-100 NOT INCLUDED — the list could not be read ({why}); S&P 500 only"
+
+
+def add_ndx(universe: list, ndx_rows: list) -> int:
+    """Tag S&P rows, append Nasdaq-100 members that are not already there. Returns how many were added."""
+    have = {u["ticker"] for u in universe}
+    for u in universe:
+        u.setdefault("index", SP500)
+    n = 0
+    for r in ndx_rows:
+        if r["ticker"] not in have:
+            sec = r.get("sector", "")
+            universe.append({"ticker": r["ticker"], "name": "", "weight": 0.0, "index": NDX,
+                             "sector": sec if sec.lower() in SECTOR_ETF else ""})
+            have.add(r["ticker"]); n += 1
+    return n
+
+
+def load_latest(path: Optional[Path] = None) -> Optional[dict]:
+    """The last healthy list, for the swing brief. None when there is none or it cannot be read."""
+    try:
+        j = json.loads((path or OUT_DIR / "latest.json").read_text())
+        return j if j.get("ok") and j.get("session") and isinstance(j.get("leaders"), list) else None
+    except Exception:
+        return None
 
 
 def cut_to_session(df: Optional[pd.DataFrame], expected: Optional[date]) -> Optional[pd.DataFrame]:
@@ -362,6 +508,7 @@ def build(universe: list, ohlcv: dict, *, spy: Optional[pd.DataFrame], regime_ke
         (fresh.__setitem__(t, df) if pd.Timestamp(df.index[-1]).date() == session else stale.append(t))
     want = [u["ticker"] for u in universe]
     priced = [t for t in want if t in fresh]
+    res["ndx_extra_n"] = sum(1 for u in universe if u.get("index") == NDX)
     res.update(priced_n=len(priced), stale=sorted(stale)[:20], stale_n=len(stale),
                missing=sorted(set(want) - set(fresh) - set(stale))[:20])
     if len(priced) < MIN_COVERAGE * max(len(want), 1):
@@ -407,6 +554,8 @@ def build(universe: list, ohlcv: dict, *, spy: Optional[pd.DataFrame], regime_ke
                           earnings_48h=e48, equity=equity, risk_pct=risk_pct, evaluate=evaluate)
         res["leaders"].append({
             "rank": i, "ticker": t, "name": meta.get(t, {}).get("name", ""), "sector": sec, "sector_etf": etf,
+            "index": meta.get(t, {}).get("index", SP500),
+            "tested_universe": meta.get(t, {}).get("index", SP500) == SP500,
             "quadrant": q, "close": round(r["close"], 2), "rs": round(r["rs"], 1),
             "ret_3m": round(r["ret63"], 1), "ret_6m": round(r["ret126"], 1), "ret_12m": round(r["ret252"], 1),
             "from_high_pct": round(r["from_high_pct"], 1),
@@ -450,7 +599,8 @@ def render_md(res: dict) -> str:
             stop = "—" if x["stop"] is None else f"{x['stop']:.2f} ({x['stop_pct']:.1f}%)"
             earn = "—" if not x["earnings"] else (f"**{x['earnings']} ⚠ 48h**" if x["earnings_48h"]
                                                   else f"{x['earnings']} ({x['earnings_days']}d)")
-            L.append(f"| {x['rank']} | **{x['ticker']}** | {sec} | {x['close']:.2f} | {x['rs']:.0f} | "
+            dag = "" if x.get("tested_universe", True) else " †"
+            L.append(f"| {x['rank']} | **{x['ticker']}**{dag} | {sec} | {x['close']:.2f} | {x['rs']:.0f} | "
                      f"{x['ret_3m']:+.0f} / {x['ret_6m']:+.0f} / {x['ret_12m']:+.0f} | {x['from_high_pct']:+.1f}% | "
                      f"{tight} | {pick} | {trig} | {stop} | {earn} |")
         L += ["", "**Why each pick reads as it does**", ""]
@@ -463,9 +613,13 @@ def render_md(res: dict) -> str:
           "- **(watch)** setups and **Near pivot / Basing** are not proven on stocks. Watch them; do not trade them yet.",
           "- **Strength** is the stock's rank in the index on 3-, 6- and 12-month returns (100 = strongest).",
           f"- **Tight** is the 10-day range over the 50-day range; ✓ at {TIGHT_FLAG:.2f} or less. A display flag, untested.",
-          "- **Earnings** dates are Yahoo estimates. Confirm on the company's site before any entry.", "",
+          "- **Earnings** dates are Yahoo estimates. Confirm on the company's site before any entry.",
+          *(["- **†** a Nasdaq-100 stock that is not in the S&P 500. It is outside the universe the historical "
+             "stock test can cover, so its record is forward-only."]
+            if any(not x.get("tested_universe", True) for x in res["leaders"]) else []), "",
           "**Data**",
           f"- Universe: {res['source']}.",
+          f"- {res.get('ndx_extra_n', 0)} Nasdaq-100 stocks outside the S&P 500 were ranked alongside it.",
           f"- Sector known for {res.get('sector_known_n', 0)} of {len(res['leaders'])} shown; next earnings date "
           f"known for {res.get('earnings_known_n', 0)} (— means Yahoo has not published one).",
           f"- {res['universe_n'] - res['priced_n']} not priced for this session"
@@ -484,7 +638,8 @@ def history_rows(res: dict) -> pd.DataFrame:
                           "rs": x["rs"], "tightness": x["tightness"], "sector": x["sector"],
                           "quadrant": x["quadrant"], "setup": x["setup"], "live": x["live"],
                           "trigger": x["trigger"], "stop": x["stop"], "spy_close": mk["spy_close"],
-                          "market_ok": mk["ok"], "version": VERSION} for x in res["leaders"]], columns=HIST_COLS)
+                          "market_ok": mk["ok"], "version": VERSION, "index": x.get("index", SP500)}
+                         for x in res["leaders"]], columns=HIST_COLS)
 
 
 def write(res: dict, out_dir: Path = OUT_DIR, log_dir: Path = LOG_DIR) -> bool:
@@ -501,6 +656,8 @@ def write(res: dict, out_dir: Path = OUT_DIR, log_dir: Path = LOG_DIR) -> bool:
     new = history_rows(res)
     if hp.exists():
         old = pd.read_csv(hp, dtype={"date": str})
+        if "index" not in old.columns:           # rows written before v1.2 were all S&P 500
+            old["index"] = SP500
         new = pd.concat([old[old["date"] != res["session"]], new], ignore_index=True)
     new.sort_values(["date", "rank"]).to_csv(hp, index=False)
     return True
@@ -521,8 +678,10 @@ def main() -> int:
     import event_calendar as ec
     universe, source = load_universe()
     sectors, sec_note = load_sectors()
+    ndx_rows, ndx_note = load_ndx()
+    n_ndx = add_ndx(universe, ndx_rows)
     n_sec = apply_sectors(universe, sectors)
-    source += f"; {sec_note}"
+    source += f"; {sec_note}; {ndx_note}, {n_ndx} not in the S&P 500"
     print(f"[leader_screen] {VERSION}: universe: {source}; sector known for {n_sec} of {len(universe)}")
     ohlcv = fetch_all([u["ticker"] for u in universe] + ["SPY"])
     try:
@@ -786,6 +945,72 @@ def selftest() -> dict:
         f.append("a past earnings date must not be shown")
     if res.get("sector_known_n") != TOP_N or "Sector known for 25 of 25" not in render_md(res):
         f.append("sector coverage is reported")
+
+    # v1.2: Nasdaq-100 add-ons
+    ndx_names = names[:85] + ["QA", "QB", "QC", "QD", "QE", "QF", "QG", "QH", "QI", "QJ", "QK", "QL", "QM", "QN", "QO", "QP"]
+    def page(rows, hdr="<th>Ticker</th><th>Company</th><th>ICB Industry<sup>[1]</sup></th>"):
+        body = "".join(f"<tr><td><a href='/x'>{t}</a></td><td>Co <b>{t}</b></td><td>{'Technology' if i % 2 else 'Telecommunications'}</td></tr>"
+                       for i, t in enumerate(rows))
+        return ("<html><table class='infobox'><tr><th>Constituents</th><td>101</td></tr></table>"
+                "<table id='changes'><tr><th>Date</th><th>Ticker</th></tr><tr><td>x</td><td>ABC</td></tr></table>"
+                f"<table id='constituents'><tr>{hdr}</tr>{body}</table></html>")
+    nd = parse_ndx_html(page(ndx_names))
+    sub = parse_ndx_html(page(ndx_names, "<th>Ticker</th><th>Company</th><th>ICB Industry</th>").replace(
+        "<th>Ticker</th>", "<th>ICB Subsector</th><th>Ticker</th>").replace("<tr><td><a", "<tr><td>Widgets</td><td><a"))
+    if len(sub) != 101 or sub[0]["sector"] not in ("Technology", "Telecommunications"):
+        f.append(f"the sector column must not be the sub-sector: {sub[0] if sub else None}")
+    if len(nd) != 101 or nd[0]["ticker"] != ndx_names[0] or nd[-1] != {"ticker": "QP", "sector": "Telecommunications"} or \
+            "BRK-B" in {r["ticker"] for r in nd}:
+        f.append(f"Nasdaq-100 table parse: {len(nd)} rows, last {nd[-1] if nd else None}")
+    alt = ("<table><tr><th>Company</th><th>Symbol</th><th>GICS Sector</th></tr>"
+           + "".join(f"<tr><td>Co {t}</td><td>{t}</td><td>Energy</td></tr>" for t in ndx_names) + "</table>")
+    if [r["ticker"] for r in parse_ndx_html(alt)] != ndx_names or parse_ndx_html(alt)[0]["sector"] != "Energy":
+        f.append("Nasdaq-100 parse must follow the header, not a fixed column order")
+    for bad in (page(ndx_names[:40]), page(ndx_names + [f"R{c}" for c in "ABCDEFGHIJKLMNOPQRST"]), "<html></html>",
+                alt.replace("Symbol", "Code")):
+        try:
+            parse_ndx_html(bad); f.append("an implausible Nasdaq-100 table must be refused")
+        except ValueError:
+            pass
+    nd_dir = Path(tempfile.mkdtemp())
+    n1, note1 = load_ndx(fetch_html=lambda: page(ndx_names), path=nd_dir / "n.csv")
+    n2, note2 = load_ndx(fetch_html=_fail, path=nd_dir / "n.csv")
+    n3, note3 = load_ndx(fetch_html=_fail, path=nd_dir / "none.csv")
+    if len(n1) != 101 or "read today" not in note1 or [r["ticker"] for r in n2] != [r["ticker"] for r in n1] or \
+            "saved copy" not in note2 or n3 != [] or "NOT INCLUDED" not in note3:
+        f.append("load_ndx: live, then the saved copy, then S&P only with a plain note")
+    u3 = [{"ticker": t, "name": "", "sector": "", "weight": 1.0} for t in names]
+    added = add_ndx(u3, n1)
+    extra = [u for u in u3 if u["index"] == NDX]
+    if added != 16 or len(u3) != 516 or {u["ticker"] for u in extra} != set(ndx_names[85:]) or \
+            any(u["index"] != SP500 for u in u3[:500]) or extra[0]["sector"] not in ("Technology", "Telecommunications"):
+        f.append(f"add_ndx: only the 16 names outside the S&P 500 are added and tagged: {added}")
+    if add_ndx([{"ticker": "A", "sector": ""}], []) != 0:
+        f.append("no Nasdaq list adds nothing")
+    uni_n = [dict(x) for x in uni] + [{"ticker": "QA", "name": "", "sector": "Technology", "weight": 0.0, "index": NDX}]
+    ohl_n = dict(ohl); ohl_n["QA"] = _bars(0.004, seed=77, noise=0.0008)
+    rn = build(uni_n, ohl_n, **kw)
+    N = {x["ticker"]: x for x in rn["leaders"]}
+    if rn["leaders"][0]["ticker"] != "QA" or N["QA"]["tested_universe"] or N["QA"]["index"] != NDX or \
+            not N["U499"]["tested_universe"] or rn["ndx_extra_n"] != 1 or "**QA** †" not in render_md(rn) or \
+            "outside the universe" not in render_md(rn) or "†" in render_md(res):
+        f.append("a Nasdaq-only leader is ranked with the rest and marked outside the tested universe")
+    hn = history_rows(rn)
+    if hn.loc[hn.ticker == "QA", "index"].iloc[0] != NDX or list(hn.columns) != HIST_COLS:
+        f.append("history records the index")
+    lp = Path(tempfile.mkdtemp())
+    write(rn, lp / "o", lp / "l")
+    if (load_latest(lp / "o" / "latest.json") or {}).get("session") != "2026-11-13" or load_latest(lp / "x.json") is not None:
+        f.append("load_latest returns the last healthy list or None")
+    (lp / "bad.json").write_text(json.dumps({"ok": False, "session": "2026-11-13", "leaders": []}))
+    if load_latest(lp / "bad.json") is not None:
+        f.append("load_latest must not return a failed build")
+    old_h = pd.read_csv(lp / "o" / "history.csv").drop(columns=["index"]); old_h["date"] = "2026-11-12"
+    old_h.to_csv(lp / "o" / "history.csv", index=False)
+    write(rn, lp / "o", lp / "l")
+    hh = pd.read_csv(lp / "o" / "history.csv")
+    if len(hh) != 2 * len(rn["leaders"]) or set(hh.loc[hh.date == "2026-11-12", "index"]) != {SP500}:
+        f.append("history written before v1.2 is kept and read as S&P 500")
 
     # write: healthy only; a re-run replaces the same session's rows
     d = Path(tempfile.mkdtemp())
