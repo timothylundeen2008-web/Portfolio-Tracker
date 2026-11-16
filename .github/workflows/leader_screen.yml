@@ -46,7 +46,10 @@ jobs:
           dispatch = "${{ github.event_name }}" == "workflow_dispatch"
           now = mt.now_et(); d = now.date().isoformat()
           def done():
-              try: return json.load(open("data/leaders/latest.json")).get("session") == d
+              # v1.0 could stamp today's date on a part-day bar; only v1.1+ counts as done
+              try:
+                  j = json.load(open("data/leaders/latest.json"))
+                  return j.get("session") == d and j.get("version") != "v1.0"
               except Exception: return False
           if dispatch:               proceed, why = True, "manual dispatch"
           elif now.weekday() >= 5:   proceed, why = False, "weekend"
@@ -78,7 +81,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/leaders/ logs/leaders/ 2>/dev/null || true
+          git add data/leaders/ logs/leaders/ data/universe/sp500_sectors.csv 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "No change."
           else

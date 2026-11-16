@@ -1,5 +1,5 @@
 """
-leader_screen.py  (v1.0 — 2026-11-16)
+leader_screen.py  (v1.1 — 2026-11-16)
 ─────────────────────────────────────
 SWING BOOK ONLY. Each evening: rank the S&P 500 and list the 25 strongest
 stocks that are in a confirmed uptrend, with the setup each is closest to.
@@ -47,6 +47,19 @@ DATA RULES
   of the universe, is a DATA FAILURE: nothing is written and the previous
   list stays, dated. A gap is never shown as "no leaders".
 
+v1.1 (after the first real run, f14cda5, 2026-11-16 3:53 PM ET)
+  1. INTRADAY BAR. That run was started before the close, so Yahoo's last bar
+     was a part-day bar and the list was stamped with a session that had not
+     finished. Bars after the expected session are now dropped before anything
+     is computed (the same rule engine_shadow uses, N66). A run before
+     4:30 PM ET therefore reports the PREVIOUS session.
+  2. SECTORS. State Street's holdings file has no sector column, so every
+     sector and rotation reading was blank. Sectors now come from
+     data/universe/sp500_sectors.csv (GICS sectors from the public
+     fja05680/sp500 list), refreshed on each run when the source is reachable.
+  3. EARNINGS. Yahoo returns the LAST report date for some stocks. A date in
+     the past is no longer shown as if it were the next one.
+
 Run:  python leader_screen.py            (Actions: needs network)
       python leader_screen.py --selftest (offline)
 """
@@ -65,7 +78,7 @@ from typing import Callable, Optional
 import numpy as np
 import pandas as pd
 
-VERSION = "v1.0"
+VERSION = "v1.1"
 MIN_PRICE = 10.0
 MIN_DOLLAR_VOL = 25_000_000.0
 NEAR_HIGH_PCT = 25.0           # within 25% of the 52-week closing high
@@ -84,6 +97,8 @@ BATCH = 100
 OUT_DIR = Path("data/leaders")
 LOG_DIR = Path("logs/leaders")
 MEMBERSHIP_CSV = Path("data/universe/sp500_membership.csv")
+SECTORS_CSV = Path("data/universe/sp500_sectors.csv")
+SECTORS_URL = "https://raw.githubusercontent.com/fja05680/sp500/master/sp500.csv"
 
 SECTOR_ETF = {"information technology": "XLK", "technology": "XLK", "financials": "XLF", "health care": "XLV",
               "consumer discretionary": "XLY", "communication services": "XLC", "industrials": "XLI",
@@ -146,6 +161,65 @@ def load_universe(fetch_raw: Optional[Callable] = None) -> tuple:
         rows, asof = membership_fallback()
         return rows, (f"FALLBACK: committed membership file as of {asof} ({len(rows)} names, no sectors) — "
                       f"live holdings failed: {type(e).__name__}: {str(e)[:90]}")
+
+
+def parse_sector_list(text: str) -> dict:
+    """ticker (Yahoo form) -> GICS sector, from either the source's sp500.csv
+    (Symbol, GICS Sector) or our own committed file (ticker, sector). Raises on a bad shape."""
+    df = pd.read_csv(io.StringIO(text))
+    cols = {c.lower().strip(): c for c in df.columns}
+    tk = cols.get("ticker") or cols.get("symbol")
+    sc = cols.get("sector") or cols.get("gics sector")
+    if not tk or not sc:
+        raise ValueError(f"no ticker/sector columns in {list(df.columns)}")
+    out = {re.sub(r"[./]", "-", str(t).strip().upper()): str(s).strip()
+           for t, s in zip(df[tk], df[sc]) if str(s).strip() and str(s).strip().lower() != "nan"}
+    known = {s for s in out.values() if s.lower() in SECTOR_ETF}
+    if len(out) < 400 or len(known) < 10:
+        raise ValueError(f"sector list looks wrong: {len(out)} tickers, {len(known)} known sectors")
+    return out
+
+
+def load_sectors(fetch_text: Optional[Callable] = None, path: Path = SECTORS_CSV, refresh: bool = True) -> tuple:
+    """-> (ticker -> sector, note). Tries the public list first and saves a good copy;
+    otherwise the committed file. Never raises: sectors are context, not a filter."""
+    if refresh:
+        try:
+            if fetch_text is None:
+                import urllib.request
+                req = urllib.request.Request(SECTORS_URL, headers={"User-Agent": "portfolio-tracker-leader-screen"})
+                with urllib.request.urlopen(req, timeout=30) as r:
+                    text = r.read().decode("utf-8", errors="replace")
+            else:
+                text = fetch_text()
+            sec = parse_sector_list(text)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            pd.DataFrame(sorted(sec.items()), columns=["ticker", "sector"]).to_csv(path, index=False)
+            return sec, f"sectors: public S&P 500 list, refreshed ({len(sec)} names)"
+        except Exception as e:
+            why = f"{type(e).__name__}: {str(e)[:70]}"
+    else:
+        why = "refresh off"
+    try:
+        sec = parse_sector_list(path.read_text())
+        return sec, f"sectors: committed file ({len(sec)} names; live refresh failed: {why})"
+    except Exception as e:
+        return {}, f"sectors UNAVAILABLE ({type(e).__name__}); sector and rotation columns are blank"
+
+
+def apply_sectors(universe: list, sectors: dict) -> int:
+    """Fill a blank sector from the list. Returns how many names have a sector afterwards."""
+    for u in universe:
+        if not u.get("sector"):
+            u["sector"] = sectors.get(u["ticker"], "")
+    return sum(1 for u in universe if u.get("sector"))
+
+
+def cut_to_session(df: Optional[pd.DataFrame], expected: Optional[date]) -> Optional[pd.DataFrame]:
+    """Drop bars dated after the expected session: a run before the close gets a part-day bar."""
+    if df is None or expected is None or df.empty:
+        return df
+    return df[pd.DatetimeIndex(df.index).normalize() <= pd.Timestamp(expected)]
 
 
 # ── per-stock numbers ───────────────────────────────────────────────────────
@@ -271,6 +345,8 @@ def build(universe: list, ohlcv: dict, *, spy: Optional[pd.DataFrame], regime_ke
     """-> the result dict. result['ok'] False means a data failure: write nothing."""
     res = {"version": VERSION, "ok": False, "source": source, "universe_n": len(universe), "regime": regime_key,
            "leaders": [], "problems": []}
+    spy = cut_to_session(spy, expected)
+    ohlcv = {t: cut_to_session(df, expected) for t, df in ohlcv.items()}
     if spy is None or len(spy) < MIN_BARS:
         res["problems"].append("SPY history missing or short")
         return res
@@ -316,13 +392,16 @@ def build(universe: list, ohlcv: dict, *, spy: Optional[pd.DataFrame], regime_ke
             earn = earnings(top["ticker"].tolist()) or {}
         except Exception as e:
             res["problems"].append(f"earnings lookup failed ({type(e).__name__}); dates not shown")
-    res["earnings_known_n"] = len(earn)
+    res["earnings_known_n"] = sum(1 for v in earn.values() if v["days_away"] >= 0)
+    res["sector_known_n"] = sum(1 for t in top["ticker"] if meta.get(t, {}).get("sector"))
     for i, r in enumerate(top.to_dict("records"), 1):
         t = r["ticker"]
         sec = meta.get(t, {}).get("sector", "")
         etf = SECTOR_ETF.get(sec.lower())
         q = quad.get(etf) if etf else None
         e = earn.get(t)
+        if e and e["days_away"] < 0:        # Yahoo gave the last report, not the next one
+            e = None
         e48 = bool(e and 0 <= e["days_away"] <= 2)
         st = setup_status(t, fresh[t], r, regime_key=regime_key, bench=spy["Close"], quadrant=q, market_ok=mkt,
                           earnings_48h=e48, equity=equity, risk_pct=risk_pct, evaluate=evaluate)
@@ -387,6 +466,8 @@ def render_md(res: dict) -> str:
           "- **Earnings** dates are Yahoo estimates. Confirm on the company's site before any entry.", "",
           "**Data**",
           f"- Universe: {res['source']}.",
+          f"- Sector known for {res.get('sector_known_n', 0)} of {len(res['leaders'])} shown; next earnings date "
+          f"known for {res.get('earnings_known_n', 0)} (— means Yahoo has not published one).",
           f"- {res['universe_n'] - res['priced_n']} not priced for this session"
           + (f" (stale: {', '.join(res['stale'][:8])})" if res.get("stale") else "")
           + (f" (missing: {', '.join(res['missing'][:8])})" if res.get("missing") else "")
@@ -439,7 +520,10 @@ def main() -> int:
     import swing_agent
     import event_calendar as ec
     universe, source = load_universe()
-    print(f"[leader_screen] {VERSION}: universe: {source}")
+    sectors, sec_note = load_sectors()
+    n_sec = apply_sectors(universe, sectors)
+    source += f"; {sec_note}"
+    print(f"[leader_screen] {VERSION}: universe: {source}; sector known for {n_sec} of {len(universe)}")
     ohlcv = fetch_all([u["ticker"] for u in universe] + ["SPY"])
     try:
         markets, rotation = swing_agent._read_bridges()
@@ -474,6 +558,7 @@ def _bars(drift: float, n: int = 520, start: float = 50.0, vol: float = 2_000_00
 
 
 def selftest() -> dict:
+    import tempfile
     f = []
     # holdings workbook
     abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -656,8 +741,53 @@ def selftest() -> dict:
     if not r9["ok"] or not any("earnings" in p for p in r9["problems"]):
         f.append("an earnings lookup failure is reported and the list still builds")
 
+    # v1.1: a part-day bar after the expected session is dropped, and changes nothing
+    intr = {t: pd.concat([d, d.tail(1).set_axis([pd.Timestamp("2026-11-16")]) * 1.5]) for t, d in ohl.items()}
+    spy_i = pd.concat([spy, spy.tail(1).set_axis([pd.Timestamp("2026-11-16")]) * 0.5])
+    calls.clear()
+    ri = build(uni, intr, **{**kw, "spy": spy_i})
+    if not ri["ok"] or ri["session"] != "2026-11-13" or ri["market"] != res["market"] or \
+            [(x["ticker"], x["close"], x["rs"]) for x in ri["leaders"]] != [(x["ticker"], x["close"], x["rs"]) for x in res["leaders"]]:
+        f.append(f"an intraday bar must be dropped: session {ri.get('session')}")
+    if any(len(c[1]) and pd.Timestamp("2026-11-16") in c[1].get("bench", pd.Series(dtype=float)).index for c in calls):
+        f.append("the evaluator must not see the part-day bar")
+    if cut_to_session(spy_i, None) is not spy_i or len(cut_to_session(spy_i, date(2026, 11, 13))) != len(spy):
+        f.append("cut_to_session")
+    # v1.1: sectors from the list fill blanks only
+    src_csv = "Symbol,Security,GICS Sector\n" + "\n".join(
+        f"{n},Co,{'Energy' if i % 11 == 0 else list(SECTOR_ETF)[i % 12].title()}" for i, n in enumerate(names))
+    sec = parse_sector_list(src_csv)
+    if sec.get("BRK-B") is None or len(sec) != 500:
+        f.append("sector list: tickers in Yahoo form")
+    try:
+        parse_sector_list("Symbol,GICS Sector\nA,Energy\n"); f.append("a 1-row sector list must be refused")
+    except ValueError:
+        pass
+    td = Path(tempfile.mkdtemp())
+    s1, n1 = load_sectors(fetch_text=lambda: src_csv, path=td / "s.csv")
+    if len(s1) != 500 or "refreshed" not in n1 or not (td / "s.csv").exists():
+        f.append("load_sectors: refresh and save")
+    def _fail(): raise OSError("offline")
+    s2, n2 = load_sectors(fetch_text=_fail, path=td / "s.csv")
+    if s2 != s1 or "committed file" not in n2:
+        f.append("load_sectors: fall back to the committed file")
+    s3, n3 = load_sectors(fetch_text=_fail, path=td / "none.csv")
+    if s3 != {} or "UNAVAILABLE" not in n3:
+        f.append("load_sectors: no source is reported, never raised")
+    u2 = [{"ticker": "ZAA", "sector": ""}, {"ticker": "ZAB", "sector": "Utilities"}, {"ticker": "QQQQ", "sector": ""}]
+    if apply_sectors(u2, {"ZAA": "Energy", "ZAB": "Energy"}) != 2 or u2[0]["sector"] != "Energy" or u2[1]["sector"] != "Utilities":
+        f.append("apply_sectors fills blanks only")
+    # v1.1: a past earnings date is not shown as the next one
+    past = lambda tks: {"U499": {"date": "2026-11-06", "days_away": -10}, "U498": {"date": "2026-12-01", "days_away": 15}}
+    rp = build(uni, ohl, **{**kw, "earnings": past})
+    P = {x["ticker"]: x for x in rp["leaders"]}
+    if P["U499"]["earnings"] is not None or P["U498"]["earnings"] != "2026-12-01" or rp["earnings_known_n"] != 1 or \
+            "2026-11-06" in render_md(rp):
+        f.append("a past earnings date must not be shown")
+    if res.get("sector_known_n") != TOP_N or "Sector known for 25 of 25" not in render_md(res):
+        f.append("sector coverage is reported")
+
     # write: healthy only; a re-run replaces the same session's rows
-    import tempfile
     d = Path(tempfile.mkdtemp())
     if write(r5, d / "o", d / "l") or (d / "o").exists():
         f.append("a failed build writes nothing")
