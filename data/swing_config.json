@@ -12,5 +12,6 @@
   "new_campaign_step": 1,
   "min_sample_per_setup": 20,
   "base_risk_pct": 1.0,
-  "max_per_sector": 2
+  "max_per_sector": 2,
+  "live_stock_cards": false
 }
