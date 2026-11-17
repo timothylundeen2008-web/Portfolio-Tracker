@@ -1,0 +1,102 @@
+ticker,sector,fetched
+ADBE,Technology,2026-11-17
+AMD,Technology,2026-11-17
+ABNB,Consumer Discretionary,2026-11-17
+ALNY,Health Care,2026-11-17
+GOOGL,Technology,2026-11-17
+GOOG,Technology,2026-11-17
+AMZN,Consumer Discretionary,2026-11-17
+AEP,Utilities,2026-11-17
+AMGN,Health Care,2026-11-17
+ADI,Technology,2026-11-17
+AAPL,Technology,2026-11-17
+AMAT,Technology,2026-11-17
+APP,Technology,2026-11-17
+ARM,Technology,2026-11-17
+ASML,Technology,2026-11-17
+ALAB,Technology,2026-11-17
+ADSK,Technology,2026-11-17
+ADP,Industrials,2026-11-17
+AXON,Industrials,2026-11-17
+BKR,Energy,2026-11-17
+BKNG,Consumer Discretionary,2026-11-17
+AVGO,Technology,2026-11-17
+CDNS,Technology,2026-11-17
+CTAS,Industrials,2026-11-17
+CSCO,Telecommunications,2026-11-17
+CCEP,Consumer Staples,2026-11-17
+CMCSA,Telecommunications,2026-11-17
+CEG,Utilities,2026-11-17
+CPRT,Consumer Discretionary,2026-11-17
+CRWV,Technology,2026-11-17
+COST,Consumer Discretionary,2026-11-17
+CRWD,Technology,2026-11-17
+CSX,Industrials,2026-11-17
+DDOG,Technology,2026-11-17
+DXCM,Health Care,2026-11-17
+FANG,Energy,2026-11-17
+DASH,Technology,2026-11-17
+EXC,Utilities,2026-11-17
+FAST,Industrials,2026-11-17
+FER,Industrials,2026-11-17
+FTNT,Technology,2026-11-17
+GEHC,Health Care,2026-11-17
+GILD,Health Care,2026-11-17
+HONA,Industrials,2026-11-17
+HON,Industrials,2026-11-17
+IDXX,Health Care,2026-11-17
+INTC,Technology,2026-11-17
+INTU,Technology,2026-11-17
+ISRG,Health Care,2026-11-17
+KDP,Consumer Staples,2026-11-17
+KLAC,Technology,2026-11-17
+LRCX,Technology,2026-11-17
+LIN,Basic Materials,2026-11-17
+LITE,Technology,2026-11-17
+MAR,Consumer Discretionary,2026-11-17
+MRVL,Technology,2026-11-17
+MELI,Consumer Discretionary,2026-11-17
+META,Technology,2026-11-17
+MCHP,Technology,2026-11-17
+MU,Technology,2026-11-17
+MSFT,Technology,2026-11-17
+MSTR,Technology,2026-11-17
+MRNA,Health Care,2026-11-17
+MDLZ,Consumer Staples,2026-11-17
+MPWR,Technology,2026-11-17
+MNST,Consumer Staples,2026-11-17
+NBIS,Technology,2026-11-17
+NFLX,Consumer Discretionary,2026-11-17
+NVDA,Technology,2026-11-17
+NXPI,Technology,2026-11-17
+ORLY,Consumer Discretionary,2026-11-17
+ODFL,Industrials,2026-11-17
+PCAR,Consumer Discretionary,2026-11-17
+PLTR,Technology,2026-11-17
+PANW,Technology,2026-11-17
+PAYX,Industrials,2026-11-17
+PYPL,Industrials,2026-11-17
+PDD,Technology,2026-11-17
+PEP,Consumer Staples,2026-11-17
+QCOM,Technology,2026-11-17
+REGN,Health Care,2026-11-17
+RKLB,Industrials,2026-11-17
+ROP,Technology,2026-11-17
+ROST,Consumer Discretionary,2026-11-17
+SNDK,Technology,2026-11-17
+STX,Technology,2026-11-17
+SHOP,Technology,2026-11-17
+SPCX,Telecommunications,2026-11-17
+SBUX,Consumer Discretionary,2026-11-17
+SNPS,Technology,2026-11-17
+TMUS,Telecommunications,2026-11-17
+TTWO,Consumer Discretionary,2026-11-17
+TER,Technology,2026-11-17
+TSLA,Consumer Discretionary,2026-11-17
+TXN,Technology,2026-11-17
+TRI,Technology,2026-11-17
+VRTX,Health Care,2026-11-17
+WMT,Consumer Discretionary,2026-11-17
+WDC,Technology,2026-11-17
+WDAY,Technology,2026-11-17
+XEL,Utilities,2026-11-17
