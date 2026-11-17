@@ -1,10 +1,10 @@
 {
   "version": "v1.1",
-  "asof": "2026-11-13",
+  "asof": "2026-11-16",
   "start": "2026-12-01",
   "error": null,
-  "generated_at": "2026-11-15T22:26:22+00:00",
-  "last_bar": "2026-11-13",
+  "generated_at": "2026-11-17T00:18:38+00:00",
+  "last_bar": "2026-11-16",
   "reads": [
     {
       "engine": "O11",
@@ -62,14 +62,29 @@
     },
     {
       "engine": "O7",
-      "state": "OFF",
-      "word": "OFFENSE",
-      "since": "2026-11-11",
-      "switched_today": false,
+      "state": "BAL",
+      "word": "BALANCED",
+      "since": "2026-11-13",
+      "switched_today": true,
       "previous": "OFF",
       "book_next": {
-        "QQQ": 50.0,
-        "SPY": 50.0
+        "VGT": 17.0,
+        "SCHD": 14.0,
+        "GLD": 10.0,
+        "TLT": 7.0,
+        "KMLM": 7.0,
+        "XLE": 5.0,
+        "XLV": 5.0,
+        "DBMF": 5.0,
+        "SCHP": 5.0,
+        "SLV": 4.0,
+        "RING": 4.0,
+        "SMH": 3.0,
+        "QQQ": 3.0,
+        "PDBC": 3.0,
+        "XLU": 3.0,
+        "SGOV": 3.0,
+        "USFR": 2.0
       }
     }
   ]
