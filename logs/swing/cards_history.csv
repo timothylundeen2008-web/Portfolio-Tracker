@@ -291,3 +291,22 @@ date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_
 2026-11-13,WFC,M0 Rotation,long,2-of-3,86.86,83.88,86.05,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
 2026-11-13,XLY,M0 Rotation,long,2-of-3,120.97,115.86,119.98,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
 2026-11-13,AMZN,M0 Rotation,long,2-of-3,270.05,253.93,266.66,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-16,XLU,M0 Rotation,long,3-of-3,44.4,43.19,44.12,transition_ambiguous,True,
+2026-11-16,EXC,M0 Rotation,long,3-of-3,46.76,45.42,46.46,transition_ambiguous,True,
+2026-11-16,SPG,M0 Rotation,long,3-of-3,234.83,228.02,232.78,transition_ambiguous,True,
+2026-11-16,XLRE,M0 Rotation,long,3-of-3,44.65,43.26,44.25,transition_ambiguous,True,
+2026-11-16,PSA,M0 Rotation,long,3-of-3,336.15,325.39,333.71,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-16,SO,M0 Rotation,long,3-of-3,94.75,91.72,94.64,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-16,AEP,M0 Rotation,long,3-of-3,130.66,126.43,129.34,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-16,WELL,M0 Rotation,long,3-of-3,247.46,239.15,244.65,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-16,WFC,M0 Rotation,long,3-of-3,86.35,83.25,84.84,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-16,MCD,M0 Rotation,long,3-of-3,277.95,267.03,274.67,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-16,SBUX,M0 Rotation,long,3-of-3,110.11,105.26,108.72,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-16,CMG,M0 Rotation,long,3-of-3,36.36,34.39,35.94,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-16,EQIX,M0 Rotation,long,3-of-3,1060.0,1002.2,1043.06,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-16,UNH,M0 Rotation,long,3-of-3,415.19,398.72,412.02,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-16,DUK,M0 Rotation,long,2-of-3,131.42,127.88,130.59,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-16,D,M0 Rotation,long,2-of-3,68.55,66.39,67.8,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-16,NEE,M0 Rotation,long,2-of-3,86.22,83.49,85.34,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-16,XLY,M0 Rotation,long,2-of-3,119.81,114.54,118.15,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-16,TSLA,M0 Rotation,long,2-of-3,389.8,362.79,379.74,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
