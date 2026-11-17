@@ -1,5 +1,5 @@
 """
-leader_screen.py  (v1.2 — 2026-11-16)
+leader_screen.py  (v1.3 — 2026-11-16)
 ─────────────────────────────────────
 SWING BOOK ONLY. Each evening: rank the S&P 500 and list the 25 strongest
 stocks that are in a confirmed uptrend, with the setup each is closest to.
@@ -72,6 +72,15 @@ v1.2 (Matt, 2026-11-16: include the Nasdaq names)
   The list is also read by the nightly swing brief (swing_agent), which scans
   each leader with the desk's own rules: see load_latest().
 
+v1.3 (after the first v1.2 run, 2026-11-16 7:14 PM ET)
+  The Wikipedia page was reached (10 tables) but none matched: v1.2 looked for
+  a header cell named Ticker/Symbol in the first row. v1.3 no longer depends
+  on the header. It takes the table column that holds 90-110 distinct
+  ticker-shaped values of which at least 60 are S&P 500 members (the two
+  indexes share about 85 names), and it prints every table's size and first
+  row when nothing matches, so a miss can be diagnosed from the log.
+  (The workflow also failed to commit that run: see leader_screen.yml.)
+
 Run:  python leader_screen.py            (Actions: needs network)
       python leader_screen.py --selftest (offline)
 """
@@ -90,7 +99,7 @@ from typing import Callable, Optional
 import numpy as np
 import pandas as pd
 
-VERSION = "v1.2"
+VERSION = "v1.3"
 MIN_PRICE = 10.0
 MIN_DOLLAR_VOL = 25_000_000.0
 NEAR_HIGH_PCT = 25.0           # within 25% of the 52-week closing high
@@ -114,6 +123,7 @@ SECTORS_URL = "https://raw.githubusercontent.com/fja05680/sp500/master/sp500.csv
 NDX_CSV = Path("data/universe/ndx_members.csv")
 NDX_URL = "https://en.wikipedia.org/wiki/Nasdaq-100"
 NDX_RANGE = (90, 110)          # a parsed Nasdaq-100 list outside this size is refused
+NDX_MIN_SP500_OVERLAP = 60     # the two indexes share about 85 names; a column sharing fewer is not it
 SP500, NDX = "S&P 500", "Nasdaq-100"
 
 SECTOR_ETF = {"information technology": "XLK", "technology": "XLK", "financials": "XLF", "health care": "XLV",
@@ -233,26 +243,30 @@ def apply_sectors(universe: list, sectors: dict) -> int:
 
 # ── Nasdaq-100 add-ons ──────────────────────────────────────────────────────
 
-def parse_ndx_html(html: str) -> list:
+def parse_ndx_html(html: str, sp500: Optional[set] = None) -> list:
     """[{ticker, sector}] from the constituents table of Wikipedia's Nasdaq-100 page.
-    Picks the table whose header has a Ticker/Symbol column and whose size is a
-    plausible Nasdaq-100. Raises ValueError when no such table exists."""
+    Header-independent: the column holding 90-110 distinct ticker-shaped values, of which
+    (when `sp500` is given) at least 60 are S&P 500 members. A column under a Ticker/Symbol
+    header wins a tie. Raises ValueError, describing every table, when nothing qualifies."""
     from html.parser import HTMLParser
 
     class T(HTMLParser):
         def __init__(self):
             super().__init__()
             self.tables, self.cur, self.row, self.cell, self.depth = [], None, None, None, 0
+            self.kinds, self.header_rows = [], []      # header_rows[i] = indexes of all-<th> rows in table i
+            self.cur_hdr = set()
 
         def handle_starttag(self, tag, attrs):
             if tag == "table":
                 self.depth += 1
                 if self.depth == 1:
-                    self.cur = []
+                    self.cur, self.cur_hdr = [], set()
             elif self.depth == 1 and tag == "tr":
-                self.row = []
+                self.row, self.kinds = [], []
             elif self.depth == 1 and tag in ("td", "th") and self.row is not None:
                 self.cell = []
+                self.kinds.append(tag)
             elif tag == "br" and self.cell is not None:
                 self.cell.append(" ")
 
@@ -260,6 +274,7 @@ def parse_ndx_html(html: str) -> list:
             if tag == "table":
                 if self.depth == 1 and self.cur is not None:
                     self.tables.append(self.cur)
+                    self.header_rows.append(self.cur_hdr)
                     self.cur = None
                 self.depth = max(self.depth - 1, 0)
             elif self.depth == 1 and tag in ("td", "th") and self.cell is not None and self.row is not None:
@@ -267,6 +282,8 @@ def parse_ndx_html(html: str) -> list:
                 self.cell = None
             elif self.depth == 1 and tag == "tr" and self.row is not None:
                 if self.row:
+                    if self.kinds and all(k == "th" for k in self.kinds):
+                        self.cur_hdr.add(len(self.cur))
                     self.cur.append(self.row)
                 self.row = None
 
@@ -276,36 +293,56 @@ def parse_ndx_html(html: str) -> list:
 
     p = T()
     p.feed(html or "")
-    for tb in p.tables:
+    tick_re = re.compile(r"^[A-Z]{1,5}([.\-][A-Z]{1,2})?$")
+    best = None                                   # (score, table, column)
+    for tb, hdr in zip(p.tables, p.header_rows):
         if len(tb) < NDX_RANGE[0]:
             continue
-        head = [c.lower() for c in tb[0]]
-        ti = next((i for i, c in enumerate(head) if c in ("ticker", "symbol", "ticker symbol")), None)
-        if ti is None:
-            continue
+        width = max(len(r) for r in tb)
+        for ci in range(width):
+            vals = [r[ci].strip().upper() for i, r in enumerate(tb) if len(r) > ci and i not in hdr]
+            tick = {re.sub(r"[./]", "-", v) for v in vals if tick_re.match(v)}
+            if not (NDX_RANGE[0] <= len(tick) <= NDX_RANGE[1]):
+                continue
+            overlap = len(tick & sp500) if sp500 else len(tick)
+            if sp500 and overlap < NDX_MIN_SP500_OVERLAP:
+                continue
+            named = any(c.strip().lower() in ("ticker", "symbol", "ticker symbol") for r in tb[:3] for c in r[ci:ci + 1])
+            score = (1 if named else 0, overlap)
+            if best is None or score > best[0]:
+                best = (score, tb, ci, hdr)
+    if best is None:
+        desc = "; ".join(f"{len(tb)} rows, first {[c[:14] for c in tb[0][:5]]}" for tb in p.tables[:12])
+        raise ValueError(f"no table column with {NDX_RANGE[0]}-{NDX_RANGE[1]} tickers"
+                         + (f" sharing {NDX_MIN_SP500_OVERLAP}+ with the S&P 500" if sp500 else "")
+                         + f" ({len(p.tables)} tables: {desc})")
+    _, tb, ti, hdr = best
+    si = None
+    for hr in tb[:3]:                             # the sector column, if a header names one
+        head = [c.lower() for c in hr]
         si = next((i for i, c in enumerate(head) if "sector" in c and "sub" not in c), None)
         if si is None:
             si = next((i for i, c in enumerate(head) if "industry" in c and "sub" not in c), None)
-        rows = []
-        for r in tb[1:]:
-            if len(r) <= ti:
-                continue
-            t = r[ti].strip().upper()
-            if re.match(r"^[A-Z]{1,5}([.\-][A-Z]{1,2})?$", t):
-                rows.append({"ticker": re.sub(r"[./]", "-", t),
-                             "sector": r[si].strip() if si is not None and len(r) > si else ""})
-        tick = {r["ticker"] for r in rows}
-        if NDX_RANGE[0] <= len(tick) <= NDX_RANGE[1]:
-            seen, out = set(), []
-            for r in rows:
-                if r["ticker"] not in seen:
-                    seen.add(r["ticker"]); out.append(r)
-            return out
-    raise ValueError(f"no constituents table of {NDX_RANGE[0]}-{NDX_RANGE[1]} tickers found "
-                     f"({len(p.tables)} tables on the page)")
+        if si is not None:
+            break
+    seen, out = set(), []
+    for i, r in enumerate(tb):
+        if len(r) <= ti or i in hdr:
+            continue
+        t = r[ti].strip().upper()
+        if not tick_re.match(t):
+            continue
+        t = re.sub(r"[./]", "-", t)
+        if t in seen:
+            continue
+        seen.add(t)
+        sec = r[si].strip() if si is not None and len(r) > si else ""
+        out.append({"ticker": t, "sector": sec})
+    return out
 
 
-def load_ndx(fetch_html: Optional[Callable] = None, path: Path = NDX_CSV, refresh: bool = True) -> tuple:
+def load_ndx(fetch_html: Optional[Callable] = None, path: Path = NDX_CSV, refresh: bool = True,
+             sp500: Optional[set] = None) -> tuple:
     """-> (rows, note). Live page first (a good parse is saved); then the saved copy; then nothing.
     Never raises: without it the screen runs on the S&P 500 alone and the note says so."""
     why = "refresh off"
@@ -319,13 +356,14 @@ def load_ndx(fetch_html: Optional[Callable] = None, path: Path = NDX_CSV, refres
                     html = r.read().decode("utf-8", errors="replace")
             else:
                 html = fetch_html()
-            rows = parse_ndx_html(html)
+            rows = parse_ndx_html(html, sp500)
             path.parent.mkdir(parents=True, exist_ok=True)
             pd.DataFrame(rows, columns=["ticker", "sector"]).assign(fetched=date.today().isoformat()).to_csv(
                 path, index=False)
             return rows, f"Nasdaq-100: Wikipedia, read today ({len(rows)} names)"
         except Exception as e:
             why = f"{type(e).__name__}: {str(e)[:70]}"
+            print(f"[leader_screen] Nasdaq-100 page not usable: {type(e).__name__}: {str(e)[:1500]}")
     try:
         df = pd.read_csv(path, dtype=str).fillna("")
         rows = [{"ticker": t, "sector": s} for t, s in zip(df["ticker"], df["sector"])]
@@ -678,7 +716,7 @@ def main() -> int:
     import event_calendar as ec
     universe, source = load_universe()
     sectors, sec_note = load_sectors()
-    ndx_rows, ndx_note = load_ndx()
+    ndx_rows, ndx_note = load_ndx(sp500={u["ticker"] for u in universe})
     n_ndx = add_ndx(universe, ndx_rows)
     n_sec = apply_sectors(universe, sectors)
     source += f"; {sec_note}; {ndx_note}, {n_ndx} not in the S&P 500"
@@ -966,14 +1004,41 @@ def selftest() -> dict:
            + "".join(f"<tr><td>Co {t}</td><td>{t}</td><td>Energy</td></tr>" for t in ndx_names) + "</table>")
     if [r["ticker"] for r in parse_ndx_html(alt)] != ndx_names or parse_ndx_html(alt)[0]["sector"] != "Energy":
         f.append("Nasdaq-100 parse must follow the header, not a fixed column order")
-    for bad in (page(ndx_names[:40]), page(ndx_names + [f"R{c}" for c in "ABCDEFGHIJKLMNOPQRST"]), "<html></html>",
-                alt.replace("Symbol", "Code")):
+    for bad in (page(ndx_names[:40]), page(ndx_names + [f"R{c}" for c in "ABCDEFGHIJKLMNOPQRST"]), "<html></html>"):
         try:
             parse_ndx_html(bad); f.append("an implausible Nasdaq-100 table must be refused")
         except ValueError:
             pass
+    # v1.3: header-independent, anchored on overlap with the S&P 500
+    spset = {re.sub(r"[./]", "-", n) for n in names}
+    nohdr = alt.replace("Symbol", "Code")                       # no Ticker/Symbol header at all
+    if [r["ticker"] for r in parse_ndx_html(nohdr, spset)] != ndx_names:
+        f.append("the ticker column must be found without a Ticker/Symbol header")
+    caption = alt.replace("<table><tr>", "<table><tr><th colspan='3'>Components</th></tr><tr>")
+    cp = parse_ndx_html(caption, spset)
+    if [r["ticker"] for r in cp] != ndx_names or cp[0]["sector"] != "Energy":
+        f.append("a title row above the header must not break the parse")
+    other = [f"X{a}{b}" for a in "ABCDEFGHIJ" for b in "ABCDEFGHIJ"]            # 100 tickers, none in the S&P 500
+    decoy = ("<table><tr><th>Ticker</th></tr>" + "".join(f"<tr><td>{t}</td></tr>" for t in other) + "</table>")
+    try:
+        parse_ndx_html(decoy, spset); f.append("a 100-ticker table sharing nothing with the S&P 500 must be refused")
+    except ValueError as e:
+        if "100 rows" not in str(e) and "101 rows" not in str(e):
+            f.append(f"a miss must describe the tables it saw: {str(e)[:120]}")
+    both = decoy.replace("</table>", "</table>" + nohdr, 1)
+    if [r["ticker"] for r in parse_ndx_html(both, spset)] != ndx_names:
+        f.append("with a decoy table present the real one must be chosen")
     nd_dir = Path(tempfile.mkdtemp())
-    n1, note1 = load_ndx(fetch_html=lambda: page(ndx_names), path=nd_dir / "n.csv")
+    # two qualifying tables: a weaker list (62 shared, no header) must lose to the real one (85 shared)
+    weak_names = names[100:162] + [f"W{a}{b}" for a in "ABCDEF" for b in "ABCDEF"]
+    weak = "<table>" + "".join(f"<tr><td>{t}</td></tr>" for t in weak_names) + "</table>"
+    for html2 in (weak + nohdr, nohdr + weak):
+        if [r["ticker"] for r in parse_ndx_html(html2, spset)] != ndx_names:
+            f.append("of two plausible tables the one sharing more with the S&P 500 must win")
+    n0, _ = load_ndx(fetch_html=lambda: both, path=Path(tempfile.mkdtemp()) / "n.csv", sp500=spset)
+    if [r["ticker"] for r in n0] != ndx_names:
+        f.append("load_ndx must pass the S&P 500 set to the parser")
+    n1, note1 = load_ndx(fetch_html=lambda: page(ndx_names), path=nd_dir / "n.csv", sp500=spset)
     n2, note2 = load_ndx(fetch_html=_fail, path=nd_dir / "n.csv")
     n3, note3 = load_ndx(fetch_html=_fail, path=nd_dir / "none.csv")
     if len(n1) != 101 or "read today" not in note1 or [r["ticker"] for r in n2] != [r["ticker"] for r in n1] or \

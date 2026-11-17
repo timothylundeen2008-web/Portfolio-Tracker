@@ -81,7 +81,11 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/leaders/ logs/leaders/ data/universe/sp500_sectors.csv data/universe/ndx_members.csv 2>/dev/null || true
+          # one path per command: `git add a b` stages NOTHING when any one path is missing
+          # (v1.2's run on 2026-11-16 committed nothing because ndx_members.csv did not exist yet)
+          for p in data/leaders logs/leaders data/universe/sp500_sectors.csv data/universe/ndx_members.csv; do
+            if [ -e "$p" ]; then git add "$p"; fi
+          done
           if git diff --cached --quiet; then
             echo "No change."
           else
