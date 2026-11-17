@@ -1,5 +1,5 @@
 """
-leader_screen.py  (v1.3 — 2026-11-16)
+leader_screen.py  (v1.4 — 2026-11-16)
 ─────────────────────────────────────
 SWING BOOK ONLY. Each evening: rank the S&P 500 and list the 25 strongest
 stocks that are in a confirmed uptrend, with the setup each is closest to.
@@ -81,6 +81,14 @@ v1.3 (after the first v1.2 run, 2026-11-16 7:14 PM ET)
   row when nothing matches, so a miss can be diagnosed from the log.
   (The workflow also failed to commit that run: see leader_screen.yml.)
 
+v1.4 (after the v1.3 run, e5435f4)
+  v1.3's printout showed why nothing matched: the Nasdaq-100 article no longer
+  carries the members table (its ten tables are the infobox, records, yearly
+  returns, milestones and navigation boxes). The table lives in a separate
+  article, "List of NASDAQ-100 companies" (one table: Ticker, Company,
+  ICB Industry, ICB Subsector). v1.4 reads that page first and the old one
+  second. The reader itself is unchanged.
+
 Run:  python leader_screen.py            (Actions: needs network)
       python leader_screen.py --selftest (offline)
 """
@@ -99,7 +107,7 @@ from typing import Callable, Optional
 import numpy as np
 import pandas as pd
 
-VERSION = "v1.3"
+VERSION = "v1.4"
 MIN_PRICE = 10.0
 MIN_DOLLAR_VOL = 25_000_000.0
 NEAR_HIGH_PCT = 25.0           # within 25% of the 52-week closing high
@@ -121,7 +129,8 @@ MEMBERSHIP_CSV = Path("data/universe/sp500_membership.csv")
 SECTORS_CSV = Path("data/universe/sp500_sectors.csv")
 SECTORS_URL = "https://raw.githubusercontent.com/fja05680/sp500/master/sp500.csv"
 NDX_CSV = Path("data/universe/ndx_members.csv")
-NDX_URL = "https://en.wikipedia.org/wiki/Nasdaq-100"
+NDX_URLS = ("https://en.wikipedia.org/wiki/List_of_NASDAQ-100_companies",
+            "https://en.wikipedia.org/wiki/Nasdaq-100")
 NDX_RANGE = (90, 110)          # a parsed Nasdaq-100 list outside this size is refused
 NDX_MIN_SP500_OVERLAP = 60     # the two indexes share about 85 names; a column sharing fewer is not it
 SP500, NDX = "S&P 500", "Nasdaq-100"
@@ -341,22 +350,32 @@ def parse_ndx_html(html: str, sp500: Optional[set] = None) -> list:
     return out
 
 
+def _http_text(url: str) -> str:
+    import urllib.request
+    req = urllib.request.Request(url, headers={
+        "User-Agent": "portfolio-tracker-leader-screen/1.4 (personal research; github actions)"})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        return r.read().decode("utf-8", errors="replace")
+
+
 def load_ndx(fetch_html: Optional[Callable] = None, path: Path = NDX_CSV, refresh: bool = True,
              sp500: Optional[set] = None) -> tuple:
-    """-> (rows, note). Live page first (a good parse is saved); then the saved copy; then nothing.
+    """fetch_html(url) -> page text (tests inject it).
+    -> (rows, note). Live pages first (a good parse is saved); then the saved copy; then nothing.
     Never raises: without it the screen runs on the S&P 500 alone and the note says so."""
     why = "refresh off"
     if refresh:
         try:
-            if fetch_html is None:
-                import urllib.request
-                req = urllib.request.Request(NDX_URL, headers={
-                    "User-Agent": "portfolio-tracker-leader-screen/1.2 (personal research; github actions)"})
-                with urllib.request.urlopen(req, timeout=30) as r:
-                    html = r.read().decode("utf-8", errors="replace")
-            else:
-                html = fetch_html()
-            rows = parse_ndx_html(html, sp500)
+            get = fetch_html or _http_text
+            rows, errs = None, []
+            for url in NDX_URLS:                  # the first page that yields a plausible list wins
+                try:
+                    rows = parse_ndx_html(get(url), sp500)
+                    break
+                except Exception as e:
+                    errs.append(f"{url.rsplit('/', 1)[-1]}: {type(e).__name__}: {str(e)[:700]}")
+            if rows is None:
+                raise ValueError(" || ".join(errs))
             path.parent.mkdir(parents=True, exist_ok=True)
             pd.DataFrame(rows, columns=["ticker", "sector"]).assign(fetched=date.today().isoformat()).to_csv(
                 path, index=False)
@@ -1035,12 +1054,36 @@ def selftest() -> dict:
     for html2 in (weak + nohdr, nohdr + weak):
         if [r["ticker"] for r in parse_ndx_html(html2, spset)] != ndx_names:
             f.append("of two plausible tables the one sharing more with the S&P 500 must win")
-    n0, _ = load_ndx(fetch_html=lambda: both, path=Path(tempfile.mkdtemp()) / "n.csv", sp500=spset)
+    n0, _ = load_ndx(fetch_html=lambda u: both, path=Path(tempfile.mkdtemp()) / "n.csv", sp500=spset)
     if [r["ticker"] for r in n0] != ndx_names:
         f.append("load_ndx must pass the S&P 500 set to the parser")
-    n1, note1 = load_ndx(fetch_html=lambda: page(ndx_names), path=nd_dir / "n.csv", sp500=spset)
-    n2, note2 = load_ndx(fetch_html=_fail, path=nd_dir / "n.csv")
-    n3, note3 = load_ndx(fetch_html=_fail, path=nd_dir / "none.csv")
+    n1, note1 = load_ndx(fetch_html=lambda u: page(ndx_names), path=nd_dir / "n.csv", sp500=spset)
+    _failu = lambda u: _fail()
+    n2, note2 = load_ndx(fetch_html=_failu, path=nd_dir / "n.csv")
+    n3, note3 = load_ndx(fetch_html=_failu, path=nd_dir / "none.csv")
+    # v1.4: the list article is tried first; the old article (no members table) is the second try
+    real_shape = ("<table class='wikitable sortable' id='constituents'><tbody><tr><th>Ticker</th><th>Company</th>"
+                  "<th>ICB Industry</th><th>ICB Subsector</th></tr>"
+                  + "".join(f"<tr><td><a href='/q'>{t}</a></td><td><a>Co {t}</a></td><td>Technology</td><td>Software</td></tr>"
+                            for t in ndx_names) + "</tbody></table>")
+    no_members = "<table><tr><th>Year</th><th>Closing level</th></tr>" + "<tr><td>1985</td><td>132</td></tr>" * 42 + "</table>"
+    seen_urls = []
+    def by_url(u):
+        seen_urls.append(u)
+        return real_shape if "List_of_NASDAQ-100" in u else no_members
+    nl, notel = load_ndx(fetch_html=by_url, path=Path(tempfile.mkdtemp()) / "n.csv", sp500=spset)
+    if [r["ticker"] for r in nl] != ndx_names or nl[0]["sector"] != "Technology" or seen_urls != [NDX_URLS[0]]:
+        f.append(f"the list article must be read first and be enough: {seen_urls}")
+    seen_urls.clear()
+    def second_only(u):
+        seen_urls.append(u)
+        return no_members if "List_of_NASDAQ-100" in u else real_shape
+    n2nd, _ = load_ndx(fetch_html=second_only, path=Path(tempfile.mkdtemp()) / "n.csv", sp500=spset)
+    if [r["ticker"] for r in n2nd] != ndx_names or len(seen_urls) != 2:
+        f.append("when the first page has no members table the second page is tried")
+    nn, noten = load_ndx(fetch_html=lambda u: no_members, path=Path(tempfile.mkdtemp()) / "n.csv", sp500=spset)
+    if nn != [] or "NOT INCLUDED" not in noten:
+        f.append("no page with a members table: S&P 500 only, said plainly")
     if len(n1) != 101 or "read today" not in note1 or [r["ticker"] for r in n2] != [r["ticker"] for r in n1] or \
             "saved copy" not in note2 or n3 != [] or "NOT INCLUDED" not in note3:
         f.append("load_ndx: live, then the saved copy, then S&P only with a plain note")
