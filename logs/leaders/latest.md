@@ -11,26 +11,26 @@ Regime `transition_ambiguous`. Swing book only; nothing here touches the long-te
 | 2 | **CRL** | Health Care (Leading) | 335.52 | 100 | +20 / +124 / +98 | -10.8% | 0.42 | — | — | — | — |
 | 3 | **HUM** | Health Care (Leading) | 461.25 | 99 | +21 / +51 / +97 | +0.0% | 0.62 | — | — | — | — |
 | 4 | **BDX** | Health Care (Leading) | 216.47 | 99 | +20 / +54 / +46 | -0.7% | 0.53 | Near pivot (watch) | 218.03 | — | — |
-| 5 | **SWK** | Industrials (Lagging) | 112.92 | 99 | +16 / +53 / +75 | -4.6% | 0.51 | — | — | — | 2027-02-03 (79d) |
+| 5 | **SWK** | Industrials (Lagging) | 112.92 | 99 | +16 / +53 / +75 | -4.6% | 0.51 | — | — | — | 2027-02-03 (78d) |
 | 6 | **VTRS** | Health Care (Leading) | 20.74 | 99 | +29 / +28 / +97 | -1.5% | 0.51 | — | — | — | — |
-| 7 | **BBY** | Consumer Discretionary (Improving) | 103.35 | 98 | +20 / +83 / +43 | -2.8% | 0.57 | — | — | — | 2026-11-24 (8d) |
+| 7 | **BBY** | Consumer Discretionary (Improving) | 103.35 | 98 | +20 / +83 / +43 | -2.8% | 0.57 | — | — | — | 2026-11-24 (7d) |
 | 8 | **WST** | Health Care (Leading) | 417.80 | 98 | +21 / +37 / +57 | +0.0% | 0.32 ✓ | — | — | — | — |
-| 9 | **CAH** | Health Care (Leading) | 283.85 | 98 | +21 / +43 / +39 | +0.0% | 0.49 | — | — | — | 2027-02-04 (80d) |
+| 9 | **CAH** | Health Care (Leading) | 283.85 | 98 | +21 / +43 / +39 | +0.0% | 0.49 | — | — | — | 2027-02-04 (79d) |
 | 10 | **BIIB** | Health Care (Leading) | 251.65 | 97 | +18 / +31 / +53 | -1.3% | 0.40 | Near pivot (watch) | 254.87 | — | — |
 | 11 | **CNC** | Health Care (Leading) | 74.77 | 97 | +15 / +28 / +107 | -1.6% | 0.64 | Near pivot (watch) | 76.01 | — | — |
 | 12 | **LLY** | Health Care (Leading) | 1431.67 | 97 | +17 / +45 / +41 | -0.8% | 0.40 ✓ | — | — | — | — |
 | 13 | **LH** | Health Care (Leading) | 372.46 | 97 | +16 / +46 / +40 | +0.0% | 0.34 ✓ | — | — | — | — |
-| 14 | **CPAY** | Financials (Improving) | 461.73 | 96 | +14 / +32 / +63 | -0.1% | 0.83 | — | — | — | 2027-02-03 (79d) |
+| 14 | **CPAY** | Financials (Improving) | 461.73 | 96 | +14 / +32 / +63 | -0.1% | 0.83 | — | — | — | 2027-02-03 (78d) |
 | 15 | **AIZ** | Financials (Improving) | 323.80 | 96 | +16 / +26 / +45 | +0.0% | 0.50 | — | — | — | — |
 | 16 | **MAS** | Industrials (Lagging) | 84.59 | 95 | +16 / +31 / +39 | -2.2% | 0.29 ✓ | — | — | — | — |
-| 17 | **MTD** | Health Care (Leading) | 1727.26 | 95 | +23 / +61 / +22 | -2.0% | 0.25 ✓ | Near pivot (watch) | 1762.28 | — | 2027-02-04 (80d) |
+| 17 | **MTD** | Health Care (Leading) | 1727.26 | 95 | +23 / +61 / +22 | -2.0% | 0.25 ✓ | Near pivot (watch) | 1762.28 | — | 2027-02-04 (79d) |
 | 18 | **MAR** | Consumer Discretionary (Improving) | 425.70 | 95 | +19 / +19 / +49 | -0.8% | 0.24 ✓ | Near pivot (watch) | 429.18 | — | — |
 | 19 | **DGX** | Health Care (Leading) | 262.21 | 95 | +11 / +39 / +42 | +0.0% | 0.47 | — | — | — | — |
 | 20 | **HST** | Real Estate (Improving) | 25.72 | 94 | +13 / +23 / +58 | -1.5% | 0.38 ✓ | Near pivot (watch) | 26.11 | — | — |
-| 21 | **AMGN** | Health Care (Leading) | 462.32 | 94 | +9 / +43 / +41 | -3.4% | 0.34 ✓ | Basing (watch) | 478.48 | — | 2027-02-02 (78d) |
+| 21 | **AMGN** | Health Care (Leading) | 462.32 | 94 | +9 / +43 / +41 | -3.4% | 0.34 ✓ | Basing (watch) | 478.48 | — | 2027-02-02 (77d) |
 | 22 | **ABBV** | Health Care (Leading) | 294.55 | 94 | +14 / +42 / +31 | -0.2% | 0.38 ✓ | Near pivot (watch) | 295.03 | — | — |
-| 23 | **SWKS** | Information Technology (Weakening) | 86.50 | 93 | +28 / +24 / +31 | -5.4% | 1.00 | Basing (watch) | 90.03 | — | 2027-02-02 (78d) |
-| 24 | **ADP** | Industrials (Lagging) | 313.43 | 93 | +17 / +43 / +27 | +0.0% | 0.40 ✓ | — | — | — | 2027-01-27 (72d) |
+| 23 | **SWKS** | Information Technology (Weakening) | 86.50 | 93 | +28 / +24 / +31 | -5.4% | 1.00 | Basing (watch) | 90.03 | — | 2027-02-02 (77d) |
+| 24 | **ADP** | Industrials (Lagging) | 313.43 | 93 | +17 / +43 / +27 | +0.0% | 0.40 ✓ | — | — | — | 2027-01-27 (71d) |
 | 25 | **VLTO** | Industrials (Lagging) | 120.31 | 93 | +25 / +39 / +23 | +0.0% | 0.27 ✓ | — | — | — | — |
 
 **Why each pick reads as it does**
@@ -69,8 +69,9 @@ Regime `transition_ambiguous`. Swing book only; nothing here touches the long-te
 - **Earnings** dates are Yahoo estimates. Confirm on the company's site before any entry.
 
 **Data**
-- Universe: State Street SPY daily holdings (503 names); sectors: public S&P 500 list, refreshed (503 names).
+- Universe: State Street SPY daily holdings (503 names); sectors: public S&P 500 list, refreshed (503 names); Nasdaq-100 NOT INCLUDED — the list could not be read (ValueError: no table column with 90-110 tickers sharing 60+ with the S&P 500 (10 t); S&P 500 only, 0 not in the S&P 500.
+- 0 Nasdaq-100 stocks outside the S&P 500 were ranked alongside it.
 - Sector known for 25 of 25 shown; next earnings date known for 8 (— means Yahoo has not published one).
 - 0 not priced for this session; 3 with under a year of history.
 
-*leader_screen.py v1.1. This filter has not been backtested; each night's list is logged to `data/leaders/history.csv` so its forward results can be scored.*
+*leader_screen.py v1.3. This filter has not been backtested; each night's list is logged to `data/leaders/history.csv` so its forward results can be scored.*
