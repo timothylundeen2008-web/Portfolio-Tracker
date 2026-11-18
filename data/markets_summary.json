@@ -1,5 +1,5 @@
 {
-  "published_at": "2026-11-13T02:45:58+00:00",
+  "published_at": "2026-11-18T02:19:25+00:00",
   "notes": "auto-published on Markets Dashboard render",
   "regime": {
     "key": "transition_ambiguous",
@@ -39,9 +39,11 @@
     "SCHD": 14.0,
     "XLV": 5.0,
     "XLU": 3.0,
-    "SGOV": 9.5,
-    "USFR": 7.0,
+    "SGOV": 12.0,
+    "USFR": 2.0,
     "TLT": 7.0,
-    "KMLM": 5.5
+    "KMLM": 5.5,
+    "DBMF": 2.5,
+    "SCHP": 0.0
   }
 }
