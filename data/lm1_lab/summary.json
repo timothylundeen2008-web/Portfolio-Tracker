@@ -1,0 +1,311 @@
+{
+ "verdict": "FAIL",
+ "base": {
+  "verdict": "FAIL",
+  "why": "2011-16 PF 1.03 < 1.3; book 1.82%/yr does not beat SPY 7.47%/yr; worst drawdown -26.46% not shallower than -25.0%",
+  "full": {
+   "n": 447,
+   "win_rate": 30.4,
+   "avg_win_R": 2.8,
+   "avg_loss_R": -1.13,
+   "expectancy_R": 0.122,
+   "profit_factor": 1.17,
+   "worst_R": -5.5,
+   "best_R": 24.25,
+   "max_consec_losses": 15
+  },
+  "halves": {
+   "2005-10": {
+    "n": 193,
+    "win_rate": 34.7,
+    "avg_win_R": 2.61,
+    "avg_loss_R": -1.08,
+    "expectancy_R": 0.251,
+    "profit_factor": 1.38,
+    "worst_R": -2.12,
+    "best_R": 24.25,
+    "max_consec_losses": 14
+   },
+   "2011-16": {
+    "n": 254,
+    "win_rate": 27.2,
+    "avg_win_R": 2.99,
+    "avg_loss_R": -1.16,
+    "expectancy_R": 0.024,
+    "profit_factor": 1.03,
+    "worst_R": -5.5,
+    "best_R": 12.86,
+    "max_consec_losses": 15
+   }
+  },
+  "stress": {
+   "phantom": 217.1,
+   "avg_loss_R": -1.13,
+   "neutral_exp_R": 0.082,
+   "harsh_exp_R": -0.287,
+   "harsh_pf": 0.67
+  },
+  "book": {
+   "cagr_pct": 1.82,
+   "max_dd_pct": -26.46,
+   "vol_pct": 13.88,
+   "sharpe": 0.2,
+   "calmar": 0.07
+  },
+  "spy": {
+   "cagr_pct": 7.47,
+   "max_dd_pct": -55.19,
+   "vol_pct": 19.47,
+   "sharpe": 0.47,
+   "calmar": 0.14
+  },
+  "beats_spy": "False"
+ },
+ "neighbours": {
+  "exit40": {
+   "verdict": "FAIL",
+   "why": "2011-16 expectancy -0.025R <= 0; 2011-16 PF 0.96 < 1.3; book 0.81%/yr does not beat SPY 7.47%/yr; worst drawdown -33.03% not shallower than -25.0%",
+   "full": {
+    "n": 519,
+    "win_rate": 31.4,
+    "avg_win_R": 2.32,
+    "avg_loss_R": -1.04,
+    "expectancy_R": 0.071,
+    "profit_factor": 1.11,
+    "worst_R": -4.68,
+    "best_R": 22.74,
+    "max_consec_losses": 19
+   },
+   "halves": {
+    "2005-10": {
+     "n": 226,
+     "win_rate": 35.4,
+     "avg_win_R": 2.29,
+     "avg_loss_R": -1.04,
+     "expectancy_R": 0.194,
+     "profit_factor": 1.32,
+     "worst_R": -2.12,
+     "best_R": 22.74,
+     "max_consec_losses": 15
+    },
+    "2011-16": {
+     "n": 293,
+     "win_rate": 28.3,
+     "avg_win_R": 2.34,
+     "avg_loss_R": -1.04,
+     "expectancy_R": -0.025,
+     "profit_factor": 0.96,
+     "worst_R": -4.68,
+     "best_R": 12.66,
+     "max_consec_losses": 19
+    }
+   },
+   "stress": {
+    "phantom": 251.3,
+    "avg_loss_R": -1.04,
+    "neutral_exp_R": 0.048,
+    "harsh_exp_R": -0.291,
+    "harsh_pf": 0.63
+   },
+   "book": {
+    "cagr_pct": 0.81,
+    "max_dd_pct": -33.03,
+    "vol_pct": 13.2,
+    "sharpe": 0.13,
+    "calmar": 0.02
+   },
+   "spy": {
+    "cagr_pct": 7.47,
+    "max_dd_pct": -55.19,
+    "vol_pct": 19.47,
+    "sharpe": 0.47,
+    "calmar": 0.14
+   },
+   "beats_spy": "False"
+  },
+  "exit60": {
+   "verdict": "FAIL",
+   "why": "2011-16 expectancy -0.1R <= 0; 2011-16 PF 0.88 < 1.3; book 0.53%/yr does not beat SPY 7.47%/yr; worst drawdown -30.12% not shallower than -25.0%",
+   "full": {
+    "n": 418,
+    "win_rate": 27.3,
+    "avg_win_R": 3.05,
+    "avg_loss_R": -1.14,
+    "expectancy_R": 0.049,
+    "profit_factor": 1.06,
+    "worst_R": -5.38,
+    "best_R": 24.01,
+    "max_consec_losses": 23
+   },
+   "halves": {
+    "2005-10": {
+     "n": 182,
+     "win_rate": 30.2,
+     "avg_win_R": 3.12,
+     "avg_loss_R": -1.07,
+     "expectancy_R": 0.243,
+     "profit_factor": 1.34,
+     "worst_R": -2.12,
+     "best_R": 24.01,
+     "max_consec_losses": 19
+    },
+    "2011-16": {
+     "n": 236,
+     "win_rate": 25.0,
+     "avg_win_R": 2.99,
+     "avg_loss_R": -1.2,
+     "expectancy_R": -0.1,
+     "profit_factor": 0.88,
+     "worst_R": -5.38,
+     "best_R": 12.69,
+     "max_consec_losses": 23
+    }
+   },
+   "stress": {
+    "phantom": 202.6,
+    "avg_loss_R": -1.14,
+    "neutral_exp_R": 0.033,
+    "harsh_exp_R": -0.34,
+    "harsh_pf": 0.62
+   },
+   "book": {
+    "cagr_pct": 0.53,
+    "max_dd_pct": -30.12,
+    "vol_pct": 14.14,
+    "sharpe": 0.11,
+    "calmar": 0.02
+   },
+   "spy": {
+    "cagr_pct": 7.47,
+    "max_dd_pct": -55.19,
+    "vol_pct": 19.47,
+    "sharpe": 0.47,
+    "calmar": 0.14
+   },
+   "beats_spy": "False"
+  },
+  "stop1.5": {
+   "verdict": "FAIL",
+   "why": "2011-16 expectancy -0.12R <= 0; 2011-16 PF 0.88 < 1.3; book 1.32%/yr does not beat SPY 7.47%/yr; worst drawdown -26.87% not shallower than -25.0%",
+   "full": {
+    "n": 494,
+    "win_rate": 25.5,
+    "avg_win_R": 3.95,
+    "avg_loss_R": -1.3,
+    "expectancy_R": 0.066,
+    "profit_factor": 1.07,
+    "worst_R": -6.24,
+    "best_R": 32.29,
+    "max_consec_losses": 33
+   },
+   "halves": {
+    "2005-10": {
+     "n": 212,
+     "win_rate": 29.7,
+     "avg_win_R": 3.91,
+     "avg_loss_R": -1.24,
+     "expectancy_R": 0.315,
+     "profit_factor": 1.37,
+     "worst_R": -2.42,
+     "best_R": 32.29,
+     "max_consec_losses": 19
+    },
+    "2011-16": {
+     "n": 282,
+     "win_rate": 22.3,
+     "avg_win_R": 3.98,
+     "avg_loss_R": -1.34,
+     "expectancy_R": -0.12,
+     "profit_factor": 0.88,
+     "worst_R": -6.24,
+     "best_R": 16.15,
+     "max_consec_losses": 33
+    }
+   },
+   "stress": {
+    "phantom": 239.9,
+    "avg_loss_R": -1.3,
+    "neutral_exp_R": 0.045,
+    "harsh_exp_R": -0.381,
+    "harsh_pf": 0.64
+   },
+   "book": {
+    "cagr_pct": 1.32,
+    "max_dd_pct": -26.87,
+    "vol_pct": 13.57,
+    "sharpe": 0.16,
+    "calmar": 0.05
+   },
+   "spy": {
+    "cagr_pct": 7.47,
+    "max_dd_pct": -55.19,
+    "vol_pct": 19.47,
+    "sharpe": 0.47,
+    "calmar": 0.14
+   },
+   "beats_spy": "False"
+  },
+  "stop2.5": {
+   "verdict": "FAIL",
+   "why": "2011-16 expectancy -0.037R <= 0; 2011-16 PF 0.94 < 1.3; book 1.88%/yr does not beat SPY 7.47%/yr",
+   "full": {
+    "n": 420,
+    "win_rate": 31.9,
+    "avg_win_R": 2.09,
+    "avg_loss_R": -0.99,
+    "expectancy_R": 0.069,
+    "profit_factor": 1.12,
+    "worst_R": -3.74,
+    "best_R": 10.94,
+    "max_consec_losses": 19
+   },
+   "halves": {
+    "2005-10": {
+     "n": 178,
+     "win_rate": 35.4,
+     "avg_win_R": 2.07,
+     "avg_loss_R": -0.94,
+     "expectancy_R": 0.213,
+     "profit_factor": 1.41,
+     "worst_R": -1.7,
+     "best_R": 10.94,
+     "max_consec_losses": 19
+    },
+    "2011-16": {
+     "n": 242,
+     "win_rate": 29.3,
+     "avg_win_R": 2.1,
+     "avg_loss_R": -1.03,
+     "expectancy_R": -0.037,
+     "profit_factor": 0.94,
+     "worst_R": -3.74,
+     "best_R": 9.87,
+     "max_consec_losses": 17
+    }
+   },
+   "stress": {
+    "phantom": 203.1,
+    "avg_loss_R": -0.99,
+    "neutral_exp_R": 0.046,
+    "harsh_exp_R": -0.277,
+    "harsh_pf": 0.62
+   },
+   "book": {
+    "cagr_pct": 1.88,
+    "max_dd_pct": -24.13,
+    "vol_pct": 13.62,
+    "sharpe": 0.2,
+    "calmar": 0.08
+   },
+   "spy": {
+    "cagr_pct": 7.47,
+    "max_dd_pct": -55.19,
+    "vol_pct": 19.47,
+    "sharpe": 0.47,
+    "calmar": 0.14
+   },
+   "beats_spy": "False"
+  }
+ },
+ "n_beat": 0
+}
