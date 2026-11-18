@@ -310,3 +310,22 @@ date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_
 2026-11-16,NEE,M0 Rotation,long,2-of-3,86.22,83.49,85.34,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
 2026-11-16,XLY,M0 Rotation,long,2-of-3,119.81,114.54,118.15,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
 2026-11-16,TSLA,M0 Rotation,long,2-of-3,389.8,362.79,379.74,transition_ambiguous,False,"over slot cap: all 4 open slot(s) went to higher-ranked cards (max 4 positions) — watch, or close something first"
+2026-11-17,XLRE,M0 Rotation,long,3-of-3,44.22,42.82,43.59,transition_ambiguous,True,
+2026-11-17,XLU,M0 Rotation,long,2-of-3,44.03,42.8,43.42,transition_ambiguous,True,
+2026-11-17,XLY,M0 Rotation,long,2-of-3,118.7,113.29,117.1,transition_ambiguous,True,
+2026-11-17,DUK,M0 Rotation,long,3-of-3,131.18,127.6,129.84,transition_ambiguous,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-17,SPG,M0 Rotation,long,3-of-3,233.8,226.94,230.24,transition_ambiguous,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-17,EXC,M0 Rotation,long,3-of-3,46.53,45.16,45.86,transition_ambiguous,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-17,WELL,M0 Rotation,long,3-of-3,246.0,238.4,245.76,transition_ambiguous,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-17,PSA,M0 Rotation,long,3-of-3,335.06,324.68,330.18,transition_ambiguous,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-17,SO,M0 Rotation,long,3-of-3,94.27,91.27,93.6,transition_ambiguous,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-17,MCD,M0 Rotation,long,3-of-3,279.16,267.84,275.82,transition_ambiguous,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-17,SBUX,M0 Rotation,long,3-of-3,110.15,105.17,107.49,transition_ambiguous,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-17,HD,M0 Rotation,long,3-of-3,346.9,331.15,339.01,transition_ambiguous,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-17,CMG,M0 Rotation,long,3-of-3,36.36,34.44,35.83,transition_ambiguous,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-17,CEG,M0 Rotation,long,3-of-3,279.85,259.54,268.07,transition_ambiguous,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-17,D,M0 Rotation,long,2-of-3,67.77,65.66,67.28,transition_ambiguous,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-17,NEE,M0 Rotation,long,2-of-3,85.17,82.39,84.42,transition_ambiguous,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-17,AEP,M0 Rotation,long,2-of-3,129.1,124.79,125.97,transition_ambiguous,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-17,AMZN,M0 Rotation,long,2-of-3,259.9,243.08,257.89,transition_ambiguous,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-17,TSLA,M0 Rotation,long,2-of-3,382.84,356.37,380.11,transition_ambiguous,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
