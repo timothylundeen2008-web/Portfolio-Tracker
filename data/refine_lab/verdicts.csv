@@ -1,0 +1,3 @@
+setup,selected,verdict,why,beats_spy,etf_guard,etf_why
+M0,H2,FAIL,holdout PF 1.03 < 1.3,False,True,meets the ETF bar
+M1,H12,FAIL,holdout expectancy -0.376R <= 0; holdout PF 0.65 < 1.3,False,True,meets the ETF bar
