@@ -1,0 +1,64 @@
+# LM1 Lab — the leadership momentum system for the SWING book, tested as a
+# whole book vs SPY on point-in-time S&P 500 members, evidence 2005-2016 (lm1_lab.py).
+# Manual only: Actions tab → "LM1 Lab" → Run workflow. Allow up to 2 hours (prices from 2003 for ~980 symbols).
+# Runs the offline selftest first and stops if it fails, so a broken harness
+# can never commit a report. Commits data/lm1_lab/, logs/lm1_lab/ and the
+# sector lookup cache. Reads data/universe/sp500_membership.csv (universe probe).
+name: LM1 Lab
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: lm1-lab
+  cancel-in-progress: false
+
+jobs:
+  lm1:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Selftest (offline)
+        run: python lm1_lab.py --selftest
+
+      - name: Run the LM1 lab
+        run: python lm1_lab.py
+
+      - name: Commit results
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # one path per command: `git add a b` stages nothing when any one path is missing
+          for p in data/lm1_lab logs/lm1_lab data/universe/sector_cache.csv; do
+            if [ -e "$p" ]; then git add "$p"; fi
+          done
+          if git diff --cached --quiet; then
+            echo "No change."
+          else
+            git commit -m "lm1 lab: report $(date -u +%Y-%m-%d)"
+            for i in 1 2 3; do
+              git pull --rebase --autostash origin main && git push && break
+              sleep 5
+            done
+          fi
+
+      - name: Publish to the run page
+        run: |
+          LATEST=$(ls -t logs/lm1_lab/*_report.md 2>/dev/null | head -1)
+          if [ -n "$LATEST" ]; then cat "$LATEST" >> "$GITHUB_STEP_SUMMARY"; fi
