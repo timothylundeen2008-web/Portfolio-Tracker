@@ -1,0 +1,56 @@
+name: EDGAR Data
+
+# Shared SEC data for tracks A and B (edgar_data.py). Manual only; run again
+# when a new quarterly insider data set is published.
+# Builds the month-by-month map of S&P 500 members to SEC company numbers,
+# officer/director open-market buys, and point-in-time quarterly EPS/revenue.
+# Needs the repository secret SEC_CONTACT_EMAIL (never printed or committed).
+# Takes roughly 30-60 minutes.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Selftest (offline)
+        run: python edgar_data.py --selftest
+      - name: Build the data
+        env:
+          SEC_CONTACT_EMAIL: ${{ secrets.SEC_CONTACT_EMAIL }}
+        run: python edgar_data.py
+      - name: Commit results
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          for p in data/edgar logs/edgar; do
+            if [ -e "$p" ]; then git add "$p"; fi
+          done
+          if git diff --cached --quiet; then
+            echo "No change."
+          else
+            git commit -m "edgar data: $(date -u +%Y-%m-%d)"
+            for i in 1 2 3; do
+              git pull --rebase --autostash origin main && git push && break
+              sleep 5
+            done
+          fi
+      - name: Publish to the run page
+        if: always()
+        run: |
+          if [ -f logs/edgar/data_report.md ]; then cat logs/edgar/data_report.md >> "$GITHUB_STEP_SUMMARY"; fi
