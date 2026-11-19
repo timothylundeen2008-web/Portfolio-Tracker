@@ -151,3 +151,7 @@ signal_id,date,signal_type,subject,direction,price_at_signal,benchmark_at_signal
 2026-11-17_flow_divergence_SGOV,2026-11-17,flow_divergence,SGOV,long,,,"ACCUMULATION (price down, money in) · flow 1.74% AUM",,rotation
 2026-11-17_flow_divergence_XLI,2026-11-17,flow_divergence,XLI,long,,,"ACCUMULATION (price down, money in) · flow 1.84% AUM",,rotation
 2026-11-17_flow_divergence_XLU,2026-11-17,flow_divergence,XLU,short,,,"DISTRIBUTION (price up, money out) · flow -6.73% AUM",,rotation
+2026-11-18_flow_divergence_HACK,2026-11-18,flow_divergence,HACK,long,,,"ACCUMULATION (price down, money in) · flow 1.87% AUM",,rotation
+2026-11-18_flow_divergence_IWO,2026-11-18,flow_divergence,IWO,long,,,"ACCUMULATION (price down, money in) · flow 0.48% AUM",,rotation
+2026-11-18_flow_divergence_TLT,2026-11-18,flow_divergence,TLT,short,,,"DISTRIBUTION (price up, money out) · flow -0.82% AUM",,rotation
+2026-11-18_flow_divergence_XLB,2026-11-18,flow_divergence,XLB,long,,,"ACCUMULATION (price down, money in) · flow 3.34% AUM",,rotation
