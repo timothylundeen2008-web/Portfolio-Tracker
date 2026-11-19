@@ -1,5 +1,6 @@
 """
-edgar_data.py  (v1.0 — 2026-11-19)
+edgar_data.py  (v1.1 — 2026-11-19; v1.1: typed quarter tables (v1.0 crashed on concat),
+                                   insider/mapping files written before the fundamentals step)
 ───────────────────────────────────
 The shared SEC data set behind tracks A (earnings acceleration) and B (insider
 cluster buying). Built once in Actions, committed, then read by the labs, so no
@@ -59,7 +60,7 @@ import pandas as pd
 import edgar_probe as ep
 import universe_probe as up
 
-VERSION = "1.0"
+VERSION = "1.1"
 START = pd.Timestamp("2006-01-01")
 WIN = 6                                   # months either side for "filing under this ticker"
 MAP_GATE, EPS_GATE, EPS_FROM = 95.0, 90.0, 2011
@@ -276,12 +277,22 @@ def _facts_rows(facts: dict, tags: tuple, unit_prefix: str) -> pd.DataFrame:
     return pd.DataFrame(columns=["start", "end", "val", "filed", "tag", "dur"])
 
 
+def _typed(q: pd.DataFrame) -> pd.DataFrame:
+    """Quarter table with real dtypes, even when empty or built by concat of empty frames."""
+    q = q.copy()
+    for c in ("end", "filed"):
+        q[c] = pd.to_datetime(q[c], errors="coerce")
+    q["val"] = pd.to_numeric(q["val"], errors="coerce")
+    q["derived"] = q["derived"].fillna(False).astype(bool)
+    return q.dropna(subset=["end", "filed", "val"])
+
+
 def quarters_pit(facts: dict, tags: tuple, unit_prefix: str = "USD") -> pd.DataFrame:
     """3-month values as first filed, plus Q4 derived as full year minus 9-month YTD (same start),
     known on the later of the two filing dates. -> end, val, filed, derived, tag"""
     df = _facts_rows(facts, tags, unit_prefix)
     if df.empty:
-        return pd.DataFrame(columns=["end", "val", "filed", "derived", "tag"])
+        return _typed(pd.DataFrame(columns=["end", "val", "filed", "derived", "tag"]))
     first = lambda d: d.sort_values("filed").drop_duplicates(["start", "end"], keep="first")
     q = first(df[(df.dur >= 80) & (df.dur <= 100)])
     fy = first(df[(df.dur >= 350) & (df.dur <= 380)])
@@ -299,7 +310,7 @@ def quarters_pit(facts: dict, tags: tuple, unit_prefix: str = "USD") -> pd.DataF
                         "derived": True, "tag": r.tag})
     if der:
         out.append(pd.DataFrame(der))
-    res = pd.concat(out, ignore_index=True).sort_values("end")
+    res = _typed(pd.concat(out, ignore_index=True)).sort_values("end")
     return res.drop_duplicates("end", keep="first").reset_index(drop=True)
 
 
@@ -428,10 +439,22 @@ def main() -> int:
     cov = coverage(mm, cal)
     buys = attach_buys(pd.concat(buys_l, ignore_index=True), mm)
     cl2, cl3 = ep.clusters(buys, 2), ep.clusters(buys, 3)
+    OUT.mkdir(parents=True, exist_ok=True)
+    LOGS.mkdir(parents=True, exist_ok=True)
+    mm.to_csv(OUT / "member_cik_months.csv.gz", index=False)          # written before the long step
+    cov.to_csv(OUT / "mapping_coverage.csv", index=False)
+    buys.to_csv(OUT / "insider_buys_od.csv", index=False)
+    cl2.to_csv(OUT / "clusters_2.csv", index=False)
+    cl3.to_csv(OUT / "clusters_3.csv", index=False)
+    for old in ("insider_buys_sp500.csv", "member_cik_map.csv"):          # probe files superseded
+        if (OUT / old).exists():
+            (OUT / old).unlink()
     eps_l, rev_l, err = [], [], {}
     ciks = sorted(mm["cik"].dropna().astype(int).unique())
     print(f"[edgar_data] companyfacts for {len(ciks)} companies")
     for i, c in enumerate(ciks):
+        if i % 200 == 0:
+            print(f"[edgar_data]   {i}/{len(ciks)} ({time.monotonic() - t0:.0f}s)")
         try:
             r = sec.get(ep.FACTS_URL.format(cik=c))
             f = json.loads(r) if r else None
@@ -443,25 +466,18 @@ def main() -> int:
             continue
         eps_l.append(quarters_pit(f, EPS_TAGS).assign(cik=c))
         rev_l.append(quarters_pit(f, REV_TAGS).assign(cik=c))
-        if i % 200 == 0:
-            print(f"[edgar_data]   {i}/{len(ciks)} ({time.monotonic() - t0:.0f}s)")
-    eps = pd.concat(eps_l, ignore_index=True) if eps_l else pd.DataFrame(columns=["end", "val", "filed", "derived", "tag", "cik"])
-    rev = pd.concat(rev_l, ignore_index=True) if rev_l else eps.iloc[:0]
+    empty = _typed(pd.DataFrame(columns=["end", "val", "filed", "derived", "tag"])).assign(cik=0).iloc[:0]
+    eps = _typed(pd.concat(eps_l, ignore_index=True)) if eps_l else empty
+    rev = _typed(pd.concat(rev_l, ignore_index=True)) if rev_l else empty
     if err:
         notes.append(f"companyfacts missing for {len(err)} companies: {dict(list(pd.Series(err).value_counts().items()))}")
-    fc = facts_cov(mm, eps, rev)
-    OUT.mkdir(parents=True, exist_ok=True)
-    LOGS.mkdir(parents=True, exist_ok=True)
-    mm.to_csv(OUT / "member_cik_months.csv.gz", index=False)
-    cov.to_csv(OUT / "mapping_coverage.csv", index=False)
-    buys.to_csv(OUT / "insider_buys_od.csv", index=False)
-    cl2.to_csv(OUT / "clusters_2.csv", index=False)
-    cl3.to_csv(OUT / "clusters_3.csv", index=False)
     eps[["cik", "end", "val", "filed", "derived", "tag"]].to_csv(OUT / "eps_quarterly.csv.gz", index=False)
     rev[["cik", "end", "val", "filed", "derived", "tag"]].to_csv(OUT / "rev_quarterly.csv.gz", index=False)
-    for old in ("insider_buys_sp500.csv", "member_cik_map.csv"):          # probe files superseded
-        if (OUT / old).exists():
-            (OUT / old).unlink()
+    try:
+        fc = facts_cov(mm, eps, rev)
+    except Exception as e:
+        notes.append(f"fundamentals coverage could not be measured: {type(e).__name__}: {str(e)[:200]}")
+        fc = pd.DataFrame(columns=["ticker", "cik", "year", "eps_yoy", "rev_yoy"])
     notes.append(f"{sec.requests} SEC requests; {len(acts)} insider data sets read; last filing month "
                  f"{month_ts(last_m).strftime('%Y-%m')}.")
     md = render(cov, mm, buys, cl2, cl3, fc, anchor_decisions(mm, act), override_checks(mm, act), notes, date.today().isoformat())
@@ -613,6 +629,18 @@ def selftest() -> dict:
         f.append("YoY known mid-2015")
     if len(quarters_pit({}, EPS_TAGS)) != 0:
         f.append("no facts -> empty")
+    # v1.0 crash: a company with no facts concatenated with one that has them
+    mix = _typed(pd.concat([quarters_pit({}, EPS_TAGS).assign(cik=1), q.assign(cik=7)], ignore_index=True))
+    mmx = pd.DataFrame({"ticker": ["A", "B"], "span_start": pd.Timestamp("2014-01-02"), "span_end": pd.NaT,
+                        "month": [month_no("2015-06-01")] * 2, "cik": [7, 1], "how": "x"})
+    try:
+        fx = facts_cov(mmx, mix, mix)
+        if list(fx["eps_yoy"]) != [True, False]:
+            f.append(f"mixed empty/non-empty quarter tables: {fx.to_dict('records')}")
+    except Exception as e:
+        f.append(f"facts_cov must handle concatenated tables: {type(e).__name__}")
+    if not pd.api.types.is_datetime64_any_dtype(quarters_pit({}, EPS_TAGS)["end"]):
+        f.append("empty quarter table must still have datetime columns")
     # facts coverage over member-years
     mm2 = pd.DataFrame({"ticker": "A", "span_start": pd.Timestamp("2014-01-02"), "span_end": pd.NaT,
                         "month": [month_no("2015-06-01"), month_no("2016-06-01")], "cik": [7, 7], "how": "x"})
