@@ -1,4 +1,4 @@
-# Engine shadow v1.1 — 2026-11-18
+# Engine shadow v1.1 — 2026-11-19
 
 Forward record of the frozen engines from **2026-12-01** (offense_lab rules; no real money). Live regime inside Balanced: `transition_ambiguous`.
 
