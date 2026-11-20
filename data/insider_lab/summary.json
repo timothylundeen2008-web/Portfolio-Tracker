@@ -1,0 +1,204 @@
+{
+ "verdict": "FAIL",
+ "stable": false,
+ "60": {
+  "judge": {
+   "full": {
+    "n": 413,
+    "expectancy_R": 0.153,
+    "win_pct": 49.9,
+    "profit_factor": 1.31
+   },
+   "halves": {
+    "2006-15": {
+     "n": 199,
+     "expectancy_R": 0.079,
+     "win_pct": 47.2,
+     "profit_factor": 1.15
+    },
+    "2016-26": {
+     "n": 214,
+     "expectancy_R": 0.222,
+     "win_pct": 52.3,
+     "profit_factor": 1.46
+    }
+   },
+   "excess": {
+    "2006-15": {
+     "mean_pct": 2.67,
+     "t": 1.48
+    },
+    "2016-26": {
+     "mean_pct": -0.12,
+     "t": -0.11
+    }
+   },
+   "why": [
+    "2006-15: profit factor 1.15 < 1.3",
+    "2016-26: mean excess vs SPY -0.12% \u2264 0"
+   ],
+   "meets": false
+  },
+  "stress": {
+   "unpriced": 148,
+   "avg_loss_R": -0.99,
+   "neutral_exp_R": 0.113,
+   "harsh_exp_R": -0.148,
+   "harsh_pf": 0.76
+  },
+  "status": {
+   "no price data": 125,
+   "ok": 425,
+   "no price at entry": 23,
+   "overlap": 12
+  }
+ },
+ "40": {
+  "judge": {
+   "full": {
+    "n": 417,
+    "expectancy_R": 0.118,
+    "win_pct": 54.0,
+    "profit_factor": 1.29
+   },
+   "halves": {
+    "2006-15": {
+     "n": 200,
+     "expectancy_R": 0.065,
+     "win_pct": 51.5,
+     "profit_factor": 1.15
+    },
+    "2016-26": {
+     "n": 217,
+     "expectancy_R": 0.167,
+     "win_pct": 56.2,
+     "profit_factor": 1.45
+    }
+   },
+   "excess": {
+    "2006-15": {
+     "mean_pct": 1.88,
+     "t": 1.35
+    },
+    "2016-26": {
+     "mean_pct": -1.25,
+     "t": -1.56
+    }
+   },
+   "why": [
+    "2006-15: profit factor 1.15 < 1.3",
+    "2016-26: mean excess vs SPY -1.25% \u2264 0"
+   ],
+   "meets": false
+  },
+  "stress": {
+   "unpriced": 148,
+   "avg_loss_R": -0.87,
+   "neutral_exp_R": 0.087,
+   "harsh_exp_R": -0.14,
+   "harsh_pf": 0.73
+  },
+  "status": {
+   "no price data": 125,
+   "ok": 425,
+   "no price at entry": 23,
+   "overlap": 8
+  }
+ },
+ "90": {
+  "judge": {
+   "full": {
+    "n": 408,
+    "expectancy_R": 0.174,
+    "win_pct": 47.3,
+    "profit_factor": 1.31
+   },
+   "halves": {
+    "2006-15": {
+     "n": 199,
+     "expectancy_R": 0.105,
+     "win_pct": 46.2,
+     "profit_factor": 1.18
+    },
+    "2016-26": {
+     "n": 209,
+     "expectancy_R": 0.239,
+     "win_pct": 48.3,
+     "profit_factor": 1.45
+    }
+   },
+   "excess": {
+    "2006-15": {
+     "mean_pct": 2.86,
+     "t": 1.62
+    },
+    "2016-26": {
+     "mean_pct": -1.51,
+     "t": -1.24
+    }
+   },
+   "why": [
+    "2006-15: profit factor 1.18 < 1.3",
+    "2016-26: mean excess vs SPY -1.51% \u2264 0"
+   ],
+   "meets": false
+  },
+  "stress": {
+   "unpriced": 148,
+   "avg_loss_R": -1.06,
+   "neutral_exp_R": 0.128,
+   "harsh_exp_R": -0.154,
+   "harsh_pf": 0.78
+  },
+  "status": {
+   "no price data": 125,
+   "ok": 425,
+   "no price at entry": 23,
+   "overlap": 17
+  }
+ },
+ "books": {
+  "Insider 60-session": {
+   "full": {
+    "cagr_pct": 6.44,
+    "max_dd_pct": -47.8
+   },
+   "h1": {
+    "cagr_pct": 5.56,
+    "max_dd_pct": -47.8
+   },
+   "h2": {
+    "cagr_pct": 7.25,
+    "max_dd_pct": -31.0
+   }
+  },
+  "Insider 40-session": {
+   "full": {
+    "cagr_pct": 3.62,
+    "max_dd_pct": -48.4
+   },
+   "h1": {
+    "cagr_pct": 2.7,
+    "max_dd_pct": -48.4
+   },
+   "h2": {
+    "cagr_pct": 4.44,
+    "max_dd_pct": -28.7
+   }
+  },
+  "Insider 90-session": {
+   "full": {
+    "cagr_pct": 4.98,
+    "max_dd_pct": -56.3
+   },
+   "h1": {
+    "cagr_pct": 3.86,
+    "max_dd_pct": -56.3
+   },
+   "h2": {
+    "cagr_pct": 6.04,
+    "max_dd_pct": -31.4
+   }
+  }
+ }
+}
