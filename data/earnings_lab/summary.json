@@ -1,0 +1,134 @@
+{
+ "verdict": "FAIL",
+ "why": [
+  "full CAGR 7.29% \u2264 SPY 13.94%",
+  "2011-18 CAGR 6.36% \u2264 SPY 10.86%",
+  "2019-26 CAGR 8.26% \u2264 SPY 17.17%",
+  "2011-18 CAGR 6.36% \u2264 no-earnings control 11.8%",
+  "2019-26 CAGR 8.26% \u2264 no-earnings control 13.95%",
+  "max DD -33.7% deeper than -25.0%"
+ ],
+ "robust": false,
+ "stable": false,
+ "books": {
+  "A1": {
+   "full": {
+    "cagr_pct": 7.29,
+    "max_dd_pct": -33.7,
+    "months": 190
+   },
+   "2011-18": {
+    "cagr_pct": 6.36,
+    "max_dd_pct": -26.0,
+    "months": 96
+   },
+   "2019-26": {
+    "cagr_pct": 8.26,
+    "max_dd_pct": -33.0,
+    "months": 94
+   }
+  },
+  "A0": {
+   "full": {
+    "cagr_pct": 12.86,
+    "max_dd_pct": -36.3,
+    "months": 190
+   },
+   "2011-18": {
+    "cagr_pct": 11.8,
+    "max_dd_pct": -31.5,
+    "months": 96
+   },
+   "2019-26": {
+    "cagr_pct": 13.95,
+    "max_dd_pct": -28.7,
+    "months": 94
+   }
+  },
+  "A1-5": {
+   "full": {
+    "cagr_pct": 8.72,
+    "max_dd_pct": -40.7,
+    "months": 190
+   },
+   "2011-18": {
+    "cagr_pct": 7.16,
+    "max_dd_pct": -31.3,
+    "months": 96
+   },
+   "2019-26": {
+    "cagr_pct": 10.35,
+    "max_dd_pct": -40.7,
+    "months": 94
+   }
+  },
+  "A1-20": {
+   "full": {
+    "cagr_pct": 7.37,
+    "max_dd_pct": -25.3,
+    "months": 190
+   },
+   "2011-18": {
+    "cagr_pct": 5.13,
+    "max_dd_pct": -21.8,
+    "months": 96
+   },
+   "2019-26": {
+    "cagr_pct": 9.71,
+    "max_dd_pct": -22.5,
+    "months": 94
+   }
+  }
+ },
+ "spy": {
+  "full": {
+   "cagr_pct": 13.94,
+   "max_dd_pct": -23.3,
+   "months": 190
+  },
+  "2011-18": {
+   "cagr_pct": 10.86,
+   "max_dd_pct": -17.1,
+   "months": 96
+  },
+  "2019-26": {
+   "cagr_pct": 17.17,
+   "max_dd_pct": -23.3,
+   "months": 94
+  }
+ },
+ "a1_harsh": {
+  "full": {
+   "cagr_pct": -8.14,
+   "max_dd_pct": -82.0,
+   "months": 190
+  },
+  "2011-18": {
+   "cagr_pct": -16.65,
+   "max_dd_pct": -77.0,
+   "months": 96
+  },
+  "2019-26": {
+   "cagr_pct": 1.45,
+   "max_dd_pct": -33.7,
+   "months": 94
+  }
+ },
+ "a1_neutral": {
+  "full": {
+   "cagr_pct": 7.61,
+   "max_dd_pct": -32.5,
+   "months": 190
+  },
+  "2011-18": {
+   "cagr_pct": 6.77,
+   "max_dd_pct": -24.6,
+   "months": 96
+  },
+  "2019-26": {
+   "cagr_pct": 8.47,
+   "max_dd_pct": -32.5,
+   "months": 94
+  }
+ }
+}
