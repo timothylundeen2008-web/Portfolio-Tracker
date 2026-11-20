@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-20T04:19:07+00:00",
-  "date": "2026-11-19",
+  "generated_at": "2026-11-20T10:01:06+00:00",
+  "date": "2026-11-20",
   "version": "alerts v1.1 (engine layer, 2026-11-13)",
   "selftest_ok": true,
   "families_read": [
@@ -11,7 +11,26 @@
     "SWING",
     "TEST"
   ],
-  "findings": [],
-  "actions": [],
+  "findings": [
+    {
+      "key": "LT_DD_10",
+      "severity": "alert",
+      "state": "hold",
+      "title": "Model book -9.0% from peak \u2014 alert"
+    },
+    {
+      "key": "DATA_FAIL",
+      "severity": "alert",
+      "state": "active",
+      "title": "Data failure: 1 input(s) block decisions"
+    }
+  ],
+  "actions": [
+    {
+      "action": "open",
+      "key": "DATA_FAIL",
+      "number": 10
+    }
+  ],
   "error": null
 }
