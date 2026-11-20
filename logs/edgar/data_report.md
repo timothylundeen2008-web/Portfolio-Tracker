@@ -1,4 +1,4 @@
-# EDGAR data 1.2 — 2026-11-20
+# EDGAR data 1.3 — 2026-11-20
 
 Shared SEC data for tracks A and B, with the probe's fixes (company number by date, renamed and bankrupt members, officers and directors only, Q4 derived).
 
@@ -105,7 +105,7 @@ The company filing under the ticker at the time is used. If the index actually h
 | 2025 | 618 | 75 | 34 |
 | 2026 | 161 | 26 | 10 |
 
-## Point-in-time EPS (gate 90% of member-years 2011+): **PASS (95.7%)**
+## Point-in-time EPS (gate 90% of member-years 2011+): **PASS (95.8%)**
 
 | Year | EPS growth known % | Revenue growth known % | Member-years |
 |---|---|---|---|
@@ -113,22 +113,22 @@ The company filing under the ticker at the time is used. If the index actually h
 | 2007 | 0.0 | 0.0 | 497.0 |
 | 2008 | 0.0 | 0.0 | 502.0 |
 | 2009 | 2.4 | 2.2 | 502.0 |
-| 2010 | 67.2 | 66.4 | 500.0 |
-| 2011 | 92.6 | 90.6 | 498.0 |
-| 2012 | 94.2 | 94.6 | 499.0 |
-| 2013 | 96.4 | 95.2 | 499.0 |
-| 2014 | 96.4 | 96.2 | 499.0 |
-| 2015 | 97.0 | 96.2 | 501.0 |
-| 2016 | 95.5 | 96.1 | 507.0 |
-| 2017 | 94.7 | 88.1 | 511.0 |
-| 2018 | 95.5 | 64.4 | 511.0 |
-| 2019 | 95.5 | 95.9 | 507.0 |
-| 2020 | 95.9 | 98.2 | 507.0 |
-| 2021 | 95.0 | 99.4 | 505.0 |
-| 2022 | 96.1 | 98.8 | 507.0 |
-| 2023 | 97.2 | 99.0 | 505.0 |
-| 2024 | 96.6 | 98.2 | 506.0 |
-| 2025 | 96.8 | 98.8 | 503.0 |
+| 2010 | 69.0 | 68.4 | 500.0 |
+| 2011 | 93.4 | 92.4 | 498.0 |
+| 2012 | 94.0 | 94.8 | 499.0 |
+| 2013 | 96.4 | 96.2 | 499.0 |
+| 2014 | 96.4 | 96.6 | 499.0 |
+| 2015 | 97.0 | 96.4 | 501.0 |
+| 2016 | 95.5 | 97.0 | 507.0 |
+| 2017 | 94.9 | 97.3 | 511.0 |
+| 2018 | 95.5 | 97.5 | 511.0 |
+| 2019 | 95.5 | 99.4 | 507.0 |
+| 2020 | 96.1 | 100.0 | 507.0 |
+| 2021 | 95.2 | 99.6 | 505.0 |
+| 2022 | 96.1 | 99.2 | 507.0 |
+| 2023 | 97.2 | 99.6 | 505.0 |
+| 2024 | 96.6 | 99.6 | 506.0 |
+| 2025 | 96.8 | 99.6 | 503.0 |
 
 ## Notes
 
@@ -137,4 +137,4 @@ The company filing under the ticker at the time is used. If the index actually h
 - companyfacts missing for 88 companies: {'no companyfacts': 88}
 - 1066 SEC requests; 81 insider data sets read; last filing month 2026-03.
 
-*edgar_data.py 1.2. Read by the track A and B labs via edgar_data.load().*
+*edgar_data.py 1.3. Read by the track A and B labs via edgar_data.load().*
