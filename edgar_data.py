@@ -1,5 +1,8 @@
 """
-edgar_data.py  (v1.2 — 2026-11-19; v1.2: share-class siblings (BRK.B, BF.B, FOXA, NWSA),
+edgar_data.py  (v1.3 — 2026-11-20; v1.3: per period the FIRST-FILED value across all tags (v1.2 let a
+                                   later restated comparative under a preferred tag displace the original, which
+                                   delayed 43% of 2017 revenue quarters); tag priority only breaks same-day ties;
+                                   v1.2: share-class siblings (BRK.B, BF.B, FOXA, NWSA),
                                    end-of-membership company used while it was alive (sparse filers), pins for
                                    L (Loews, not Liberty Media), ARNC (Alcoa), DOC (Healthpeak), tags merged
                                    per period for EPS and revenue; v1.1: typed quarter tables (v1.0 crashed on concat),
@@ -63,7 +66,7 @@ import pandas as pd
 import edgar_probe as ep
 import universe_probe as up
 
-VERSION = "1.2"
+VERSION = "1.3"
 START = pd.Timestamp("2006-01-01")
 WIN = 6                                   # months either side for "filing under this ticker"
 MAP_GATE, EPS_GATE, EPS_FROM = 95.0, 90.0, 2011
@@ -284,8 +287,8 @@ def attach_buys(buys: pd.DataFrame, mm: pd.DataFrame) -> pd.DataFrame:
 # ── fundamentals ────────────────────────────────────────────────────────────
 
 def _facts_rows(facts: dict, tags: tuple, unit_prefix: str) -> pd.DataFrame:
-    """All periods reported under any of `tags`. For each period the highest-priority tag present is kept
-    (e.g. diluted EPS before basic), so a company that changed tags over the years is still covered."""
+    """All periods reported under any of `tags`, one row per period: the value first filed under any tag,
+    so a company that changed tags over the years is still covered without look-ahead or delay."""
     g = (facts.get("facts") or {}).get("us-gaap") or {}
     parts = []
     for prio, tag in enumerate(dict.fromkeys(tags)):
@@ -304,8 +307,9 @@ def _facts_rows(facts: dict, tags: tuple, unit_prefix: str) -> pd.DataFrame:
     if not parts:
         return pd.DataFrame(columns=["start", "end", "val", "filed", "tag", "dur"])
     df = pd.concat(parts, ignore_index=True)
-    best = df.groupby(["start", "end"])["prio"].transform("min")
-    df = df[df["prio"] == best].drop(columns="prio")
+    # point in time: the value first filed for the period, whatever its tag; same-day ties go to the
+    # higher-priority tag (diluted EPS before basic). Later restated comparatives never displace it.
+    df = df.sort_values(["filed", "prio"]).drop_duplicates(["start", "end"], keep="first").drop(columns="prio")
     return df.assign(dur=(df["end"] - df["start"]).dt.days)
 
 
@@ -677,13 +681,23 @@ def selftest() -> dict:
         "RevenueFromContractWithCustomerExcludingAssessedTax": {"units": {"USD": [fct("2016-01-01", "2016-03-31", 100, "2016-05-01")]}},
         "EarningsPerShareBasic": {"units": {"USD/shares": [fct("2015-01-01", "2015-03-31", 2.0, "2015-05-01"),
                                                              fct("2016-01-01", "2016-03-31", 2.2, "2016-05-01")]}},
-        "EarningsPerShareDiluted": {"units": {"USD/shares": [fct("2016-01-01", "2016-03-31", 2.1, "2016-05-02")]}}}}}
+        "EarningsPerShareDiluted": {"units": {"USD/shares": [fct("2016-01-01", "2016-03-31", 2.1, "2016-05-01")]}}}}}
     rq = quarters_pit(tagged, REV_TAGS)
     if len(rq) != 2 or not ep.yoy_known(rq, pd.Timestamp("2016-06-30")):
         f.append(f"revenue tags merged across a tag change: {rq.to_dict('records')}")
     eq = quarters_pit(tagged, EPS_TAGS).set_index("end")
     if eq.loc[pd.Timestamp("2016-03-31"), "val"] != 2.1 or eq.loc[pd.Timestamp("2015-03-31"), "val"] != 2.0:
-        f.append("EPS: diluted preferred, basic fills a period with no diluted value")
+        f.append("EPS: diluted preferred on the same filing, basic fills a period with no diluted value")
+    # v1.2 fault: a later restated comparative under a preferred tag displaced the original
+    restated = {"facts": {"us-gaap": {
+        "SalesRevenueNet": {"units": {"USD": [fct("2017-01-01", "2017-03-31", 95, "2017-05-01")]}},
+        "Revenues": {"units": {"USD": [fct("2017-01-01", "2017-03-31", 97, "2019-02-25"),
+                                       fct("2018-01-01", "2018-03-31", 105, "2018-05-01")]}}}}}
+    rr = quarters_pit(restated, REV_TAGS).set_index("end")
+    if rr.loc[pd.Timestamp("2017-03-31"), "val"] != 95 or rr.loc[pd.Timestamp("2017-03-31"), "filed"] != pd.Timestamp("2017-05-01"):
+        f.append(f"first-filed value wins over a later restatement under another tag: {rr.to_dict('records')}")
+    if not ep.yoy_known(rr.reset_index(), pd.Timestamp("2018-06-30")):
+        f.append("revenue growth known mid-2018 from the original 2017 value")
     if len(quarters_pit({}, EPS_TAGS)) != 0:
         f.append("no facts -> empty")
     # v1.0 crash: a company with no facts concatenated with one that has them
