@@ -1,5 +1,8 @@
 """
-edgar_data.py  (v1.1 — 2026-11-19; v1.1: typed quarter tables (v1.0 crashed on concat),
+edgar_data.py  (v1.2 — 2026-11-19; v1.2: share-class siblings (BRK.B, BF.B, FOXA, NWSA),
+                                   end-of-membership company used while it was alive (sparse filers), pins for
+                                   L (Loews, not Liberty Media), ARNC (Alcoa), DOC (Healthpeak), tags merged
+                                   per period for EPS and revenue; v1.1: typed quarter tables (v1.0 crashed on concat),
                                    insider/mapping files written before the fundamentals step)
 ───────────────────────────────────
 The shared SEC data set behind tracks A (earnings acceleration) and B (insider
@@ -60,7 +63,7 @@ import pandas as pd
 import edgar_probe as ep
 import universe_probe as up
 
-VERSION = "1.1"
+VERSION = "1.2"
 START = pd.Timestamp("2006-01-01")
 WIN = 6                                   # months either side for "filing under this ticker"
 MAP_GATE, EPS_GATE, EPS_FROM = 95.0, 90.0, 2011
@@ -81,7 +84,14 @@ PRE_RENAMES = {"JEF": ("2018-05-01", "LUK"), "WBA": ("2014-12-31", "WAG"), "LDOS
                "LB": ("2013-03-22", "LTD"), "MSI": ("2011-01-04", "MOT"), "SAF": ("2006-07-01", "SAFC"),
                "WELL": ("2018-02-28", "HCN"), "WM": ("2008-10-01", "WMI")}
 # one company for the whole membership, where two companies shared the ticker in the same months
-PINS = {"WM": 823768}            # Waste Management (WaMu kept filing as WM after its 2008 failure)
+PINS = {"WM": 823768,            # Waste Management (WaMu kept filing as WM after its 2008 failure)
+        "L": 60086,              # Loews (Liberty Media traded as L until 2006)
+        "ARNC": 4281,            # Alcoa Inc, renamed Arconic 2016 (the 2020 spin-off is a different company)
+        "DOC": 765880}           # Healthpeak, which took DOC from Physicians Realty in March 2024
+# other share classes a company files under (the member's own class is often missing on Form 4s)
+SIBLINGS = {"BRK-B": ("BRK-A", "BRKA", "BRKB"), "BF-B": ("BF-A", "BFA", "BFB", "BF"),
+            "FOXA": ("FOX", "NWS", "NWSA"), "FOX": ("FOXA",), "NWSA": ("NWS",), "NWS": ("NWSA",),
+            "GOOGL": ("GOOG",), "GOOG": ("GOOGL",), "UA": ("UAA",), "UAA": ("UA",)}
 # last resort, each verified by the company's own filings inside the span
 CIK_OVERRIDES = {"FNMA": 310522, "FMCC": 1026214, "CBS": 813828, "VIAC": 813828, "BIO": 12208, "HCA": 860730,
                  "CMCSK": 1166691, "LSI": 703360, "MOLX": 67472}
@@ -174,28 +184,38 @@ class Activity:
         return {c: self._sum(d, m, w) for c, d in self.by_sym.get(sym, {}).items() if self._sum(d, m, w) > 0}
 
 
-def _choose(act: Activity, sym: str, m: int, anchor: Optional[int]) -> tuple:
-    """(b) the company filing under the ticker that month (else within 6 months), most filings wins;
-    (c) else the end-of-membership company if it filed at all that month (ticker unused then, or blank)."""
+def _alive(act: Activity, cik: int, m: int) -> bool:
+    """The company filed something within 6 months before and after month m (it existed then)."""
+    d = act.any.get(cik)
+    if not d:
+        return False
+    return min(d) <= m + WIN and max(d) >= m - WIN
+
+
+def _choose(act: Activity, syms, m: int, anchor: Optional[int]) -> tuple:
+    """(b) the company filing under the ticker (then its other share classes) that month, else within
+    6 months, most filings wins; (c) else the end-of-membership company while it was alive."""
+    syms = [syms] if isinstance(syms, str) else list(syms)
     for w in (1, WIN):
-        here = act.filers(sym, m, w)
-        if here:
-            return max(here, key=lambda c: (here[c], -c)), "ticker at the time"
-    if anchor is not None and act.total(anchor, m, 1) > 0:
+        for sym in syms:
+            here = act.filers(sym, m, w)
+            if here:
+                return max(here, key=lambda c: (here[c], -c)), "ticker at the time"
+    if anchor is not None and _alive(act, anchor, m):
         return anchor, "end-of-membership company"
     return None, ""
 
 
-def anchor_for(act: Activity, sym: str, end_m: int) -> Optional[int]:
-    """Company filing under `sym` nearest the end of membership (within 24 months before it)."""
-    best = None
+def anchor_for(act: Activity, syms, end_m: int) -> Optional[int]:
+    """Company filing under the ticker (or a sibling class) nearest the end of membership (within 24 months)."""
+    syms = [syms] if isinstance(syms, str) else list(syms)
     for w in (WIN, 12, 24):
-        cands = {c: sum(d.get(k, 0) for k in range(end_m - w, end_m + 1)) for c, d in act.by_sym.get(sym, {}).items()}
-        cands = {c: n for c, n in cands.items() if n > 0}
-        if cands:
-            best = max(cands, key=lambda c: (cands[c], -c))
-            break
-    return best
+        for sym in syms:
+            cands = {c: sum(d.get(k, 0) for k in range(end_m - w, end_m + 1)) for c, d in act.by_sym.get(sym, {}).items()}
+            cands = {c: n for c, n in cands.items() if n > 0}
+            if cands:
+                return max(cands, key=lambda c: (cands[c], -c))
+    return None
 
 
 def map_months(iv: dict, act: Activity, last_m: int) -> pd.DataFrame:
@@ -203,13 +223,16 @@ def map_months(iv: dict, act: Activity, last_m: int) -> pd.DataFrame:
     s0 = month_no(START)
     for tk, spans in iv.items():
         y = up.yahoo_symbol(tk)
+        ys = [y] + list(SIBLINGS.get(y, ()))
         alt = RENAMES.get(tk) or RENAMES.get(y)
         for a, b in spans:
             if b is not None and b <= START:
                 continue
             m0 = max(month_no(a), s0)
-            m1 = month_no((b - pd.Timedelta(days=1)) if b is not None else month_ts(last_m))
-            anc = anchor_for(act, y, m1)
+            m1 = min(month_no((b - pd.Timedelta(days=1)) if b is not None else month_ts(last_m)), last_m)
+            if m1 < m0:
+                continue
+            anc = anchor_for(act, ys, m1)
             anc_alt = anchor_for(act, alt, m1) if alt else None
             pre = PRE_RENAMES.get(tk) or PRE_RENAMES.get(y)
             for m in range(m0, m1 + 1):
@@ -220,7 +243,7 @@ def map_months(iv: dict, act: Activity, last_m: int) -> pd.DataFrame:
                     cik, how = _choose(act, pre[1], m, None)
                     how = f"was {pre[1]}: {how}" if cik is not None else ""
                 if cik is None:
-                    cik, how = _choose(act, y, m, anc)
+                    cik, how = _choose(act, ys, m, anc)
                 if cik is None and alt:
                     cik, how = _choose(act, alt, m, anc_alt)
                     how = f"rename {alt}: {how}" if cik is not None else ""
@@ -261,20 +284,29 @@ def attach_buys(buys: pd.DataFrame, mm: pd.DataFrame) -> pd.DataFrame:
 # ── fundamentals ────────────────────────────────────────────────────────────
 
 def _facts_rows(facts: dict, tags: tuple, unit_prefix: str) -> pd.DataFrame:
+    """All periods reported under any of `tags`. For each period the highest-priority tag present is kept
+    (e.g. diluted EPS before basic), so a company that changed tags over the years is still covered."""
     g = (facts.get("facts") or {}).get("us-gaap") or {}
-    for tag in tags:
+    parts = []
+    for prio, tag in enumerate(dict.fromkeys(tags)):
         for u, vals in ((g.get(tag) or {}).get("units") or {}).items():
             if not u.startswith(unit_prefix):
                 continue
             df = pd.DataFrame(vals)
             if df.empty or not {"start", "end", "val", "filed"} <= set(df.columns):
                 continue
+            df = df[["start", "end", "val", "filed"]].copy()
             for c in ("start", "end", "filed"):
                 df[c] = pd.to_datetime(df[c], errors="coerce")
             df = df.dropna(subset=["start", "end", "filed", "val"])
             if len(df):
-                return df.assign(tag=tag, dur=(df["end"] - df["start"]).dt.days)
-    return pd.DataFrame(columns=["start", "end", "val", "filed", "tag", "dur"])
+                parts.append(df.assign(tag=tag, prio=prio))
+    if not parts:
+        return pd.DataFrame(columns=["start", "end", "val", "filed", "tag", "dur"])
+    df = pd.concat(parts, ignore_index=True)
+    best = df.groupby(["start", "end"])["prio"].transform("min")
+    df = df[df["prio"] == best].drop(columns="prio")
+    return df.assign(dur=(df["end"] - df["start"]).dt.days)
 
 
 def _typed(q: pd.DataFrame) -> pd.DataFrame:
@@ -582,6 +614,19 @@ def selftest() -> dict:
     mm = map_months({"WM": [(pd.Timestamp("2006-01-02"), None)]}, act, month_no("2010-12-01"))
     if set(mm["cik"]) != {823768}:
         f.append("WM is pinned to Waste Management")
+    # v1.2: share-class siblings, sparse end-of-membership company, pins
+    act = _act(_monthly("BRK-A", 1067983, "2006-01", "2026-03", 1) + [("BRK-B", 1067983, "2012-05", 2)])
+    mm = map_months({"BRK.B": [(pd.Timestamp("2010-02-16"), None)]}, act, month_no("2026-03-01"))
+    if mm["cik"].isna().any() or set(mm["cik"]) != {1067983}:
+        f.append("BRK.B maps through its A-share filings every month")
+    sparse = [("MHP", 64040, f"{y}-{m:02d}", 2) for y in range(2006, 2016) for m in (2, 11)] + _monthly("SPGI", 64040, "2016-05", "2020-12")
+    mm = map_months({"SPGI": [(pd.Timestamp("2006-01-02"), None)]}, _act(sparse), month_no("2020-12-01"))
+    if mm["cik"].isna().any():
+        f.append(f"a sparse filer stays mapped while alive: {int(mm['cik'].isna().sum())} months unmapped")
+    act = _act(_monthly("L", 1082114, "2006-01", "2006-11") + _monthly("LTR", 60086, "2006-01", "2006-11") + _monthly("L", 60086, "2006-12", "2010-12"))
+    mm = map_months({"L": [(pd.Timestamp("2006-01-02"), None)]}, act, month_no("2010-12-01"))
+    if set(mm["cik"]) != {60086}:
+        f.append("L is Loews for the whole membership")
     # bankrupt rename + override + FDIC
     act = _act(_monthly("WM", 5, "2006-01", "2008-09") + _monthly("", 310522, "2006-01", "2008-09", 1))
     iv = {"WAMUQ": [(pd.Timestamp("2006-01-02"), pd.Timestamp("2008-09-30"))],
@@ -627,6 +672,18 @@ def selftest() -> dict:
         f.append(f"5 quarters expected: {len(q)}")
     if not ep.yoy_known(q, pd.Timestamp("2015-06-30")):
         f.append("YoY known mid-2015")
+    tagged = {"facts": {"us-gaap": {
+        "SalesRevenueNet": {"units": {"USD": [fct("2015-01-01", "2015-03-31", 90, "2015-05-01")]}},
+        "RevenueFromContractWithCustomerExcludingAssessedTax": {"units": {"USD": [fct("2016-01-01", "2016-03-31", 100, "2016-05-01")]}},
+        "EarningsPerShareBasic": {"units": {"USD/shares": [fct("2015-01-01", "2015-03-31", 2.0, "2015-05-01"),
+                                                             fct("2016-01-01", "2016-03-31", 2.2, "2016-05-01")]}},
+        "EarningsPerShareDiluted": {"units": {"USD/shares": [fct("2016-01-01", "2016-03-31", 2.1, "2016-05-02")]}}}}}
+    rq = quarters_pit(tagged, REV_TAGS)
+    if len(rq) != 2 or not ep.yoy_known(rq, pd.Timestamp("2016-06-30")):
+        f.append(f"revenue tags merged across a tag change: {rq.to_dict('records')}")
+    eq = quarters_pit(tagged, EPS_TAGS).set_index("end")
+    if eq.loc[pd.Timestamp("2016-03-31"), "val"] != 2.1 or eq.loc[pd.Timestamp("2015-03-31"), "val"] != 2.0:
+        f.append("EPS: diluted preferred, basic fills a period with no diluted value")
     if len(quarters_pit({}, EPS_TAGS)) != 0:
         f.append("no facts -> empty")
     # v1.0 crash: a company with no facts concatenated with one that has them
