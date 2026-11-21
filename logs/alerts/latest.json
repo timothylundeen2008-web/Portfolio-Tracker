@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-21T03:30:18+00:00",
+  "generated_at": "2026-11-21T04:17:34+00:00",
   "date": "2026-11-20",
   "version": "alerts v1.1 (engine layer, 2026-11-13)",
   "selftest_ok": true,
@@ -33,12 +33,12 @@
   ],
   "actions": [
     {
-      "action": "open",
+      "action": "still open",
       "key": "LT_DD_10",
       "number": 11
     },
     {
-      "action": "open",
+      "action": "still open",
       "key": "LT_ENGINE",
       "number": 12
     },
