@@ -61,14 +61,15 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-VERSION = "alerts v1.1 (engine layer, 2026-11-13)"
+VERSION = "alerts v1.1.1 (engine layer, 2026-11-13; radar row ignored 2026-11-21)"
 ROOT = Path(os.environ.get("ALERTS_ROOT", "."))
 OUT_DIR = Path("logs/alerts")
 
 LT_ALERT, LT_ALERT_CLEAR = -10.0, -8.0
 LT_ALARM, LT_ALARM_CLEAR = -15.0, -13.0
 BAD_STATUS = {"STALE", "MISSING", "FAILED", "FAIL", "DOWN"}
-IGNORED_INPUTS = {"Position ledger"}          # UNUSED by design: the model book is the reference
+IGNORED_INPUTS = {"Position ledger",          # UNUSED by design: the model book is the reference
+                  "Opportunity Radar (market_radar.py)"}   # v1.1.1: alert-only, blocks no decision
 MAX_SOURCE_AGE_DAYS = 4                        # covers a weekend plus a holiday
 LABEL_ROOT = "auto-alert"
 LABELS = {LABEL_ROOT: "5319e7", "alert": "fbca04", "alarm": "d73a4a"}
@@ -395,6 +396,9 @@ def selftest() -> dict:
 
     if keys(_src()) != []:
         f.append(f"a calm night must raise nothing (Position ledger STALE is ignored): {keys(_src())}")
+    if keys(_src(health=[{"input": "FRED DGS10", "status": "OK"},
+                         {"input": "Opportunity Radar (market_radar.py)", "status": "STALE"}])) != []:
+        f.append("a stale radar is alert-only and must not raise DATA_FAIL")
     if keys(_src(dd=-10.0)) != ["LT_DD_10"]:
         f.append("exactly -10% must raise the LT alert")
     if keys(_src(dd=-15.2)) != ["LT_DD_10", "LT_DD_15"]:

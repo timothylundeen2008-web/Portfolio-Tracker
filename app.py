@@ -1099,6 +1099,24 @@ else:
         'to enable live cross-dashboard signal reads here.</div>',
         unsafe_allow_html=True)
 
+# ── v2026-11-21 (N78): engine switch banner — unmissable on every tab ─────────
+def _latest_brief() -> dict:
+    try:
+        import glob as _g, json as _j, os as _o
+        _f = sorted(_g.glob(_o.path.join("logs", "brief", "*_brief.json")))
+        return _j.load(open(_f[-1])) if _f else {}
+    except Exception:
+        return {}
+
+
+_LB = _latest_brief()
+_SW = ((_LB.get("model") or {}).get("switch") or {})
+if _SW:
+    st.error(f"⚠ **Engine switch — model portfolio:** O11 moved {_SW.get('from_word')} → **{_SW.get('word')}** at the "
+             f"{_SW.get('asof')} close. From the **{_SW.get('effective')}** session the model book holds "
+             f"**{_SW.get('book_txt')}** (the whole book). Details: Construction & P/E tab. "
+             "Model portfolio only — research, not personalized advice.")
+
 st.markdown("---")
 
 # ─── TABS ─────────────────────────────────────────────────────────────────────
@@ -1675,10 +1693,23 @@ with tab4:
             st.warning("Model drawdown is past -5%; the engine's -8% Offense stop and trend rules are the control.")
         elif _sm.get("warn"):
             st.warning("Model drawdown is past the -5% warning line; the breaker trips at -8%.")
-        if _eng and (_mdl.get("engine") or {}).get("conclusion"):
+        _swm = _mdl.get("switch") or {}
+        if _swm:
+            st.error(f"⚠ **ENGINE SWITCH at the {_swm.get('asof')} close: {_swm.get('from_word')} → "
+                     f"{_swm.get('word')}.** From the **{_swm.get('effective')}** session the model book holds the "
+                     "book below — the whole book. The sleeve table further down is today's book, OUTGOING.")
+            _nb = pd.DataFrame([{"Sleeve": t, "Holds from " + str(_swm.get("effective")) + " %": w}
+                                for t, w in (_swm.get("next_book") or {}).items()])
+            if not _nb.empty:
+                st.dataframe(_nb, use_container_width=True, hide_index=True)
+            st.caption("Timing as tested: the state seen at a close is traded the next session. Weekday-authorized, "
+                       "like a stop. The tested rule is kept as is (defense lab 2026-11-20: no alternative passed).")
+        elif _eng and (_mdl.get("engine") or {}).get("conclusion"):
             st.caption(_mdl["engine"]["conclusion"])
         _rows = pd.DataFrame(_mdl.get("rows") or [])
         if not _rows.empty:
+            if _swm:
+                st.markdown("**Today's book (outgoing)**")
             _rows = _rows.rename(columns={"ticker": "Sleeve", "weight": "Should hold %", "change": "Change today",
                                           "gate": "Entry gate (adds)", "gate_trigger": "Pending until",
                                           "hold_trend": "Hold trend (200-day)",
@@ -2000,6 +2031,50 @@ with tab4:
 # TAB 5 — MARKET SIGNALS
 # ════════════════════════════════════════════════════════════
 with tab5:
+    # ── Opportunity Radar (v2026-11-21): the same reader as the daily brief's section 7A ──
+    st.markdown("### 🛰️ Opportunity Radar — alert-only")
+    try:
+        import market_radar as _mr
+        import market_time as _mtm
+        _rs = _mr.brief_summary("data", _mtm.last_trading_day(_mtm.now_et().date()))
+    except Exception as _e:
+        _rs = {"available": False, "conclusion": f"Radar unavailable: {type(_e).__name__}: {_e}"}
+    if not _rs.get("available"):
+        st.warning(_rs.get("conclusion") or "Radar not available — a data gap, not a quiet market.")
+    else:
+        (st.warning if _rs.get("stale") else st.info)(_rs["conclusion"])
+        _loud = [x for x in _rs.get("pulse") or [] if x.get("level") in ("ALERT", "WARN")]
+        r1, r2, r3, r4 = st.columns(4)
+        r1.metric("Leaders", f"{_rs.get('n_leaders', 0)} / {_rs.get('n_ranked', 0)}",
+                  help="In an uptrend (close above a rising 200-day) and top fifth by average 3/6/12-month "
+                       "return in excess of SPY.")
+        r2.metric("Last scan (Mon/Wed/Fri)", _rs.get("scan_date") or "—")
+        r3.metric("New leaders", sum(1 for x in _rs.get("flags") or [] if x["kind"] == "new_leader"))
+        r4.metric("Breakdowns", sum(1 for x in _rs.get("flags") or [] if x["kind"] == "breakdown"))
+        if _rs.get("flags"):
+            st.markdown("**Flags at the last scan:** " + " · ".join(
+                f"{'🟢 NEW LEADER' if x['kind'] == 'new_leader' else '🔴 BREAKDOWN'} {x['ticker']} ({x['name']})"
+                for x in _rs["flags"]))
+        if _rs.get("leaders"):
+            _ld = pd.DataFrame(_rs["leaders"]).rename(columns={
+                "ticker": "Fund", "name": "Name", "area": "Area", "rs": "Strength vs SPY %",
+                "vs_200d": "vs 200-day %", "from_high": "From 52w high %", "ret_5d": "5 days %"})
+            st.dataframe(_ld.style.format({c: "{:+.1f}" for c in ("Strength vs SPY %", "vs 200-day %",
+                                                                   "From 52w high %", "5 days %")}, na_rep="—"),
+                         use_container_width=True, hide_index=True)
+        _mu = ", ".join(f"{x['ticker']} {x['ret_1d']:+.1f}% ({x['z_1d']:+.1f}σ)" for x in _rs.get("movers_up") or [])
+        _md = ", ".join(f"{x['ticker']} {x['ret_1d']:+.1f}% ({x['z_1d']:+.1f}σ)" for x in _rs.get("movers_down") or [])
+        st.caption(f"Biggest moves at the {_rs.get('asof')} close vs each fund's own volatility — up: {_mu or 'none'}; "
+                   f"down: {_md or 'none'}.")
+        if _rs.get("areas"):
+            st.caption("Funds in an uptrend by area: " + "; ".join(
+                f"{a['area']} {a['uptrend']}/{a['funds']}" for a in _rs["areas"]))
+        _sb = _rs.get("scoreboard") or []
+        st.caption("Radar scoreboard (flags vs SPY at 3/6/12 months): " + (
+            "; ".join(f"{r['kind']} @{r['horizon']}: n={r['n']}, {r['mean_excess_pct']:+.2f}%, right {r['right_pct']:.0f}%"
+                      for r in _sb) if _sb else "no flag old enough to score yet.")
+                   + " Alert-only: nothing here moves the model book or the swing book. Full report: logs/radar/latest.md.")
+    st.markdown("---")
     st.markdown("### Live Market Signals")
     sig_tix=["^VIX","GLD","TLT","BIL","SPY","^TNX","^TYX"]+list(PORTFOLIO.keys())
     sig_prices=fetch_prices(sig_tix,"1y")

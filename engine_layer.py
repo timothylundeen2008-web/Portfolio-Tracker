@@ -1,5 +1,5 @@
 """
-engine_layer.py  (v1.0 — 2026-11-13)
+engine_layer.py  (v1.0.1 — 2026-11-21)
 ────────────────────────────────────
 The model book's switching layer: engine O11, adopted by Matt on 2026-11-13
 ("option 2") as an explicit, recorded exception to the offense-lab bar. O11
@@ -20,6 +20,8 @@ WHAT IT DECIDES
   Timing as tested: the state seen at a session's close is traded the next
   session, so the weights booked on day d use the state of the session BEFORE d.
 
+v1.0.1 (2026-11-21, N77): "since" is the first close of the current state (it
+  showed the last close of the previous state, one session early).
 DATA
   Needs ~3 years of SPY, QQQ, VWEHX, VFITX closes (the state is path-dependent:
   the Offense high and the cooldown carry). Missing credit falls back to the
@@ -35,7 +37,7 @@ import pandas as pd
 
 import offense_lab as ol
 
-VERSION = "v1.0"
+VERSION = "v1.0.1"
 ENGINE = "O11"
 TICKERS = ("SPY", "QQQ", *ol.CREDIT_PAIR)
 HISTORY = "5y"
@@ -90,16 +92,25 @@ def overlay(state: Optional[str], balanced: dict) -> dict:
     return dict(balanced)
 
 
+def run_start(st: Optional[pd.Series]) -> Optional[str]:
+    """First close of the current state's run (N77). None when the whole history is one state."""
+    if st is None or st.empty:
+        return None
+    other = st.index[st != st.iloc[-1]]
+    if not len(other):
+        return None
+    return pd.Timestamp(st.index[st.index > other[-1]][0]).date().isoformat()
+
+
 def read(st: Optional[pd.Series], prices: Optional[dict] = None) -> dict:
     """Today's read for the brief and alerts: state at the last close, since when, switch today."""
     if st is None or st.empty:
         return {"available": False, "engine": ENGINE,
                 "conclusion": f"Engine {ENGINE} unavailable: SPY/QQQ history missing — yesterday's state is held."}
     now, prev = str(st.iloc[-1]), str(st.iloc[-2]) if len(st) > 1 else str(st.iloc[-1])
-    since = st[st != now]
     out = {"available": True, "engine": ENGINE, "version": VERSION, "state": now, "word": WORDS.get(now, now),
            "asof": st.index[-1].date().isoformat(), "previous": prev, "switched": now != prev,
-           "since": since.index[-1].date().isoformat() if len(since) else None,
+           "since": run_start(st),
            "credit_data": credit_ok(prices or {}) if prices is not None else None}
     if out["switched"]:
         out["conclusion"] = (f"Engine {ENGINE} SWITCHED {WORDS.get(prev, prev)} → {WORDS.get(now, now)} at the "
@@ -150,6 +161,15 @@ def selftest() -> dict:
         f.append("missing credit must be said")
     if read(None)["available"]:
         f.append("no state: read() must say unavailable")
+    # N77: "since" = first close of the current run
+    ix = pd.bdate_range("2026-11-16", periods=5)
+    run = pd.Series(["OUT", "OUT", "OUT", "OUT", "DEF"], index=ix)
+    if run_start(run) != "2026-11-20" or read(run)["since"] != "2026-11-20" or not read(run)["switched"]:
+        f.append("N77: since must be the switch close (2026-11-20), not the day before")
+    if run_start(pd.Series(["DEF"] * 3, index=ix[:3])) is not None:
+        f.append("N77: a single-state history has no run start")
+    if run_start(pd.Series(["DEF", "OUT", "OUT"], index=ix[:3])) != "2026-11-17":
+        f.append("N77: run start after an earlier switch")
     return {"ok": not f, "failures": f, "version": VERSION}
 
 

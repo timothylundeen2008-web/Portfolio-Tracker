@@ -50,7 +50,7 @@ import pandas as pd
 import hedge_lab as hl
 import offense_lab as ol
 
-VERSION = "v1.1"     # v1.0.1 (N66): drop bars after the expected session; v1.1: O11 added
+VERSION = "v1.1.1"     # v1.0.1 (N66): drop bars after the expected session; v1.1: O11 added
 SHADOW_START = "2026-12-01"
 ENGINES = ("O11", "O9", "O7")     # O11 = best of the lab (v1.4); O9 and O7 for comparison
 FETCH_DAYS = 700                      # >= 200-day average + warm-up + slack
@@ -150,11 +150,12 @@ def today_read(states: dict, bal_on, asof: pd.Timestamp) -> list:
         st = states[k]
         now = st.iloc[-1]
         prev = st.iloc[-2] if len(st) > 1 else now
-        since = st[st != now]
+        other = st.index[st != now]
+        since = st.index[st.index > other[-1]] if len(other) else st.index[:0]   # N77: first close of this run
         cand = ol.CANDIDATES[k]
         book = ol.book_for(now, cand, bal_on(asof))
         rows.append({"engine": k, "state": now, "word": STATE_WORDS.get(now, now),
-                     "since": since.index[-1].date().isoformat() if len(since) else "start",
+                     "since": since[0].date().isoformat() if len(since) else "start",
                      "switched_today": now != prev, "previous": prev,
                      "book_next": {t: w for t, w in sorted(book.items(), key=lambda x: -x[1]) if w > 0}})
     return rows
@@ -302,6 +303,13 @@ def selftest() -> dict:
     if r3["status"].get("last_bar") != exp.isoformat() or r3["status"]["error"] or \
             not r3["nav"].equals(nav) or [x["state"] for x in r3["reads"]] != [x["state"] for x in r["reads"]]:
         f.append(f"a partial bar after the expected session must be dropped: {r3['status'].get('last_bar')}")
+    # N77: "since" is the first close of the current state, never the last close of the previous one
+    for x in r["reads"]:
+        sx = st[x["engine"]] if x["engine"] in st else None
+        if sx is not None and x["since"] != "start":
+            if sx.loc[pd.Timestamp(x["since"])] != x["state"] or \
+                    sx[sx.index < pd.Timestamp(x["since"])].iloc[-1] == x["state"]:
+                f.append(f"N77: {x['engine']} since {x['since']} must be the first close of the {x['state']} run")
     # v1.1: O11 is tracked; a missing credit pair is flagged, not hidden
     if "O11" not in nav or "O11" not in [x["engine"] for x in r["reads"]]:
         f.append("O11 must be in the shadow")

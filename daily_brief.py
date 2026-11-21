@@ -1,6 +1,12 @@
 """
-daily_brief.py  (v1.6.2 — November 2026)
+daily_brief.py  (v1.8 — November 2026)
 ───────────────────────────────────────
+v1.8 (2026-11-21): section 7A "Opportunity Radar" (market_radar.brief_summary — the
+  same reader the app uses; alert-only, stale/missing said as such) and a data-health
+  row for it. N78: when the engine switches at today's close the model section leads
+  with the switch, the session it takes effect and the book it moves to (the whole
+  book), labels today's sleeves OUTGOING, and drops the outgoing book's small weight
+  changes from the weekend list (they were contradicting the switch).
 v1.6.2 (2026-11-07): model section adds book_risk.risk_by_group (share of
   book variance by group, PROPOSED 40% line); SPY and 60/40 benchmarks now
   come from model_vs_spy.build_frame, the function the app's chart uses.
@@ -1945,6 +1951,16 @@ def portfolio_section(inp: dict, targets: dict, regime_key: Optional[str], force
 ENGINE_LIVE = True      # v1.7 (2026-11-13): O11 switching layer on the model book (Matt: "option 2")
 
 
+def next_session(d: date) -> date:
+    """The next trading session after d (the engine trades the session after its signal close)."""
+    n = d + timedelta(days=1)
+    for _ in range(10):
+        if mt.is_trading_day(n):
+            return n
+        n += timedelta(days=1)
+    return n
+
+
 def model_section(inp: dict, rg: dict) -> dict:
     """The framework's answer, every session: regime targets after the entry
     gate and the portfolio circuit breaker, tracked as a model book."""
@@ -2050,17 +2066,39 @@ def model_section(inp: dict, rg: dict) -> dict:
         weekend.append(f"Model portfolio changed today ({moved}) — execute at the weekend review if following it")
     _ew = {"OFF": "OFFENSE (50% QQQ / 50% SPY)", "DEF": "DEFENSE (SGOV / GLD / TLT)",
            "BAL": f"BALANCED (the `{key}` regime book)", "OUT": f"FAST-EXIT → BALANCED (the `{key}` regime book)"}
+    # v1.8 (N78): a switch at today's close replaces the WHOLE book at the next session. Say that first,
+    # show the book it moves to, and drop the outgoing book's small weight changes from the to-do list.
+    switch = None
+    if (sm.get("engine") and eread and eread.get("available") and eread.get("switched")
+            and eread.get("state") and eread["state"] != sm["engine"]):
+        try:
+            import engine_layer as _el2
+            _nb = _el2.overlay(eread["state"], today_w or {})
+            _words = dict(_el2.WORDS)
+        except Exception:
+            _nb, _words = {}, {}
+        _nb = {t: round(float(w), 1) for t, w in sorted(_nb.items(), key=lambda kv: -kv[1]) if float(w) > 0}
+        switch = {"from": eread.get("previous"), "to": eread["state"], "word": eread.get("word"),
+                  "from_word": _words.get(eread.get("previous"), eread.get("previous")),
+                  "asof": eread.get("asof"), "effective": next_session(inp["session"]).isoformat(),
+                  "next_book": _nb, "book_txt": " / ".join(f"{t} {w:g}" for t, w in _nb.items())}
+        out["switch"] = switch
+        weekend = [w for w in weekend if not w.startswith("Model portfolio changed today")]
+        actions.append(f"ENGINE SWITCH at the {switch['asof']} close → {switch['word']} — from the "
+                       f"{switch['effective']} session the model book holds {switch['book_txt']}, replacing the "
+                       f"whole book (weekday-authorized, like a stop)")
     if sm.get("engine"):
         if sm.get("engine_changed"):
             actions.append(f"ENGINE SWITCH — the model book moved to {_ew.get(sm['engine'], sm['engine'])} "
                            f"(was {_ew.get(sm['engine_previous'], sm['engine_previous'])}); weekday-authorized, "
                            f"like a stop")
-        if eread and eread.get("switched"):
+        if eread and eread.get("switched") and not switch:
             weekend.append(f"Engine {eread.get('engine')} switched at today's close to {eread.get('word')}: "
                            f"the model book moves at the NEXT session")
     c = ((f"Engine {(eread or {}).get('engine', 'O11')}: the book holds {_ew.get(sm['engine'], sm['engine'])}. "
           if sm.get("engine") else "")
-         + f"You SHOULD hold the {'book' if sm.get('engine') else f'`{key}` model'} above"
+         + ("Today's book (the sleeve table) is OUTGOING" if switch else
+            f"You SHOULD hold the {'book' if sm.get('engine') else f'`{key}` model'} above")
          + (" — with the CIRCUIT BREAKER ON (risk sleeves halved)" if sm["breaker"] == "ON" else "")
          + f". Model book {sm['nav']:.2f} ({sm['drawdown_pct']:+.1f}% from peak"
          + (f"; 20d {sm['ret_20d']:+.1f}%" if sm.get("ret_20d") is not None else "") + "). ")
@@ -2101,7 +2139,11 @@ def model_section(inp: dict, rg: dict) -> dict:
     except Exception as e:
         out["attribution"] = out["ai_exposure"] = out["vol_target"] = out["risk_by_group"] = {
             "available": False, "conclusion": f"book_risk unavailable: {type(e).__name__}: {e}"}
-    if eread and eread.get("switched") is not None:
+    if switch:
+        c = (f"⚠ ENGINE SWITCH at the {switch['asof']} close: {switch['from_word']} → {switch['word']}. From the "
+             f"{switch['effective']} session the model book holds {switch['book_txt']} — the whole book, replacing "
+             f"today's sleeves. " + c)
+    elif eread and eread.get("switched") is not None:
         c += " " + eread["conclusion"]
     elif eread and not eread.get("available"):
         c += " ⚠ " + eread["conclusion"]
@@ -2137,6 +2179,19 @@ def _model_benchmarks(book: pd.DataFrame, closes: dict) -> dict:
 
 
 # ── Swing ──────────────────────────────────────────────────────────────────
+
+def radar_section(inp: dict) -> dict:
+    """v1.8: section 7A — the Opportunity Radar's last run (market_radar.brief_summary, the same
+    reader the app uses). Alert-only; a missing or stale radar is a data gap, not a quiet market."""
+    try:
+        import market_radar as _mr
+    except Exception as e:
+        return {"available": False, "conclusion": f"Radar unavailable: market_radar.py not importable ({type(e).__name__})."}
+    try:
+        return _mr.brief_summary(inp.get("data_dir") or "data", inp["session"])
+    except Exception as e:
+        return {"available": False, "conclusion": f"Radar read failed: {type(e).__name__}: {e}"}
+
 
 def swing_section(inp: dict) -> dict:
     b, fname = inp.get("swing") or {}, inp.get("swing_file")
@@ -2280,6 +2335,12 @@ def data_health(inp: dict) -> list[dict]:
             note = (note + "; " if note else "") + "weekly release (Mondays) — a week's lag is normal"
         add((inp.get("series_label") or {}).get(sid, f"FRED {sid}"), s.index[-1].date().isoformat() if len(s) else None,
             FRED_MAX_AGE.get(sid, 4), note)
+    try:                                       # v1.8: the radar's last bar (alert-only input)
+        _rj = json.loads((Path(inp.get("data_dir") or "data") / "radar" / "latest.json").read_text())
+        add("Opportunity Radar (market_radar.py)", _rj.get("asof"), 0,
+            "alert-only; runs ~5:20 PM ET weekdays — stale means the evening run failed or has not run")
+    except Exception:
+        add("Opportunity Radar (market_radar.py)", None, 0, "no radar output yet — alert-only input, blocks no decision")
     a = inp.get("assessment")
     _reg = (a or {}).get("regime") or {}
     if a and _reg.get("data_failure"):
@@ -2424,6 +2485,7 @@ def build(inp: dict) -> dict:
     fl = flow_section(inp)
     fm = flow_map_section(inp, rg.get("key"))
     br = breadth_section(inp)
+    rd = radar_section(inp)
     mr = market_read_section(inp, {"breadth": br, "rotation": ro, "regime": rg})
     targets = a.get("targets") or (inp.get("markets") or {}).get("regime_targets") or {}
     pf = portfolio_section(inp, targets, rg.get("key"))
@@ -2435,7 +2497,7 @@ def build(inp: dict) -> dict:
     dh = data_health(inp)
     brief = {"session": inp["session"].isoformat(), "generated_et": mt.fmt_et(inp["now_et"]),
              "scoreboard": sb, "market_read": mr, "regime": rg, "cross_asset": xa, "rotation": ro, "flow": fl,
-             "flow_map": fm, "breadth": br, "model": mdl, "portfolio": pf, "swing": sw, "next48": nx, "alerts": al,
+             "flow_map": fm, "breadth": br, "radar": rd, "model": mdl, "portfolio": pf, "swing": sw, "next48": nx, "alerts": al,
              "signals": sg,
              "data_health": dh, "errors": inp.get("errors", []), "targets": targets}
     brief["headline"] = headline(brief)
@@ -2540,9 +2602,20 @@ def headline(b: dict) -> list[str]:
         s3 = "Model portfolio unavailable."
     if auth:
         s3 += " Authorized today: " + "; ".join(x.split(" —")[0] for x in auth) + "."
+    _sw = md_.get("switch")
+    if _sw:
+        s3 += f" From the {_sw['effective']} session the model book holds {_sw['book_txt']}."
     if sw.get("available") and sw.get("permitted"):
         s3 += f" Swing: {len(sw['permitted'])} entry-permitted card{'s' if len(sw['permitted']) != 1 else ''}."
-    return [s1, s2, s3]
+    out = [s1, s2, s3]
+    rd = b.get("radar") or {}
+    if rd.get("available") and not rd.get("stale"):
+        nl = [x["ticker"] for x in rd.get("flags") or [] if x["kind"] == "new_leader"]
+        bd = [x["ticker"] for x in rd.get("flags") or [] if x["kind"] == "breakdown"]
+        if (nl or bd) and rd.get("scan_date") == b["session"]:
+            out.append("Radar (alert-only): " + "; ".join(
+                ([f"new leaders {', '.join(nl)}"] if nl else []) + ([f"breakdowns {', '.join(bd)}"] if bd else [])) + ".")
+    return out
 
 
 def conclusions(b: dict) -> dict:
@@ -2765,9 +2838,44 @@ def render_md(b: dict) -> str:
     else:
         L += [f"*Top-10 contribution unavailable: {tt.get('reason', 'no data')}.*", ""]
 
+    # v1.8: 7A · Opportunity Radar (alert-only; market_radar.brief_summary)
+    rd = b.get("radar") or {}
+    L += ["## 7A · Opportunity Radar (alert-only — no book acts on it)"]
+    if not rd.get("available"):
+        L += [f"⚠ {rd.get('conclusion') or 'Radar not available.'}", ""]
+    else:
+        _p2 = lambda v: "—" if v is None else f"{v:+.1f}%"
+        L += [f"**Conclusion:** {rd['conclusion']}", ""]
+        if rd.get("flags"):
+            L += [f"**Flags at the {rd.get('scan_date')} scan** (scored vs SPY at 3, 6, 12 months):", ""]
+            L += [f"- {'NEW LEADER' if x['kind'] == 'new_leader' else 'BREAKDOWN'} — {x['ticker']} {x['name']}"
+                  for x in rd["flags"]] + [""]
+        if rd.get("leaders"):
+            L += ["| Leader | Area | Strength vs SPY | vs 200-day | From 52w high | 5 days |", "|---|---|---|---|---|---|"]
+            L += [f"| {x['ticker']} {x['name']} | {x['area']} | {_p2(x['rs'])} | {_p2(x['vs_200d'])} | "
+                  f"{_p2(x['from_high'])} | {_p2(x['ret_5d'])} |" for x in rd["leaders"]] + [""]
+        mv = [f"{x['ticker']} {_p2(x['ret_1d'])} ({x['z_1d']:+.1f}σ)" for x in rd.get("movers_up") or []]
+        md2 = [f"{x['ticker']} {_p2(x['ret_1d'])} ({x['z_1d']:+.1f}σ)" for x in rd.get("movers_down") or []]
+        if mv or md2:
+            L += [f"- Biggest moves vs each fund's own volatility — up: {', '.join(mv) or 'none'}; "
+                  f"down: {', '.join(md2) or 'none'}"]
+        ar = [a for a in rd.get("areas") or []]
+        if ar:
+            L += ["- Funds in an uptrend by area: " + "; ".join(f"{a['area']} {a['uptrend']}/{a['funds']}" for a in ar)]
+        sbd = rd.get("scoreboard") or []
+        L += ["- Radar scoreboard: " + ("; ".join(f"{r['kind']} @{r['horizon']}: n={r['n']}, mean {r['mean_excess_pct']:+.2f}% vs SPY, "
+                                               f"right {r['right_pct']:.0f}%" for r in sbd)
+                                     if sbd else "no flag old enough to score yet (first scores after 63 sessions)."),
+              "- Full report: `logs/radar/latest.md`. Satellite rules: `claude/opportunity_radar.md`.", ""]
+
     pf = b["portfolio"]
     md_ = b.get("model") or {}
     L += ["## 8 · Model portfolio — what you SHOULD hold (Levels 5–7)"]
+    _sw = md_.get("switch")
+    if _sw:
+        L += [f"> ⚠ **ENGINE SWITCH at the {_sw['asof']} close: {_sw['from_word']} → {_sw['word']}.** From the "
+              f"**{_sw['effective']}** session the model book holds **{_sw['book_txt']}** — the whole book. "
+              "The sleeve table below is today's book, outgoing.", ""]
     if md_.get("available"):
         sm = md_["summary"]
         L.append(f"- Regime `{sm['regime']}` · breaker **{sm['breaker']}** · model book {sm['nav']:.2f} "
@@ -3481,6 +3589,48 @@ def selftest() -> dict:
             f.append("engine state must be one of OFF/BAL/DEF/OUT")
         if "Engine O11" not in mdl.get("conclusion", ""):
             f.append("the model conclusion must say what the engine holds")
+        # v1.8 (N78): a switch at today's close leads the section with the next session's whole book
+        import engine_layer as _elm
+        _orig_states = _elm.states
+        _ixs = pd.bdate_range(end=pd.Timestamp(inp["session"]), periods=400)
+        _elm.states = lambda ep, _s=pd.Series(["OUT"] * 399 + ["DEF"], index=_ixs): _s
+        try:
+            _m2 = model_section(inp, b["regime"])
+        finally:
+            _elm.states = _orig_states
+        _sw = _m2.get("switch") or {}
+        _DBG_N78 = (_m2.get("conclusion"), _m2.get("actions"), _m2.get("weekend"), _sw)
+        if _sw.get("to") != "DEF" or _sw.get("next_book") != {"SGOV": 60.0, "GLD": 20.0, "TLT": 20.0}:
+            f.append(f"N78: a switch to DEFENSE must carry the Defense book: {_sw}")
+        elif _sw.get("effective") != next_session(inp["session"]).isoformat() or _sw["effective"] <= inp["session"].isoformat():
+            f.append(f"N78: the switch takes effect the next session: {_sw.get('effective')}")
+        if not _m2.get("conclusion", "").startswith("⚠ ENGINE SWITCH") or "OUTGOING" not in _m2.get("conclusion", "") \
+                or "You SHOULD hold the book above" in _m2.get("conclusion", ""):
+            f.append(f"N78: the conclusion must lead with the switch and call today's book outgoing: {_m2.get('conclusion', '')[:160]}")
+        if any(w_.startswith("Model portfolio changed today") for w_ in _m2.get("weekend") or []) or \
+                not any(a_.startswith("ENGINE SWITCH at the") for a_ in _m2.get("actions") or []):
+            f.append(f"N78: outgoing weight changes leave the to-do list; the switch is an authorized action: "
+                     f"{_m2.get('weekend')} {_m2.get('actions')}")
+        _b2 = dict(b, model=_m2)
+        _h2 = " ".join(headline(_b2))
+        if "SGOV 60 / GLD 20 / TLT 20" not in _h2 or "ENGINE SWITCH at the" not in _h2:
+            f.append(f"N78: the headline must name the switch and the next book: {_h2[-300:]}")
+        _md2 = render_md({**_b2, "headline": headline(_b2), "conclusions": conclusions(_b2)})
+        if "ENGINE SWITCH at the" not in _md2.split("## 8 ·")[1].split("## 9 ·")[0]:
+            f.append("N78: section 8 must open with the switch banner")
+        if "switch" in mdl:
+            f.append("N78: no switch read → no switch block")
+        # v1.8: 7A radar sits between 7 and 8; without radar files it says "data gap", never "quiet"
+        if not ("## 7 · Breadth" in md and "## 7A · Opportunity Radar" in md and
+                md.index("## 7 · Breadth") < md.index("## 7A · Opportunity Radar") < md.index("## 8 · Model")):
+            f.append("7A Opportunity Radar must sit between sections 7 and 8")
+        _rd = b.get("radar") or {}
+        _rrow = {r["input"]: r for r in b["data_health"]}.get("Opportunity Radar (market_radar.py)") or {}
+        if Path("data/radar/latest.json").exists():
+            if not _rd.get("available"):
+                f.append("radar files present but section unavailable")
+        elif _rd.get("available") or "data gap" not in (_rd.get("conclusion") or "") or _rrow.get("status") != "MISSING":
+            f.append(f"no radar output: unavailable, called a data gap, MISSING in data health: {_rd.get('conclusion')} {_rrow}")
         for r_ in mdl.get("rows") or []:
             if r_["gate"] in ("BLOCKED", "UNAVAILABLE") and r_["change"] > 0.05:
                 f.append(f"{r_['ticker']} shows a BLOCKED add yet the model weight rose {r_['change']:+.1f}")

@@ -1,5 +1,5 @@
 """
-market_radar.py  (v1.0 — 2026-11-20)
+market_radar.py  (v1.1 — 2026-11-21)
 ─────────────────────────────────────
 Opportunity Radar (track C, widened at Matt's request 2026-11-20: "I want to keep a
 wide eye on the markets to take advantage of any opportunities there are"; cadence:
@@ -21,6 +21,10 @@ Runs every weekday evening after the close (workflow "Market Radar").
                       BREAKDOWN (a leader that lost its trend or fell below the top
                       40%). Every flag is logged and scored against SPY at 3, 6 and
                       12 months, so the radar's own edge is measured forward.
+v1.1 (2026-11-21): brief_summary() — one reader of the radar's saved files for the
+  daily brief (section 7A) and the app, so the two can never disagree. A missing or
+  stale radar is reported as such, never as "no signal".
+
 ALERT-ONLY. Nothing here changes the model book or the swing book.
 
 Run:  python market_radar.py [--scan]     (Actions)
@@ -38,7 +42,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-VERSION = "1.0"
+VERSION = "1.1"
 UNIVERSE = {
     # US broad, size and style
     "SPY": ("US broad", "S&P 500"), "QQQ": ("US broad", "Nasdaq-100"), "IWM": ("US broad", "Small caps"),
@@ -310,6 +314,101 @@ def render(stamp: str, pl: dict, m: pd.DataFrame, scan: bool, fl: list, board: p
     return "\n".join(L) + "\n"
 
 
+# ── reader for the brief and the app (v1.1) ────────────────────────────────
+
+def _read_csv(p: Path) -> pd.DataFrame:
+    try:
+        return pd.read_csv(p) if p.exists() else pd.DataFrame()
+    except Exception:
+        return pd.DataFrame()
+
+
+def brief_summary(data_dir="data", session=None, max_leaders: int = 12, movers: int = 3) -> dict:
+    """What the daily brief and the app show from the radar's last run. Pure file reads.
+    `session` (date or ISO string): the session the reader is about; the radar is STALE
+    when its last bar is older (a missing radar is a data gap, not a quiet market)."""
+    d = Path(data_dir) / "radar"
+    out = {"available": False, "version": VERSION, "asof": None, "stale": None, "scan_date": None,
+           "pulse": [], "leaders": [], "flags": [], "movers_up": [], "movers_down": [], "areas": [],
+           "scoreboard": [], "notes": [], "conclusion": ""}
+    try:
+        lj = json.loads((d / "latest.json").read_text())
+    except Exception as e:
+        out["conclusion"] = (f"Radar has not published ({type(e).__name__}) — no market-wide read today. "
+                             "This is a data gap, not a quiet market.")
+        return out
+    m = _read_csv(d / "latest_metrics.csv")
+    if m.empty:
+        out["conclusion"] = "Radar metrics file missing — no market-wide read today (data gap)."
+        return out
+    m = m.rename(columns={m.columns[0]: "ticker"}).set_index("ticker")
+    asof = lj.get("asof")
+    out.update(available=True, asof=asof, pulse=list(lj.get("pulse") or []), notes=list(lj.get("notes") or []))
+    sess = str(session)[:10] if session is not None else None
+    out["stale"] = bool(sess and asof and asof < sess)
+    # leaders now (every run recomputes them), strongest first
+    if "leader" in m:
+        lead = m[m["leader"].astype(str).str.lower() == "true"].sort_values("rs", ascending=False)
+        out["leaders"] = [{"ticker": t, "name": name(t), "area": area(t), "rs": _r(r.get("rs")),
+                           "vs_200d": _r(r.get("vs_200d")), "from_high": _r(r.get("from_high")),
+                           "ret_5d": _r(r.get("ret_5d"))} for t, r in lead.head(max_leaders).iterrows()]
+        out["n_leaders"], out["n_ranked"] = int(len(lead)), int(m["rs"].notna().sum())
+    # biggest moves vs each fund's own volatility
+    if "z_1d" in m:
+        z = m.dropna(subset=["z_1d"]).sort_values("z_1d")
+        pick = lambda df: [{"ticker": t, "name": name(t), "ret_1d": _r(r["ret_1d"]), "z_1d": _r(r["z_1d"])}
+                           for t, r in df.iterrows()]
+        out["movers_up"] = pick(z[z["z_1d"] > 0].iloc[::-1].head(movers))
+        out["movers_down"] = pick(z[z["z_1d"] < 0].head(movers))
+    # areas: funds in an uptrend
+    if "trend" in m:
+        tr = m["trend"].astype(str).str.lower() == "true"
+        g = pd.DataFrame({"area": [area(t) for t in m.index], "up": tr.to_numpy(), "rs": m["rs"].to_numpy()})
+        out["areas"] = [{"area": a, "funds": int(len(x)), "uptrend": int(x["up"].sum()),
+                         "median_rs": _r(x["rs"].median())} for a, x in g.groupby("area")]
+    # last scan and its flags
+    hist = _read_csv(d / "scan_history.csv")
+    if not hist.empty and "date" in hist:
+        out["scan_date"] = str(hist["date"].max())
+        fl = _read_csv(d / "flags.csv")
+        if not fl.empty:
+            fl = fl[fl["date"].astype(str) == out["scan_date"]]
+            out["flags"] = [{"ticker": r.ticker, "name": name(r.ticker), "kind": r.kind} for r in fl.itertuples()]
+    sc = _read_csv(d / "scores.csv")
+    if not sc.empty:
+        out["scoreboard"] = scoreboard(sc).to_dict("records")
+    # one-paragraph conclusion
+    loud = [x for x in out["pulse"] if x.get("level") in ("ALERT", "WARN")]
+    nl = [x["ticker"] for x in out["flags"] if x["kind"] == "new_leader"]
+    bd = [x["ticker"] for x in out["flags"] if x["kind"] == "breakdown"]
+    c = (f"Radar (as of the {asof} close): {out.get('n_leaders', 0)} of {out.get('n_ranked', 0)} funds lead "
+         "(uptrend and top fifth vs SPY)")
+    if out["leaders"]:
+        c += " — strongest " + ", ".join(x["ticker"] for x in out["leaders"][:5])
+    c += ". "
+    if out["scan_date"]:
+        first = any(str(n).startswith("First scan") for n in out["notes"]) and out["scan_date"] == asof
+        c += (f"Last scan {out['scan_date']}: "
+              + ("first scan, nothing to compare yet" if first and not out["flags"] else "")
+              + ("" if first and not out["flags"] else ("new leaders " + ", ".join(nl) if nl else "no new leaders"))
+              + ("" if first and not out["flags"] else ("; breakdowns " + ", ".join(bd) if bd else "; no breakdowns"))
+              + ". ")
+    if loud:
+        c += f"{len(loud)} close alert(s): " + " ".join(x["text"] for x in loud) + " "
+    if out["stale"]:
+        c = f"⚠ STALE — the radar's last bar is {asof}, older than the {sess} session. " + c
+    out["conclusion"] = c.strip() + " Alert-only: no book acts on it."
+    return out
+
+
+def _r(v, dp: int = 2):
+    try:
+        v = float(v)
+        return None if math.isnan(v) else round(v, dp)
+    except (TypeError, ValueError):
+        return None
+
+
 # ── run ─────────────────────────────────────────────────────────────────────
 
 def fetch(tickers: list, period: str = "3y") -> pd.DataFrame:
@@ -506,6 +605,41 @@ def selftest() -> dict:
     md = render("T", p, metrics(slide), True, fl, b, ["n"])
     if "Pulse" not in md or "Radar scoreboard" not in md:
         f.append("report sections")
+    # v1.1: brief_summary reads the saved files; missing / stale are said, never read as quiet
+    import tempfile
+    tmp = Path(tempfile.mkdtemp())
+    if brief_summary(tmp, "2026-11-20")["available"] or "data gap" not in brief_summary(tmp)["conclusion"]:
+        f.append("brief_summary: a missing radar must be unavailable and called a data gap")
+    rd = tmp / "radar"
+    rd.mkdir()
+    mm = pd.DataFrame({"close": [1.0, 1, 1, 1], "ret_1d": [2.0, -3, 0.5, -0.1], "z_1d": [3.0, -2.5, 0.4, float("nan")],
+                       "ret_5d": [1.0, 1, 1, 1], "trend": [True, False, True, True], "vs_200d": [5.0, -4, 2, 1],
+                       "rs": [20.0, -10, 5, 1], "from_high": [-1.0, -9, -2, -3], "rs_pct": [100.0, 25, 75, 50],
+                       "leader": [True, False, False, False]}, index=["XLV", "SMH", "XLE", "SPY"])
+    mm.to_csv(rd / "latest_metrics.csv")
+    (rd / "latest.json").write_text(json.dumps({"asof": "2026-11-23", "scan": True, "notes": [],
+                                                "pulse": [{"key": "k", "level": "ALERT", "text": "SPY closed -8.6%."},
+                                                          {"key": "i", "level": "INFO", "text": "quiet"}]}))
+    pd.DataFrame({"date": ["2026-11-20", "2026-11-23"], "ticker": ["XLE", "XLV"], "leader": [True, True],
+                  "rs": [1.0, 2], "rs_pct": [90.0, 95], "trend": [True, True]}).to_csv(rd / "scan_history.csv", index=False)
+    pd.DataFrame({"date": ["2026-11-20", "2026-11-23", "2026-11-23"], "ticker": ["SMH", "XLV", "XLE"],
+                  "kind": ["new_leader", "new_leader", "breakdown"], "close": [1.0, 1, 1]}).to_csv(rd / "flags.csv", index=False)
+    bs = brief_summary(tmp, "2026-11-23")
+    if not bs["available"] or bs["stale"] or bs["scan_date"] != "2026-11-23":
+        f.append(f"brief_summary: fresh read {bs['stale']} {bs['scan_date']}")
+    if [x["ticker"] for x in bs["leaders"]] != ["XLV"] or bs.get("n_leaders") != 1 or bs.get("n_ranked") != 4:
+        f.append("brief_summary: leaders come from the leader column, strongest first")
+    if sorted((x["ticker"], x["kind"]) for x in bs["flags"]) != [("XLE", "breakdown"), ("XLV", "new_leader")]:
+        f.append("brief_summary: only the last scan's flags")
+    if [x["ticker"] for x in bs["movers_up"]] != ["XLV", "XLE"] or [x["ticker"] for x in bs["movers_down"]] != ["SMH"]:
+        f.append("brief_summary: movers by z, NaN skipped")
+    if "new leaders XLV" not in bs["conclusion"] or "breakdowns XLE" not in bs["conclusion"] \
+            or "SPY closed -8.6%" not in bs["conclusion"] or "quiet" in bs["conclusion"]:
+        f.append("brief_summary: conclusion names flags and only ALERT/WARN pulse lines")
+    if not brief_summary(tmp, "2026-11-24")["stale"] or "STALE" not in brief_summary(tmp, "2026-11-24")["conclusion"]:
+        f.append("brief_summary: an older bar than the session must be STALE")
+    if {a["area"]: a["uptrend"] for a in bs["areas"]}.get("US sectors") != 2:
+        f.append("brief_summary: uptrend count by area")
     return {"ok": not f, "failures": f, "version": VERSION}
 
 
