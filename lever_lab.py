@@ -1,5 +1,5 @@
 """
-lever_lab.py  (v1.1 — 2026-11-21)
+lever_lab.py  (v1.2 — 2026-11-21)
 ──────────────────────────────────
 Swing book only. Two pre-registered tests of "bigger wins per trade" (Matt, 2026-11-21:
 "aiming for possible swing trade wins and/or trading options wins that are north of
@@ -46,6 +46,10 @@ v1.1 (2026-11-21): the first run was killed after 9 minutes (runner shutdown) �
   map per fund now; progress lines are printed. Added a DELTA SWEEP (0.50-0.90, report only, not a
   bar and not a trial): delta is a design choice to research, and cheaper deltas make more funds
   affordable on $10k. Rules and bars are unchanged from v1.0.
+v1.2 (2026-11-21): run 2 finished the analysis but crashed saving summary.json (year keys were
+  dates) and ran without XLB (yfinance cache "database is locked"). Outputs go through one
+  writer (write_outputs) with a JSON sanitizer, tested in the selftest; missing funds are retried
+  one at a time, and the run stops (writes nothing) if any pre-registered fund is still missing.
 
 Run:  python lever_lab.py            (Actions: needs yfinance)
       python lever_lab.py --selftest (offline)
@@ -63,7 +67,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-VERSION = "1.1"
+VERSION = "1.2"
 ND = NormalDist()
 OUT_DATA, OUT_LOGS = Path("data/lever_lab"), Path("logs/lever_lab")
 TRIALS_BEFORE = 91
@@ -738,12 +742,63 @@ def render(s1: dict, s2: dict, stamp: str) -> str:
     return "\n".join(L) + "\n"
 
 
+def _jsonable(v):
+    """JSON-safe copy: dict keys become strings (dates as ISO), numpy scalars become floats/ints."""
+    if isinstance(v, dict):
+        return {(k.date().isoformat() if isinstance(k, pd.Timestamp) else str(k)): _jsonable(x) for k, x in v.items()}
+    if isinstance(v, (list, tuple)):
+        return [_jsonable(x) for x in v]
+    if isinstance(v, (np.floating, float)):
+        return float(v) if np.isfinite(v) else None
+    if isinstance(v, (np.integer,)):
+        return int(v)
+    if isinstance(v, (np.bool_,)):
+        return bool(v)
+    if isinstance(v, pd.Timestamp):
+        return v.date().isoformat()
+    return v
+
+
+def write_outputs(s1: dict, s2: dict, stamp: str, out_data: Path, out_logs: Path) -> str:
+    md = render(s1, s2, stamp)
+    out_data.mkdir(parents=True, exist_ok=True)
+    out_logs.mkdir(parents=True, exist_ok=True)
+    summ = {"version": VERSION, "asof": stamp, "trials": TRIALS_BEFORE + TRIALS_HERE,
+            "S1a": s1["S1a"]["verdict"], "S1b": s1["S1b"]["verdict"], "S2": s2["verdict"],
+            "stock_R": s1["stock_R"], "afford": s1["afford"], "feas": s1["feas"]}
+    js = json.dumps(_jsonable(summ), indent=1, default=str)     # serialize BEFORE writing anything
+    (out_logs / "latest.md").write_text(md)
+    (out_logs / f"{stamp}.md").write_text(md)
+    for key in ("S1a", "S1b"):
+        pd.DataFrame([{k: x[k] for k in ("ticker", "entry_date", "exit_date", "K", "cost", "ret", "hold_days", "open", "stock_r")}
+                      for x in s1[key]["opts"]]).to_csv(out_data / f"{key}_trades.csv", index=False)
+        s1[key]["nav"].round(2).to_csv(out_data / f"{key}_nav.csv")
+    pd.DataFrame([{k: t[k] for k in t if k != "path"} for t in s2["trades"]]).to_csv(out_data / "S2_trades.csv", index=False)
+    s2["nav"].round(2).to_csv(out_data / "S2_nav.csv")
+    (out_data / "summary.json").write_text(js)
+    return md
+
+
 def main() -> int:
     import swing_backtest as bt
     stamp = datetime.now(timezone.utc).date().isoformat()
     etfs = [t for t in bt.SECTOR_ETFS + list(bt.OTHER_ETFS) if t not in bt.LEVERAGED]
     _log("fetching prices ...")
     ohlcv = bt.fetch_ohlcv(sorted(set(etfs)), start="2003-06-01")
+    for attempt in range(3):                       # v1.2: retry missing funds one at a time
+        miss = sorted(set(etfs) - set(ohlcv))
+        if not miss:
+            break
+        _log(f"retry {attempt + 1}: {', '.join(miss)}")
+        import time
+        time.sleep(3)
+        for t in miss:
+            ohlcv.update(bt.fetch_ohlcv([t], start="2003-06-01"))
+    miss = sorted(set(etfs) - set(ohlcv))
+    if miss:
+        print(f"[lever_lab] DATA FAILURE: no prices for {', '.join(miss)} after 3 retries — the pre-registered "
+              "fund list is incomplete; nothing written. Rerun later.")
+        return 1
     misc = _yf_close(["^VIX", "^IRX", "SPY", "QQQ", "UPRO", "TQQQ"], "1998-01-01")
     if "^VIX" not in misc or "^IRX" not in misc or "SPY" not in ohlcv or "QQQ" not in misc:
         print("[lever_lab] DATA FAILURE: VIX, IRX, SPY or QQQ missing; nothing written.")
@@ -752,31 +807,11 @@ def main() -> int:
     irx = misc["^IRX"]["Close"]
     cal_all = misc["SPY"].index
     cash_d = (irx.reindex(cal_all).ffill() / 100.0 / 252).fillna(0.0)
-    missing = sorted(set(etfs) - set(ohlcv))
     s1 = run_s1(ohlcv, vix, irx, cash_d)
     _log("S2: washout snapback ...")
     s2 = run_s2({"SPY": misc["SPY"], "QQQ": misc["QQQ"]}, vix, cash_d,
                 {k: misc[k]["Close"] for k in ("UPRO", "TQQQ") if k in misc})
-    md = render(s1, s2, stamp)
-    if missing:
-        md += f"\nNo data for: {', '.join(missing)}\n"
-    OUT_DATA.mkdir(parents=True, exist_ok=True)
-    OUT_LOGS.mkdir(parents=True, exist_ok=True)
-    (OUT_LOGS / "latest.md").write_text(md)
-    (OUT_LOGS / f"{stamp}.md").write_text(md)
-    for key in ("S1a", "S1b"):
-        pd.DataFrame([{k: x[k] for k in ("ticker", "entry_date", "exit_date", "K", "cost", "ret", "hold_days", "open", "stock_r")}
-                      for x in s1[key]["opts"]]).to_csv(OUT_DATA / f"{key}_trades.csv", index=False)
-        s1[key]["nav"].round(2).to_csv(OUT_DATA / f"{key}_nav.csv")
-    pd.DataFrame([{k: t[k] for k in t if k != "path"} for t in s2["trades"]]).to_csv(OUT_DATA / "S2_trades.csv", index=False)
-    s2["nav"].round(2).to_csv(OUT_DATA / "S2_nav.csv")
-
-    def _j(v):
-        return {k: (_j(x) if isinstance(x, dict) else x) for k, x in v.items() if k not in ("opts", "nav", "trades")}
-    summ = {"version": VERSION, "asof": stamp, "trials": TRIALS_BEFORE + TRIALS_HERE,
-            "S1a": s1["S1a"]["verdict"], "S1b": s1["S1b"]["verdict"], "S2": s2["verdict"],
-            "stock_R": s1["stock_R"], "afford": s1["afford"], "feas": s1["feas"]}
-    (OUT_DATA / "summary.json").write_text(json.dumps(summ, indent=1, default=str))
+    md = write_outputs(s1, s2, stamp, OUT_DATA, OUT_LOGS)
     print(md)
     return 0
 
@@ -905,6 +940,33 @@ def selftest() -> dict:
     nb2, _ = s1_book(opts, cal[:30], pd.Series(0.0, index=cal), allowed={"T0"})
     if abs(nb2.iloc[-1] - 10_500) > 1e-6:
         f.append("S1 book: the affordable filter must drop other funds")
+    # v1.2: the writer must serialize what the run produces (date-keyed years, numpy values, NaN)
+    import tempfile
+    tmp = Path(tempfile.mkdtemp())
+    yrs = {pd.Timestamp("2024-12-31"): np.float64(5.0), pd.Timestamp("2025-12-31"): float("nan")}
+    vv = {"verdict": "FAIL", "fails": ["x"], "all": trade_stats([0.5, -0.2]), "halves": {}, "harsh_halves": {},
+          "robust": np.bool_(False), "stable": "0 of 4", "book": {"full": {"cagr": 1.0, "max_dd": -2.0}},
+          "spy": {"full": {"cagr": 2.0, "max_dd": -3.0}}, "hwm_stops": 0, "book_all_funds": {"cagr": 1.0, "max_dd": -1.0},
+          "taken": 1, "hold_median": 2.0, "years": yrs, "delta_sweep": []}
+    o1 = [{"ticker": "XLF", "entry_date": cal[0], "exit_date": cal[3], "K": 95.0, "cost": 1.0, "ret": 0.5,
+           "hold_days": 3, "open": False, "stock_r": 0.2}]
+    s1f = {"S1a": {"verdict": vv, "nav": nav, "opts": o1}, "S1b": {"verdict": dict(vv), "nav": nav, "opts": o1},
+           "stock_R": trade_stats([0.1]), "afford": ["XLF"],
+           "feas": [{"ticker": "XLF", "price": 50.0, "iv": 30.0, "one_contract": 400.0, "pct_of_10k": 4.0, "affordable": True}]}
+    v2 = {"verdict": "FAIL", "fails": [], "all": trade_stats([0.2, -0.1]), "halves": {}, "book": {"full": {"cagr": 1.0, "max_dd": -1.0}},
+          "tbill": {"full": {"cagr": 1.0, "max_dd": 0.0}}, "robust": False, "stable": "0 of 8", "worst_trade_eq": -1.0,
+          "worst_year": -1.0, "hwm_stops": 0, "years": yrs, "neighbours": {}, "stress": trade_stats([0.1]),
+          "lev_check": {"UPRO": {"note": "x"}, "TQQQ": {"note": "x"}}, "episodes": {}, "live": {}}
+    s2f = {"verdict": v2, "nav": nav2, "trades": [{k: x for k, x in trs[0].items()}] if trs else []}
+    try:
+        write_outputs(s1f, s2f, "2026-11-21", tmp / "d", tmp / "l")
+        js = json.loads((tmp / "d" / "summary.json").read_text())
+        if js["S1a"]["years"].get("2024-12-31") != 5.0 or js["S1a"]["years"].get("2025-12-31") is not None:
+            f.append("writer: year keys must be ISO dates and NaN must become null")
+        if not (tmp / "l" / "latest.md").exists() or not (tmp / "d" / "S2_trades.csv").exists():
+            f.append("writer: report and trade files must be written")
+    except Exception as e:
+        f.append(f"writer crashed: {type(e).__name__}: {e}")
     return {"ok": not f, "failures": f, "version": VERSION}
 
 
