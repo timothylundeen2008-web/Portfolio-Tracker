@@ -1,16 +1,16 @@
 {
-  "version": "v1.1",
+  "version": "v1.1.1",
   "asof": "2026-11-20",
   "start": "2026-12-01",
   "error": null,
-  "generated_at": "2026-11-21T09:48:06+00:00",
+  "generated_at": "2026-11-21T12:03:27+00:00",
   "last_bar": "2026-11-20",
   "reads": [
     {
       "engine": "O11",
       "state": "DEF",
       "word": "DEFENSE",
-      "since": "2026-11-19",
+      "since": "2026-11-20",
       "switched_today": true,
       "previous": "OUT",
       "book_next": {
@@ -23,7 +23,7 @@
       "engine": "O9",
       "state": "DEF",
       "word": "DEFENSE",
-      "since": "2026-11-19",
+      "since": "2026-11-20",
       "switched_today": true,
       "previous": "OUT",
       "book_next": {
@@ -36,7 +36,7 @@
       "engine": "O7",
       "state": "DEF",
       "word": "DEFENSE",
-      "since": "2026-11-19",
+      "since": "2026-11-20",
       "switched_today": true,
       "previous": "BAL",
       "book_next": {
