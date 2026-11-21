@@ -1,6 +1,6 @@
 {
  "session": "2026-11-20",
- "generated_et": "Nov 20, 2026 10:29 PM EST",
+ "generated_et": "Nov 21, 2026 07:02 AM EST",
  "scoreboard": {
   "rows": [
    {
@@ -149,12 +149,12 @@
    },
    {
     "name": "WTI crude",
-    "value": 83.34059498373938,
+    "value": 83.34533186046356,
     "unit": "$",
     "kind": "index",
-    "d1": 1.0990515137760948,
-    "d5": -5.893634506257827,
-    "d20": -19.298346380516797,
+    "d1": 1.104786629335286,
+    "d5": -5.888285729321552,
+    "d20": -19.29375949480153,
     "d1_txt": "+1.1%",
     "d5_txt": "-5.9%",
     "d20_txt": "-19.3%",
@@ -635,10 +635,10 @@
   ],
   "flip_error": null,
   "guards": [
-   "cape: 36.44 (live, as of 2026-11-20)",
-   "top20 concentration pct: 48.24 (live, as of 2026-11-20) \u2014 top 20 SPY weights summed",
+   "cape: 36.44 (live, as of 2026-11-21)",
+   "top20 concentration pct: 48.24 (live, as of 2026-11-21) \u2014 top 20 SPY weights summed",
    "fed bs expanding: False (live, as of 2026-11-18) \u2014 flat / neutral: 4-wk avg -3.0B/wk, 13-wk avg -0.3B/wk",
-   "deficit gt 5pct gdp: True (manual, as of 2026-08-13, 99d old)"
+   "deficit gt 5pct gdp: True (manual, as of 2026-08-13, 100d old)"
   ],
   "guard_warnings": [],
   "repression": {
@@ -1648,7 +1648,7 @@
  "flow_map": {
   "available": true,
   "stale": false,
-  "age_hours": 0.7,
+  "age_hours": 9.2,
   "published_at": "2026-11-21T02:50:08+00:00",
   "data_through": "2026-11-20",
   "window": 20,
@@ -2199,19 +2199,257 @@
   },
   "conclusion": "47% of the proxy universe is above its 50-day and 50% above its 200-day; 0 new 52-week highs vs 9 new lows. Participation is mixed."
  },
+ "radar": {
+  "available": true,
+  "version": "1.1",
+  "asof": "2026-11-20",
+  "stale": false,
+  "scan_date": "2026-11-20",
+  "pulse": [
+   {
+    "key": "multi:SPY:5:down",
+    "level": "ALERT",
+    "text": "SPY closed -8.6% over 5 sessions."
+   },
+   {
+    "key": "multi:QQQ:5:down",
+    "level": "ALERT",
+    "text": "QQQ closed -10.5% over 5 sessions."
+   },
+   {
+    "key": "multi:IWM:5:down",
+    "level": "ALERT",
+    "text": "IWM closed -7.5% over 5 sessions."
+   },
+   {
+    "key": "engine2:SPY:below",
+    "level": "ALERT",
+    "text": "SPY closed below its 200-day for the 2nd day (-5.5%): the O11 Defense rule fires; the model trades next session."
+   }
+  ],
+  "leaders": [
+   {
+    "ticker": "USO",
+    "name": "Crude oil",
+    "area": "Commodities",
+    "rs": 37.64,
+    "vs_200d": 8.08,
+    "from_high": -17.64,
+    "ret_5d": -4.09
+   },
+   {
+    "ticker": "XLV",
+    "name": "Health care",
+    "area": "US sectors",
+    "rs": 16.86,
+    "vs_200d": 10.76,
+    "from_high": -6.55,
+    "ret_5d": -6.15
+   },
+   {
+    "ticker": "XLE",
+    "name": "Energy",
+    "area": "US sectors",
+    "rs": 16.4,
+    "vs_200d": 2.17,
+    "from_high": -13.58,
+    "ret_5d": -6.85
+   },
+   {
+    "ticker": "XLP",
+    "name": "Consumer staples",
+    "area": "US sectors",
+    "rs": 14.98,
+    "vs_200d": 7.36,
+    "from_high": -2.31,
+    "ret_5d": -2.05
+   },
+   {
+    "ticker": "IBB",
+    "name": "Biotech",
+    "area": "US industries",
+    "rs": 14.79,
+    "vs_200d": 6.37,
+    "from_high": -9.76,
+    "ret_5d": -6.1
+   },
+   {
+    "ticker": "CIBR",
+    "name": "Cybersecurity",
+    "area": "Themes",
+    "rs": 14.38,
+    "vs_200d": 7.56,
+    "from_high": -16.88,
+    "ret_5d": -3.8
+   },
+   {
+    "ticker": "IWD",
+    "name": "Large value",
+    "area": "US broad",
+    "rs": 12.36,
+    "vs_200d": 3.04,
+    "from_high": -6.74,
+    "ret_5d": -6.04
+   },
+   {
+    "ticker": "KIE",
+    "name": "Insurance",
+    "area": "US industries",
+    "rs": 11.72,
+    "vs_200d": 7.09,
+    "from_high": -3.29,
+    "ret_5d": -2.42
+   },
+   {
+    "ticker": "UUP",
+    "name": "US dollar",
+    "area": "Currencies & alts",
+    "rs": 10.57,
+    "vs_200d": 5.42,
+    "from_high": -0.03,
+    "ret_5d": 0.41
+   },
+   {
+    "ticker": "DBMF",
+    "name": "Managed futures",
+    "area": "Currencies & alts",
+    "rs": 10.31,
+    "vs_200d": 1.42,
+    "from_high": -5.58,
+    "ret_5d": -2.99
+   },
+   {
+    "ticker": "XRT",
+    "name": "Retail",
+    "area": "US industries",
+    "rs": 8.47,
+    "vs_200d": 1.21,
+    "from_high": -7.71,
+    "ret_5d": -5.01
+   },
+   {
+    "ticker": "BKLN",
+    "name": "Senior loans",
+    "area": "Rates & credit",
+    "rs": 6.35,
+    "vs_200d": 2.09,
+    "from_high": -0.49,
+    "ret_5d": -0.29
+   }
+  ],
+  "flags": [],
+  "movers_up": [
+   {
+    "ticker": "TIP",
+    "name": "TIPS",
+    "ret_1d": 0.68,
+    "z_1d": 2.92
+   },
+   {
+    "ticker": "FXY",
+    "name": "Japanese yen",
+    "ret_1d": 0.8,
+    "z_1d": 2.41
+   },
+   {
+    "ticker": "IEF",
+    "name": "7\u201310y Treasuries",
+    "ret_1d": 0.91,
+    "z_1d": 2.38
+   }
+  ],
+  "movers_down": [
+   {
+    "ticker": "ETHA",
+    "name": "Ether",
+    "ret_1d": -9.16,
+    "z_1d": -2.9
+   },
+   {
+    "ticker": "IWF",
+    "name": "Large growth",
+    "ret_1d": -6.02,
+    "z_1d": -2.86
+   },
+   {
+    "ticker": "SMH",
+    "name": "Semiconductors",
+    "ret_1d": -10.6,
+    "z_1d": -2.62
+   }
+  ],
+  "areas": [
+   {
+    "area": "Commodities",
+    "funds": 11,
+    "uptrend": 1,
+    "median_rs": -16.33
+   },
+   {
+    "area": "Currencies & alts",
+    "funds": 7,
+    "uptrend": 2,
+    "median_rs": 3.5
+   },
+   {
+    "area": "International",
+    "funds": 17,
+    "uptrend": 0,
+    "median_rs": -1.93
+   },
+   {
+    "area": "Rates & credit",
+    "funds": 8,
+    "uptrend": 2,
+    "median_rs": 2.68
+   },
+   {
+    "area": "Themes",
+    "funds": 13,
+    "uptrend": 1,
+    "median_rs": -13.96
+   },
+   {
+    "area": "US broad",
+    "funds": 9,
+    "uptrend": 2,
+    "median_rs": 0.0
+   },
+   {
+    "area": "US industries",
+    "funds": 18,
+    "uptrend": 3,
+    "median_rs": 3.82
+   },
+   {
+    "area": "US sectors",
+    "funds": 11,
+    "uptrend": 4,
+    "median_rs": 3.71
+   }
+  ],
+  "scoreboard": [],
+  "notes": [
+   "Latest SPY bar is 2026-11-20, not today (2026-11-21): data delayed or not a session.",
+   "First scan: no earlier scan to compare, so no flags today."
+  ],
+  "conclusion": "Radar (as of the 2026-11-20 close): 12 of 94 funds lead (uptrend and top fifth vs SPY) \u2014 strongest USO, XLV, XLE, XLP, IBB. Last scan 2026-11-20: first scan, nothing to compare yet. 4 close alert(s): SPY closed -8.6% over 5 sessions. QQQ closed -10.5% over 5 sessions. IWM closed -7.5% over 5 sessions. SPY closed below its 200-day for the 2nd day (-5.5%): the O11 Defense rule fires; the model trades next session. Alert-only: no book acts on it.",
+  "n_leaders": 12,
+  "n_ranked": 94
+ },
  "model": {
   "available": true,
-  "conclusion": "Engine O11: the book holds FAST-EXIT \u2192 BALANCED (the `transition_ambiguous` regime book). You SHOULD hold the book above. Model book 90.35 (-11.4% from peak; 20d -9.1%). \u26a0 Drawdown past -5% \u2014 the engine's \u22128% Offense stop and trend rules are the control. Adds waiting on the entry gate (parked in SGOV): KMLM. 2 weight change(s) vs the prior session. Since 2026-08-12: model -9.65% vs SPY -10.48% and 60/40 -6.43%. \u26a0 AI / growth tech carries 52% of book risk \u2265 40% (PROPOSED limit). Engine O11 SWITCHED FAST-EXIT (Balanced) \u2192 DEFENSE at the 2026-11-20 close: the model book moves at the next session.",
+  "conclusion": "\u26a0 ENGINE SWITCH at the 2026-11-20 close: FAST-EXIT (Balanced) \u2192 DEFENSE. From the 2026-11-23 session the model book holds SGOV 60 / GLD 20 / TLT 20 \u2014 the whole book, replacing today's sleeves. Engine O11: the book holds FAST-EXIT \u2192 BALANCED (the `transition_ambiguous` regime book). Today's book (the sleeve table) is OUTGOING. Model book 90.35 (-11.4% from peak; 20d -9.1%). \u26a0 Drawdown past -5% \u2014 the engine's \u22128% Offense stop and trend rules are the control. Adds waiting on the entry gate (parked in SGOV): KMLM. 2 weight change(s) vs the prior session. Since 2026-08-12: model -9.65% vs SPY -10.48% and 60/40 -6.43%. \u26a0 AI / growth tech carries 52% of book risk \u2265 40% (PROPOSED limit).",
   "engine": {
    "available": true,
    "engine": "O11",
-   "version": "v1.0",
+   "version": "v1.0.1",
    "state": "DEF",
    "word": "DEFENSE",
    "asof": "2026-11-20",
    "previous": "OUT",
    "switched": true,
-   "since": "2026-11-19",
+   "since": "2026-11-20",
    "credit_data": true,
    "conclusion": "Engine O11 SWITCHED FAST-EXIT (Balanced) \u2192 DEFENSE at the 2026-11-20 close: the model book moves at the next session."
   },
@@ -2227,6 +2465,20 @@
    "ret_1m": -9.71,
    "ret_3m": -9.42,
    "ret_12_1": 16.54
+  },
+  "switch": {
+   "from": "OUT",
+   "to": "DEF",
+   "word": "DEFENSE",
+   "from_word": "FAST-EXIT (Balanced)",
+   "asof": "2026-11-20",
+   "effective": "2026-11-23",
+   "next_book": {
+    "SGOV": 60.0,
+    "GLD": 20.0,
+    "TLT": 20.0
+   },
+   "book_txt": "SGOV 60 / GLD 20 / TLT 20"
   },
   "attribution": {
    "available": true,
@@ -2924,19 +3176,18 @@
     "vs_spy_3m": 10.45
    }
   ],
-  "actions": [],
-  "weekend": [
-   "Model portfolio changed today (KMLM -1.5, SGOV +1.5) \u2014 execute at the weekend review if following it",
-   "Engine O11 switched at today's close to DEFENSE: the model book moves at the NEXT session"
+  "actions": [
+   "ENGINE SWITCH at the 2026-11-20 close \u2192 DEFENSE \u2014 from the 2026-11-23 session the model book holds SGOV 60 / GLD 20 / TLT 20, replacing the whole book (weekday-authorized, like a stop)"
   ],
+  "weekend": [],
   "path": "data/model_book.csv",
   "regime_held": false
  },
  "portfolio": {
   "available": false,
   "active": false,
-  "ledger_age_days": 117,
-  "conclusion": "Ledger last touched 117 days ago \u2014 not tracking real positions, so it is not used. The model portfolio (section 8) is what you SHOULD hold."
+  "ledger_age_days": 118,
+  "conclusion": "Ledger last touched 118 days ago \u2014 not tracking real positions, so it is not used. The model portfolio (section 8) is what you SHOULD hold."
  },
  "swing": {
   "available": true,
@@ -3631,7 +3882,7 @@
   "next_event": {
    "event": "PCE",
    "date": "2026-11-25",
-   "days_away": 5,
+   "days_away": 4,
    "affects": "Rates-sensitive sleeves",
    "blackout": false
   },
@@ -3639,7 +3890,7 @@
    "PCE \u2014 hot core PCE pushes DFII10 up. Cool PCE with DFII10 reversing lower:"
   ],
   "calendar_asof": "2026-11-01",
-  "conclusion": "No scheduled binary event in the next two sessions \u2014 the event block is clear. Next: PCE on 2026-11-25 (5 days)."
+  "conclusion": "No scheduled binary event in the next two sessions \u2014 the event block is clear. Next: PCE on 2026-11-25 (4 days)."
  },
  "alerts": [
   {
@@ -4428,16 +4679,16 @@
   ],
   "scorecard": {
    "coverage": {
-    "signals": 156,
+    "signals": 163,
     "by_type": {
      "confluence_2of3": 12,
      "confluence_3of3": 25,
-     "flow_divergence": 85,
+     "flow_divergence": 91,
      "flow_into_stocks": 1,
      "gold_gate_fail": 1,
      "gold_gate_pass": 1,
      "regime_transition": 2,
-     "regime_weekly": 14,
+     "regime_weekly": 15,
      "stealth_flag": 15
     },
     "types_ready": [
@@ -4453,7 +4704,7 @@
     "1w": [
      {
       "signal_type": "flow_divergence",
-      "logged": 85,
+      "logged": 91,
       "n": 73,
       "hit_rate": 35.6,
       "avg_rel": -1.05,
@@ -4480,7 +4731,7 @@
      },
      {
       "signal_type": "regime_weekly",
-      "logged": 14,
+      "logged": 15,
       "n": 14,
       "hit_rate": NaN,
       "avg_rel": 0.16,
@@ -4545,7 +4796,7 @@
      },
      {
       "signal_type": "regime_weekly",
-      "logged": 14,
+      "logged": 15,
       "n": 10,
       "hit_rate": null,
       "avg_rel": 0.42,
@@ -4590,12 +4841,12 @@
      },
      {
       "signal_type": "flow_divergence",
-      "logged": 85,
+      "logged": 91,
       "n": 0,
       "hit_rate": null,
       "avg_rel": NaN,
       "med_rel": NaN,
-      "verdict": "WAITING \u2014 85 logged, none past the 4w horizon yet"
+      "verdict": "WAITING \u2014 91 logged, none past the 4w horizon yet"
      },
      {
       "signal_type": "stealth_flag",
@@ -4619,7 +4870,7 @@
     "12w": [
      {
       "signal_type": "regime_weekly",
-      "logged": 14,
+      "logged": 15,
       "n": 2,
       "hit_rate": null,
       "avg_rel": 1.58,
@@ -4637,12 +4888,12 @@
      },
      {
       "signal_type": "flow_divergence",
-      "logged": 85,
+      "logged": 91,
       "n": 0,
       "hit_rate": null,
       "avg_rel": NaN,
       "med_rel": NaN,
-      "verdict": "WAITING \u2014 85 logged, none past the 12w horizon yet"
+      "verdict": "WAITING \u2014 91 logged, none past the 12w horizon yet"
      },
      {
       "signal_type": "confluence_3of3",
@@ -4701,94 +4952,9 @@
     ]
    }
   },
-  "conclusion": "156 signals on record since 2026-08-14; 7 new this run (flow_divergence, regime_weekly). 4-week scores so far: confluence_3of3 n=13 avg +3.07pp; regime_weekly n=10 avg +0.42pp; confluence_2of3 n=10 avg +1.64pp; regime_transition n=2 avg -0.14pp; gold_gate_fail n=1 avg +5.94pp. Hit rates appear only at 20+ scored signals.",
-  "new_today": [
-   {
-    "signal_id": "2026-11-20_regime_weekly_PORT",
-    "date": "2026-11-20",
-    "signal_type": "regime_weekly",
-    "subject": "PORT",
-    "direction": "long",
-    "price_at_signal": null,
-    "benchmark_at_signal": null,
-    "context": "regime=transition_ambiguous",
-    "notes": "{\"weights\": {\"VGT\": 17.0, \"SMH\": 3.0, \"QQQ\": 3.0, \"GLD\": 10.0, \"SLV\": 4.0, \"RING\": 4.0, \"XLE\": 5.0, \"PDBC\": 3.0, \"SCHD\": 13.5, \"XLV\": 5.0, \"XLU\": 3.0, \"SGOV\": 14.0, \"USFR\": 2.0, \"TLT\": 7.0, \"KMLM\": 4.0, \"DBMF\": 2.5, \"SCHP\": 0.0}, \"bench_weights\": {\"VGT\": 20, \"SMH\": 4, \"QQQ\": 4, \"GLD\": 12, \"SLV\": 5, \"RING\": 5, \"XLE\": 5, \"PDBC\": 3, \"SCHD\": 13, \"XLV\": 4, \"XLU\": 3, \"SGOV\": 5, \"USFR\": 3, \"TLT\": 10, \"KMLM\": 4}, \"bench\": \"BASE\"}",
-    "source": "daily_log"
-   },
-   {
-    "signal_id": "2026-11-20_flow_divergence_XRT",
-    "date": "2026-11-20",
-    "signal_type": "flow_divergence",
-    "subject": "XRT",
-    "direction": "long",
-    "price_at_signal": null,
-    "benchmark_at_signal": null,
-    "context": "ACCUMULATION (price down, money in) \u00b7 flow 60.93% AUM",
-    "notes": "",
-    "source": "rotation"
-   },
-   {
-    "signal_id": "2026-11-20_flow_divergence_KBE",
-    "date": "2026-11-20",
-    "signal_type": "flow_divergence",
-    "subject": "KBE",
-    "direction": "long",
-    "price_at_signal": null,
-    "benchmark_at_signal": null,
-    "context": "ACCUMULATION (price down, money in) \u00b7 flow 5.35% AUM",
-    "notes": "",
-    "source": "rotation"
-   },
-   {
-    "signal_id": "2026-11-20_flow_divergence_XOP",
-    "date": "2026-11-20",
-    "signal_type": "flow_divergence",
-    "subject": "XOP",
-    "direction": "long",
-    "price_at_signal": null,
-    "benchmark_at_signal": null,
-    "context": "ACCUMULATION (price down, money in) \u00b7 flow 4.27% AUM",
-    "notes": "",
-    "source": "rotation"
-   },
-   {
-    "signal_id": "2026-11-20_flow_divergence_SCHD",
-    "date": "2026-11-20",
-    "signal_type": "flow_divergence",
-    "subject": "SCHD",
-    "direction": "long",
-    "price_at_signal": null,
-    "benchmark_at_signal": null,
-    "context": "ACCUMULATION (price down, money in) \u00b7 flow 3.21% AUM",
-    "notes": "",
-    "source": "rotation"
-   },
-   {
-    "signal_id": "2026-11-20_flow_divergence_USFR",
-    "date": "2026-11-20",
-    "signal_type": "flow_divergence",
-    "subject": "USFR",
-    "direction": "long",
-    "price_at_signal": null,
-    "benchmark_at_signal": null,
-    "context": "ACCUMULATION (price down, money in) \u00b7 flow 2.71% AUM",
-    "notes": "",
-    "source": "rotation"
-   },
-   {
-    "signal_id": "2026-11-20_flow_divergence_XLV",
-    "date": "2026-11-20",
-    "signal_type": "flow_divergence",
-    "subject": "XLV",
-    "direction": "long",
-    "price_at_signal": null,
-    "benchmark_at_signal": null,
-    "context": "ACCUMULATION (price down, money in) \u00b7 flow 0.58% AUM",
-    "notes": "",
-    "source": "rotation"
-   }
-  ],
-  "recorded": 7
+  "conclusion": "163 signals on record since 2026-08-14; 0 new this run. 4-week scores so far: confluence_3of3 n=13 avg +3.07pp; regime_weekly n=10 avg +0.42pp; confluence_2of3 n=10 avg +1.64pp; regime_transition n=2 avg -0.14pp; gold_gate_fail n=1 avg +5.94pp. Hit rates appear only at 20+ scored signals.",
+  "new_today": [],
+  "recorded": 0
  },
  "data_health": [
   {
@@ -4855,6 +5021,13 @@
    "note": "one series of front-month settles: Yahoo CL=F daily for completed sessions, latest 5 rebuilt from 1-min bars (VWAP 14:28\u201314:30 ET); method check \u2014 Yahoo daily vs rebuilt on 4 earlier session(s): max $0.97; FRED spot minus settle on 2026-11-17: +3.50 (market spread, not an error); front-month expiry 2026-11-20 (Dec 2026 contract) inside the 20-day window \u2014 changes spanning it include the roll"
   },
   {
+   "input": "Opportunity Radar (market_radar.py)",
+   "asof": "2026-11-20",
+   "age_days": 0,
+   "status": "OK",
+   "note": "alert-only; runs ~5:20 PM ET weekdays \u2014 stale means the evening run failed or has not run"
+  },
+  {
    "input": "Regime assessment",
    "asof": "2026-11-20",
    "age_days": 0,
@@ -4864,7 +5037,7 @@
   {
    "input": "Money Flow bridge",
    "asof": "2026-11-21",
-   "age_days": -1,
+   "age_days": 0,
    "status": "OK",
    "note": ""
   },
@@ -4878,14 +5051,14 @@
   {
    "input": "Flow map summary",
    "asof": "2026-11-21",
-   "age_days": -1,
+   "age_days": 0,
    "status": "OK",
    "note": ""
   },
   {
    "input": "Markets bridge",
    "asof": "2026-11-18",
-   "age_days": 2,
+   "age_days": 3,
    "status": "STALE",
    "note": ""
   },
@@ -4899,7 +5072,7 @@
   {
    "input": "Position ledger",
    "asof": "2026-07-26",
-   "age_days": 117,
+   "age_days": 118,
    "status": "UNUSED",
    "note": "not tracking real positions \u2014 the model portfolio (section 8) is the reference"
   },
@@ -4956,7 +5129,7 @@
   "\ud83d\udd14 **Risk alerts:** ALERT Data failure: 1 input(s) block decisions; ALERT Model book -11.4% from peak \u2014 alert; ALERT Engine O11 \u2192 DEFENSE (from OUT). Pushed to the phone by tonight's Alerts run (GitHub issues).",
   "Biggest moves: S&P 500 (SPY) -3.6% to 689.81 (-4.2\u03c3, 38th pctile); Nasdaq 100 (QQQ) -5.7% to 608.45 (-4.2\u03c3, 19th pctile).",
   "Regime `transition_ambiguous` (session 26); cross-asset majority WATCH; nearest flip is HY OAS 2-week change +0.21pp to `credit_stress` (~3 typical days).",
-  "Model portfolio: `transition_ambiguous`, drawdown -11.4%, 2 weight change(s) today."
+  "Model portfolio: `transition_ambiguous`, drawdown -11.4%, 2 weight change(s) today. Authorized today: ENGINE SWITCH at the 2026-11-20 close \u2192 DEFENSE. From the 2026-11-23 session the model book holds SGOV 60 / GLD 20 / TLT 20."
  ],
  "risk_alerts": {
   "available": true,
@@ -4991,9 +5164,6 @@
    "HY OAS 3.52pp \u2192 4.50pp flips to `credit_stress` (~18 typical days)",
    "Short real rate 0.14pp \u2192 0.26pp flips to `neutral` \u2014 \u22480.5 \u00d7 a 25bp policy move, or the CPI equivalent"
   ],
-  "weekend": [
-   "Model portfolio changed today (KMLM -1.5, SGOV +1.5) \u2014 execute at the weekend review if following it",
-   "Engine O11 switched at today's close to DEFENSE: the model book moves at the NEXT session"
-  ]
+  "weekend": []
  }
 }
