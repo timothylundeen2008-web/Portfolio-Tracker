@@ -1,4 +1,4 @@
-# Engine shadow v1.1 — 2026-11-19
+# Engine shadow v1.1 — 2026-11-20
 
 Forward record of the frozen engines from **2026-12-01** (offense_lab rules; no real money). Live regime inside Balanced: `transition_ambiguous`.
 
@@ -6,9 +6,9 @@ Forward record of the frozen engines from **2026-12-01** (offense_lab rules; no 
 
 | Engine | State | Since | Switch today | Holds from the next session |
 |---|---|---|---|---|
-| O11 O9, 50-day exit only when credit confirms (−8% stop unconditional) | **FAST-EXIT** | 2026-10-16 | no | VGT 17%, SCHD 14%, GLD 10%, TLT 7%, KMLM 7%, XLE 5% (+11 more) |
-| O9 O7, fast exit (QQQ < 50d or −8%) to Balanced, slow re-entry | **FAST-EXIT** | 2026-10-16 | no | VGT 17%, SCHD 14%, GLD 10%, TLT 7%, KMLM 7%, XLE 5% (+11 more) |
-| O7 Three-state O2: Offense / Balanced (mixed) / Defense (SPY < 200d) | **BALANCED** | 2026-11-13 | no | VGT 17%, SCHD 14%, GLD 10%, TLT 7%, KMLM 7%, XLE 5% (+11 more) |
+| O11 O9, 50-day exit only when credit confirms (−8% stop unconditional) | **DEFENSE** | 2026-11-19 | **yes** (FAST-EXIT → DEFENSE) | SGOV 60%, GLD 20%, TLT 20% |
+| O9 O7, fast exit (QQQ < 50d or −8%) to Balanced, slow re-entry | **DEFENSE** | 2026-11-19 | **yes** (FAST-EXIT → DEFENSE) | SGOV 60%, GLD 20%, TLT 20% |
+| O7 Three-state O2: Offense / Balanced (mixed) / Defense (SPY < 200d) | **DEFENSE** | 2026-11-19 | **yes** (BALANCED → DEFENSE) | SGOV 60%, GLD 20%, TLT 20% |
 
 The forward record starts on 2026-12-01; until then this page only reports the engines' reads.
 
