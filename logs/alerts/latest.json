@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-20T12:10:41+00:00",
+  "generated_at": "2026-11-21T03:30:18+00:00",
   "date": "2026-11-20",
   "version": "alerts v1.1 (engine layer, 2026-11-13)",
   "selftest_ok": true,
@@ -15,8 +15,14 @@
     {
       "key": "LT_DD_10",
       "severity": "alert",
-      "state": "hold",
-      "title": "Model book -9.0% from peak \u2014 alert"
+      "state": "active",
+      "title": "Model book -11.4% from peak \u2014 alert"
+    },
+    {
+      "key": "LT_ENGINE",
+      "severity": "alert",
+      "state": "active",
+      "title": "Engine O11 \u2192 DEFENSE (from OUT)"
     },
     {
       "key": "DATA_FAIL",
@@ -26,6 +32,16 @@
     }
   ],
   "actions": [
+    {
+      "action": "open",
+      "key": "LT_DD_10",
+      "number": 11
+    },
+    {
+      "action": "open",
+      "key": "LT_ENGINE",
+      "number": 12
+    },
     {
       "action": "still open",
       "key": "DATA_FAIL",
