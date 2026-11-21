@@ -1,5 +1,7 @@
 """
-intraday_watch.py  (v1 — October 2026)
+intraday_watch.py  (v1.1 — 2026-11-20; v1.1: engine-mode drawdown wording (the breaker is retired),
+                    moves over 5 and 10 sessions, sharp rallies, sector breadth thrust,
+                    SPY/QQQ 200-day closes that drive the O11 engine)
 ──────────────────────────────────────
 Three intraday checks on trading days (about 11:00, 1:30 and 2:45 PM ET;
 GitHub may start them late). ALERT-ONLY: the model portfolio still changes
@@ -22,6 +24,18 @@ WHAT IT CHECKS (against the model portfolio you SHOULD hold)
   5. Trigger met      — an add the entry gate is holding back whose release
                          level is now exceeded (INFO only: it executes only
                          if it holds to the close).
+  6. Multi-day moves  — SPY, QQQ, IWM down or up 5%+ over 5 sessions or 8%+
+                         over 10 (a slide made of small days, or a sharp rally).
+  7. Sharp up day     — SPY +2.5% or QQQ/IWM +3.5% today (drops: SPY -3%,
+                         QQQ/IWM -3.5%).
+  8. Breadth thrust   — 9+ of the 11 sector ETFs above their 50-day today
+                         after 3 or fewer 5 sessions ago (often the turn).
+  9. Engine closes    — SPY/QQQ crossing their 200-day. The O11 engine acts on
+                         2 consecutive closes: WARN on the first cross, ALERT
+                         when today's close would be the second.
+  In engine mode (breaker column "ENGINE") the -5% / -8% breaker lines are
+  retired; the drawdown is shown and a WARN fires near -10% (alerts.py sends
+  the close-based -10% / -15% notices).
 
 HOW IT EMAILS
   It opens one GitHub issue per day ("Intraday watch — YYYY-MM-DD") that
@@ -48,13 +62,19 @@ import pandas as pd
 BOOK_FILE = Path("data/model_book.csv")
 BRIEF_GLOB = "logs/brief/*_brief.json"
 CASH = {"SGOV", "USFR", "BIL", "SHV"}
-WATCH_EXTRA = ["SPY", "^VIX", "HYG", "IEF"]
+SECTORS = ["XLK", "XLF", "XLE", "XLV", "XLI", "XLY", "XLP", "XLU", "XLB", "XLRE", "XLC"]
+WATCH_EXTRA = ["SPY", "QQQ", "IWM", "^VIX", "HYG", "IEF"] + SECTORS
 
 BREAKER_DD = -8.0
 WARN_DD = -5.0
 FAST_FALL_MIN_PCT = 3.0
 FAST_FALL_SIGMA = 2.5
 SPY_DROP_PCT = -3.0
+SPY_RALLY_PCT = 2.5
+IDX_DAY_PCT = 3.5                  # QQQ, IWM one-day move, either way
+MULTI = ((5, 5.0), (10, 8.0))      # (sessions, % either way) for SPY, QQQ, IWM
+THRUST_NOW, THRUST_BEFORE = 9, 3
+ENGINE_DD_WARN = -9.0              # engine mode: warn as the book nears the -10% alert
 VIX_LEVEL = 30.0
 VIX_JUMP_PCT = 25.0
 CREDIT_PROXY_PCT = -1.25
@@ -155,7 +175,11 @@ def run_checks(model: dict, closes: dict, today: pd.Timestamp, now_hour: float) 
         nav = model["nav"] * (1 + r_book)
         dd = (nav / max(model["peak"], nav) - 1) * 100
         rows.append(("Model book", f"{r_book * 100:+.2f}% since {model['date']}", f"drawdown {dd:+.1f}%"))
-        if model.get("breaker") != "ON" and dd <= BREAKER_DD:
+        if model.get("breaker") == "ENGINE":
+            if dd <= ENGINE_DD_WARN:
+                add("dd_engine", "WARN", f"Model drawdown {dd:.1f}% at live prices (engine mode: no breaker; "
+                                         f"the engine's own rules decide; alerts at -10% and -15% on the close).")
+        elif model.get("breaker") != "ON" and dd <= BREAKER_DD:
             add("breaker_trip", "ALERT",
                 f"Model drawdown {dd:.1f}% at live prices. {tail}, the circuit breaker TRIPS "
                 f"(risk sleeves halved, freed weight to SGOV; weekday-authorized).")
@@ -205,6 +229,54 @@ def run_checks(model: dict, closes: dict, today: pd.Timestamp, now_hour: float) 
                 f"High yield (HYG) is lagging Treasuries (IEF) by {rel:.2f}% today — credit is widening "
                 f"intraday. The HY OAS print that drives credit_stress lands tomorrow.")
 
+    # 6-7) one-day and multi-day moves in the main indexes
+    for t in ("QQQ", "IWM"):
+        r = _ret(closes.get(t))
+        if r is not None:
+            rows.append((t, f"{r:+.2f}%", ""))
+            if abs(r) >= IDX_DAY_PCT:
+                add(f"day:{t}", "ALERT", f"{t} {r:+.1f}% today.")
+    if r_spy is not None and r_spy >= SPY_RALLY_PCT:
+        add("spy_rally", "ALERT", f"SPY {r_spy:+.1f}% today — a sharp rally.")
+    for t in ("SPY", "QQQ", "IWM"):
+        s = closes.get(t)
+        for n, lim in MULTI:
+            if s is None or len(s) <= n:
+                continue
+            m = float(s.iloc[-1] / s.iloc[-1 - n] - 1) * 100
+            if abs(m) >= lim:
+                way = "down" if m < 0 else "up"
+                add(f"multi:{t}:{n}:{way}", "ALERT",
+                    f"{t} {m:+.1f}% over {n} sessions{' — a sharp rally' if m > 0 else ''}.")
+    # 8) breadth thrust
+    above_now = above_then = known = 0
+    for t in SECTORS:
+        s = closes.get(t)
+        if s is None or len(s) < 56:
+            continue
+        known += 1
+        above_now += bool(s.iloc[-1] > s.iloc[-50:].mean())
+        above_then += bool(s.iloc[-6] > s.iloc[-55:-5].mean())
+    if known:
+        rows.append(("Sectors above 50-day", f"{above_now} of {known}", f"{above_then} five sessions ago"))
+        if known >= 10 and above_now >= THRUST_NOW and above_then <= THRUST_BEFORE:
+            add("thrust", "ALERT", f"Breadth thrust: {above_now} of {known} sectors above their 50-day, up from "
+                                   f"{above_then} five sessions ago — historically a common start of a recovery.")
+    # 9) the closes that drive the O11 engine
+    for t, role in (("SPY", "SPY's 200-day decides Defense"), ("QQQ", "QQQ's 200-day decides Offense vs Balanced")):
+        e = engine_cross(closes.get(t))
+        if e is None:
+            continue
+        rows.append((f"{t} vs 200-day", f"{e['pct']:+.2f}%", f"{e['prior_run']} close(s) {e['prior_side']} before today"))
+        if e["today_side"] != e["prior_side"]:
+            add(f"engine1:{t}:{e['today_side']}", "WARN",
+                f"{t} is {e['today_side']} its 200-day ({e['pct']:+.1f}%). {tail}, that is close #1 of the 2 the "
+                f"engine needs ({role}).")
+        elif e["prior_run"] == 1:
+            add(f"engine2:{t}:{e['today_side']}", "ALERT",
+                f"{t} is {e['today_side']} its 200-day again ({e['pct']:+.1f}%). {tail}, that is the 2nd close: "
+                f"the engine rule fires and trades next session ({role}).")
+
     # 5) entry-gate triggers met intraday
     for t, g in (model.get("gates") or {}).items():
         if g.get("state") not in ("BLOCKED", "PULLBACK"):
@@ -218,6 +290,24 @@ def run_checks(model: dict, closes: dict, today: pd.Timestamp, now_hour: float) 
                 f"{t} is above its entry-gate level ({float(lvl):,.2f}) — the held-back add releases only "
                 f"if it closes there.")
     return {"alerts": alerts, "notes": notes, "live": True, "rows": rows, "pre_close": pre}
+
+
+def engine_cross(s: Optional[pd.Series], n: int = 200) -> Optional[dict]:
+    """Side of the 200-day today (live bar) and the run of closes on one side before today."""
+    if s is None or len(s) < n + 5:
+        return None
+    ma = s.rolling(n).mean()
+    side = (s > ma).map({True: "above", False: "below"})
+    today_side = side.iloc[-1]
+    prior = side.iloc[:-1].dropna()
+    prior_side = prior.iloc[-1]
+    run = 0
+    for v in reversed(prior.tolist()):
+        if v != prior_side:
+            break
+        run += 1
+    return {"today_side": today_side, "prior_side": prior_side, "prior_run": run,
+            "pct": float(s.iloc[-1] / ma.iloc[-1] - 1) * 100}
 
 
 # ── notification (GitHub issue -> email) ─────────────────────────────────────
@@ -361,6 +451,59 @@ def selftest() -> dict:
     _bt = next((a["text"] for a in r["alerts"] if a["key"] == "breaker_trip"), "")
     if not r["pre_close"] or "4:00 PM close" not in _bt:
         f.append("2:45 PM run must read as a pre-close verdict")
+    # v1.1: engine mode, multi-day moves, rallies, thrust, engine closes
+    eng = dict(model, breaker="ENGINE", nav=100.0, peak=110.0)
+    r = run_checks(eng, crash, today, 14.75)
+    ks = {a["key"] for a in r["alerts"]}
+    if "breaker_trip" in ks or "dd_warn" in ks or "dd_engine" not in ks:
+        f.append(f"engine mode: no breaker lines, a drawdown warning instead: {ks}")
+    if any("TRIPS" in a["text"] for a in r["alerts"]):
+        f.append("engine mode must not say the breaker trips")
+    if "dd_engine" in {a["key"] for a in run_checks(dict(eng, peak=101.0), calm, today, 11.0)["alerts"]}:
+        f.append("engine mode: a small drawdown raises nothing")
+    def slide(days, total, base=100.0):
+        v = base * np.exp(np.cumsum(np.full(260, 0.0004)))
+        v[-days:] = v[-days - 1] * np.exp(np.linspace(0, np.log(1 + total), days + 1)[1:])
+        return pd.Series(v, index=idx)
+    slow = dict(calm, SPY=slide(5, -0.07))
+    ks = {a["key"] for a in run_checks(model, slow, today, 11.0)["alerts"]}
+    if "multi:SPY:5:down" not in ks or "spy_drop" in ks:
+        f.append(f"a 7% slide in small days must alert over 5 sessions, not as a one-day drop: {ks}")
+    pop = dict(calm, SPY=series(0.03), QQQ=series(0.04), IWM=series(-0.01))
+    ks = {a["key"] for a in run_checks(model, pop, today, 11.0)["alerts"]}
+    if not {"spy_rally", "day:QQQ"} <= ks or "day:IWM" in ks:
+        f.append(f"sharp up days alert; small ones do not: {ks}")
+    up5 = dict(calm, QQQ=slide(5, 0.06))
+    if "multi:QQQ:5:up" not in {a["key"] for a in run_checks(model, up5, today, 11.0)["alerts"]}:
+        f.append("a 6% five-session rally must alert")
+    def sector(up_now):
+        v = 100 * np.exp(np.cumsum(np.full(260, -0.002)))
+        if up_now:
+            v[-3:] = v[-4] * 1.15
+        return pd.Series(v, index=idx)
+    thr = dict(calm, **{t: sector(i < 10) for i, t in enumerate(SECTORS)})
+    ks = {a["key"] for a in run_checks(model, thr, today, 11.0)["alerts"]}
+    if "thrust" not in ks:
+        f.append(f"10 of 11 sectors jumping above their 50-day after a slide is a thrust: {ks}")
+    if "thrust" in {a["key"] for a in run_checks(model, dict(calm, **{t: sector(False) for t in SECTORS}), today, 11.0)["alerts"]}:
+        f.append("no thrust while sectors stay down")
+    if "thrust" in {a["key"] for a in run_checks(model, dict(calm, **{t: series(0.001) for t in SECTORS}), today, 11.0)["alerts"]}:
+        f.append("sectors that were already above their 50-day are not a thrust")
+    def cross(prior_below):
+        v = 100 * np.exp(np.cumsum(np.full(260, 0.0004)))
+        s = pd.Series(v, index=idx)
+        ma = s.rolling(200).mean()
+        for k in range(1, prior_below + 1):
+            s.iloc[-1 - k] = ma.iloc[-1 - k] * 0.9
+        s.iloc[-1] = ma.iloc[-1] * 0.9
+        return s
+    e1 = {a["key"] for a in run_checks(model, dict(calm, SPY=cross(0)), today, 14.75)["alerts"]}
+    e2 = {a["key"] for a in run_checks(model, dict(calm, SPY=cross(1)), today, 14.75)["alerts"]}
+    e3 = {a["key"] for a in run_checks(model, dict(calm, SPY=cross(3)), today, 14.75)["alerts"]}
+    if "engine1:SPY:below" not in e1 or "engine2:SPY:below" not in e2 or any(k.startswith("engine") and "SPY" in k for k in e3):
+        f.append(f"engine closes: first cross WARN, second ALERT, later quiet: {e1} {e2} {e3}")
+    if engine_cross(pd.Series([1.0] * 50)) is not None:
+        f.append("short history -> no engine reading")
     # trigger met (INFO only)
     up = dict(calm, KMLM=series(0.0, base=101, drift=0))
     r = run_checks(model, up, today, 11.0)
