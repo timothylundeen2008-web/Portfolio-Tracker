@@ -74,3 +74,28 @@ date,rank,ticker,close,rs,tightness,sector,quadrant,setup,live,trigger,stop,spy_
 2026-11-18,23,DGX,259.69,93.3,0.33,Health Care,Leading,Near pivot,False,262.21,,730.2,True,v1.4,S&P 500
 2026-11-18,24,GWW,1448.12,93.2,0.31,Industrials,Lagging,Basing,False,1502.61,,730.2,True,v1.4,S&P 500
 2026-11-18,25,A,177.33,92.8,0.26,Health Care,Leading,Near pivot,False,181.48,,730.2,True,v1.4,S&P 500
+2026-11-20,1,SWK,106.62,99.2,0.4,Industrials,Lagging,,False,,,689.81,False,v1.4,S&P 500
+2026-11-20,2,HAS,112.41,99.0,0.3,Consumer Discretionary,Improving,Basing,False,123.29,,689.81,False,v1.4,S&P 500
+2026-11-20,3,BDX,212.78,98.8,0.25,Health Care,Leading,Near pivot,False,218.03,,689.81,False,v1.4,S&P 500
+2026-11-20,4,BBY,97.95,98.6,0.44,Consumer Discretionary,Improving,Basing,False,106.28,,689.81,False,v1.4,S&P 500
+2026-11-20,5,BIIB,249.59,98.4,0.37,Health Care,Leading,Near pivot,False,254.87,,689.81,False,v1.4,S&P 500
+2026-11-20,6,VTRS,19.63,98.2,0.37,Health Care,Leading,,False,,,689.81,False,v1.4,S&P 500
+2026-11-20,7,LH,367.13,97.8,0.17,Health Care,Leading,Near pivot,False,372.46,,689.81,False,v1.4,S&P 500
+2026-11-20,8,CAH,272.81,97.7,0.19,Health Care,Leading,,False,,,689.81,False,v1.4,S&P 500
+2026-11-20,9,WST,390.3,97.5,0.35,Health Care,Leading,Basing,False,417.8,,689.81,False,v1.4,S&P 500
+2026-11-20,10,MAS,82.6,97.3,0.22,Industrials,Lagging,,False,,,689.81,False,v1.4,S&P 500
+2026-11-20,11,AIZ,316.65,96.9,0.27,Financials,Improving,Near pivot,False,323.8,,689.81,False,v1.4,S&P 500
+2026-11-20,12,DGX,258.28,95.9,0.25,Health Care,Leading,Near pivot,False,262.21,,689.81,False,v1.4,S&P 500
+2026-11-20,13,EG,421.98,95.7,0.37,Financials,Improving,Near pivot,False,433.0,,689.81,False,v1.4,S&P 500
+2026-11-20,14,TRV,393.24,95.5,0.35,Financials,Improving,Basing,False,409.25,,689.81,False,v1.4,S&P 500
+2026-11-20,15,MTD,1666.88,95.3,0.21,Health Care,Leading,Basing,False,1762.28,,689.81,False,v1.4,S&P 500
+2026-11-20,16,SJM,133.68,95.0,0.35,Consumer Staples,Weakening,Near pivot,False,135.54,,689.81,False,v1.4,S&P 500
+2026-11-20,17,CDW,161.78,94.7,0.51,Information Technology,Lagging,,False,,,689.81,False,v1.4,S&P 500
+2026-11-20,18,CPAY,429.84,94.5,0.4,Financials,Improving,,False,,,689.81,False,v1.4,S&P 500
+2026-11-20,19,ABBV,286.2,94.3,0.46,Health Care,Leading,Basing,False,295.03,,689.81,False,v1.4,S&P 500
+2026-11-20,20,MAR,406.64,93.9,0.26,Consumer Discretionary,Improving,Basing,False,428.44,,689.81,False,v1.4,S&P 500
+2026-11-20,21,VLTO,116.63,93.5,0.17,Industrials,Lagging,,False,,,689.81,False,v1.4,S&P 500
+2026-11-20,22,KDP,34.84,93.3,0.51,Consumer Staples,Weakening,Basing,False,38.25,,689.81,False,v1.4,S&P 500
+2026-11-20,23,KO,96.99,93.0,0.38,Consumer Staples,Weakening,Near pivot,False,99.48,,689.81,False,v1.4,S&P 500
+2026-11-20,24,LLY,1347.11,92.8,0.39,Health Care,Leading,Basing,False,1443.5,,689.81,False,v1.4,S&P 500
+2026-11-20,25,TGT,165.83,92.6,0.57,Consumer Staples,Weakening,Near pivot,False,167.46,,689.81,False,v1.4,S&P 500
