@@ -1,5 +1,5 @@
 """
-lever_lab.py  (v1.0 — 2026-11-21)
+lever_lab.py  (v1.1 — 2026-11-21)
 ──────────────────────────────────
 Swing book only. Two pre-registered tests of "bigger wins per trade" (Matt, 2026-11-21:
 "aiming for possible swing trade wins and/or trading options wins that are north of
@@ -41,6 +41,12 @@ S2  WASHOUT SNAPBACK in a 3x index fund (synthetic 3x of SPY or QQQ: 3 x daily r
     Index calls were dropped before the run: one 0.70-delta SPY or QQQ call costs
       ~$6,000, 60% of a $10,000 account.
 
+v1.1 (2026-11-21): the first run was killed after 9 minutes (runner shutdown) — every option
+  trade carried its own ~5,800-entry date map (hundreds of millions of entries in all). One shared
+  map per fund now; progress lines are printed. Added a DELTA SWEEP (0.50-0.90, report only, not a
+  bar and not a trial): delta is a design choice to research, and cheaper deltas make more funds
+  affordable on $10k. Rules and bars are unchanged from v1.0.
+
 Run:  python lever_lab.py            (Actions: needs yfinance)
       python lever_lab.py --selftest (offline)
 """
@@ -57,7 +63,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-VERSION = "1.0"
+VERSION = "1.1"
 ND = NormalDist()
 OUT_DATA, OUT_LOGS = Path("data/lever_lab"), Path("logs/lever_lab")
 TRIALS_BEFORE = 91
@@ -73,6 +79,7 @@ HALF_SPREAD = {"t1": 0.015, "t2": 0.03}
 IV_FLOOR_MULT, RV_LONG, RV_SHORT = 1.10, 60, 20
 HARSH_IV_MULT, HARSH_SPREAD_MULT = 1.20, 2.0
 S1_NEIGHBOURS = [("dte", 45), ("dte", 90), ("delta", 0.60), ("delta", 0.75)]
+DELTA_SWEEP = (0.50, 0.60, 0.70, 0.75, 0.80, 0.90)      # v1.1: report only
 S1_HALVES = (("2005-15", "2005-01-01", "2015-12-31"), ("2016-26", "2016-01-01", "2100-01-01"))
 S1_BAR = {"min_trades": 100, "min_half": 30, "min_pf": 1.3, "min_payoff": 2.0, "max_dd": -30.0}
 
@@ -521,6 +528,10 @@ def s2_verdict(trades: list, nav: pd.Series, tbill_nav: pd.Series, stress: list,
 #  Run (Actions)
 # ═══════════════════════════════════════════════════════════════════════════
 
+def _log(msg: str) -> None:
+    print(f"[lever_lab {datetime.now(timezone.utc).strftime('%H:%M:%S')}] {msg}", flush=True)
+
+
 def _yf_close(tickers, start):
     import yfinance as yf
     df = yf.download(tickers, start=start, auto_adjust=True, progress=False, group_by="ticker", threads=True)
@@ -543,15 +554,18 @@ def run_s1(ohlcv: dict, vix: pd.Series, irx: pd.Series, cash_d: pd.Series) -> di
     etfs = [t for t in bt.SECTOR_ETFS + list(bt.OTHER_ETFS) if t not in bt.LEVERAGED]
     sector_of = {**{s: s for s in bt.SECTOR_ETFS}, **{t: s for t, s in bt.OTHER_ETFS.items()}}
     ohl = {t: v for t, v in ohlcv.items() if t in etfs}
+    _log(f"S1: M0 signals on {len(ohl)} funds ...")
     res = bt.run(ohl, etfs, [], sector_of, setups=("M0",), variants=("B",), verbose=False)
     trs = [t for t in res["trades"]["B"] if t.mkt_ok and t.asset == "etf"]
+    _log(f"S1: {len(trs)} M0 trades with SPY above its 200-day")
     spy = ohl["SPY"]["Close"]
-    prep = {}
+    prep, dmap = {}, {}
     for tk, df in ohl.items():
         iv = iv_series(df["Close"], spy, vix).to_numpy()
         rate = (irx.reindex(df.index).ffill() / 100.0).to_numpy()
         ema10 = df["Close"].ewm(span=10, adjust=False).mean().to_numpy()
         prep[tk] = (df.index, df["Open"].to_numpy(), df["Close"].to_numpy(), ema10, iv, rate)
+        dmap[tk] = {dd: i for i, dd in enumerate(df.index)}       # ONE map per fund, shared by its trades
 
     def build(mode, delta=S1_DELTA, dte=S1_DTE, ivm=1.0, spm=1.0):
         out = []
@@ -562,27 +576,31 @@ def run_s1(ohlcv: dict, vix: pd.Series, irx: pd.Series, cash_d: pd.Series) -> di
             x = option_trade(t.ticker, d[0], d[1], d[2], d[3], d[4], d[5], t.entry_t, t.entry, t.stop0,
                              t.events, mode, delta, dte, ivm, spm)
             if x is not None:
-                x["_dates"] = {dd: i for i, dd in enumerate(d[0])}
+                x["_dates"] = dmap[t.ticker]
                 x["stock_r"] = t.r_net
                 out.append(x)
         return out
 
-    # affordable funds: one contract at today's price and IV <= premium cap on $10k
-    afford, feas = set(), []
-    for tk, (dates, o, c, e, iv, rate) in prep.items():
-        S, sg, rr = c[-1], iv[-1], (rate[-1] if np.isfinite(rate[-1]) else 0.04)
-        if not (np.isfinite(S) and np.isfinite(sg)):
-            continue
-        K = strike_for_delta(S, S1_DELTA, S1_DTE / 365, rr, sg)
-        one = bs_call(S, K, S1_DTE / 365, rr, sg) * 100 * (1 + half_spread(tk))
-        ok = one <= S1_PREMIUM_PCT / 100 * S1_ACCOUNT
-        feas.append({"ticker": tk, "price": round(float(S), 2), "iv": round(float(sg) * 100, 1),
-                     "one_contract": round(one, 0), "pct_of_10k": round(one / S1_ACCOUNT * 100, 1), "affordable": ok})
-        if ok:
-            afford.add(tk)
+    # affordable funds: one contract at today's price and IV <= premium cap on $10k (depends on delta)
+    def affordable(delta=S1_DELTA, dte=S1_DTE):
+        a, rows = set(), []
+        for tk, (dates, o, c, e, iv, rate) in prep.items():
+            S, sg, rr = c[-1], iv[-1], (rate[-1] if np.isfinite(rate[-1]) else 0.04)
+            if not (np.isfinite(S) and np.isfinite(sg)):
+                continue
+            K = strike_for_delta(S, delta, dte / 365, rr, sg)
+            one = bs_call(S, K, dte / 365, rr, sg) * 100 * (1 + half_spread(tk))
+            ok = one <= S1_PREMIUM_PCT / 100 * S1_ACCOUNT
+            rows.append({"ticker": tk, "price": round(float(S), 2), "iv": round(float(sg) * 100, 1),
+                         "one_contract": round(one, 0), "pct_of_10k": round(one / S1_ACCOUNT * 100, 1), "affordable": ok})
+            if ok:
+                a.add(tk)
+        return a, rows
+    afford, feas = affordable()
     cal = spy.index[spy.index >= pd.Timestamp("2005-01-01")]
     out = {"n_stock_trades": len(trs), "afford": sorted(afford), "feas": feas}
     for mode, key in (("mirror", "S1a"), ("native", "S1b")):
+        _log(f"S1: {key} base, harsh and neighbours ...")
         opts = build(mode)
         nav, taken = s1_book(opts, cal, cash_d, allowed=afford)
         nav_all, _ = s1_book(opts, cal, cash_d)
@@ -596,6 +614,20 @@ def run_s1(ohlcv: dict, vix: pd.Series, irx: pd.Series, cash_d: pd.Series) -> di
         ver["taken"] = len(taken)
         ver["hold_median"] = float(np.median([x["hold_days"] for x in opts])) if opts else float("nan")
         ver["years"] = year_returns(nav).round(1).to_dict()
+        # DELTA SWEEP — report only (not a bar, not a trial). Each delta uses its own affordable set.
+        sweep = []
+        for dl in DELTA_SWEEP:
+            o3 = opts if dl == S1_DELTA else build(mode, delta=dl)
+            af, _rows = affordable(dl)
+            nv = s1_book(o3, cal, cash_d, allowed=af)[0]
+            st3 = trade_stats([x["ret"] for x in o3])
+            sweep.append({"delta": dl, "n": st3["n"], "exp": st3["exp"], "pf": st3["pf"], "payoff": st3["payoff"],
+                          "big_win_share": st3["big_win_share"], "afford_n": len(af),
+                          "book": nav_stats(nv, "2005-01-01"),
+                          "book_all": nav_stats(s1_book(o3, cal, cash_d)[0], "2005-01-01")})
+            del o3
+        ver["delta_sweep"] = sweep
+        _log(f"S1: {key} done — {ver['verdict']}")
         out[key] = {"verdict": ver, "nav": nav, "opts": opts}
     stock = trade_stats([t.r_net for t in trs if prep[t.ticker][0][t.entry_t] >= pd.Timestamp("2005-01-01")])
     out["stock_R"] = stock
@@ -661,6 +693,15 @@ def render(s1: dict, s2: dict, stamp: str) -> str:
         L += [f"", f"- Same book on every M0 fund (fractional contracts, not buyable at $10k): "
                    f"CAGR {v['book_all_funds']['cagr']:.2f}%, max DD {v['book_all_funds']['max_dd']:.1f}%",
               f"- Times the live −20% high-water stop would have halted the book: {v['hwm_stops']}", ""]
+        if v.get("delta_sweep"):
+            L += ["**Delta sweep (report only — not a bar, not a trial; each delta has its own affordable funds):**", "",
+                  "| Delta | Trades | Expectancy | PF | Payoff | Wins ≥ +25% | Affordable funds | Book CAGR | Book max DD | Every-fund CAGR |",
+                  "|---|---|---|---|---|---|---|---|---|---|"]
+            for w in v["delta_sweep"]:
+                L.append(f"| {w['delta']:.2f} | {w['n']} | {_p(w['exp'], 1, True)} | {_p(w['pf'])} | {_p(w['payoff'])} | "
+                         f"{_p(w['big_win_share'], 0, True)} | {w['afford_n']} | {w['book']['cagr']:.2f}% | "
+                         f"{w['book']['max_dd']:.1f}% | {w['book_all']['cagr']:.2f}% |")
+            L.append("")
     st = s1["stock_R"]
     L += [f"Reference — the same M0 trades in shares: n {st['n']}, expectancy {st['exp']:+.3f}R, PF {_p(st['pf'])}.", "",
           f"Affordable funds (one 0.70-delta, 60-day call ≤ 5% of $10,000 today): {', '.join(s1['afford']) or 'none'}", "",
@@ -701,6 +742,7 @@ def main() -> int:
     import swing_backtest as bt
     stamp = datetime.now(timezone.utc).date().isoformat()
     etfs = [t for t in bt.SECTOR_ETFS + list(bt.OTHER_ETFS) if t not in bt.LEVERAGED]
+    _log("fetching prices ...")
     ohlcv = bt.fetch_ohlcv(sorted(set(etfs)), start="2003-06-01")
     misc = _yf_close(["^VIX", "^IRX", "SPY", "QQQ", "UPRO", "TQQQ"], "1998-01-01")
     if "^VIX" not in misc or "^IRX" not in misc or "SPY" not in ohlcv or "QQQ" not in misc:
@@ -712,6 +754,7 @@ def main() -> int:
     cash_d = (irx.reindex(cal_all).ffill() / 100.0 / 252).fillna(0.0)
     missing = sorted(set(etfs) - set(ohlcv))
     s1 = run_s1(ohlcv, vix, irx, cash_d)
+    _log("S2: washout snapback ...")
     s2 = run_s2({"SPY": misc["SPY"], "QQQ": misc["QQQ"]}, vix, cash_d,
                 {k: misc[k]["Close"] for k in ("UPRO", "TQQQ") if k in misc})
     md = render(s1, s2, stamp)
