@@ -297,7 +297,11 @@ def run_weekly(fred_key: str = "") -> dict:
 
     # Step 5 — institutional flow. Gated on integrity, not just coverage.
     def _flow():
-        import flow_integrity as fi
+        try:                                   # N85 (2026-11-22): same guard as Step 0 — absent here by design
+            import flow_integrity as fi
+        except ImportError:
+            return {"flow_readable": False,
+                    "flow_note": "N/A: flow_integrity lives in Money_Flow only"}
         rep = fi.full_report()
         if rep["status"] != "OK":
             return {"flow_readable": False,

@@ -1,5 +1,5 @@
 """
-swing_engine.py  (v1.0 — 2026-11-22)
+swing_engine.py  (v1.0.1 — 2026-11-22)
 ─────────────────────────────────────
 The $10,000 swing account's ENGINE BOOK (Matt, 2026-11-22: "Good with your recommendation"):
 the swing account mirrors the O11 model book — the only switching rule here that passed
@@ -25,6 +25,10 @@ testing — turned into whole-share order tickets for a $10,000 account. Paper f
   (market_radar scoreboard), and S3 leveraged trend (shadow here; failed its test 2026-11-22,
   kept only as a forward record).
 
+v1.0.1 (2026-11-22, N84): the S3 shadow reads dividend-ADJUSTED prices, as the trend lab tested
+  it (v1.0 used unadjusted closes: SPY read -5.9% vs its 200-day instead of -5.5%). Order tickets
+  still use unadjusted prices — the prices actually traded.
+
 Run:  python swing_engine.py             (Actions, after the Daily Brief)
       python swing_engine.py --selftest  (offline)
 """
@@ -42,7 +46,7 @@ from typing import Callable, Optional
 import numpy as np
 import pandas as pd
 
-VERSION = "1.0"
+VERSION = "1.0.1"
 PAPER_START = date(2026, 12, 1)
 EQUITY0 = 10_000.0
 MIN_TRADE = 100.0
@@ -270,7 +274,7 @@ def s3_shadow(spy: pd.DataFrame, qqq: pd.DataFrame, irx: pd.Series) -> dict:
 
 # ── run ─────────────────────────────────────────────────────────────────────
 
-def _fetch(tickers, start):
+def _fetch(tickers, start, adjusted: bool = False):
     import yfinance as yf
     out = {}
     for attempt in range(4):
@@ -282,7 +286,7 @@ def _fetch(tickers, start):
             time.sleep(3)
         for t in need:
             try:
-                df = yf.download(t, start=start, auto_adjust=False, progress=False, threads=False)
+                df = yf.download(t, start=start, auto_adjust=adjusted, progress=False, threads=False)
                 if isinstance(df.columns, pd.MultiIndex):
                     df.columns = df.columns.get_level_values(0)
                 df = df.dropna(subset=["Close"])
@@ -404,7 +408,8 @@ def main(fetch: Optional[Callable] = None, brief_dir: Path = BRIEF_DIR) -> int:
         return 1
     s3 = None
     try:
-        hist = f(["SPY", "QQQ", "^IRX"], S3_SINCE) if fetch is None else fetch(["SPY", "QQQ", "^IRX"], S3_SINCE)
+        hist = (_fetch(["SPY", "QQQ", "^IRX"], S3_SINCE, adjusted=True) if fetch is None
+                else fetch(["SPY", "QQQ", "^IRX"], S3_SINCE))
         if all(k in hist for k in ("SPY", "QQQ", "^IRX")):
             s3 = s3_shadow(hist["SPY"], hist["QQQ"], hist["^IRX"]["Close"])
     except Exception as e:
