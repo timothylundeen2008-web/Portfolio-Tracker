@@ -1,5 +1,5 @@
 """
-swing_tab.py  (v1 — September 2026)
+swing_tab.py  (v1 — September 2026; engine-book panel 2026-11-22)
 ───────────────────────────────────
 The Swing Desk tab, rebuilt as the AGENT'S surface rather than a scanner.
 
@@ -103,6 +103,7 @@ def render(st, fetch_ohlcv=None):
     opens = sj.open_positions(journal)
 
     with t_brief:
+        _engine_panel(st)          # 2026-11-22: the swing account's ENGINE book (O11 mirror), above the M0 cards
         if not brief:
             st.warning("No brief yet. The Swing Desk Brief job writes one at 6:45 PM ET on trading days "
                        "(Actions → Swing Desk Brief → Run workflow to produce one now).")
@@ -372,6 +373,54 @@ def render(st, fetch_ohlcv=None):
                     for r_ in res["cards"] + res["avoid"]:
                         r_["sector_quadrant"] = quads.get(r_["ticker"])
                 sd.render(st, res)
+
+
+def _engine_panel(st) -> None:
+    """The $10,000 swing account mirrors the O11 model book (swing_engine.py, Matt 2026-11-22).
+    Read-only: shows the saved data/swing_engine/latest.json, never computes."""
+    try:
+        r = json.load(open(os.path.join("data", "swing_engine", "latest.json")))
+    except Exception:
+        st.info("**Swing account — engine book:** no output yet. It runs after each Consolidated Daily Brief "
+                "(Actions → Swing Engine Book → Run workflow to produce one now).")
+        return
+    st.markdown("### 💼 Swing account — engine book (mirrors the O11 model book)")
+    if r.get("stale_brief"):
+        st.warning("The latest daily brief is older than the last session; these tickets may be stale.")
+    t = r.get("target") or {}
+    c = st.columns(4)
+    c[0].metric("Engine", f"{t.get('state') or '—'}{' · SWITCHED' if t.get('switched') else ''}")
+    c[1].metric("Target for", t.get("for_session") or "—")
+    eq = r.get("equity") or {}
+    c[2].metric("Paper account", f"${eq['now']:,.0f}" if eq else "$10,000",
+                f"{eq['ret_pct']:+.2f}%" if eq else f"starts {r.get('paper_start')}")
+    c[3].metric("From peak", f"{eq['dd_pct']:+.2f}%" if eq else "—")
+    if t.get("weights"):
+        st.caption("Target: " + " / ".join(f"{k} {v:g}%" for k, v in sorted(t["weights"].items(), key=lambda kv: -kv[1])))
+    pend, pv = r.get("pending"), r.get("preview")
+    if pend:
+        st.markdown(f"**Orders for the {pend['for']} open** — {pend['why']} (decided at the {pend['decided']} close)")
+        st.dataframe(pd.DataFrame(pend["tickets"]).rename(columns={"side": "Side", "ticker": "Fund", "shares": "Shares",
+                     "est_price": "≈ Price", "est_value": "≈ Value"}), use_container_width=True, hide_index=True)
+    elif pv:
+        st.markdown(f"**Preview — paper starts {r.get('paper_start')}.** A $10,000 account would hold, at the "
+                    f"{pv.get('priced_at')} close:")
+        st.dataframe(pd.DataFrame(pv["tickets"]).drop(columns=["side"], errors="ignore").rename(columns={
+            "ticker": "Fund", "shares": "Shares", "est_price": "≈ Price", "est_value": "≈ Value"}),
+            use_container_width=True, hide_index=True)
+        st.caption(f"Cash left ≈ ${pv.get('cash_left', 0):,.0f}. Whole shares; orders at the next open.")
+    elif r.get("ledger"):
+        st.success("No orders for the next session — the account is on target.")
+    if r.get("gaps"):
+        st.warning("Data gaps (a gap holds the previous position; it is not a signal): "
+                   + "; ".join(json.dumps(g) for g in r["gaps"][-3:]))
+    s3 = r.get("s3") or {}
+    if s3.get("sleeves"):
+        st.caption("Paper tracks (no money) — S3 leveraged trend (failed its test; forward record only): "
+                   + "; ".join(f"{k} {'HOLDING' if v['holding'] else ('ON' if v['on_today'] else 'OFF')}"
+                               for k, v in s3["sleeves"].items())
+                   + " · M0 cards below · radar flags in Market Signals. Research, not personalized advice.")
+    st.markdown("---")
 
 
 def _trigger_of(rec: dict | None) -> str:
