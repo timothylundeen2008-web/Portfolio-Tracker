@@ -1,0 +1,287 @@
+{
+ "version": "1.0",
+ "verdict": "FAIL",
+ "fails": [
+  "book full CAGR 3.79% <= SPY 10.7%",
+  "book 2005-15 CAGR 3.81% <= SPY 7.34%",
+  "book 2016-26 CAGR 3.84% <= SPY 14.27%"
+ ],
+ "guard_reproduces_m0": true,
+ "baseline_recorded_cagr": 2.94,
+ "gaps": [],
+ "m0t": {
+  "trades": {
+   "full": {
+    "n": 2101,
+    "win_rate": 28.4,
+    "avg_win_R": 3.4,
+    "avg_loss_R": -0.81,
+    "expectancy_R": 0.438,
+    "profit_factor": 1.83,
+    "worst_R": -3.48,
+    "best_R": 35.89,
+    "max_consec_losses": 21
+   },
+   "2005-15": {
+    "n": 893,
+    "win_rate": 30.8,
+    "avg_win_R": 3.14,
+    "avg_loss_R": -0.78,
+    "expectancy_R": 0.469,
+    "profit_factor": 1.94,
+    "worst_R": -2.02,
+    "best_R": 22.61,
+    "max_consec_losses": 13
+   },
+   "2016-26": {
+    "n": 1208,
+    "win_rate": 26.6,
+    "avg_win_R": 3.62,
+    "avg_loss_R": -0.83,
+    "expectancy_R": 0.416,
+    "profit_factor": 1.76,
+    "worst_R": -3.48,
+    "best_R": 35.89,
+    "max_consec_losses": 23
+   }
+  },
+  "book": {
+   "full": {
+    "cagr_pct": 3.79,
+    "max_dd_pct": -11.92,
+    "vol_pct": 5.98,
+    "sharpe": 0.65,
+    "calmar": 0.32
+   },
+   "2005-15": {
+    "cagr_pct": 3.81,
+    "max_dd_pct": -11.04,
+    "vol_pct": 5.97,
+    "sharpe": 0.66,
+    "calmar": 0.35
+   },
+   "2016-26": {
+    "cagr_pct": 3.84,
+    "max_dd_pct": -9.64,
+    "vol_pct": 5.98,
+    "sharpe": 0.66,
+    "calmar": 0.4
+   }
+  },
+  "exposure_avg_pct": 36.5,
+  "months_le_-10pct": 0,
+  "hwm_-20pct_breached": false,
+  "trades_taken": 382,
+  "exit_mix": {
+   "closing-basis stop": {
+    "n": 891,
+    "mean_R": 0.097
+   },
+   "disaster stop": {
+    "n": 830,
+    "mean_R": 0.955
+   },
+   "trend: close below falling trail MA": {
+    "n": 340,
+    "mean_R": -0.553
+   },
+   "leveraged 90-day cap": {
+    "n": 40,
+    "mean_R": 5.736
+   },
+   "open at end": {
+    "n": 3,
+    "mean_R": 0.923
+   }
+  },
+  "median_hold": 17.0
+ },
+ "m0": {
+  "trades": {
+   "full": {
+    "n": 4449,
+    "win_rate": 32.9,
+    "avg_win_R": 1.06,
+    "avg_loss_R": -0.59,
+    "expectancy_R": 0.126,
+    "profit_factor": 1.57,
+    "worst_R": -3.12,
+    "best_R": 12.81,
+    "max_consec_losses": 18
+   },
+   "2005-15": {
+    "n": 1953,
+    "win_rate": 33.5,
+    "avg_win_R": 1.07,
+    "avg_loss_R": -0.55,
+    "expectancy_R": 0.155,
+    "profit_factor": 1.78,
+    "worst_R": -2.02,
+    "best_R": 7.58,
+    "max_consec_losses": 12
+   },
+   "2016-26": {
+    "n": 2496,
+    "win_rate": 32.4,
+    "avg_win_R": 1.05,
+    "avg_loss_R": -0.62,
+    "expectancy_R": 0.104,
+    "profit_factor": 1.43,
+    "worst_R": -3.12,
+    "best_R": 12.81,
+    "max_consec_losses": 13
+   }
+  },
+  "book": {
+   "full": {
+    "cagr_pct": 2.89,
+    "max_dd_pct": -11.59,
+    "vol_pct": 5.12,
+    "sharpe": 0.58,
+    "calmar": 0.25
+   },
+   "2005-15": {
+    "cagr_pct": 2.83,
+    "max_dd_pct": -8.63,
+    "vol_pct": 4.5,
+    "sharpe": 0.64,
+    "calmar": 0.33
+   },
+   "2016-26": {
+    "cagr_pct": 2.99,
+    "max_dd_pct": -8.48,
+    "vol_pct": 5.67,
+    "sharpe": 0.55,
+    "calmar": 0.35
+   }
+  },
+  "exposure_avg_pct": 34.3,
+  "months_le_-10pct": 0,
+  "hwm_-20pct_breached": false,
+  "trades_taken": 1227,
+  "exit_mix": {
+   "thesis: sector Weakening/Lagging": {
+    "n": 3275,
+    "mean_R": 0.182
+   },
+   "closing-basis stop": {
+    "n": 532,
+    "mean_R": -0.198
+   },
+   "disaster stop": {
+    "n": 429,
+    "mean_R": 0.226
+   },
+   "trend: close below falling trail MA": {
+    "n": 195,
+    "mean_R": -0.546
+   },
+   "leveraged 90-day cap": {
+    "n": 18,
+    "mean_R": 4.436
+   },
+   "open at end": {
+    "n": 2,
+    "mean_R": 0.614
+   }
+  },
+  "median_hold": 1.0
+ },
+ "diag_no_rotation_only": {
+  "book": {
+   "full": {
+    "cagr_pct": 3.61,
+    "max_dd_pct": -10.88,
+    "vol_pct": 4.37,
+    "sharpe": 0.83,
+    "calmar": 0.33
+   },
+   "2005-15": {
+    "cagr_pct": 3.69,
+    "max_dd_pct": -9.35,
+    "vol_pct": 4.2,
+    "sharpe": 0.88,
+    "calmar": 0.39
+   },
+   "2016-26": {
+    "cagr_pct": 3.6,
+    "max_dd_pct": -6.55,
+    "vol_pct": 4.53,
+    "sharpe": 0.8,
+    "calmar": 0.55
+   }
+  },
+  "trades": {
+   "n": 2101,
+   "win_rate": 33.0,
+   "avg_win_R": 2.63,
+   "avg_loss_R": -0.79,
+   "expectancy_R": 0.374,
+   "profit_factor": 1.76,
+   "worst_R": -3.12,
+   "best_R": 12.81,
+   "max_consec_losses": 18
+  }
+ },
+ "diag_no_ladder_only": {
+  "book": {
+   "full": {
+    "cagr_pct": 3.52,
+    "max_dd_pct": -13.74,
+    "vol_pct": 6.44,
+    "sharpe": 0.57,
+    "calmar": 0.26
+   },
+   "2005-15": {
+    "cagr_pct": 2.85,
+    "max_dd_pct": -8.78,
+    "vol_pct": 5.54,
+    "sharpe": 0.53,
+    "calmar": 0.32
+   },
+   "2016-26": {
+    "cagr_pct": 4.24,
+    "max_dd_pct": -13.74,
+    "vol_pct": 7.22,
+    "sharpe": 0.61,
+    "calmar": 0.31
+   }
+  },
+  "trades": {
+   "n": 4449,
+   "win_rate": 32.0,
+   "avg_win_R": 1.2,
+   "avg_loss_R": -0.6,
+   "expectancy_R": 0.153,
+   "profit_factor": 1.67,
+   "worst_R": -3.48,
+   "best_R": 35.89,
+   "max_consec_losses": 18
+  }
+ },
+ "spy": {
+  "full": {
+   "cagr_pct": 10.7,
+   "max_dd_pct": -55.19,
+   "vol_pct": 19.01,
+   "sharpe": 0.63,
+   "calmar": 0.19
+  },
+  "2005-15": {
+   "cagr_pct": 7.34,
+   "max_dd_pct": -55.19,
+   "vol_pct": 20.14,
+   "sharpe": 0.45,
+   "calmar": 0.13
+  },
+  "2016-26": {
+   "cagr_pct": 14.27,
+   "max_dd_pct": -33.72,
+   "vol_pct": 17.81,
+   "sharpe": 0.84,
+   "calmar": 0.42
+  }
+ },
+ "trials": 97,
+ "asof": "2026-11-23"
+}
