@@ -1,5 +1,5 @@
 """
-swing_engine.py  (v1.0.1 — 2026-11-22)
+swing_engine.py  (v1.1 — 2026-11-22)
 ─────────────────────────────────────
 The $10,000 swing account's ENGINE BOOK (Matt, 2026-11-22: "Good with your recommendation"):
 the swing account mirrors the O11 model book — the only switching rule here that passed
@@ -29,6 +29,11 @@ v1.0.1 (2026-11-22, N84): the S3 shadow reads dividend-ADJUSTED prices, as the t
   it (v1.0 used unadjusted closes: SPY read -5.9% vs its 200-day instead of -5.5%). Order tickets
   still use unadjusted prices — the prices actually traded.
 
+v1.1 (2026-11-22, Matt): the two books must be DIFFERENT, so the swing account no longer
+  mirrors the O11 model book. Swing limits stay at 1-2% risk per trade, -10% month stand-down,
+  -20% high-water stop ("A"). Until a swing strategy passes a pre-registered test, the account
+  holds SGOV (MODE = "cash"). The mirror code stays (MODE = "mirror") but is not used.
+
 Run:  python swing_engine.py             (Actions, after the Daily Brief)
       python swing_engine.py --selftest  (offline)
 """
@@ -46,7 +51,9 @@ from typing import Callable, Optional
 import numpy as np
 import pandas as pd
 
-VERSION = "1.0.1"
+VERSION = "1.1"
+MODE = "cash"                     # "cash": hold SGOV until a swing rule passes | "mirror": copy the O11 model book
+CASH_TARGET = {"SGOV": 100.0}
 PAPER_START = date(2026, 12, 1)
 EQUITY0 = 10_000.0
 MIN_TRADE = 100.0
@@ -82,11 +89,19 @@ def target_from_brief(b: dict) -> Optional[dict]:
     return {"session": str(b.get("session")), "weights": w, "state": state, "switched": switched}
 
 
-def load_targets(brief_dir: Path = BRIEF_DIR) -> dict:
+def load_targets(brief_dir: Path = BRIEF_DIR, mode: Optional[str] = None) -> dict:
+    """One target per brief session. In cash mode the briefs only supply the session calendar."""
+    mode = mode or MODE
     out = {}
     for f in sorted(glob.glob(str(brief_dir / "*_brief.json"))):
         try:
-            t = target_from_brief(json.load(open(f)))
+            b = json.load(open(f))
+            if mode == "cash":
+                if b.get("session"):
+                    out[str(b["session"])] = {"session": str(b["session"]), "weights": dict(CASH_TARGET),
+                                              "state": "CASH (no swing rule has passed yet)", "switched": False}
+                continue
+            t = target_from_brief(b)
             if t:
                 out[t["session"]] = t
         except Exception:
@@ -307,7 +322,7 @@ def build(targets: dict, prices: dict, s3: Optional[dict], today_session: Option
     cal = spy_ix                                             # trading calendar = SPY's sessions
     last = max(targets) if targets else None
     sim = simulate(targets, prices, cal)
-    out = {"version": VERSION, "paper_start": PAPER_START.isoformat(), "latest_brief": last,
+    out = {"version": VERSION, "mode": MODE, "paper_start": PAPER_START.isoformat(), "latest_brief": last,
            "price_date": str(cal[-1].date()) if len(cal) else None, "s3": s3}
     if last:
         tgt = targets[last]
@@ -338,8 +353,10 @@ def _s3_word(v: dict) -> str:
 
 
 def render(r: dict) -> str:
-    L = [f"# Swing account — engine book (paper) · {r.get('latest_brief')}", "",
-         f"*swing_engine.py {VERSION}. The $10,000 swing account mirrors the O11 model book. Paper from "
+    what = ("holds SGOV until a swing strategy passes a pre-registered test (limits: 1-2% risk per trade, "
+            "-10% month stand-down, -20% high-water stop)" if r.get("mode") == "cash" else "mirrors the O11 model book")
+    L = [f"# Swing account (paper) · {r.get('latest_brief')}", "",
+         f"*swing_engine.py {VERSION}. The $10,000 swing account {what}. Paper from "
          f"{r['paper_start']}; live target 2027-01-04. Research, not personalized advice.*", ""]
     if r.get("stale_brief"):
         L += ["⚠ The latest daily brief is older than the last session — tickets below may be stale.", ""]
@@ -535,6 +552,18 @@ def selftest() -> dict:
     # idempotent: two runs give the same ledger
     if simulate(targets, prices, cal)["rows"] != sim["rows"]:
         f.append("ledger must be identical on rerun")
+    # v1.1 cash mode: every brief session targets SGOV 100; the switch in the brief is ignored
+    import tempfile as _tf
+    td = Path(_tf.mkdtemp())
+    (td / "2026-11-20_brief.json").write_text(json.dumps(b_sw))
+    tc = load_targets(td, mode="cash")
+    if tc.get("2026-11-20", {}).get("weights") != {"SGOV": 100.0} or tc["2026-11-20"]["switched"]:
+        f.append(f"cash mode: SGOV 100, no switch: {tc}")
+    tm = load_targets(td, mode="mirror")
+    if tm.get("2026-11-20", {}).get("weights") != {"SGOV": 60.0, "GLD": 20.0, "TLT": 20.0}:
+        f.append(f"mirror mode still reads the brief: {tm}")
+    if MODE != "cash":
+        f.append("v1.1: the deployed mode must be cash (Matt 2026-11-22: the books must differ)")
     # writer + main end to end, and the no-brief abort
     import tempfile, os
     tmp = Path(tempfile.mkdtemp())
@@ -548,6 +577,8 @@ def selftest() -> dict:
         js = json.loads((tmp / "data" / "swing_engine" / "latest.json").read_text())
         if rc != 0 or not js.get("preview") or not (tmp / "logs" / "swing_engine" / "latest.md").exists():
             f.append("main: preview run must write outputs")
+        elif [x["ticker"] for x in js["preview"]["tickets"]] != ["SGOV"] or js.get("mode") != "cash":
+            f.append(f"main: cash-mode preview buys SGOV only: {js['preview']['tickets']}")
         rc2 = main(fetch=lambda t, st: {k: fake[k] for k in t if k in fake}, brief_dir=tmp / "nope")
         if rc2 != 1:
             f.append("main: no brief -> DATA FAILURE")

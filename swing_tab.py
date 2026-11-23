@@ -384,12 +384,18 @@ def _engine_panel(st) -> None:
         st.info("**Swing account — engine book:** no output yet. It runs after each Consolidated Daily Brief "
                 "(Actions → Swing Engine Book → Run workflow to produce one now).")
         return
-    st.markdown("### 💼 Swing account — engine book (mirrors the O11 model book)")
+    if r.get("mode") == "cash":
+        st.markdown("### 💼 Swing account — $10,000 in SGOV until a swing strategy passes its test")
+        st.caption("Limits: 1–2% risk per trade · −10% in a month → no new trades that month · −20% from the high → "
+                   "stop and review. SGOV is the baseline every swing strategy must beat.")
+    else:
+        st.markdown("### 💼 Swing account — engine book (mirrors the O11 model book)")
     if r.get("stale_brief"):
         st.warning("The latest daily brief is older than the last session; these tickets may be stale.")
     t = r.get("target") or {}
     c = st.columns(4)
-    c[0].metric("Engine", f"{t.get('state') or '—'}{' · SWITCHED' if t.get('switched') else ''}")
+    c[0].metric("Holding" if r.get("mode") == "cash" else "Engine",
+                "SGOV" if r.get("mode") == "cash" else f"{t.get('state') or '—'}{' · SWITCHED' if t.get('switched') else ''}")
     c[1].metric("Target for", t.get("for_session") or "—")
     eq = r.get("equity") or {}
     c[2].metric("Paper account", f"${eq['now']:,.0f}" if eq else "$10,000",
