@@ -1,6 +1,9 @@
 """
-daily_brief.py  (v1.8 — November 2026)
+daily_brief.py  (v1.8.1 — November 2026)
 ───────────────────────────────────────
+v1.8.1 (2026-11-23, Matt: "the long term investing book should be modeled with 100k"): the model
+  book is shown in dollars on $100,000 (NAV index 100 = $100,000). Display only; the NAV, weights
+  and every rule are unchanged.
 v1.8 (2026-11-21): section 7A "Opportunity Radar" (market_radar.brief_summary — the
   same reader the app uses; alert-only, stale/missing said as such) and a data-health
   row for it. N78: when the engine switches at today's close the model section leads
@@ -1951,6 +1954,13 @@ def portfolio_section(inp: dict, targets: dict, regime_key: Optional[str], force
 ENGINE_LIVE = True      # v1.7 (2026-11-13): O11 switching layer on the model book (Matt: "option 2")
 
 
+MODEL_CAPITAL = 100_000.0          # v1.8.1: the long-term model book is shown on $100,000 (NAV 100 = $100k)
+
+
+def usd(v) -> str:
+    return "—" if v is None else f"${float(v):,.0f}"
+
+
 def next_session(d: date) -> date:
     """The next trading session after d (the engine trades the session after its signal close)."""
     n = d + timedelta(days=1)
@@ -2028,6 +2038,11 @@ def model_section(inp: dict, rg: dict) -> dict:
         out["conclusion"] = f"Model book failed: {type(e).__name__}: {e}"
         return out
     sm = mbk.summary(book)
+    if sm.get("nav") is not None:                       # v1.8.1: dollars on $100,000 (display only)
+        sm["capital_usd"] = MODEL_CAPITAL
+        sm["value_usd"] = round(float(sm["nav"]) * MODEL_CAPITAL / 100.0, 0)
+        if sm.get("peak") is not None:
+            sm["peak_usd"] = round(float(sm["peak"]) * MODEL_CAPITAL / 100.0, 0)
     pending = mbk.pending_session(book, inp["session"])
     out["pending"] = pending
     out["benchmarks"] = _model_benchmarks(book, closes)
@@ -2100,7 +2115,7 @@ def model_section(inp: dict, rg: dict) -> dict:
          + ("Today's book (the sleeve table) is OUTGOING" if switch else
             f"You SHOULD hold the {'book' if sm.get('engine') else f'`{key}` model'} above")
          + (" — with the CIRCUIT BREAKER ON (risk sleeves halved)" if sm["breaker"] == "ON" else "")
-         + f". Model book {sm['nav']:.2f} ({sm['drawdown_pct']:+.1f}% from peak"
+         + f". Model book {usd(sm.get('value_usd'))} on {usd(MODEL_CAPITAL)} ({sm['drawdown_pct']:+.1f}% from peak"
          + (f"; 20d {sm['ret_20d']:+.1f}%" if sm.get("ret_20d") is not None else "") + "). ")
     if sm["warn"] and sm["breaker"] == "ENGINE":
         c += f"⚠ Drawdown past {mbk.WARN_DD:.0f}% — the engine's −8% Offense stop and trend rules are the control. "
@@ -2878,8 +2893,10 @@ def render_md(b: dict) -> str:
               "The sleeve table below is today's book, outgoing.", ""]
     if md_.get("available"):
         sm = md_["summary"]
-        L.append(f"- Regime `{sm['regime']}` · breaker **{sm['breaker']}** · model book {sm['nav']:.2f} "
-                 f"({sm['drawdown_pct']:+.1f}% from peak {sm['peak']:.2f})"
+        L.append(f"- Regime `{sm['regime']}` · breaker **{sm['breaker']}** · model book "
+                 f"{usd(sm.get('value_usd', sm['nav'] * MODEL_CAPITAL / 100))} on {usd(MODEL_CAPITAL)} "
+                 f"({sm['drawdown_pct']:+.1f}% from peak {usd(sm.get('peak_usd', sm['peak'] * MODEL_CAPITAL / 100))}; "
+                 f"NAV {sm['nav']:.2f})"
                  + (f" · 5d {sm['ret_5d']:+.2f}%" if sm.get("ret_5d") is not None else "")
                  + (f" · 20d {sm['ret_20d']:+.2f}%" if sm.get("ret_20d") is not None else "")
                  + (f" · since inception {sm['since_inception_pct']:+.2f}%" if sm.get("since_inception_pct") is not None else "")
@@ -3589,6 +3606,13 @@ def selftest() -> dict:
             f.append("engine state must be one of OFF/BAL/DEF/OUT")
         if "Engine O11" not in mdl.get("conclusion", ""):
             f.append("the model conclusion must say what the engine holds")
+        # v1.8.1: dollars on $100,000 in the conclusion and section 8 (display only)
+        _smd = mdl.get("summary") or {}
+        if _smd.get("nav") is not None:
+            if abs(_smd.get("value_usd", -1) - round(_smd["nav"] * 1000, 0)) > 0.5 or "on $100,000" not in mdl.get("conclusion", ""):
+                f.append(f"v1.8.1: model book in dollars on $100,000: {_smd.get('value_usd')} / {mdl.get('conclusion', '')[:120]}")
+            if "on $100,000" not in md.split("## 8 ·")[1].split("## 9 ·")[0]:
+                f.append("v1.8.1: section 8 shows dollars on $100,000")
         # v1.8 (N78): a switch at today's close leads the section with the next session's whole book
         import engine_layer as _elm
         _orig_states = _elm.states

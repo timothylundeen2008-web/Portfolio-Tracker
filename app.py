@@ -1680,9 +1680,10 @@ with tab4:
                            "Replaces the circuit breaker as the book's drawdown control (2026-11-13).")
         else:
             c2.metric("Circuit breaker", "ON — risk halved" if _brk else "OFF")
-        c3.metric("Model drawdown", f"{_sm.get('drawdown_pct', 0):+.1f}%",
-                  help=("Model book vs its running peak. Alerts at -10% and -15%." if _eng else
-                        "Model book vs its running peak. Warning at -5%, breaker trips at -8%."))
+        _usd = _sm.get("value_usd", (_sm.get("nav") or 0) * 1000)          # 2026-11-23: shown on $100,000
+        c3.metric("Model book ($100k start)", f"${_usd:,.0f}", f"{_sm.get('drawdown_pct', 0):+.1f}% from peak",
+                  help=("Model book on $100,000 (NAV 100 = $100,000) vs its running peak. Alerts at -10% and -15%."
+                        if _eng else "Model book vs its running peak. Warning at -5%, breaker trips at -8%."))
         c4.metric("Model 20-day", f"{_sm['ret_20d']:+.2f}%" if _sm.get("ret_20d") is not None else "—",
                   help=(f"Since inception ({_sm.get('since')}): {_sm['since_inception_pct']:+.2f}%"
                         if _sm.get("since_inception_pct") is not None else None))
@@ -1729,7 +1730,8 @@ with tab4:
                 st.caption("Returns are display-only and do not drive any gate or weight (dividend-adjusted closes). "
                            "1M = 21 sessions, 3M = 63, **12-1** = 12-month return excluding the latest month. "
                            f"SPY: 1M {_f(_sr.get('ret_1m'))} · 3M {_f(_sr.get('ret_3m'))} · 12-1 {_f(_sr.get('ret_12_1'))}.")
-        st.caption(f"As of the {_mb.get('session')} close · model book {_sm.get('nav', 0):.2f}, tracked since "
+        st.caption(f"As of the {_mb.get('session')} close · model book ${_sm.get('value_usd', (_sm.get('nav') or 0) * 1000):,.0f} "
+                   f"on $100,000 (NAV {_sm.get('nav', 0):.2f}), tracked since "
                    f"{_sm.get('since')}. Regime targets → entry gate (adds must be above a rising 200-day and "
                    "their 50-day; blocked adds wait in SGOV) → circuit breaker. A model, not a broker "
                    "statement: daily-rebalanced, before costs and taxes. Full reasoning: Logs tab → "
