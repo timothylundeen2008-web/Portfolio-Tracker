@@ -1,5 +1,5 @@
 {
- "version": "1.0",
+ "version": "1.1",
  "asof": "2026-11-24",
  "filers": {
   "druckenmiller": {
@@ -11,17 +11,21 @@
    "accession": "0001536411-26-000011",
    "previous_period": "2026-06-30",
    "amendments_after": [],
-   "total_value": 4470867,
+   "total_value": 4470867000,
    "positions": 65,
    "top10_weight_pct": 64.1,
    "options_lines": 5,
+   "unit_notes": [
+    "0001536411-26-000011: values reported in $ thousands (median implied price $0.062); scaled \u00d71000",
+    "0001536411-26-000006: values reported in $ thousands (median implied price $0.088); scaled \u00d71000"
+   ],
    "top": [
     {
      "issuer": "Natera Inc",
      "class": "COM",
      "cusip": "632307104",
      "put_call": "",
-     "value": 1306335,
+     "value": 1306335000,
      "shares": 3160666.0,
      "weight_pct": 29.22
     },
@@ -30,7 +34,7 @@
      "class": "ORD SHS",
      "cusip": "G7997R103",
      "put_call": "",
-     "value": 315247,
+     "value": 315247000,
      "shares": 341790.0,
      "weight_pct": 7.05
     },
@@ -39,7 +43,7 @@
      "class": "COM",
      "cusip": "023135106",
      "put_call": "",
-     "value": 192493,
+     "value": 192493000,
      "shares": 772600.0,
      "weight_pct": 4.31
     },
@@ -48,7 +52,7 @@
      "class": "CL A COM",
      "cusip": "35137L105",
      "put_call": "",
-     "value": 190835,
+     "value": 190835000,
      "shares": 3046050.0,
      "weight_pct": 4.27
     },
@@ -57,7 +61,7 @@
      "class": "SPONSORED ADS",
      "cusip": "984245100",
      "put_call": "",
-     "value": 177555,
+     "value": 177555000,
      "shares": 3541897.0,
      "weight_pct": 3.97
     },
@@ -66,7 +70,7 @@
      "class": "COM",
      "cusip": "91332U101",
      "put_call": "",
-     "value": 161935,
+     "value": 161935000,
      "shares": 3956385.0,
      "weight_pct": 3.62
     },
@@ -75,7 +79,7 @@
      "class": "SPONSORD ADS",
      "cusip": "81141R100",
      "put_call": "",
-     "value": 155072,
+     "value": 155072000,
      "shares": 1592765.0,
      "weight_pct": 3.47
     },
@@ -84,7 +88,7 @@
      "class": "MSCI BRAZIL ETF",
      "cusip": "464286400",
      "put_call": "",
-     "value": 125814,
+     "value": 125814000,
      "shares": 3377570.0,
      "weight_pct": 2.81
     },
@@ -93,7 +97,7 @@
      "class": "COM PAR $.01",
      "cusip": "457669307",
      "put_call": "",
-     "value": 124715,
+     "value": 124715000,
      "shares": 1092650.0,
      "weight_pct": 2.79
     },
@@ -102,7 +106,7 @@
      "class": "COM",
      "cusip": "023135106",
      "put_call": "Call",
-     "value": 114435,
+     "value": 114435000,
      "shares": 459300.0,
      "weight_pct": 2.56
     },
@@ -111,7 +115,7 @@
      "class": "ORD SHS",
      "cusip": "G7997R103",
      "put_call": "Call",
-     "value": 90389,
+     "value": 90389000,
      "shares": 98000.0,
      "weight_pct": 2.02
     },
@@ -120,7 +124,7 @@
      "class": "COM",
      "cusip": "76155X100",
      "put_call": "",
-     "value": 89552,
+     "value": 89552000,
      "shares": 436287.0,
      "weight_pct": 2.0
     },
@@ -129,7 +133,7 @@
      "class": "CL A COM",
      "cusip": "G0896C103",
      "put_call": "",
-     "value": 86720,
+     "value": 86720000,
      "shares": 1647408.0,
      "weight_pct": 1.94
     },
@@ -138,7 +142,7 @@
      "class": "NY REGISTRY",
      "cusip": "861012102",
      "put_call": "",
-     "value": 86197,
+     "value": 86197000,
      "shares": 1615380.0,
      "weight_pct": 1.93
     },
@@ -147,7 +151,7 @@
      "class": "ORDINARY SHARES",
      "cusip": "N62509109",
      "put_call": "",
-     "value": 81646,
+     "value": 81646000,
      "shares": 3357146.0,
      "weight_pct": 1.83
     },
@@ -156,7 +160,7 @@
      "class": "COM",
      "cusip": "12514G108",
      "put_call": "",
-     "value": 73788,
+     "value": 73788000,
      "shares": 575750.0,
      "weight_pct": 1.65
     },
@@ -165,7 +169,7 @@
      "class": "COM PAR $.01",
      "cusip": "457669307",
      "put_call": "Call",
-     "value": 62777,
+     "value": 62777000,
      "shares": 550000.0,
      "weight_pct": 1.4
     },
@@ -174,7 +178,7 @@
      "class": "COM",
      "cusip": "88023U101",
      "put_call": "",
-     "value": 61712,
+     "value": 61712000,
      "shares": 993600.0,
      "weight_pct": 1.38
     },
@@ -183,7 +187,7 @@
      "class": "COM",
      "cusip": "651639106",
      "put_call": "",
-     "value": 43875,
+     "value": 43875000,
      "shares": 380400.0,
      "weight_pct": 0.98
     },
@@ -192,7 +196,7 @@
      "class": "COM SHS",
      "cusip": "06849F108",
      "put_call": "",
-     "value": 42891,
+     "value": 42891000,
      "shares": 1054600.0,
      "weight_pct": 0.96
     },
@@ -201,7 +205,7 @@
      "class": "COM",
      "cusip": "008474108",
      "put_call": "",
-     "value": 42345,
+     "value": 42345000,
      "shares": 231050.0,
      "weight_pct": 0.95
     },
@@ -210,7 +214,7 @@
      "class": "CL A ORD SHS",
      "cusip": "G11448100",
      "put_call": "",
-     "value": 39668,
+     "value": 39668000,
      "shares": 3781493.0,
      "weight_pct": 0.89
     },
@@ -219,7 +223,7 @@
      "class": "CL A",
      "cusip": "22266T109",
      "put_call": "",
-     "value": 36998,
+     "value": 36998000,
      "shares": 2667485.0,
      "weight_pct": 0.83
     },
@@ -228,7 +232,7 @@
      "class": "COM",
      "cusip": "958102105",
      "put_call": "",
-     "value": 36793,
+     "value": 36793000,
      "shares": 80960.0,
      "weight_pct": 0.82
     },
@@ -237,7 +241,7 @@
      "class": "COM",
      "cusip": "44916Y106",
      "put_call": "",
-     "value": 36092,
+     "value": 36092000,
      "shares": 2941500.0,
      "weight_pct": 0.81
     }
@@ -247,77 +251,77 @@
      {
       "issuer": "Seagate Technology Hldngs Pl (Call)",
       "weight_pct": 2.02,
-      "value": 90389.0
+      "value": 90389000.0
      },
      {
       "issuer": "Somnigroup International Inc",
       "weight_pct": 1.38,
-      "value": 61712.0
+      "value": 61712000.0
      },
      {
       "issuer": "Newmont Corp",
       "weight_pct": 0.98,
-      "value": 43875.0
+      "value": 43875000.0
      },
      {
       "issuer": "Barrick Mng Corp",
       "weight_pct": 0.96,
-      "value": 42891.0
+      "value": 42891000.0
      },
      {
       "issuer": "Agnico Eagle Mines Ltd",
       "weight_pct": 0.95,
-      "value": 42345.0
+      "value": 42345000.0
      },
      {
       "issuer": "Western Digital Corp",
       "weight_pct": 0.82,
-      "value": 36793.0
+      "value": 36793000.0
      },
      {
       "issuer": "Applovin Corp",
       "weight_pct": 0.71,
-      "value": 31790.0
+      "value": 31790000.0
      },
      {
       "issuer": "Space Exploration Techn Corp",
       "weight_pct": 0.68,
-      "value": 30493.0
+      "value": 30493000.0
      },
      {
       "issuer": "Ttm Technologies Inc",
       "weight_pct": 0.61,
-      "value": 27210.0
+      "value": 27210000.0
      },
      {
       "issuer": "Humana Inc",
       "weight_pct": 0.56,
-      "value": 24886.0
+      "value": 24886000.0
      },
      {
       "issuer": "Palantir Technologies Inc",
       "weight_pct": 0.34,
-      "value": 14983.0
+      "value": 14983000.0
      },
      {
       "issuer": "Td Synnex Corporation",
       "weight_pct": 0.32,
-      "value": 14512.0
+      "value": 14512000.0
      },
      {
       "issuer": "Insight Enterprises Inc",
       "weight_pct": 0.23,
-      "value": 10489.0
+      "value": 10489000.0
      },
      {
       "issuer": "Korsana Biosciences Inc",
       "weight_pct": 0.2,
-      "value": 8914.0
+      "value": 8914000.0
      },
      {
       "issuer": "Mks Inc.",
       "weight_pct": 0.19,
-      "value": 8470.0
+      "value": 8470000.0
      }
     ],
     "exited": [
@@ -542,6 +546,7 @@
    "positions": 974,
    "top10_weight_pct": 28.3,
    "options_lines": 0,
+   "unit_notes": [],
    "top": [
     {
      "issuer": "STATE STR SPDR S&P 500 ETF T",
