@@ -1,5 +1,5 @@
 """
-swing_tab.py  (v1 — September 2026; engine-book panel 2026-11-22)
+swing_tab.py  (v1 — September 2026; engine-book panel 2026-11-22; M0-T paper panel 2026-11-23)
 ───────────────────────────────────
 The Swing Desk tab, rebuilt as the AGENT'S surface rather than a scanner.
 
@@ -104,6 +104,7 @@ def render(st, fetch_ohlcv=None):
 
     with t_brief:
         _engine_panel(st)          # 2026-11-22: the swing account's ENGINE book (O11 mirror), above the M0 cards
+        _m0t_panel(st)             # 2026-11-23: M0-T paper record (data/m0t_paper, m0t_paper.py)
         if not brief:
             st.warning("No brief yet. The Swing Desk Brief job writes one at 6:45 PM ET on trading days "
                        "(Actions → Swing Desk Brief → Run workflow to produce one now).")
@@ -426,6 +427,67 @@ def _engine_panel(st) -> None:
                    + "; ".join(f"{k} {'HOLDING' if v['holding'] else ('ON' if v['on_today'] else 'OFF')}"
                                for k, v in s3["sleeves"].items())
                    + " · M0 cards below · radar flags in Market Signals. Research, not personalized advice.")
+    st.markdown("---")
+
+
+def _m0t_panel(st) -> None:
+    """M0-T paper record (m0t_paper.py, Matt 2026-11-23). Read-only: shows data/m0t_paper/summary.json."""
+    try:
+        r = json.load(open(os.path.join("data", "m0t_paper", "summary.json")))
+    except Exception:
+        st.info("**M0-T paper record:** no output yet. It runs after each Consolidated Daily Brief "
+                "(Actions → M0-T Paper Record → Run workflow to produce one now).")
+        return
+    live = r.get("mode") == "paper"
+    st.markdown("### 📝 M0-T paper record — $10,000, no money" + ("" if live else f" (preview; starts {r.get('paper_start')})"))
+    st.caption("M0-T = the M0 rule without the sector-rotation exit and ladder trims (best swing edge tested: "
+               "+0.44R per trade, PF 1.83, 2005–26), at the live 1% / 0.5% risk. It FAILED the beat-SPY book bar, "
+               "so it is paper only; this record is the out-of-sample test. Prices as of the "
+               f"{r.get('asof')} close.")
+    if r.get("limit_block"):
+        st.error(f"Swing limit: {r['limit_block']}")
+    c = st.columns(4)
+    c[0].metric("Paper account", f"${r.get('equity', 0):,.0f}", f"{r.get('ret_pct', 0):+.2f}%")
+    spy = r.get("spy_ret_pct")
+    c[1].metric("SPY since start", "—" if spy is None else f"{spy:+.2f}%")
+    c[2].metric("This month", f"{r.get('month_pct', 0):+.2f}%", "limit −10%", delta_color="off")
+    c[3].metric("From the high", f"{r.get('dd_from_high_pct', 0):+.2f}%", "limit −20%", delta_color="off")
+    if r.get("streak_reduced"):
+        st.warning("Streak mode: 3 straight losses, so new trades are half size until 2 straight wins.")
+    ex = r.get("exits_next_open") or {}
+    if r.get("open"):
+        st.markdown("**Open positions**")
+        st.dataframe(pd.DataFrame([{"Fund": p["ticker"], "Since": p["entry_date"], "Shares": p["shares"],
+                                    "Entry": p["entry"], "Close": p["close"], "Stop (closing)": p["stop"],
+                                    "Disaster stop (resting)": p["disaster_stop"], "Open R": p["open_R"],
+                                    "Next open": ("SELL — " + ex[p["ticker"]]) if p["ticker"] in ex else "hold"}
+                                   for p in r["open"]]), use_container_width=True, hide_index=True)
+    orders = r.get("orders") or []
+    placed = [o for o in orders if o.get("status") == "ORDER"]
+    if placed:
+        st.markdown("**Buy-stop orders for the next open** (good for that session only)")
+        st.dataframe(pd.DataFrame([{"Fund": o["ticker"], "Buy-stop": o["buy_stop"], "Stop": o["stop"],
+                                    "Shares": o["shares"], "Confluence": f"{o['conf']}-of-3",
+                                    "Risk %": o["risk_pct"]} for o in placed]), use_container_width=True, hide_index=True)
+    skipped = [o for o in orders if o.get("status") != "ORDER"]
+    if skipped:
+        st.caption("Signals with no order: " + "; ".join(f"{o['ticker']} ({o['why']})" for o in skipped))
+    if not orders and not ex:
+        st.caption("No M0 signal and no exit at tonight's close.")
+    cl = r.get("closed") or []
+    if cl:
+        s, e = r.get("closed_stats") or {}, r.get("expected") or {}
+        st.markdown(f"**Closed trades: {s.get('n')}** · win {s.get('win_rate')}% · expectancy {s.get('expectancy_R')}R · "
+                    f"PF {s.get('profit_factor')} — backtest expects {e.get('expectancy_R')}R, PF {e.get('profit_factor')}, "
+                    f"win {e.get('win_rate')}%. Under ~30 trades these are numbers, not evidence.")
+        st.dataframe(pd.DataFrame([{"Fund": x["ticker"], "In": x["entry_date"], "Out": x["exit_date"],
+                                    "Why": x["exit_reason"], "R": x["r"], "P&L $": x["pnl"]} for x in cl[::-1]]),
+                     use_container_width=True, hide_index=True)
+    if r.get("unseen_trades"):
+        st.warning("Reconciliation — trades never seen as orders the night before (price revision?): "
+                   + ", ".join(r["unseen_trades"]))
+    if r.get("equity_curve") and len(r["equity_curve"]) > 1:
+        st.line_chart(pd.DataFrame(r["equity_curve"]).set_index("date")["equity"], height=160)
     st.markdown("---")
 
 

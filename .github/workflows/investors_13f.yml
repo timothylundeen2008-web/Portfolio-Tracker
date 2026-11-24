@@ -1,0 +1,54 @@
+name: Investor 13F
+
+# Reference only: latest 13F holdings of Duquesne Family Office (Druckenmiller) and Bridgewater
+# (investors_13f.py; Matt 2026-11-23). Weekly on Mondays plus manual. 13Fs are due 45 days after
+# each quarter end (mid-Feb, mid-May, mid-Aug, mid-Nov).
+# Needs the repository secret SEC_CONTACT_EMAIL (never printed or committed).
+
+on:
+  schedule:
+    - cron: '17 23 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: investors-13f
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Selftest (offline)
+        run: python investors_13f.py --selftest
+      - name: Fetch the latest 13F filings
+        env:
+          SEC_CONTACT_EMAIL: ${{ secrets.SEC_CONTACT_EMAIL }}
+        run: python investors_13f.py
+      - name: Commit results
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/investors_13f/ 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No change."
+          else
+            git commit -m "investor 13F: $(date -u +%Y-%m-%d)"
+            for i in 1 2 3; do
+              git pull --rebase --autostash origin main && git push && break
+              sleep 5
+            done
+          fi

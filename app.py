@@ -1121,7 +1121,7 @@ st.markdown("---")
 
 # ─── TABS ─────────────────────────────────────────────────────────────────────
 (tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8,tab9,tab_sug,tab_cand,tab_exp,
- tab_swing, tab_logs) = st.tabs([
+ tab_swing, tab_13f, tab_logs) = st.tabs([
     "🏠 Overview",
     "📈 Holding vs Benchmark",
     "🗂️ Category Performance",
@@ -1135,6 +1135,7 @@ st.markdown("---")
     "🔍 Candidate Review",
     "🧬 Exposure & Exits",
     "🎯 Swing Desk",
+    "🧭 Investor 13F",
     "📋 Daily & Weekly Logs",
 ])
 
@@ -3160,3 +3161,14 @@ with tab_swing:
         _stab.render(st, fetch_ohlcv)
     except Exception as e:
         st.error(f"Swing Desk unavailable: {e}")
+
+# ════════════════════════════════════════════════════════════
+# INVESTOR 13F — reference only (Matt 2026-11-23): latest 13F holdings of
+# Duquesne Family Office (Druckenmiller) and Bridgewater (Dalio's firm).
+# Read-only from data/investors_13f/summary.json (investors_13f.py). Not a signal.
+with tab_13f:
+    try:
+        import investors_tab as _itab
+        _itab.render(st)
+    except Exception as e:
+        st.error(f"Investor 13F unavailable: {e}")
