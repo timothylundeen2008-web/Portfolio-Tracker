@@ -1,18 +1,18 @@
 {
   "version": "v1.1.1",
-  "asof": "2026-11-20",
+  "asof": "2026-11-23",
   "start": "2026-12-01",
   "error": null,
-  "generated_at": "2026-11-21T12:04:43+00:00",
-  "last_bar": "2026-11-20",
+  "generated_at": "2026-11-24T06:24:43+00:00",
+  "last_bar": "2026-11-23",
   "reads": [
     {
       "engine": "O11",
       "state": "DEF",
       "word": "DEFENSE",
       "since": "2026-11-20",
-      "switched_today": true,
-      "previous": "OUT",
+      "switched_today": false,
+      "previous": "DEF",
       "book_next": {
         "SGOV": 60.0,
         "GLD": 20.0,
@@ -24,8 +24,8 @@
       "state": "DEF",
       "word": "DEFENSE",
       "since": "2026-11-20",
-      "switched_today": true,
-      "previous": "OUT",
+      "switched_today": false,
+      "previous": "DEF",
       "book_next": {
         "SGOV": 60.0,
         "GLD": 20.0,
@@ -37,8 +37,8 @@
       "state": "DEF",
       "word": "DEFENSE",
       "since": "2026-11-20",
-      "switched_today": true,
-      "previous": "BAL",
+      "switched_today": false,
+      "previous": "DEF",
       "book_next": {
         "SGOV": 60.0,
         "GLD": 20.0,
