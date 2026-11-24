@@ -2,7 +2,7 @@
  "version": "1.1",
  "mode": "cash",
  "paper_start": "2026-12-01",
- "latest_brief": "2026-11-20",
+ "latest_brief": "2026-11-23",
  "price_date": "2026-11-23",
  "s3": {
   "sleeves": {
@@ -29,7 +29,7 @@
   "nav": null
  },
  "target": {
-  "for_session": "2026-11-23",
+  "for_session": "2026-11-24",
   "state": "CASH (no swing rule has passed yet)",
   "switched": false,
   "weights": {
@@ -48,7 +48,7 @@
   ],
   "missing": [],
   "cash_left": 36.64,
-  "priced_at": "2026-11-20"
+  "priced_at": "2026-11-23"
  },
  "ledger": [],
  "pending": null,
