@@ -10,9 +10,11 @@ Paper only, no money. The swing account itself stays in SGOV. Research, not pers
 
 | Fund | Status | Confluence | Detail |
 |---|---|---|---|
+| XLRE | no order | 3-of-3 | SPY below its 200-day: no new entries |
+| IBB | no order | 3-of-3 | SPY below its 200-day: no new entries |
+| XBI | no order | 3-of-3 | SPY below its 200-day: no new entries |
 | XLU | no order | 2-of-3 | SPY below its 200-day: no new entries |
 | XLY | no order | 2-of-3 | SPY below its 200-day: no new entries |
 | XRT | no order | 2-of-3 | SPY below its 200-day: no new entries |
-| IBB | no order | 2-of-3 | SPY below its 200-day: no new entries |
 
-*m0t_paper.py 1.0*
+*m0t_paper.py 1.1*
