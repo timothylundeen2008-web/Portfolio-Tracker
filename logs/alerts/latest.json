@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-24T07:06:17+00:00",
+  "generated_at": "2026-11-24T12:28:14+00:00",
   "date": "2026-11-24",
   "version": "alerts v1.1.1 (engine layer, 2026-11-13; radar row ignored 2026-11-21)",
   "selftest_ok": true,
@@ -15,37 +15,26 @@
     {
       "key": "LT_DD_10",
       "severity": "alert",
-      "state": "active",
-      "title": "Model book -11.4% from peak \u2014 alert"
-    },
-    {
-      "key": "LT_ENGINE",
-      "severity": "alert",
-      "state": "active",
-      "title": "Engine O11 \u2192 DEFENSE (from OUT)"
+      "state": "hold",
+      "title": "Model book -8.6% from peak \u2014 alert"
     },
     {
       "key": "DATA_FAIL",
       "severity": "alert",
       "state": "active",
-      "title": "Data failure: 1 input(s) block decisions"
+      "title": "Data failure: 2 input(s) block decisions"
     }
   ],
   "actions": [
     {
-      "action": "still open",
-      "key": "LT_DD_10",
-      "number": 11
-    },
-    {
-      "action": "still open",
-      "key": "LT_ENGINE",
-      "number": 12
-    },
-    {
-      "action": "still open",
+      "action": "update",
       "key": "DATA_FAIL",
       "number": 10
+    },
+    {
+      "action": "close",
+      "key": "LT_ENGINE",
+      "number": 12
     }
   ],
   "error": null
