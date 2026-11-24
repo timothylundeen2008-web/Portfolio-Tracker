@@ -1,5 +1,5 @@
 {
-  "published_at": "2026-11-24T02:05:24+00:00",
+  "published_at": "2026-11-24T05:44:20+00:00",
   "notes": "auto-published on Markets Dashboard render",
   "regime": {
     "key": "credit_stress",
@@ -41,10 +41,10 @@
     "RING": 4.0,
     "XLE": 4.0,
     "PDBC": 2.0,
-    "SCHD": 14.5,
+    "SCHD": 16.0,
     "XLV": 7.0,
     "XLU": 1.0,
-    "SGOV": 21.5,
+    "SGOV": 20.0,
     "USFR": 9.0,
     "TLT": 2.0,
     "KMLM": 4.0
