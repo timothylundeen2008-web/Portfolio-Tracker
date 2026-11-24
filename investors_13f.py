@@ -1,6 +1,9 @@
 """
-investors_13f.py  (v1.0 — 2026-11-23)
+investors_13f.py  (v1.1 — 2026-11-24)
 ──────────────────────────────────────
+v1.1: some filers (Duquesne) still report values in $ thousands after the 2023 switch to dollars;
+      units are now detected per filing from implied share prices (fix_units). Weights were unaffected.
+
 REFERENCE ONLY, not a signal and not tested. Latest quarterly 13F holdings of two investors Matt
 follows (2026-11-23: "add a tab or a reference somewhere that shows the current holdings of Stan
 druckenmiller and ray dalio"):
@@ -37,7 +40,7 @@ from typing import Optional
 
 import pandas as pd
 
-VERSION = "1.0"
+VERSION = "1.1"
 FILERS = [
     {"key": "druckenmiller", "cik": 1536411, "name": "Duquesne Family Office LLC", "person": "Stanley Druckenmiller"},
     {"key": "bridgewater", "cik": 1350694, "name": "Bridgewater Associates, LP", "person": "Ray Dalio (founder)"},
@@ -108,6 +111,17 @@ def parse_infotable(xml: bytes, filed: str) -> pd.DataFrame:
     return df
 
 
+def fix_units(df: pd.DataFrame) -> tuple:
+    """Detect a filing reported in $ thousands: the median implied price (value / shares) of plain share
+    lines is then far below $1. -> (frame in dollars, note)."""
+    sh = df[(df["put_call"] == "") & (df["share_type"].str.upper() == "SH") & (df["shares"] > 0)]
+    if len(sh) >= 3:
+        med = float((sh["value"] / sh["shares"]).median())
+        if med < 1.0:
+            return df.assign(value=df["value"] * 1000.0), f"values reported in $ thousands (median implied price ${med:.3f}); scaled ×1000"
+    return df, ""
+
+
 def aggregate(df: pd.DataFrame) -> pd.DataFrame:
     """One row per CUSIP + put/call (filers split lines by manager or discretion)."""
     if df.empty:
@@ -161,12 +175,16 @@ def fetch_filer(sec, f: dict) -> dict:
         xml = sec.get(f"https://www.sec.gov/Archives/edgar/data/{cik}/{acc}/{name}")
         if not xml:
             raise RuntimeError(f"information table missing: {fl['accession']}")
-        return aggregate(parse_infotable(xml, fl["filed"]))
+        df, note = fix_units(parse_infotable(xml, fl["filed"]))
+        if note:
+            notes.append(f"{fl['accession']}: {note}")
+        return aggregate(df)
 
+    notes: list = []
     now = table(latest)
     before = table(prev) if prev else None
     return {"filer": f, "latest": latest, "previous": prev, "amendments_after": amends, "holdings": now,
-            "previous_holdings": before, "changes": changes(now, before)}
+            "previous_holdings": before, "changes": changes(now, before), "notes": notes}
 
 
 def summarise(res: dict, top: int = 25) -> dict:
@@ -181,6 +199,7 @@ def summarise(res: dict, top: int = 25) -> dict:
             "amendments_after": [a["accession"] + " filed " + a["filed"] for a in res["amendments_after"]],
             "total_value": round(float(h["value"].sum())), "positions": int(len(h)), "top10_weight_pct": round(top10, 1),
             "options_lines": int((h["put_call"] != "").sum()) if len(h) else 0,
+            "unit_notes": res.get("notes", []),
             "top": rows, "changes": {k: v[:15] for k, v in res["changes"].items()},
             "source_url": f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={res['filer']['cik']:010d}&type=13F-HR"}
 
@@ -241,6 +260,14 @@ def selftest() -> dict:
     old = parse_infotable(_xml([("A", "X", 5, 1, "")], ns=False), "2022-11-14")
     if float(old["value"].iloc[0]) != 5000:
         f.append("pre-2023 values are $ thousands")
+    thou = parse_infotable(_xml([("NATERA", "1", 1306335, 3160666, ""), ("SEAGATE", "2", 315247, 341790, ""),
+                                 ("AMAZON", "3", 192493, 772600, "")]), "2026-11-16")
+    fx, note = fix_units(thou)
+    if abs(fx["value"].iloc[0] - 1306335000) > 1 or not note:
+        f.append("fix_units: a filing in $ thousands must be scaled ×1000")
+    dol = parse_infotable(_xml([("A", "1", 413000, 1000, ""), ("B", "2", 92000, 1000, ""), ("C", "3", 250000, 1000, "")]), "2026-11-16")
+    if fix_units(dol)[1] or fix_units(dol)[0]["value"].iloc[0] != 413000:
+        f.append("fix_units: a filing in dollars must be left alone")
     x_prev = _xml([("NVIDIA CORP", "67066G104", 800, 20, ""), ("OLD CO", "000000009", 200, 50, "")])
     ch = changes(df, aggregate(parse_infotable(x_prev, "2026-08-14")))
     names = lambda k: [z["issuer"] for z in ch[k]]

@@ -1,6 +1,11 @@
 """
-m0t_paper.py  (v1.0 — 2026-11-23)
+m0t_paper.py  (v1.1 — 2026-11-24)
 ──────────────────────────────────
+v1.1: (1) positions are marked by DATE on the paper calendar (aligned()); v1.0 passed a calendar
+      starting 2026-12-01 to run_portfolio while close_cal was laid out from 2022, and
+      run_portfolio reads close_cal by POSITION, so open positions would have been marked with
+      prices from years earlier. (2) A run before the close drops today's partial bar.
+
 Swing book, PAPER ONLY. The forward record of M0-T (trial 97: live M0 with no sector-rotation exit
 and no ladder trims) on its own $10,000 paper account from 2026-12-01, at the live sizing
 (1% risk on 3-of-3, 0.5% on 2-of-3, halved after 3 straight losses). Matt 2026-11-23:
@@ -41,10 +46,11 @@ import swing_backtest as bt
 import swing_desk as sd
 import m0t_lab as m0t
 
-VERSION = "1.0"
+VERSION = "1.1"
 PAPER_START = date(2026, 12, 1)
 FETCH_START = "2022-01-01"        # >= 252 + 320 bars of warm-up before PAPER_START
 START_EQUITY = 10_000.0
+PARTIAL_BAR_MINUTES = 20          # a bar for today is treated as incomplete until 20 min after the close
 MONTH_LIMIT, HWM_LIMIT = -10.0, -20.0
 OUT_DATA, OUT_LOGS = Path("data/m0t_paper"), Path("logs/m0t_paper")
 SEEN_COLS = ["first_seen", "signal_date", "ticker", "buy_stop", "stop", "conf", "risk_pct"]
@@ -52,6 +58,12 @@ SEEN_COLS = ["first_seen", "signal_date", "ticker", "buy_stop", "stop", "conf", 
 
 def _log(msg: str) -> None:
     print(f"[m0t_paper {datetime.now(timezone.utc).strftime('%H:%M:%S')}] {msg}", flush=True)
+
+
+def aligned(data: dict, cal: pd.DatetimeIndex) -> dict:
+    """run_portfolio reads data[tk]["close_cal"].iloc[k] with k = position in the calendar it is GIVEN.
+    When that calendar is a slice of the one close_cal was built on, re-lay close_cal on it by date."""
+    return {tk: {**d, "close_cal": d["close_cal"].reindex(cal)} for tk, d in data.items()}
 
 
 def universe() -> tuple:
@@ -189,7 +201,8 @@ def plan_orders(sigs: list, open_pos: list, exits: dict, equity: float, cash: fl
 
 # ── the book ───────────────────────────────────────────────────────────────
 
-def build(ohlcv: dict, rates: dict, paper_start: date = PAPER_START, seen: Optional[pd.DataFrame] = None) -> dict:
+def build(ohlcv: dict, rates: dict, paper_start: date = PAPER_START, seen: Optional[pd.DataFrame] = None,
+          sweep_mode: str = "TBILL") -> dict:
     etfs, sector_of = universe()
     res = bt.run(ohlcv, etfs, [], sector_of, setups=("M0",), variants=("B",), verbose=False)
     data, cal_all = res["data"], res["cal"]
@@ -211,7 +224,8 @@ def build(ohlcv: dict, rates: dict, paper_start: date = PAPER_START, seen: Optio
         cal = cal_all[cal_all >= p0]
         sw, gaps = bt.sweep_inputs(ohlcv, rates, cal)
         out["gaps"] = gaps
-        p = bt.run_portfolio(sel, ufs, data, cal, sector_of, start_equity=START_EQUITY, sweep={"mode": "TBILL", **sw})
+        p = bt.run_portfolio(sel, ufs, aligned(data, cal), cal, sector_of, start_equity=START_EQUITY,
+                             sweep=None if sweep_mode == "CASH0" else {"mode": sweep_mode, **sw})
         eq = p["equity"]
         equity = float(eq.iloc[-1])
         for tr, sh in p["taken"]:
@@ -280,6 +294,12 @@ def build(ohlcv: dict, rates: dict, paper_start: date = PAPER_START, seen: Optio
                 "expected": {"expectancy_R": 0.44, "profit_factor": 1.83, "win_rate": 28.4,
                              "source": "trial 97 backtest, 2005–2026"}})
     return out
+
+
+def drop_partial(ohlcv: dict, today) -> dict:
+    """Remove a bar dated `today` from every frame (an intraday run sees a partial daily bar)."""
+    t = pd.Timestamp(today)
+    return {k: v[v.index.normalize() != t] for k, v in ohlcv.items()}
 
 
 def update_seen(seen: pd.DataFrame, orders: list, first_seen: str) -> pd.DataFrame:
@@ -367,13 +387,14 @@ def main(fetch=None, out_data: Path = OUT_DATA, out_logs: Path = OUT_LOGS, expec
         print(f"[m0t_paper] DATA FAILURE: no prices for {', '.join(miss) or 'SPY'} after retries; nothing written.")
         return 1
     if expect_session == "auto":
-        try:
-            import market_time as mt
-            expect_session = mt.last_trading_day(mt.now_et().date()).isoformat()
-            if mt.is_trading_day(mt.now_et().date()) and (mt.minutes_since_close() or -1) < 0:
-                expect_session = None            # run before today's close: yesterday's bar is fine
-        except Exception:
-            expect_session = None
+        import market_time as mt
+        today = mt.now_et().date()
+        if mt.is_trading_day(today) and (mt.minutes_since_close() or 0) < PARTIAL_BAR_MINUTES:
+            ohlcv = drop_partial(ohlcv, today)   # run before (or just after) the close: today's bar is incomplete
+            expect_session = mt.last_trading_day(today - pd.Timedelta(days=1)).isoformat()
+            _log(f"run before today's close is final: using bars through {expect_session}")
+        else:
+            expect_session = mt.last_trading_day(today).isoformat()
     last = ohlcv["SPY"].index[-1].date().isoformat()
     stale = sorted(t for t, df in ohlcv.items() if df.index[-1] != ohlcv["SPY"].index[-1])
     if stale:
@@ -415,17 +436,29 @@ def selftest() -> dict:
         f.append("fixture: need paper trades")
     if any(c["entry_date"] < ps.isoformat() for c in r["closed"] + r["open"]):
         f.append("no trade may enter before the paper start")
-    # 1. the paper book equals run_portfolio on M0-T trades entered from the start (the backtest's own pass)
+    # 1. the paper book, run on its own short calendar, must equal the same trades run on the FULL
+    #    calendar the prices are laid out on (CASH0, so nothing accrues before the start): marking is by date.
+    with contextlib.redirect_stdout(io.StringIO()):
+        r0 = build(ohl, rates, paper_start=ps, sweep_mode="CASH0")
     res = bt.run(ohl, etfs, [], sector_of, setups=("M0",), variants=("B",), verbose=False)
     trs, unf = m0t.resimulate(res, ladder=(), rotation=False)
     p0 = pd.Timestamp(ps)
     sel = [t for t in trs if t.mkt_ok and res["data"][t.ticker]["index"][t.entry_t] >= p0]
     ufs = [g for g in unf if g.mkt_ok and g.t + 1 < len(res["data"][g.ticker]["index"]) and res["data"][g.ticker]["index"][g.t + 1] >= p0]
-    c2 = cal[cal >= p0]
-    sw, _g = bt.sweep_inputs(ohl, rates, c2)
-    pp = bt.run_portfolio(sel, ufs, res["data"], c2, sector_of, sweep={"mode": "TBILL", **sw})
-    if abs(float(pp["equity"].iloc[-1]) - r["equity"]) > 0.01:
-        f.append(f"paper equity {r['equity']} must equal the backtest pass {float(pp['equity'].iloc[-1]):.2f}")
+    pf = bt.run_portfolio(sel, ufs, res["data"], res["cal"], sector_of)
+    full_eq = pf["equity"][pf["equity"].index >= p0]
+    mine = pd.Series({pd.Timestamp(x["date"]): x["equity"] for x in r0["equity_curve"]})
+    gap = float((mine - full_eq.reindex(mine.index)).abs().max())
+    if not (gap < 0.02 and len(mine) == len(full_eq)):
+        f.append(f"paper book must match the full-calendar pass day by day (max gap ${gap:,.2f})")
+    if not r0["open"] and not r0["closed"]:
+        f.append("fixture: the identity check needs trades")
+    # an open position is marked at ITS close on the last day
+    for o in r["open"]:
+        px = float(ohl[o["ticker"]]["Close"].iloc[-1])
+        if abs(o["close"] - round(px, 2)) > 0.011:
+            f.append(f"open {o['ticker']} marked at {o['close']}, its last close is {px:.2f}")
+            break
     if bt.LADDER != (2.0, 4.0, 8.0):
         f.append("bt.LADDER must be restored")
     if any(c["exit_reason"].startswith("thesis") for c in r["closed"]):
@@ -499,6 +532,10 @@ def selftest() -> dict:
         f.append("plan_orders: 4 open positions leave no slot")
     if plan_orders(s[:1], full, {"H0": "closing-basis stop"}, 1e4, 1e4, False, None)[0]["status"] != "ORDER":
         f.append("plan_orders: a position exiting at the open frees its slot")
+    # partial bar
+    dp = drop_partial({"A": ohl["SPY"]}, cal[-1].date())["A"]
+    if dp.index[-1] != cal[-2] or len(dp) != len(cal) - 1:
+        f.append("drop_partial must remove only today's bar")
     # streak replay
     if not streak_reduced([{"r": -1.0}] * 3) or streak_reduced([{"r": -1.0}] * 3 + [{"r": 1.0}] * 2):
         f.append("streak_reduced: 3 losses on, 2 wins off")

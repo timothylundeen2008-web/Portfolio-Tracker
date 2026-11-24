@@ -1,0 +1,558 @@
+"""
+m0t_paper.py  (v1.0 — 2026-11-23)
+──────────────────────────────────
+Swing book, PAPER ONLY. The forward record of M0-T (trial 97: live M0 with no sector-rotation exit
+and no ladder trims) on its own $10,000 paper account from 2026-12-01, at the live sizing
+(1% risk on 3-of-3, 0.5% on 2-of-3, halved after 3 straight losses). Matt 2026-11-23:
+"Yes to building 1, 2, and 3".
+
+The swing ACCOUNT stays in SGOV (swing_engine.py, MODE "cash"); this is a separate paper record.
+It uses swing_backtest's and m0t_lab's own code, not a copy, so the forward record is the same
+rules as the backtest:
+  * signals and trade paths: bt.run (M0, stop B) -> m0t.resimulate(ladder=(), rotation=False);
+  * the book: bt.run_portfolio with the T-bill sweep, starting with $10,000 on PAPER_START;
+  * only trades whose entry session is on/after PAPER_START count.
+The ledger is recomputed from PAPER_START every night (idempotent). Yahoo revises prices, so the
+script also keeps an APPEND-ONLY log of every order the night it was first seen
+(data/m0t_paper/orders_seen.csv) and reports any ledger trade that was never seen in advance.
+
+Also shows what happens at the NEXT open: buy-stop orders from tonight's signals (with the
+portfolio's slot / sector / heat / streak rules applied) and exits triggered at tonight's close.
+The swing limits (-10% month, -20% from high) are checked and reported; a breach blocks new orders
+on the tab and is flagged for review. The recomputed ledger itself does not enforce them (same as
+the backtest), so any breach is visible, not hidden.
+
+Run:  python m0t_paper.py            (Actions; needs yfinance)
+      python m0t_paper.py --selftest (offline)
+"""
+from __future__ import annotations
+
+import json
+import math
+import sys
+from datetime import date, datetime, timezone
+from pathlib import Path
+from typing import Optional
+
+import numpy as np
+import pandas as pd
+
+import swing_backtest as bt
+import swing_desk as sd
+import m0t_lab as m0t
+
+VERSION = "1.0"
+PAPER_START = date(2026, 12, 1)
+FETCH_START = "2022-01-01"        # >= 252 + 320 bars of warm-up before PAPER_START
+START_EQUITY = 10_000.0
+MONTH_LIMIT, HWM_LIMIT = -10.0, -20.0
+OUT_DATA, OUT_LOGS = Path("data/m0t_paper"), Path("logs/m0t_paper")
+SEEN_COLS = ["first_seen", "signal_date", "ticker", "buy_stop", "stop", "conf", "risk_pct"]
+
+
+def _log(msg: str) -> None:
+    print(f"[m0t_paper {datetime.now(timezone.utc).strftime('%H:%M:%S')}] {msg}", flush=True)
+
+
+def universe() -> tuple:
+    etfs = bt.SECTOR_ETFS + list(bt.OTHER_ETFS)
+    sector_of = {s: s for s in bt.SECTOR_ETFS}
+    sector_of.update(bt.OTHER_ETFS)
+    return etfs, sector_of
+
+
+# ── tonight's decisions (the last bar; bt.run never emits signals on it) ──────
+
+def prior_stop(tr, last: int) -> float:
+    """The stop in force when the last bar's close is judged (before any tightening on that bar)."""
+    s = [st for (t, st) in tr.stops if t < last]
+    return float(s[-1]) if s else float(tr.stops[0][1])
+
+
+def exit_at_next_open(tr, arr: dict) -> Optional[str]:
+    """M0-T end-of-day rules on the LAST bar, in simulate_trade's order (variant B, no rotation exit,
+    no ladder). Returns the exit reason that fills at the next open, or None."""
+    c = arr["Close"]
+    j = len(c) - 1
+    if not tr.still_open or j <= tr.entry_t - 1:
+        return None
+    stop = prior_stop(tr, j)
+    held = j - tr.entry_t
+    if c[j] <= stop:
+        return "closing-basis stop"
+    if tr.asset == "lev" and held >= bt.LEV_MAX_DAYS:
+        return "leveraged 90-day cap"
+    ma = arr["sma100"]
+    if j >= 3 and np.isfinite(ma[j]) and c[j] < ma[j] and not (ma[j] > ma[j - 3]):
+        return "trend: close below falling trail MA"
+    return None
+
+
+def tonight_signals(ohlcv: dict, res: dict, etfs: list, sector_of: dict) -> list:
+    """M0 signals on the last bar, built exactly as bt.signals_for_ticker builds them for any
+    earlier bar (prefilter -> production detector -> confluence >= 2), plus SPY > 200-day."""
+    out = []
+    bench = ohlcv["SPY"]["Close"]
+    mkt = bt.market_ok(bench)
+    quads_by_sector = bt.rotation_proxy({k: v["Close"] for k, v in ohlcv.items()})
+    for tk, df in ohlcv.items():
+        if tk not in etfs or len(df) < bt.WINDOW:
+            continue
+        x = bt.indicators(df, bench)
+        pf = bt.prefilters(df, x)
+        t = len(df) - 1
+        if not pf["M0"][t]:
+            continue
+        w = df.iloc[t - bt.WINDOW + 1:t + 1]
+        m0 = sd.detect_rotation_reclaim(w, True)
+        if not m0["is_setup"]:
+            continue
+        sec = sector_of.get(tk)
+        q = quads_by_sector.get(sec) if sec else None
+        quad = q.reindex(df.index).iloc[t] if q is not None else None
+        rot = bt._rot_leg(quad)
+        conf = int(rot) + 1 + int(bool(m0["volume_ok"]))
+        if conf < 2:
+            continue
+        mk = bool(mkt.reindex(df.index).ffill().fillna(False).iloc[t])
+        out.append({"ticker": tk, "signal_date": df.index[t].date().isoformat(), "buy_stop": round(float(m0["entry"]), 2),
+                    "stop": round(float(m0["stop"]), 2), "conf": conf, "size_mult": 1.0 if conf == 3 else 0.5,
+                    "sector": sec or f"OTHER:{tk}", "quad": quad, "mkt_ok": mk})
+    return out
+
+
+def streak_reduced(closed: list) -> bool:
+    """run_portfolio's streak rule replayed over closed trades in exit order."""
+    losses = wins = 0
+    reduced = False
+    for tr in closed:
+        if tr["r"] < -bt.SCRATCH_R:
+            losses, wins = losses + 1, 0
+        elif tr["r"] > bt.SCRATCH_R:
+            wins, losses = wins + 1, 0
+        if losses >= bt.STREAK_LOSSES:
+            reduced = True
+        if reduced and wins >= bt.STREAK_RESET_WINS:
+            reduced = False
+    return reduced
+
+
+def plan_orders(sigs: list, open_pos: list, exits: dict, equity: float, cash: float, reduced: bool,
+                blocked: Optional[str]) -> list:
+    """Apply run_portfolio's selection rules to tonight's signals: rank (confluence, tighter stop),
+    4 slots, 2 per sector, one per ticker, 8% heat, 30% cap, whole shares. Positions exiting at the
+    open free their slot only after the open (the backtest settles exits first, so they do free it)."""
+    staying = [p for p in open_pos if p["ticker"] not in exits]
+    held = {p["ticker"] for p in staying}
+    sec_n: dict = {}
+    for p in staying:
+        sec_n[p["sector"]] = sec_n.get(p["sector"], 0) + 1
+    heat = sum(p["shares"] * max(0.0, p["entry"] - p["stop"]) for p in staying)
+    slots = bt.MAX_POSITIONS - len(staying)
+    out = []
+    for s in sorted(sigs, key=lambda z: (-z["conf"], (z["buy_stop"] - z["stop"]) / z["buy_stop"])):
+        o = dict(s)
+        rps = s["buy_stop"] - s["stop"]
+        risk_pct = (bt.REDUCED_RISK_PCT if reduced else bt.BASE_RISK_PCT) * s["size_mult"]
+        o["risk_pct"] = risk_pct
+        why = None
+        if blocked:
+            why = blocked
+        elif not s["mkt_ok"]:
+            why = "SPY below its 200-day: no new entries"
+        elif s["ticker"] in held:
+            why = "already held"
+        elif slots <= 0:
+            why = "no free slot (4 positions)"
+        elif sec_n.get(s["sector"], 0) >= bt.MAX_PER_SECTOR:
+            why = "2 already in this sector"
+        sh = 0
+        if why is None:
+            slots -= 1                                   # an order uses its slot even if it never fills
+            sh = math.floor(equity * risk_pct / 100 / rps) if rps > 0 else 0
+            sh = min(sh, math.floor(equity * bt.MAX_POSITION_PCT / 100 / s["buy_stop"]))
+            sh = min(sh, math.floor(cash / (s["buy_stop"] * (1 + bt.COST_BPS["etf"] / 1e4))))
+            if sh < 1:
+                why = "size rounds to 0 shares"
+            elif heat + sh * rps > equity * bt.HEAT_CAP_PCT / 100 + 1e-6:
+                why = "would exceed the 8% open-risk cap"
+            else:
+                heat += sh * rps
+                held.add(s["ticker"])
+                sec_n[s["sector"]] = sec_n.get(s["sector"], 0) + 1
+        o["shares"] = sh if why is None else 0
+        o["status"] = "ORDER" if why is None else "no order"
+        o["why"] = why or f"buy-stop {s['buy_stop']}, stop {s['stop']}, {sh} sh ≈ ${sh * s['buy_stop']:,.0f}, risk ≈ ${sh * rps:,.0f}"
+        out.append(o)
+    return out
+
+
+# ── the book ───────────────────────────────────────────────────────────────
+
+def build(ohlcv: dict, rates: dict, paper_start: date = PAPER_START, seen: Optional[pd.DataFrame] = None) -> dict:
+    etfs, sector_of = universe()
+    res = bt.run(ohlcv, etfs, [], sector_of, setups=("M0",), variants=("B",), verbose=False)
+    data, cal_all = res["data"], res["cal"]
+    asof = cal_all[-1]
+    trs, unf = m0t.resimulate(res, ladder=(), rotation=False)
+    p0 = pd.Timestamp(paper_start)
+    ent = lambda tr: data[tr.ticker]["index"][tr.entry_t]
+    sel = [t for t in trs if t.mkt_ok and ent(t) >= p0]
+    ufs = [g for g in unf if g.mkt_ok and g.t + 1 < len(data[g.ticker]["index"])
+           and data[g.ticker]["index"][g.t + 1] >= p0]
+    live = asof >= p0
+    out = {"version": VERSION, "asof": asof.date().isoformat(), "paper_start": paper_start.isoformat(),
+           "mode": "paper" if live else "preview", "start_equity": START_EQUITY,
+           "sizing": f"{bt.BASE_RISK_PCT:g}% / {bt.BASE_RISK_PCT * 0.5:g}% (3-of-3 / 2-of-3), "
+                     f"{bt.REDUCED_RISK_PCT:g}% x confluence after {bt.STREAK_LOSSES} straight losses"}
+    equity, cash, open_pos, closed, eq_rows = START_EQUITY, START_EQUITY, [], [], []
+    spy_ret = None
+    if live:
+        cal = cal_all[cal_all >= p0]
+        sw, gaps = bt.sweep_inputs(ohlcv, rates, cal)
+        out["gaps"] = gaps
+        p = bt.run_portfolio(sel, ufs, data, cal, sector_of, start_equity=START_EQUITY, sweep={"mode": "TBILL", **sw})
+        eq = p["equity"]
+        equity = float(eq.iloc[-1])
+        for tr, sh in p["taken"]:
+            idx = data[tr.ticker]["index"]
+            row = {"ticker": tr.ticker, "sector": sector_of.get(tr.ticker) or f"OTHER:{tr.ticker}",
+                   "signal_date": idx[tr.signal_t].date().isoformat(), "entry_date": idx[tr.entry_t].date().isoformat(),
+                   "entry": round(tr.entry, 2), "shares": int(sh), "conf": tr.conf, "stop0": round(tr.stop0, 2)}
+            if tr.still_open:
+                a = data[tr.ticker]["arr"]
+                last = len(a["Close"]) - 1
+                row.update({"stop": round(float(tr.stops[-1][1]), 2),
+                            "disaster_stop": round(float(tr.stops[-1][1] - bt.DISASTER_ATR * a["atr14"][tr.signal_t]), 2),
+                            "close": round(float(a["Close"][last]), 2),
+                            "open_R": round((a["Close"][last] - tr.entry) / tr.risk, 2),
+                            "value": round(sh * float(a["Close"][last]), 2),
+                            "exit_next_open": exit_at_next_open(tr, a)})
+                open_pos.append(row)
+            else:
+                px = [e for e in tr.events if e[1] != "entry"]
+                row.update({"exit_date": idx[tr.exit_t].date().isoformat(), "exit_reason": tr.exit_reason,
+                            "exit": round(float(px[-1][3]), 2) if px else None, "r": round(float(tr.r_net), 3),
+                            "pnl": round(float(tr.r_net) * tr.risk * sh, 2)})
+                closed.append(row)
+        invested = sum(r["value"] for r in open_pos)
+        cash = equity - invested
+        eq_rows = [{"date": d.date().isoformat(), "equity": round(float(v), 2)} for d, v in eq.items()]
+        spy = ohlcv["SPY"]["Close"]
+        spy = spy[spy.index >= p0]
+        if len(spy) >= 2:
+            # SPY from the first session's OPEN, like the account (which can trade from that open)
+            spy0 = float(ohlcv["SPY"]["Open"][ohlcv["SPY"].index >= p0].iloc[0])
+            spy_ret = round((float(spy.iloc[-1]) / spy0 - 1) * 100, 2)
+        m = eq[eq.index >= pd.Timestamp(asof.year, asof.month, 1)]
+        prev = eq[eq.index < pd.Timestamp(asof.year, asof.month, 1)]
+        base = float(prev.iloc[-1]) if len(prev) else START_EQUITY
+        out["month_pct"] = round((float(m.iloc[-1]) / base - 1) * 100, 2) if len(m) else 0.0
+        out["dd_from_high_pct"] = round((equity / float(eq.cummax().iloc[-1]) - 1) * 100, 2)
+        out["max_dd_pct"] = round(float((eq / eq.cummax() - 1).min()) * 100, 2)
+        out["exposure_avg_pct"] = p["exposure_avg_pct"]
+    else:
+        out.update({"month_pct": 0.0, "dd_from_high_pct": 0.0, "max_dd_pct": 0.0})
+    closed.sort(key=lambda r: (r["exit_date"], r["ticker"]))
+    blocked = None
+    if out["dd_from_high_pct"] <= HWM_LIMIT:
+        blocked = "−20% from the high: STOP and review (restart only with Matt's approval)"
+    elif out["month_pct"] <= MONTH_LIMIT:
+        blocked = "−10% this month: no new entries until next month"
+    exits = {r["ticker"]: r["exit_next_open"] for r in open_pos if r.get("exit_next_open")}
+    sigs = tonight_signals(ohlcv, res, etfs, sector_of)
+    orders = plan_orders(sigs, open_pos, exits, equity, cash + sum(
+        r["value"] for r in open_pos if r["ticker"] in exits), streak_reduced(closed), blocked)
+    # reconciliation: every counted trade should have been seen as an order the night before
+    unseen = []
+    if seen is not None and len(seen) and live:
+        keys = set(zip(seen["signal_date"].astype(str), seen["ticker"].astype(str)))
+        first = str(seen["first_seen"].min())
+        for r in open_pos + closed:
+            if r["signal_date"] >= first and (r["signal_date"], r["ticker"]) not in keys:
+                unseen.append(f"{r['ticker']} (signal {r['signal_date']})")
+    out.update({"equity": round(equity, 2), "cash": round(cash, 2),
+                "ret_pct": round((equity / START_EQUITY - 1) * 100, 2), "spy_ret_pct": spy_ret,
+                "open": open_pos, "closed": closed, "exits_next_open": exits, "orders": orders,
+                "limit_block": blocked, "streak_reduced": streak_reduced(closed),
+                "unseen_trades": unseen, "equity_curve": eq_rows,
+                "closed_stats": bt.trade_stats([r["r"] for r in closed]) if closed else {"n": 0},
+                "expected": {"expectancy_R": 0.44, "profit_factor": 1.83, "win_rate": 28.4,
+                             "source": "trial 97 backtest, 2005–2026"}})
+    return out
+
+
+def update_seen(seen: pd.DataFrame, orders: list, first_seen: str) -> pd.DataFrame:
+    rows = [{"first_seen": first_seen, "signal_date": o["signal_date"], "ticker": o["ticker"],
+             "buy_stop": o["buy_stop"], "stop": o["stop"], "conf": o["conf"], "risk_pct": o["risk_pct"]}
+            for o in orders if o["status"] == "ORDER"]
+    new = pd.DataFrame(rows, columns=SEEN_COLS)
+    allr = pd.concat([seen, new], ignore_index=True) if len(seen) else new
+    return allr.drop_duplicates(subset=["signal_date", "ticker"], keep="first").reset_index(drop=True)
+
+
+def load_seen(out_data: Path = OUT_DATA) -> pd.DataFrame:
+    p = out_data / "orders_seen.csv"
+    try:
+        return pd.read_csv(p, dtype=str) if p.exists() else pd.DataFrame(columns=SEEN_COLS)
+    except Exception:
+        return pd.DataFrame(columns=SEEN_COLS)
+
+
+def render(r: dict) -> str:
+    spy = "—" if r["spy_ret_pct"] is None else f"{r['spy_ret_pct']:+.2f}%"
+    L = [f"# M0-T paper record — {r['asof']} ({'PAPER' if r['mode'] == 'paper' else 'PREVIEW: starts ' + r['paper_start']})", "",
+         "Paper only, no money. The swing account itself stays in SGOV. Research, not personalized advice.", "",
+         f"- Account: **${r['equity']:,.2f}** on $10,000 ({r['ret_pct']:+.2f}%); SPY since start: {spy}",
+         f"- This month {r['month_pct']:+.2f}% (limit −10%) · from the high {r['dd_from_high_pct']:+.2f}% (limit −20%)"
+         + (f" · **{r['limit_block']}**" if r["limit_block"] else ""),
+         f"- Sizing: {r['sizing']}" + (" · **streak mode on (half size)**" if r["streak_reduced"] else ""), ""]
+    if r["open"]:
+        L += ["## Open positions", "", "| Fund | Since | Shares | Entry | Close | Stop | Disaster stop | Open R | Next open |",
+              "|---|---|---|---|---|---|---|---|---|"]
+        for p in r["open"]:
+            L.append(f"| {p['ticker']} | {p['entry_date']} | {p['shares']} | {p['entry']} | {p['close']} | {p['stop']} | "
+                     f"{p['disaster_stop']} | {p['open_R']:+.2f} | {('SELL: ' + p['exit_next_open']) if p['exit_next_open'] else 'hold'} |")
+        L.append("")
+    L += ["## Orders for the next open", ""]
+    if r["orders"]:
+        L += ["| Fund | Status | Confluence | Detail |", "|---|---|---|---|"]
+        for o in r["orders"]:
+            L.append(f"| {o['ticker']} | {o['status']} | {o['conf']}-of-3 | {o['why']} |")
+    else:
+        L.append("No M0 signal at tonight's close.")
+    if r["closed"]:
+        s = r["closed_stats"]
+        L += ["", f"## Closed trades: {s.get('n')} · win {s.get('win_rate')}% · expectancy {s.get('expectancy_R')}R · "
+              f"PF {s.get('profit_factor')} (backtest: {r['expected']['expectancy_R']}R, PF {r['expected']['profit_factor']})", "",
+              "| Fund | In | Out | Why | R | P&L |", "|---|---|---|---|---|---|"]
+        for c in r["closed"][-20:]:
+            L.append(f"| {c['ticker']} | {c['entry_date']} | {c['exit_date']} | {c['exit_reason']} | {c['r']:+.2f} | ${c['pnl']:+,.2f} |")
+    if r.get("unseen_trades"):
+        L += ["", "**Reconciliation:** trades not seen as orders the night before (price revision?): " + ", ".join(r["unseen_trades"])]
+    if r.get("gaps"):
+        L += ["", "Data gaps: " + "; ".join(r["gaps"])]
+    L += ["", f"*m0t_paper.py {VERSION}*"]
+    return "\n".join(L) + "\n"
+
+
+def write_outputs(r: dict, seen: pd.DataFrame, stamp: str, out_data: Path = OUT_DATA, out_logs: Path = OUT_LOGS) -> str:
+    from lever_lab import _jsonable
+    md = render(r)
+    js = json.dumps(_jsonable(r), indent=1, default=str)
+    seen2 = update_seen(seen, r["orders"], r["asof"])
+    out_data.mkdir(parents=True, exist_ok=True)
+    out_logs.mkdir(parents=True, exist_ok=True)
+    (out_data / "summary.json").write_text(js)
+    seen2.to_csv(out_data / "orders_seen.csv", index=False)
+    (out_logs / "latest.md").write_text(md)
+    (out_logs / f"{stamp}.md").write_text(md)
+    return md
+
+
+def main(fetch=None, out_data: Path = OUT_DATA, out_logs: Path = OUT_LOGS, expect_session: Optional[str] = "auto") -> int:
+    etfs, _s = universe()
+    fetch = fetch or bt.fetch_ohlcv
+    _log("fetching prices ...")
+    ohlcv = fetch(sorted(set(etfs)), FETCH_START)
+    for attempt in range(3):
+        miss = sorted(set(etfs) - set(ohlcv))
+        if not miss:
+            break
+        _log(f"retry {attempt + 1}: {', '.join(miss)}")
+        for t in miss:
+            ohlcv.update(fetch([t], FETCH_START))
+    miss = sorted(set(etfs) - set(ohlcv))
+    if miss or "SPY" not in ohlcv:
+        print(f"[m0t_paper] DATA FAILURE: no prices for {', '.join(miss) or 'SPY'} after retries; nothing written.")
+        return 1
+    if expect_session == "auto":
+        try:
+            import market_time as mt
+            expect_session = mt.last_trading_day(mt.now_et().date()).isoformat()
+            if mt.is_trading_day(mt.now_et().date()) and (mt.minutes_since_close() or -1) < 0:
+                expect_session = None            # run before today's close: yesterday's bar is fine
+        except Exception:
+            expect_session = None
+    last = ohlcv["SPY"].index[-1].date().isoformat()
+    stale = sorted(t for t, df in ohlcv.items() if df.index[-1] != ohlcv["SPY"].index[-1])
+    if stale:
+        print(f"[m0t_paper] DATA FAILURE: last bar differs from SPY's ({last}) for {', '.join(stale)}; nothing written.")
+        return 1
+    if expect_session and last < expect_session:
+        print(f"[m0t_paper] DATA FAILURE: prices end {last}, expected the {expect_session} session; nothing written.")
+        return 1
+    rates = fetch(["^IRX"], FETCH_START)
+    seen = load_seen(out_data)
+    r = build(ohlcv, rates, seen=seen)
+    md = write_outputs(r, seen, datetime.now(timezone.utc).date().isoformat(), out_data, out_logs)
+    print(md)
+    return 0
+
+
+# ── selftest ────────────────────────────────────────────────────────────────
+
+def _fixture(n=1100, k=None):
+    etfs, _s = universe()
+    keep = ["SPY", "XLK", "XLE", "XLF", "XLV", "XLU", "XLI", "QQQ", "TQQQ", "SMH"] if k is None else k
+    return {tk: bt._walk(i + 3, n=n, drift=0.0005 + 0.0002 * (i % 4)) for i, tk in enumerate(keep)}
+
+
+def selftest() -> dict:
+    import contextlib, io, os, tempfile
+    f = []
+    ohl = _fixture()
+    irx = pd.DataFrame({"Open": 4.0, "High": 4.0, "Low": 4.0, "Close": 4.0, "Volume": 0}, index=ohl["SPY"].index)
+    rates = {"^IRX": irx}
+    etfs, sector_of = universe()
+    cal = ohl["SPY"].index
+    ps = cal[len(cal) - 300].date()                    # paper start 300 sessions before the end
+    with contextlib.redirect_stdout(io.StringIO()):
+        r = build(ohl, rates, paper_start=ps)
+    if r["mode"] != "paper":
+        f.append("mode must be paper after the start date")
+    if not (r["closed"] or r["open"]):
+        f.append("fixture: need paper trades")
+    if any(c["entry_date"] < ps.isoformat() for c in r["closed"] + r["open"]):
+        f.append("no trade may enter before the paper start")
+    # 1. the paper book equals run_portfolio on M0-T trades entered from the start (the backtest's own pass)
+    res = bt.run(ohl, etfs, [], sector_of, setups=("M0",), variants=("B",), verbose=False)
+    trs, unf = m0t.resimulate(res, ladder=(), rotation=False)
+    p0 = pd.Timestamp(ps)
+    sel = [t for t in trs if t.mkt_ok and res["data"][t.ticker]["index"][t.entry_t] >= p0]
+    ufs = [g for g in unf if g.mkt_ok and g.t + 1 < len(res["data"][g.ticker]["index"]) and res["data"][g.ticker]["index"][g.t + 1] >= p0]
+    c2 = cal[cal >= p0]
+    sw, _g = bt.sweep_inputs(ohl, rates, c2)
+    pp = bt.run_portfolio(sel, ufs, res["data"], c2, sector_of, sweep={"mode": "TBILL", **sw})
+    if abs(float(pp["equity"].iloc[-1]) - r["equity"]) > 0.01:
+        f.append(f"paper equity {r['equity']} must equal the backtest pass {float(pp['equity'].iloc[-1]):.2f}")
+    if bt.LADDER != (2.0, 4.0, 8.0):
+        f.append("bt.LADDER must be restored")
+    if any(c["exit_reason"].startswith("thesis") for c in r["closed"]):
+        f.append("M0-T never exits on rotation")
+    # 2. preview before the start: no ledger, $10k
+    with contextlib.redirect_stdout(io.StringIO()):
+        rp = build(ohl, rates, paper_start=(cal[-1] + pd.Timedelta(days=30)).date())
+    if rp["mode"] != "preview" or rp["closed"] or rp["open"] or rp["equity"] != START_EQUITY:
+        f.append("preview must show an empty $10,000 account")
+    # 3 + 4. on consecutive nights of a small fixture: tonight_signals == the signals bt.run emits
+    #        for that bar once one more bar exists; exit_at_next_open == the exit simulate_trade takes.
+    sm = _fixture(n=800, k=["SPY", "XLK", "XLE", "XLF", "TQQQ", "SMH"])
+    scal = sm["SPY"].index
+    runs = {}
+
+    def run_at(cut):
+        if cut not in runs:
+            sub = {k: v.iloc[:cut + 1] for k, v in sm.items()}
+            with contextlib.redirect_stdout(io.StringIO()):
+                rs_ = bt.run(sub, etfs, [], sector_of, setups=("M0",), variants=("B",), verbose=False)
+                tt, _u = m0t.resimulate(rs_, ladder=(), rotation=False)
+            runs[cut] = (sub, rs_, tt)
+        return runs[cut]
+
+    hits = misses = agree = checked = 0
+    for cut in range(len(scal) - 61, len(scal) - 1):
+        sub, rs, t1 = run_at(cut)
+        _n, rn, t2 = run_at(cut + 1)
+        mine = {(s_["ticker"], round(s_["buy_stop"], 2)) for s_ in tonight_signals(sub, rs, etfs, sector_of)}
+        theirs = {(g.ticker, round(g.level, 2)) for g in rn["signals"] if g.t == cut}
+        misses += int(mine != theirs)
+        hits += len(theirs)
+        by2 = {(t.ticker, t.entry_t): t for t in t2}
+        j = cut + 1
+        for tr in [t for t in t1 if t.still_open]:
+            nx = by2.get((tr.ticker, tr.entry_t))
+            if nx is None or (nx.exit_t == j and nx.exit_reason == "disaster stop"):
+                continue                                 # intraday stop on the new bar: not knowable tonight
+            theirs_x = nx.exit_reason if (nx.exit_t == j and not nx.still_open) else None
+            checked += 1
+            agree += int(exit_at_next_open(tr, rs["data"][tr.ticker]["arr"]) == theirs_x)
+    if misses:
+        f.append(f"tonight_signals disagrees with bt.run on {misses} nights")
+    if hits < 3:
+        f.append(f"fixture: too few last-bar signals to prove tonight_signals ({hits})")
+    if checked < 20:
+        f.append(f"fixture: too few open-trade nights to prove exit_at_next_open ({checked})")
+    elif agree != checked:
+        f.append(f"exit_at_next_open disagrees with simulate_trade on {checked - agree} of {checked}")
+    # 5. order planning rules
+    base_sig = {"signal_date": "2026-12-02", "buy_stop": 100.0, "stop": 95.0, "conf": 3, "size_mult": 1.0, "mkt_ok": True, "quad": "Leading"}
+    s = [dict(base_sig, ticker=f"T{i}", sector="XLK" if i < 3 else f"S{i}") for i in range(6)]
+    o = plan_orders(s, [], {}, 10_000.0, 10_000.0, False, None)
+    st_ = [x["status"] for x in o]
+    if st_.count("ORDER") != 4 or sum(1 for x in o if x["status"] == "ORDER" and x["sector"] == "XLK") != 2:
+        f.append(f"plan_orders: 4 slots, 2 per sector: {st_}")
+    if o[0]["shares"] != 20:                           # $100 risk / $5 = 20 sh ($2,000 < 30% cap)
+        f.append(f"plan_orders: 1% of $10k / $5 risk = 20 sh, got {o[0]['shares']}")
+    o2 = plan_orders(s[:1], [], {}, 10_000.0, 10_000.0, True, None)
+    if o2[0]["shares"] != 10:
+        f.append("plan_orders: streak mode halves size")
+    tight = [dict(base_sig, ticker="T", sector="XLK", stop=99.5)]
+    if plan_orders(tight, [], {}, 10_000.0, 10_000.0, False, None)[0]["shares"] != 30:
+        f.append("plan_orders: 30% cap must bind on a tight stop")
+    if plan_orders(s[:1], [], {}, 10_000.0, 10_000.0, False, "−10% this month")[0]["status"] != "no order":
+        f.append("plan_orders: a limit block must stop orders")
+    if plan_orders([dict(base_sig, ticker="T", sector="XLK", mkt_ok=False)], [], {}, 1e4, 1e4, False, None)[0]["status"] != "no order":
+        f.append("plan_orders: SPY below 200-day must stop orders")
+    full = [{"ticker": f"H{i}", "sector": f"Q{i}", "shares": 10, "entry": 100.0, "stop": 95.0} for i in range(4)]
+    if plan_orders(s[:1], full, {}, 1e4, 1e4, False, None)[0]["status"] != "no order":
+        f.append("plan_orders: 4 open positions leave no slot")
+    if plan_orders(s[:1], full, {"H0": "closing-basis stop"}, 1e4, 1e4, False, None)[0]["status"] != "ORDER":
+        f.append("plan_orders: a position exiting at the open frees its slot")
+    # streak replay
+    if not streak_reduced([{"r": -1.0}] * 3) or streak_reduced([{"r": -1.0}] * 3 + [{"r": 1.0}] * 2):
+        f.append("streak_reduced: 3 losses on, 2 wins off")
+    # 6. writer, append-only seen log, reconciliation, abort paths
+    tmp = Path(tempfile.mkdtemp())
+    try:
+        seen0 = pd.DataFrame(columns=SEEN_COLS)
+        write_outputs(r, seen0, "2026-12-02", tmp / "d", tmp / "l")
+        s1 = load_seen(tmp / "d")
+        n_orders = sum(1 for o in r["orders"] if o["status"] == "ORDER")
+        if len(s1) != n_orders:
+            f.append(f"seen log: {len(s1)} rows for {n_orders} orders")
+        r2 = dict(r, orders=[dict(o, buy_stop=999.0) for o in r["orders"]])
+        write_outputs(r2, s1, "2026-12-03", tmp / "d", tmp / "l")
+        s2 = load_seen(tmp / "d")
+        if len(s2) != len(s1) or (len(s2) and float(s2["buy_stop"].iloc[0]) == 999.0):
+            f.append("seen log must keep the FIRST sighting of an order")
+        js = json.loads((tmp / "d" / "summary.json").read_text())
+        if "equity" not in js or not (tmp / "l" / "latest.md").exists():
+            f.append("writer: outputs incomplete")
+        if r["closed"] or r["open"]:
+            fake = pd.DataFrame([{"first_seen": "2000-01-01", "signal_date": "1999-01-01", "ticker": "ZZZ",
+                                  "buy_stop": 1, "stop": 0.5, "conf": 3, "risk_pct": 1}])
+            with contextlib.redirect_stdout(io.StringIO()):
+                rr = build(ohl, rates, paper_start=ps, seen=fake)
+            if len(rr["unseen_trades"]) != len(rr["closed"]) + len(rr["open"]):
+                f.append("reconciliation: trades with no prior order sighting must be listed")
+        cwd = os.getcwd()
+        os.chdir(tmp)
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                rc1 = main(fetch=lambda tks, start=None: {})
+                stale = dict(ohl, XLK=ohl["XLK"].iloc[:-1])
+                full_u = {t: ohl.get(t, ohl["XLK"]) for t in etfs}
+                full_u["XLK"] = stale["XLK"]
+                rc2 = main(fetch=lambda tks, start=None: {t: full_u[t] for t in tks if t in full_u}, expect_session=None)
+                full_ok = {t: ohl.get(t, ohl["XLK"]) for t in etfs}
+                full_ok["^IRX"] = irx
+                rc3 = main(fetch=lambda tks, start=None: {t: full_ok[t] for t in tks if t in full_ok},
+                           expect_session=(cal[-1] + pd.Timedelta(days=1)).date().isoformat())
+            if rc1 != 1 or rc2 != 1 or rc3 != 1 or (tmp / "data" / "m0t_paper").exists():
+                f.append(f"main: missing / stale / old data must stop with nothing written ({rc1}, {rc2}, {rc3})")
+        finally:
+            os.chdir(cwd)
+    except Exception as e:
+        import traceback
+        f.append(f"writer/main crashed: {type(e).__name__}: {e} {traceback.format_exc()[-300:]}")
+    return {"ok": not f, "failures": f, "version": VERSION, "fixture": {"closed": len(r["closed"]), "open": len(r["open"]),
+            "orders": len(r["orders"]), "signal_hits": hits, "exit_checks": checked}}
+
+
+if __name__ == "__main__":
+    if "--selftest" in sys.argv:
+        res_ = selftest()
+        print(json.dumps(res_, indent=2))
+        sys.exit(0 if res_["ok"] else 1)
+    sys.exit(main())

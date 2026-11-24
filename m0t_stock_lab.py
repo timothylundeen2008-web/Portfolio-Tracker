@@ -1,6 +1,11 @@
 """
-m0t_stock_lab.py  (v1.0 — 2026-11-23)
+m0t_stock_lab.py  (v1.1 — 2026-11-24)
 ──────────────────────────────────────
+v1.1: positions are marked by DATE (m0t_paper.aligned). v1.0 passed a calendar starting 2017 to
+      run_portfolio while close_cal was laid out from 2015-06, so open positions were marked with
+      prices ~18 months off and every book figure (equity, drawdown, months, sizing) was wrong.
+      Trade-level figures were unaffected. Same trial (99), re-run; not a new trial.
+
 Swing book only. Trial 99, pre-registered in claude/m0t_stock_lab_2026-11-23.md (Matt 2026-11-23:
 "Yes to building 1, 2, and 3"). Bars are fixed BEFORE any run on real prices; a FAIL is final.
 
@@ -38,7 +43,7 @@ import stock_lab as sl
 import swing_backtest as bt
 import universe_probe as up
 
-VERSION = "1.0"
+VERSION = "1.1"
 OUT_DATA, OUT_LOGS = Path("data/m0t_stock_lab"), Path("logs/m0t_stock_lab")
 TRIALS_BEFORE, TRIALS_HERE = 98, 1
 HALVES = sl.HALVES                          # ("2017-21", "2022-26")
@@ -125,8 +130,10 @@ def trade_block(trs: list, data: dict) -> dict:
             **{h: bt.trade_stats([t.r_net for t in closed if half_of(dt(t)) == h]) for h in HALVES}}
 
 
-def book(trs: list, unf: list, data: dict, cal: pd.DatetimeIndex, sector_of: dict, sw: dict) -> dict:
-    p = bt.run_portfolio(trs, unf, data, cal, sector_of, sweep={"mode": "TBILL", **sw})
+def book(trs: list, unf: list, data: dict, cal: pd.DatetimeIndex, sector_of: dict, sw) -> dict:
+    from m0t_paper import aligned
+    p = bt.run_portfolio(trs, unf, aligned(data, cal), cal, sector_of,
+                         sweep=None if sw is None else {"mode": "TBILL", **sw})
     taken = [t for t, _s in p["taken"]]
     return {"p": p, "stats": windows(p["equity"]), "taken": taken,
             "taken_stock": sum(1 for t in taken if t.asset == "stock"), "taken_etf": sum(1 for t in taken if t.asset != "stock")}
@@ -367,6 +374,17 @@ def selftest() -> dict:
             f.append(f"C1 must take stock trades too ({r['c1']})")
         if r["c1"]["taken_stock"] + r["c1"]["taken_etf"] != r["c1"]["trades_taken"]:
             f.append("C1 trade split must add up")
+        # marking by date: the book on the 2017 calendar == the same trades on the full calendar (CASH0)
+        e_sec = etf_universe()[1]
+        sec_all = {**e_sec, **{t: sec.get(t) for t in s_data}}
+        data_all = {**e_data, **s_data}
+        cal_all = pd.DatetimeIndex(ohl["SPY"].index)
+        cal_t = cal_all[cal_all >= sl.TEST_START]
+        mine = book(e_tr + s_tr, e_uf + s_uf, data_all, cal_t, sec_all, None)["p"]["equity"]
+        full = bt.run_portfolio(e_tr + s_tr, e_uf + s_uf, data_all, cal_all, sec_all)["equity"]
+        gap = float((mine - full.reindex(mine.index)).abs().max())
+        if not gap < 0.02:
+            f.append(f"book must match the full-calendar pass day by day (max gap ${gap:,.2f})")
         # verdict logic
         ok_ts = {"full": {"n": 300}, HALVES[0]: {"n": 100, "expectancy_R": 0.3, "profit_factor": 1.6},
                  HALVES[1]: {"n": 100, "expectancy_R": 0.2, "profit_factor": 1.5}}

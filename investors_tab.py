@@ -1,5 +1,5 @@
 """
-investors_tab.py  (v1.0 — 2026-11-23)
+investors_tab.py  (v1.1 — 2026-11-24; shows the units note)
 ─────────────────────────────────────
 The "🧭 Investor 13F" tab: latest 13F holdings of Duquesne Family Office (Stanley Druckenmiller) and
 Bridgewater Associates (Ray Dalio's firm). REFERENCE ONLY. Reads data/investors_13f/summary.json,
@@ -49,6 +49,8 @@ def render(st) -> None:
             st.caption(f"{v.get('name')} · SEC CIK {v.get('cik')} · [filings on EDGAR]({v.get('source_url')})"
                        + (f" · {v['options_lines']} option lines (puts/calls are listed at the value of the "
                           "underlying shares, not the premium)" if v.get("options_lines") else ""))
+            for n in v.get("unit_notes") or []:
+                st.caption(f"Units: {n}")
             if v.get("amendments_after"):
                 st.warning("An amendment was filed after this report (not merged): " + "; ".join(v["amendments_after"]))
             st.markdown("**Top holdings**")
