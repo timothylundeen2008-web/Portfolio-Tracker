@@ -1,37 +1,18 @@
 {
- "asof": "2026-11-20",
- "scan": true,
- "pulse": [
-  {
-   "key": "multi:SPY:5:down",
-   "level": "ALERT",
-   "text": "SPY closed -8.6% over 5 sessions."
-  },
-  {
-   "key": "multi:QQQ:5:down",
-   "level": "ALERT",
-   "text": "QQQ closed -10.5% over 5 sessions."
-  },
-  {
-   "key": "multi:IWM:5:down",
-   "level": "ALERT",
-   "text": "IWM closed -7.5% over 5 sessions."
-  },
-  {
-   "key": "engine2:SPY:below",
-   "level": "ALERT",
-   "text": "SPY closed below its 200-day for the 2nd day (-5.5%): the O11 Defense rule fires; the model trades next session."
-  }
- ],
+ "asof": "2026-11-23",
+ "scan": false,
+ "pulse": [],
  "leaders": [
-  "BKLN",
   "CIBR",
   "DBMF",
   "IBB",
   "IWD",
   "KIE",
+  "RSP",
+  "SKYY",
   "USO",
   "UUP",
+  "XBI",
   "XLE",
   "XLP",
   "XLV",
@@ -39,7 +20,6 @@
  ],
  "flags": [],
  "notes": [
-  "Latest SPY bar is 2026-11-20, not today (2026-11-21): data delayed or not a session.",
-  "First scan: no earlier scan to compare, so no flags today."
+  "Latest SPY bar is 2026-11-23, not today (2026-11-24): data delayed or not a session."
  ]
 }
