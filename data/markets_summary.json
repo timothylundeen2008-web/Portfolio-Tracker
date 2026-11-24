@@ -1,12 +1,17 @@
 {
-  "published_at": "2026-11-22T02:31:22+00:00",
+  "published_at": "2026-11-24T02:04:51+00:00",
   "notes": "auto-published on Markets Dashboard render",
   "regime": {
-    "key": "transition_ambiguous",
-    "label": "Transition \u2014 Ambiguous (short real rate at zero)",
-    "transition_reason": "band_ambiguous",
+    "key": "credit_stress",
+    "label": "Credit Stress \u2014 spreads widening",
+    "transition_reason": null,
     "drivers": [
-      "Short real policy rate +0.14% sits INSIDE the \u00b10.25% transition band \u2014 within the noise of a single CPI print. The framework's primary gauge is not currently giving a directional reading, so no regime that depends on its sign can be confirmed."
+      "Short real policy rate +0.14% sits INSIDE the \u00b10.25% transition band \u2014 within the noise of a single CPI print. The framework's primary gauge is not currently giving a directional reading, so no regime that depends on its sign can be confirmed.",
+      "HY OAS 3.76% \u2014 out of the calm zone (>= 3.5%)",
+      "Spreads widening +0.34pp over ~2 weeks (threshold +0.25pp)",
+      "Long real yield +0.42pp/3mo (rising \u2014 rates and credit both tightening)",
+      "Short real rate +0.14%",
+      "Not yet a liquidity crisis (needs HY > 5.0% AND +0.5pp/2wk)"
     ]
   },
   "repression": {
@@ -28,22 +33,20 @@
   "trend_states": {},
   "conviction": {},
   "regime_targets": {
-    "VGT": 17.0,
-    "SMH": 3.0,
-    "QQQ": 3.0,
+    "VGT": 14.0,
+    "SMH": 2.0,
+    "QQQ": 1.0,
     "GLD": 10.0,
     "SLV": 4.0,
     "RING": 4.0,
-    "XLE": 5.0,
-    "PDBC": 3.0,
-    "SCHD": 13.5,
-    "XLV": 5.0,
-    "XLU": 3.0,
-    "SGOV": 14.0,
-    "USFR": 2.0,
-    "TLT": 7.0,
-    "KMLM": 4.0,
-    "DBMF": 2.5,
-    "SCHP": 0.0
+    "XLE": 4.0,
+    "PDBC": 2.0,
+    "SCHD": 14.5,
+    "XLV": 7.0,
+    "XLU": 1.0,
+    "SGOV": 21.5,
+    "USFR": 9.0,
+    "TLT": 2.0,
+    "KMLM": 4.0
   }
 }
