@@ -1,0 +1,93 @@
+{
+ "version": "1.0",
+ "asof": "2026-11-24",
+ "paper_start": "2026-12-01",
+ "mode": "preview",
+ "start_equity": 10000.0,
+ "sizing": "1% / 0.5% (3-of-3 / 2-of-3), 0.5% x confluence after 3 straight losses",
+ "month_pct": 0.0,
+ "dd_from_high_pct": 0.0,
+ "max_dd_pct": 0.0,
+ "equity": 10000.0,
+ "cash": 10000.0,
+ "ret_pct": 0.0,
+ "spy_ret_pct": null,
+ "open": [],
+ "closed": [],
+ "exits_next_open": {},
+ "orders": [
+  {
+   "ticker": "XLU",
+   "signal_date": "2026-11-24",
+   "buy_stop": 43.63,
+   "stop": 42.36,
+   "conf": 2,
+   "size_mult": 0.5,
+   "sector": "XLU",
+   "quad": "Improving",
+   "mkt_ok": false,
+   "risk_pct": 0.5,
+   "shares": 0,
+   "status": "no order",
+   "why": "SPY below its 200-day: no new entries"
+  },
+  {
+   "ticker": "XLY",
+   "signal_date": "2026-11-24",
+   "buy_stop": 117.69,
+   "stop": 111.67,
+   "conf": 2,
+   "size_mult": 0.5,
+   "sector": "XLY",
+   "quad": "Improving",
+   "mkt_ok": false,
+   "risk_pct": 0.5,
+   "shares": 0,
+   "status": "no order",
+   "why": "SPY below its 200-day: no new entries"
+  },
+  {
+   "ticker": "XRT",
+   "signal_date": "2026-11-24",
+   "buy_stop": 89.97,
+   "stop": 85.21,
+   "conf": 2,
+   "size_mult": 0.5,
+   "sector": "XLY",
+   "quad": "Improving",
+   "mkt_ok": false,
+   "risk_pct": 0.5,
+   "shares": 0,
+   "status": "no order",
+   "why": "SPY below its 200-day: no new entries"
+  },
+  {
+   "ticker": "IBB",
+   "signal_date": "2026-11-24",
+   "buy_stop": 216.36,
+   "stop": 204.57,
+   "conf": 2,
+   "size_mult": 0.5,
+   "sector": "XLV",
+   "quad": "Leading",
+   "mkt_ok": false,
+   "risk_pct": 0.5,
+   "shares": 0,
+   "status": "no order",
+   "why": "SPY below its 200-day: no new entries"
+  }
+ ],
+ "limit_block": null,
+ "streak_reduced": false,
+ "unseen_trades": [],
+ "equity_curve": [],
+ "closed_stats": {
+  "n": 0
+ },
+ "expected": {
+  "expectancy_R": 0.44,
+  "profit_factor": 1.83,
+  "win_rate": 28.4,
+  "source": "trial 97 backtest, 2005\u20132026"
+ }
+}
