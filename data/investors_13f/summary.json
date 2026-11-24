@@ -1,0 +1,1070 @@
+{
+ "version": "1.0",
+ "asof": "2026-11-24",
+ "filers": {
+  "druckenmiller": {
+   "name": "Duquesne Family Office LLC",
+   "person": "Stanley Druckenmiller",
+   "cik": 1536411,
+   "period": "2026-09-30",
+   "filed": "2026-11-16",
+   "accession": "0001536411-26-000011",
+   "previous_period": "2026-06-30",
+   "amendments_after": [],
+   "total_value": 4470867,
+   "positions": 65,
+   "top10_weight_pct": 64.1,
+   "options_lines": 5,
+   "top": [
+    {
+     "issuer": "Natera Inc",
+     "class": "COM",
+     "cusip": "632307104",
+     "put_call": "",
+     "value": 1306335,
+     "shares": 3160666.0,
+     "weight_pct": 29.22
+    },
+    {
+     "issuer": "Seagate Technology Hldngs Pl",
+     "class": "ORD SHS",
+     "cusip": "G7997R103",
+     "put_call": "",
+     "value": 315247,
+     "shares": 341790.0,
+     "weight_pct": 7.05
+    },
+    {
+     "issuer": "Amazon Com Inc",
+     "class": "COM",
+     "cusip": "023135106",
+     "put_call": "",
+     "value": 192493,
+     "shares": 772600.0,
+     "weight_pct": 4.31
+    },
+    {
+     "issuer": "Fox Corp",
+     "class": "CL A COM",
+     "cusip": "35137L105",
+     "put_call": "",
+     "value": 190835,
+     "shares": 3046050.0,
+     "weight_pct": 4.27
+    },
+    {
+     "issuer": "Ypf Sociedad Anonima",
+     "class": "SPONSORED ADS",
+     "cusip": "984245100",
+     "put_call": "",
+     "value": 177555,
+     "shares": 3541897.0,
+     "weight_pct": 3.97
+    },
+    {
+     "issuer": "Unity Software Inc",
+     "class": "COM",
+     "cusip": "91332U101",
+     "put_call": "",
+     "value": 161935,
+     "shares": 3956385.0,
+     "weight_pct": 3.62
+    },
+    {
+     "issuer": "Sea Ltd",
+     "class": "SPONSORD ADS",
+     "cusip": "81141R100",
+     "put_call": "",
+     "value": 155072,
+     "shares": 1592765.0,
+     "weight_pct": 3.47
+    },
+    {
+     "issuer": "Ishares Inc",
+     "class": "MSCI BRAZIL ETF",
+     "cusip": "464286400",
+     "put_call": "",
+     "value": 125814,
+     "shares": 3377570.0,
+     "weight_pct": 2.81
+    },
+    {
+     "issuer": "Insmed Inc",
+     "class": "COM PAR $.01",
+     "cusip": "457669307",
+     "put_call": "",
+     "value": 124715,
+     "shares": 1092650.0,
+     "weight_pct": 2.79
+    },
+    {
+     "issuer": "Amazon Com Inc",
+     "class": "COM",
+     "cusip": "023135106",
+     "put_call": "Call",
+     "value": 114435,
+     "shares": 459300.0,
+     "weight_pct": 2.56
+    },
+    {
+     "issuer": "Seagate Technology Hldngs Pl",
+     "class": "ORD SHS",
+     "cusip": "G7997R103",
+     "put_call": "Call",
+     "value": 90389,
+     "shares": 98000.0,
+     "weight_pct": 2.02
+    },
+    {
+     "issuer": "Revolution Medicines Inc",
+     "class": "COM",
+     "cusip": "76155X100",
+     "put_call": "",
+     "value": 89552,
+     "shares": 436287.0,
+     "weight_pct": 2.0
+    },
+    {
+     "issuer": "Bbb Foods Inc",
+     "class": "CL A COM",
+     "cusip": "G0896C103",
+     "put_call": "",
+     "value": 86720,
+     "shares": 1647408.0,
+     "weight_pct": 1.94
+    },
+    {
+     "issuer": "Stmicroelectronics N V",
+     "class": "NY REGISTRY",
+     "cusip": "861012102",
+     "put_call": "",
+     "value": 86197,
+     "shares": 1615380.0,
+     "weight_pct": 1.93
+    },
+    {
+     "issuer": "Newamsterdam Pharma Company",
+     "class": "ORDINARY SHARES",
+     "cusip": "N62509109",
+     "put_call": "",
+     "value": 81646,
+     "shares": 3357146.0,
+     "weight_pct": 1.83
+    },
+    {
+     "issuer": "Cdw Corp",
+     "class": "COM",
+     "cusip": "12514G108",
+     "put_call": "",
+     "value": 73788,
+     "shares": 575750.0,
+     "weight_pct": 1.65
+    },
+    {
+     "issuer": "Insmed Inc",
+     "class": "COM PAR $.01",
+     "cusip": "457669307",
+     "put_call": "Call",
+     "value": 62777,
+     "shares": 550000.0,
+     "weight_pct": 1.4
+    },
+    {
+     "issuer": "Somnigroup International Inc",
+     "class": "COM",
+     "cusip": "88023U101",
+     "put_call": "",
+     "value": 61712,
+     "shares": 993600.0,
+     "weight_pct": 1.38
+    },
+    {
+     "issuer": "Newmont Corp",
+     "class": "COM",
+     "cusip": "651639106",
+     "put_call": "",
+     "value": 43875,
+     "shares": 380400.0,
+     "weight_pct": 0.98
+    },
+    {
+     "issuer": "Barrick Mng Corp",
+     "class": "COM SHS",
+     "cusip": "06849F108",
+     "put_call": "",
+     "value": 42891,
+     "shares": 1054600.0,
+     "weight_pct": 0.96
+    },
+    {
+     "issuer": "Agnico Eagle Mines Ltd",
+     "class": "COM",
+     "cusip": "008474108",
+     "put_call": "",
+     "value": 42345,
+     "shares": 231050.0,
+     "weight_pct": 0.95
+    },
+    {
+     "issuer": "Bitdeer Technologies Group",
+     "class": "CL A ORD SHS",
+     "cusip": "G11448100",
+     "put_call": "",
+     "value": 39668,
+     "shares": 3781493.0,
+     "weight_pct": 0.89
+    },
+    {
+     "issuer": "Coupang Inc",
+     "class": "CL A",
+     "cusip": "22266T109",
+     "put_call": "",
+     "value": 36998,
+     "shares": 2667485.0,
+     "weight_pct": 0.83
+    },
+    {
+     "issuer": "Western Digital Corp",
+     "class": "COM",
+     "cusip": "958102105",
+     "put_call": "",
+     "value": 36793,
+     "shares": 80960.0,
+     "weight_pct": 0.82
+    },
+    {
+     "issuer": "Hyperliquid Strategies Inc",
+     "class": "COM",
+     "cusip": "44916Y106",
+     "put_call": "",
+     "value": 36092,
+     "shares": 2941500.0,
+     "weight_pct": 0.81
+    }
+   ],
+   "changes": {
+    "new": [
+     {
+      "issuer": "Seagate Technology Hldngs Pl (Call)",
+      "weight_pct": 2.02,
+      "value": 90389.0
+     },
+     {
+      "issuer": "Somnigroup International Inc",
+      "weight_pct": 1.38,
+      "value": 61712.0
+     },
+     {
+      "issuer": "Newmont Corp",
+      "weight_pct": 0.98,
+      "value": 43875.0
+     },
+     {
+      "issuer": "Barrick Mng Corp",
+      "weight_pct": 0.96,
+      "value": 42891.0
+     },
+     {
+      "issuer": "Agnico Eagle Mines Ltd",
+      "weight_pct": 0.95,
+      "value": 42345.0
+     },
+     {
+      "issuer": "Western Digital Corp",
+      "weight_pct": 0.82,
+      "value": 36793.0
+     },
+     {
+      "issuer": "Applovin Corp",
+      "weight_pct": 0.71,
+      "value": 31790.0
+     },
+     {
+      "issuer": "Space Exploration Techn Corp",
+      "weight_pct": 0.68,
+      "value": 30493.0
+     },
+     {
+      "issuer": "Ttm Technologies Inc",
+      "weight_pct": 0.61,
+      "value": 27210.0
+     },
+     {
+      "issuer": "Humana Inc",
+      "weight_pct": 0.56,
+      "value": 24886.0
+     },
+     {
+      "issuer": "Palantir Technologies Inc",
+      "weight_pct": 0.34,
+      "value": 14983.0
+     },
+     {
+      "issuer": "Td Synnex Corporation",
+      "weight_pct": 0.32,
+      "value": 14512.0
+     },
+     {
+      "issuer": "Insight Enterprises Inc",
+      "weight_pct": 0.23,
+      "value": 10489.0
+     },
+     {
+      "issuer": "Korsana Biosciences Inc",
+      "weight_pct": 0.2,
+      "value": 8914.0
+     },
+     {
+      "issuer": "Mks Inc.",
+      "weight_pct": 0.19,
+      "value": 8470.0
+     }
+    ],
+    "exited": [
+     {
+      "issuer": "Invesco Exchange Traded Fd T (Call)",
+      "prior_weight_pct": 3.35
+     },
+     {
+      "issuer": "Ishares Inc (Call)",
+      "prior_weight_pct": 2.8
+     },
+     {
+      "issuer": "Alphabet Inc",
+      "prior_weight_pct": 2.31
+     },
+     {
+      "issuer": "United Airls Hldgs Inc",
+      "prior_weight_pct": 2.07
+     },
+     {
+      "issuer": "Ishares Tr (Call)",
+      "prior_weight_pct": 1.9
+     },
+     {
+      "issuer": "Sandisk Corp",
+      "prior_weight_pct": 1.52
+     },
+     {
+      "issuer": "State Str Spdr S&P 500 Etf T (Call)",
+      "prior_weight_pct": 1.29
+     },
+     {
+      "issuer": "Delta Air Lines Inc",
+      "prior_weight_pct": 1.08
+     },
+     {
+      "issuer": "D R Horton Inc",
+      "prior_weight_pct": 0.93
+     },
+     {
+      "issuer": "Advanced Micro Devices Inc",
+      "prior_weight_pct": 0.81
+     },
+     {
+      "issuer": "Cleveland-Cliffs Inc New",
+      "prior_weight_pct": 0.76
+     },
+     {
+      "issuer": "Hut 8 Corp",
+      "prior_weight_pct": 0.7
+     },
+     {
+      "issuer": "Caris Life Sciences Inc",
+      "prior_weight_pct": 0.65
+     },
+     {
+      "issuer": "Global X Fds",
+      "prior_weight_pct": 0.58
+     },
+     {
+      "issuer": "Woodward Inc",
+      "prior_weight_pct": 0.55
+     }
+    ],
+    "added": [
+     {
+      "issuer": "Seagate Technology Hldngs Pl",
+      "shares_chg_pct": 180.2,
+      "weight_pct": 7.05
+     },
+     {
+      "issuer": "Amazon Com Inc",
+      "shares_chg_pct": 42.7,
+      "weight_pct": 4.31
+     },
+     {
+      "issuer": "Fox Corp",
+      "shares_chg_pct": 38.2,
+      "weight_pct": 4.27
+     },
+     {
+      "issuer": "Ypf Sociedad Anonima",
+      "shares_chg_pct": 12.8,
+      "weight_pct": 3.97
+     },
+     {
+      "issuer": "Unity Software Inc",
+      "shares_chg_pct": 435.5,
+      "weight_pct": 3.62
+     },
+     {
+      "issuer": "Sea Ltd",
+      "shares_chg_pct": 44.8,
+      "weight_pct": 3.47
+     },
+     {
+      "issuer": "Champion Homes Inc",
+      "shares_chg_pct": 45.9,
+      "weight_pct": 0.71
+     },
+     {
+      "issuer": "Cavco Inds Inc Del",
+      "shares_chg_pct": 43.3,
+      "weight_pct": 0.71
+     },
+     {
+      "issuer": "Daktronics Inc",
+      "shares_chg_pct": 59.7,
+      "weight_pct": 0.7
+     },
+     {
+      "issuer": "Rhythm Pharmaceuticals Inc",
+      "shares_chg_pct": 32.6,
+      "weight_pct": 0.57
+     },
+     {
+      "issuer": "Riot Platforms Inc",
+      "shares_chg_pct": 20.0,
+      "weight_pct": 0.41
+     },
+     {
+      "issuer": "Beam Therapeutics Inc",
+      "shares_chg_pct": 355.5,
+      "weight_pct": 0.38
+     },
+     {
+      "issuer": "Jbs N.V.",
+      "shares_chg_pct": 114.4,
+      "weight_pct": 0.36
+     },
+     {
+      "issuer": "Relay Therapeutics Inc",
+      "shares_chg_pct": 144.3,
+      "weight_pct": 0.34
+     }
+    ],
+    "trimmed": [
+     {
+      "issuer": "Insmed Inc",
+      "shares_chg_pct": -23.3,
+      "weight_pct": 2.79
+     },
+     {
+      "issuer": "Bbb Foods Inc",
+      "shares_chg_pct": -43.2,
+      "weight_pct": 1.94
+     },
+     {
+      "issuer": "Stmicroelectronics N V",
+      "shares_chg_pct": -47.9,
+      "weight_pct": 1.93
+     },
+     {
+      "issuer": "Cdw Corp",
+      "shares_chg_pct": -22.6,
+      "weight_pct": 1.65
+     },
+     {
+      "issuer": "Insmed Inc (Call)",
+      "shares_chg_pct": -59.3,
+      "weight_pct": 1.4
+     },
+     {
+      "issuer": "Fluor Corp",
+      "shares_chg_pct": -26.4,
+      "weight_pct": 0.77
+     },
+     {
+      "issuer": "Tesla Inc (Call)",
+      "shares_chg_pct": -50.0,
+      "weight_pct": 0.5
+     },
+     {
+      "issuer": "Adma Biologics Inc",
+      "shares_chg_pct": -20.5,
+      "weight_pct": 0.5
+     },
+     {
+      "issuer": "Taiwan Semiconductor Manufac",
+      "shares_chg_pct": -94.5,
+      "weight_pct": 0.33
+     },
+     {
+      "issuer": "Crh Plc",
+      "shares_chg_pct": -71.2,
+      "weight_pct": 0.3
+     },
+     {
+      "issuer": "Nuvation Bio Inc",
+      "shares_chg_pct": -50.0,
+      "weight_pct": 0.28
+     },
+     {
+      "issuer": "Palo Alto Networks Inc",
+      "shares_chg_pct": -74.3,
+      "weight_pct": 0.27
+     },
+     {
+      "issuer": "Eli Lilly & Co",
+      "shares_chg_pct": -69.3,
+      "weight_pct": 0.1
+     },
+     {
+      "issuer": "Dbv Technologies S A",
+      "shares_chg_pct": -54.9,
+      "weight_pct": 0.05
+     }
+    ]
+   },
+   "source_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001536411&type=13F-HR"
+  },
+  "bridgewater": {
+   "name": "Bridgewater Associates, LP",
+   "person": "Ray Dalio (founder)",
+   "cik": 1350694,
+   "period": "2026-09-30",
+   "filed": "2026-11-16",
+   "accession": "0001350694-26-000004",
+   "previous_period": "2026-06-30",
+   "amendments_after": [],
+   "total_value": 22985792515,
+   "positions": 974,
+   "top10_weight_pct": 28.3,
+   "options_lines": 0,
+   "top": [
+    {
+     "issuer": "STATE STR SPDR S&P 500 ETF T",
+     "class": "TR UNIT",
+     "cusip": "78462F103",
+     "put_call": "",
+     "value": 2595471644,
+     "shares": 3403317.0,
+     "weight_pct": 11.29
+    },
+    {
+     "issuer": "ISHARES TR",
+     "class": "CORE S&P500 ETF",
+     "cusip": "464287200",
+     "put_call": "",
+     "value": 1154942390,
+     "shares": 1508053.0,
+     "weight_pct": 5.02
+    },
+    {
+     "issuer": "NVIDIA CORPORATION",
+     "class": "COM",
+     "cusip": "67066G104",
+     "put_call": "",
+     "value": 613935912,
+     "shares": 2688221.0,
+     "weight_pct": 2.67
+    },
+    {
+     "issuer": "BROADCOM INC",
+     "class": "COM",
+     "cusip": "11135F101",
+     "put_call": "",
+     "value": 461725648,
+     "shares": 1314746.0,
+     "weight_pct": 2.01
+    },
+    {
+     "issuer": "LAM RESEARCH CORP",
+     "class": "COM NEW",
+     "cusip": "512807306",
+     "put_call": "",
+     "value": 348182821,
+     "shares": 1059885.0,
+     "weight_pct": 1.51
+    },
+    {
+     "issuer": "ADVANCED MICRO DEVICES INC",
+     "class": "COM",
+     "cusip": "007903107",
+     "put_call": "",
+     "value": 300580323,
+     "shares": 491337.0,
+     "weight_pct": 1.31
+    },
+    {
+     "issuer": "APPLIED MATLS INC",
+     "class": "COM",
+     "cusip": "038222105",
+     "put_call": "",
+     "value": 288100753,
+     "shares": 563379.0,
+     "weight_pct": 1.25
+    },
+    {
+     "issuer": "MICRON TECHNOLOGY INC",
+     "class": "COM",
+     "cusip": "595112103",
+     "put_call": "",
+     "value": 252557818,
+     "shares": 237119.0,
+     "weight_pct": 1.1
+    },
+    {
+     "issuer": "NEWMONT CORP",
+     "class": "COM",
+     "cusip": "651639106",
+     "put_call": "",
+     "value": 242638682,
+     "shares": 2103682.0,
+     "weight_pct": 1.06
+    },
+    {
+     "issuer": "AMAZON COM INC",
+     "class": "COM",
+     "cusip": "023135106",
+     "put_call": "",
+     "value": 241863857,
+     "shares": 970756.0,
+     "weight_pct": 1.05
+    },
+    {
+     "issuer": "ISHARES INC",
+     "class": "MSCI STH KOR ETF",
+     "cusip": "464286772",
+     "put_call": "",
+     "value": 229577895,
+     "shares": 1256034.0,
+     "weight_pct": 1.0
+    },
+    {
+     "issuer": "APPLOVIN CORP",
+     "class": "COM CL A",
+     "cusip": "03831W108",
+     "put_call": "",
+     "value": 198375307,
+     "shares": 683040.0,
+     "weight_pct": 0.86
+    },
+    {
+     "issuer": "SHELL PLC",
+     "class": "SPON ADS",
+     "cusip": "780259305",
+     "put_call": "",
+     "value": 195929321,
+     "shares": 2061329.0,
+     "weight_pct": 0.85
+    },
+    {
+     "issuer": "VANGUARD INTL EQUITY INDEX F",
+     "class": "FTSE EMR MKT ETF",
+     "cusip": "922042858",
+     "put_call": "",
+     "value": 188419448,
+     "shares": 3176858.0,
+     "weight_pct": 0.82
+    },
+    {
+     "issuer": "SEAGATE TECHNOLOGY HLDNGS PL",
+     "class": "ORD SHS",
+     "cusip": "G7997R103",
+     "put_call": "",
+     "value": 182523707,
+     "shares": 197892.0,
+     "weight_pct": 0.79
+    },
+    {
+     "issuer": "ORACLE CORP",
+     "class": "COM",
+     "cusip": "68389X105",
+     "put_call": "",
+     "value": 162205259,
+     "shares": 1181393.0,
+     "weight_pct": 0.71
+    },
+    {
+     "issuer": "QUALCOMM INC",
+     "class": "COM",
+     "cusip": "747525103",
+     "put_call": "",
+     "value": 161608285,
+     "shares": 878115.0,
+     "weight_pct": 0.7
+    },
+    {
+     "issuer": "META PLATFORMS INC",
+     "class": "CL A",
+     "cusip": "30303M102",
+     "put_call": "",
+     "value": 159542501,
+     "shares": 220004.0,
+     "weight_pct": 0.69
+    },
+    {
+     "issuer": "PETROLEO BRASILEIRO S A",
+     "class": "SPONSORED ADR",
+     "cusip": "71654V408",
+     "put_call": "",
+     "value": 158731418,
+     "shares": 7605722.0,
+     "weight_pct": 0.69
+    },
+    {
+     "issuer": "ALPHABET INC",
+     "class": "CAP STK CL A",
+     "cusip": "02079K305",
+     "put_call": "",
+     "value": 158356971,
+     "shares": 460233.0,
+     "weight_pct": 0.69
+    },
+    {
+     "issuer": "JOHNSON & JOHNSON",
+     "class": "COM",
+     "cusip": "478160104",
+     "put_call": "",
+     "value": 144953357,
+     "shares": 547531.0,
+     "weight_pct": 0.63
+    },
+    {
+     "issuer": "ALTRIA GROUP INC",
+     "class": "COM",
+     "cusip": "02209S103",
+     "put_call": "",
+     "value": 141460936,
+     "shares": 2100697.0,
+     "weight_pct": 0.62
+    },
+    {
+     "issuer": "ISHARES INC",
+     "class": "CORE MSCI EMKT",
+     "cusip": "46434G103",
+     "put_call": "",
+     "value": 133886324,
+     "shares": 1649659.0,
+     "weight_pct": 0.58
+    },
+    {
+     "issuer": "EOG RES INC",
+     "class": "COM",
+     "cusip": "26875P101",
+     "put_call": "",
+     "value": 130643181,
+     "shares": 948339.0,
+     "weight_pct": 0.57
+    },
+    {
+     "issuer": "VISA INC",
+     "class": "COM CL A",
+     "cusip": "92826C839",
+     "put_call": "",
+     "value": 128554260,
+     "shares": 357761.0,
+     "weight_pct": 0.56
+    }
+   ],
+   "changes": {
+    "new": [
+     {
+      "issuer": "DOMINION ENERGY INC",
+      "weight_pct": 0.4,
+      "value": 91758306.0
+     },
+     {
+      "issuer": "OCCIDENTAL PETE CORP",
+      "weight_pct": 0.37,
+      "value": 85771392.0
+     },
+     {
+      "issuer": "SYNAPTICS INC",
+      "weight_pct": 0.34,
+      "value": 78347207.0
+     },
+     {
+      "issuer": "FORTINET INC",
+      "weight_pct": 0.33,
+      "value": 75414733.0
+     },
+     {
+      "issuer": "CISCO SYS INC",
+      "weight_pct": 0.31,
+      "value": 71195523.0
+     },
+     {
+      "issuer": "MASTERCARD INCORPORATED",
+      "weight_pct": 0.22,
+      "value": 51433953.0
+     },
+     {
+      "issuer": "RUBRIK INC.",
+      "weight_pct": 0.22,
+      "value": 50411672.0
+     },
+     {
+      "issuer": "ENTERGY CORP NEW",
+      "weight_pct": 0.19,
+      "value": 43872324.0
+     },
+     {
+      "issuer": "TEVA PHARMACEUTICAL INDS LTD",
+      "weight_pct": 0.17,
+      "value": 38921771.0
+     },
+     {
+      "issuer": "JAZZ PHARMACEUTICALS PLC",
+      "weight_pct": 0.15,
+      "value": 33606286.0
+     },
+     {
+      "issuer": "DIAMONDBACK ENERGY INC",
+      "weight_pct": 0.15,
+      "value": 33503600.0
+     },
+     {
+      "issuer": "CANADIAN NAT RES LTD MED TER",
+      "weight_pct": 0.12,
+      "value": 28699473.0
+     },
+     {
+      "issuer": "KNIGHT-SWIFT TRANSN HLDGS IN",
+      "weight_pct": 0.12,
+      "value": 28567935.0
+     },
+     {
+      "issuer": "MADRIGAL PHARMACEUTICALS INC",
+      "weight_pct": 0.12,
+      "value": 27025863.0
+     },
+     {
+      "issuer": "ICON PUB LTD CO",
+      "weight_pct": 0.1,
+      "value": 22840536.0
+     }
+    ],
+    "exited": [
+     {
+      "issuer": "UNION PAC CORP",
+      "prior_weight_pct": 0.57
+     },
+     {
+      "issuer": "PACCAR INC",
+      "prior_weight_pct": 0.47
+     },
+     {
+      "issuer": "NUTANIX INC",
+      "prior_weight_pct": 0.21
+     },
+     {
+      "issuer": "TEVA PHARMACEUTICAL INDS LTD",
+      "prior_weight_pct": 0.18
+     },
+     {
+      "issuer": "S&P GLOBAL INC",
+      "prior_weight_pct": 0.16
+     },
+     {
+      "issuer": "EXXON MOBIL CORP",
+      "prior_weight_pct": 0.12
+     },
+     {
+      "issuer": "CAPITAL ONE FINL CORP",
+      "prior_weight_pct": 0.12
+     },
+     {
+      "issuer": "AMETEK INC",
+      "prior_weight_pct": 0.12
+     },
+     {
+      "issuer": "SMURFIT WESTROCK PLC",
+      "prior_weight_pct": 0.09
+     },
+     {
+      "issuer": "PHILLIPS 66",
+      "prior_weight_pct": 0.09
+     },
+     {
+      "issuer": "FEDEX CORP",
+      "prior_weight_pct": 0.09
+     },
+     {
+      "issuer": "CORTEVA INC",
+      "prior_weight_pct": 0.08
+     },
+     {
+      "issuer": "PNC FINL SVCS GROUP INC",
+      "prior_weight_pct": 0.08
+     },
+     {
+      "issuer": "WATSCO INC",
+      "prior_weight_pct": 0.08
+     },
+     {
+      "issuer": "WEYERHAEUSER CO",
+      "prior_weight_pct": 0.08
+     }
+    ],
+    "added": [
+     {
+      "issuer": "LAM RESEARCH CORP",
+      "shares_chg_pct": 13.0,
+      "weight_pct": 1.51
+     },
+     {
+      "issuer": "APPLIED MATLS INC",
+      "shares_chg_pct": 93.3,
+      "weight_pct": 1.25
+     },
+     {
+      "issuer": "MICRON TECHNOLOGY INC",
+      "shares_chg_pct": 103.2,
+      "weight_pct": 1.1
+     },
+     {
+      "issuer": "APPLOVIN CORP",
+      "shares_chg_pct": 365.9,
+      "weight_pct": 0.86
+     },
+     {
+      "issuer": "SHELL PLC",
+      "shares_chg_pct": 35.1,
+      "weight_pct": 0.85
+     },
+     {
+      "issuer": "VANGUARD INTL EQUITY INDEX F",
+      "shares_chg_pct": 15.7,
+      "weight_pct": 0.82
+     },
+     {
+      "issuer": "QUALCOMM INC",
+      "shares_chg_pct": 440.5,
+      "weight_pct": 0.7
+     },
+     {
+      "issuer": "META PLATFORMS INC",
+      "shares_chg_pct": 99.9,
+      "weight_pct": 0.69
+     },
+     {
+      "issuer": "PETROLEO BRASILEIRO S A",
+      "shares_chg_pct": 16.6,
+      "weight_pct": 0.69
+     },
+     {
+      "issuer": "ALTRIA GROUP INC",
+      "shares_chg_pct": 21.6,
+      "weight_pct": 0.62
+     },
+     {
+      "issuer": "ISHARES INC",
+      "shares_chg_pct": 24.2,
+      "weight_pct": 0.58
+     },
+     {
+      "issuer": "EOG RES INC",
+      "shares_chg_pct": 75.8,
+      "weight_pct": 0.57
+     },
+     {
+      "issuer": "VISA INC",
+      "shares_chg_pct": 338.8,
+      "weight_pct": 0.56
+     },
+     {
+      "issuer": "PG&E CORP",
+      "shares_chg_pct": 73.5,
+      "weight_pct": 0.55
+     },
+     {
+      "issuer": "QORVO INC",
+      "shares_chg_pct": 3345.0,
+      "weight_pct": 0.53
+     }
+    ],
+    "trimmed": [
+     {
+      "issuer": "STATE STR SPDR S&P 500 ETF T",
+      "shares_chg_pct": -36.0,
+      "weight_pct": 11.29
+     },
+     {
+      "issuer": "ISHARES TR",
+      "shares_chg_pct": -49.8,
+      "weight_pct": 5.02
+     },
+     {
+      "issuer": "NVIDIA CORPORATION",
+      "shares_chg_pct": -30.5,
+      "weight_pct": 2.67
+     },
+     {
+      "issuer": "NEWMONT CORP",
+      "shares_chg_pct": -21.9,
+      "weight_pct": 1.06
+     },
+     {
+      "issuer": "AMAZON COM INC",
+      "shares_chg_pct": -52.1,
+      "weight_pct": 1.05
+     },
+     {
+      "issuer": "ORACLE CORP",
+      "shares_chg_pct": -17.6,
+      "weight_pct": 0.71
+     },
+     {
+      "issuer": "ALPHABET INC",
+      "shares_chg_pct": -65.2,
+      "weight_pct": 0.69
+     },
+     {
+      "issuer": "JOHNSON & JOHNSON",
+      "shares_chg_pct": -18.2,
+      "weight_pct": 0.63
+     },
+     {
+      "issuer": "BARRICK MNG CORP",
+      "shares_chg_pct": -10.3,
+      "weight_pct": 0.52
+     },
+     {
+      "issuer": "MICROSOFT CORP",
+      "shares_chg_pct": -68.9,
+      "weight_pct": 0.49
+     },
+     {
+      "issuer": "MARATHON PETE CORP",
+      "shares_chg_pct": -33.4,
+      "weight_pct": 0.4
+     },
+     {
+      "issuer": "APPLE INC",
+      "shares_chg_pct": -30.1,
+      "weight_pct": 0.37
+     },
+     {
+      "issuer": "CELESTICA INC",
+      "shares_chg_pct": -33.0,
+      "weight_pct": 0.35
+     },
+     {
+      "issuer": "ASML HLDG NV",
+      "shares_chg_pct": -31.5,
+      "weight_pct": 0.33
+     },
+     {
+      "issuer": "SEA LTD",
+      "shares_chg_pct": -43.2,
+      "weight_pct": 0.29
+     }
+    ]
+   },
+   "source_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001350694&type=13F-HR"
+  }
+ }
+}
