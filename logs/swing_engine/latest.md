@@ -16,7 +16,7 @@ Cash left ≈ $37
 
 **Paper tracks (no money):**
 
-- S3 leveraged trend (failed its test 2026-11-22; forward record only): SPY OFF (-1.1% vs 200-day); QQQ OFF (-4.6% vs 200-day)
+- S3 leveraged trend (failed its test 2026-11-22; forward record only): SPY OFF (-1.6% vs 200-day); QQQ OFF (-6.5% vs 200-day)
 - M0 cards: Swing Desk brief and journal (paper).
 - Radar flags: scored automatically in `logs/radar/latest.md`.
 
