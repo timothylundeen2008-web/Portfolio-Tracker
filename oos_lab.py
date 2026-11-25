@@ -10,6 +10,8 @@ v1.1 (independent review, before any real run; recorded in the pre-registration)
     return the books can hold, and every simulated day must have full coverage, else abort;
   * each window starts from the PREVIOUS close (the first day's return is counted);
   * the size file's block must be titled value-weighted.
+v1.1.1 (plumbing only; first real run aborted on a download timeout): each source is fetched with up to
+  4 attempts, a 180 s read timeout and a growing pause, and a failure names the source.
 
 LONG-TERM book only. Out-of-sample replay, 1963–1999, pre-registered in claude/oos_lab_2026-11-25.md
 (strategy_plan_2026-11-24.md item 2; Matt 2026-11-25: "retest XM as one fixed in advance candidate",
@@ -62,7 +64,7 @@ import hedge_lab as hl
 import offense_lab as ol
 import xm_lab as xm
 
-VERSION = "1.1"
+VERSION = "1.1.1"
 OUT_DIR, LOG_DIR = Path("data/oos_lab"), Path("logs/oos_lab")
 TRIALS_BEFORE, TRIALS_HERE = 43, 4
 EVAL_START, EVAL_END = "1963-01-02", "1999-12-31"
@@ -431,8 +433,23 @@ def write_outputs(a: dict, chk: dict, stamp: str, out_dir: Path = OUT_DIR, log_d
 def http_get(url: str) -> bytes:
     import urllib.request
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (research; portfolio-tracker oos_lab)"})
-    with urllib.request.urlopen(req, timeout=60) as r:
+    with urllib.request.urlopen(req, timeout=180) as r:
         return r.read()
+
+
+def fetch_source(get, key: str, tries: int = 4, pause: float = 10.0) -> bytes:
+    """One source with retries; the last error is re-raised naming the source."""
+    import time
+    last = None
+    for i in range(tries):
+        try:
+            return get(URLS[key])
+        except Exception as e:                 # timeouts, resets, HTTP errors
+            last = e
+            print(f"[oos_lab] {key}: attempt {i + 1} of {tries} failed ({type(e).__name__}: {e})")
+            if i < tries - 1 and pause:
+                time.sleep(pause * (i + 1))
+    raise RuntimeError(f"{key} ({URLS[key]}) failed {tries} times: {type(last).__name__}: {last}")
 
 
 def unzip_text(blob: bytes) -> str:
@@ -441,23 +458,23 @@ def unzip_text(blob: bytes) -> str:
         return z.read(name).decode("latin-1")
 
 
-def load_all(get=http_get) -> tuple:
-    ff3 = parse_french(unzip_text(get(URLS["ff3"])), ("Mkt-RF", "RF"))
-    size = parse_french(unzip_text(get(URLS["size"])), ("Lo 30",), title="Value Weight")
-    dg = pd.read_csv(io.BytesIO(get(URLS["dgs10"])))
+def load_all(get=http_get, pause: float = 10.0) -> tuple:
+    ff3 = parse_french(unzip_text(fetch_source(get, "ff3", pause=pause)), ("Mkt-RF", "RF"))
+    size = parse_french(unzip_text(fetch_source(get, "size", pause=pause)), ("Lo 30",), title="Value Weight")
+    dg = pd.read_csv(io.BytesIO(fetch_source(get, "dgs10", pause=pause)))
     dg.columns = [c.strip().upper() for c in dg.columns]
     dcol = [c for c in dg.columns if "DATE" in c][0]
     dgs10 = pd.Series(pd.to_numeric(dg["DGS10"], errors="coerce").to_numpy(), index=pd.to_datetime(dg[dcol])).dropna()
-    gd = pd.read_csv(io.BytesIO(get(URLS["gold"])))
+    gd = pd.read_csv(io.BytesIO(fetch_source(get, "gold", pause=pause)))
     gd.columns = [c.strip().lower() for c in gd.columns]
     gold = pd.Series(pd.to_numeric(gd["price"], errors="coerce").to_numpy(), index=pd.to_datetime(gd["date"].astype(str).str[:7])).dropna()
     return ff3, size, dgs10, gold
 
 
-def main(get=http_get, yahoo_fetch=None) -> int:
+def main(get=http_get, yahoo_fetch=None, pause: float = 10.0) -> int:
     stamp = date.today().isoformat()
     try:
-        ff3, size, dgs10, gold = load_all(get)
+        ff3, size, dgs10, gold = load_all(get, pause)
     except Exception as e:
         print(f"[oos_lab] DATA FAILURE: {type(e).__name__}: {e}; nothing written.")
         return 1
@@ -699,7 +716,7 @@ def selftest() -> dict:
         try:
             with contextlib.redirect_stdout(io.StringIO()):
                 rc_ok = main(get=lambda u: texts[u], yahoo_fetch=lambda t, start=None: {})
-                rc_bad = main(get=lambda u: (_ for _ in ()).throw(OSError("blocked")))
+                rc_bad = main(get=lambda u: (_ for _ in ()).throw(OSError("blocked")), pause=0)
                 short = dict(texts); short[URLS["dgs10"]] = b"observation_date,DGS10\n1975-01-02,7.0\n"
                 os.rename("data", "data_ok")
                 rc_short = main(get=lambda u: short[u], yahoo_fetch=lambda t, start=None: {})
@@ -713,6 +730,29 @@ def selftest() -> dict:
                 rc_d2 = main(get=lambda u: d2[u], yahoo_fetch=lambda t, start=None: {})
                 f3 = dict(texts); f3[URLS["ff3"]] = _zip(_french_text(ff3[ff3.index < "1990-07-01"]))
                 rc_f3 = main(get=lambda u: f3[u], yahoo_fetch=lambda t, start=None: {})
+            # a source that times out twice then answers must still give a full run
+            flaky = {"n": 0}
+
+            def get_flaky(u):
+                if u == URLS["gold"] and flaky["n"] < 2:
+                    flaky["n"] += 1
+                    raise TimeoutError("The read operation timed out")
+                return texts[u]
+            os.rename("data_ok", "data_keep")
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                rc_flaky = main(get=get_flaky, yahoo_fetch=lambda t, start=None: {}, pause=0)
+            if rc_flaky != 0 or not (tmp / "data" / "oos_lab" / "summary.json").exists() or "gold: attempt 2 of 4" not in buf.getvalue():
+                f.append("fetch_source: two timeouts then success must still run (and log the attempts)")
+            import shutil
+            shutil.rmtree(tmp / "data")
+            os.rename("data_keep", "data_ok")
+            # a source that never answers stops the run, names the source, writes nothing
+            buf2 = io.StringIO()
+            with contextlib.redirect_stdout(buf2):
+                rc_dead = main(get=lambda u: (_ for _ in ()).throw(TimeoutError("timed out")) if u == URLS["size"] else texts[u], pause=0)
+            if rc_dead != 1 or "size (" not in buf2.getvalue() or (tmp / "data" / "oos_lab").exists():
+                f.append("fetch_source: a dead source must stop the run and be named")
             if rc_ok != 0 or not (tmp / "data_ok" / "oos_lab" / "summary.json").exists():
                 f.append("main: a clean run must write outputs")
             if rc_bad != 1 or rc_short != 1 or rc_gold != 1 or rc_d2 != 1 or rc_f3 != 1 or (tmp / "data" / "oos_lab").exists():
