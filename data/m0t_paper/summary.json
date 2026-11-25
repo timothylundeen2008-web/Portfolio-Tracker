@@ -64,8 +64,8 @@
   {
    "ticker": "XLU",
    "signal_date": "2026-11-24",
-   "buy_stop": 43.63,
-   "stop": 42.36,
+   "buy_stop": 43.64,
+   "stop": 42.37,
    "conf": 2,
    "size_mult": 0.5,
    "sector": "XLU",
@@ -94,8 +94,8 @@
   {
    "ticker": "XRT",
    "signal_date": "2026-11-24",
-   "buy_stop": 90.44,
-   "stop": 85.61,
+   "buy_stop": 90.45,
+   "stop": 85.62,
    "conf": 2,
    "size_mult": 0.5,
    "sector": "XLY",
