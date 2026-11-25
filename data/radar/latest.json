@@ -1,5 +1,5 @@
 {
- "asof": "2026-11-23",
+ "asof": "2026-11-24",
  "scan": false,
  "pulse": [],
  "leaders": [
@@ -9,17 +9,18 @@
   "IWD",
   "KIE",
   "RSP",
-  "SKYY",
+  "USMV",
   "USO",
   "UUP",
   "XBI",
   "XLE",
+  "XLF",
   "XLP",
   "XLV",
   "XRT"
  ],
  "flags": [],
  "notes": [
-  "Latest SPY bar is 2026-11-23, not today (2026-11-24): data delayed or not a session."
+  "No data for 1 fund(s): FXY."
  ]
 }

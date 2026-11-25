@@ -8,24 +8,24 @@ Alert-only. The O11 engine and the swing desk act only on their own rules. Resea
 
 | Item | Reading |
 |---|---|
-| SPY | 1 day +4.7%, 5 sessions -2.4%, 10 sessions -4.0% |
-| QQQ | 1 day +7.0%, 5 sessions -1.6%, 10 sessions -4.2% |
-| IWM | 1 day +3.6%, 5 sessions -2.6%, 10 sessions -5.9% |
-| SPY vs 200-day | -1.12% (below; 2 close(s) below before today) |
-| QQQ vs 200-day | -4.58% (below; 6 close(s) below before today) |
+| SPY | 1 day -0.5%, 5 sessions -1.9%, 10 sessions -4.2% |
+| QQQ | 1 day -2.0%, 5 sessions -2.9%, 10 sessions -5.4% |
+| IWM | 1 day +0.5%, 5 sessions -0.7%, 10 sessions -4.8% |
+| SPY vs 200-day | -1.62% (below; 3 close(s) below before today) |
+| QQQ vs 200-day | -6.49% (below; 7 close(s) below before today) |
 
 **Biggest moves today, against each fund's normal volatility**
 
 | Up | Move | σ | Down | Move | σ |
 |---|---|---|---|---|---|
-| EWT Taiwan | +18.0% | +3.8 | UNG Natural gas | -6.6% | -2.2 |
-| SMH Semiconductors | +15.0% | +3.3 | INDA India | -1.4% | -1.7 |
-| IWF Large growth | +8.0% | +3.3 | FXE Euro | -0.6% | -1.6 |
-| EEM Emerging markets | +7.4% | +3.2 | USO Crude oil | -4.5% | -1.5 |
-| BOTZ Robotics & AI | +7.6% | +3.0 | FXY Japanese yen | -0.3% | -0.8 |
+| XBI Biotech (equal weight) | +6.6% | +2.4 | CPER Copper | -3.9% | -2.0 |
+| IBB Biotech | +5.2% | +2.4 | PPLT Platinum | -4.2% | -1.6 |
+| XLV Health care | +3.0% | +2.1 | SLV Silver | -5.3% | -1.6 |
+| FXE Euro | +0.6% | +1.7 | UUP US dollar | -0.5% | -1.5 |
+| UNG Natural gas | +4.7% | +1.4 | SMH Semiconductors | -7.3% | -1.2 |
 
 ## Notes
 
-- Latest SPY bar is 2026-11-23, not today (2026-11-24): data delayed or not a session.
+- No data for 1 fund(s): FXY.
 
 *market_radar.py 1.1*
