@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-25T23:15:04+00:00",
+  "generated_at": "2026-11-25T23:57:09+00:00",
   "date": "2026-11-25",
   "version": "alerts v1.1.1 (engine layer, 2026-11-13; radar row ignored 2026-11-21)",
   "selftest_ok": true,
@@ -8,6 +8,7 @@
     "DATA",
     "HY",
     "LT",
+    "SWING",
     "TEST"
   ],
   "findings": [
@@ -21,7 +22,7 @@
       "key": "DATA_FAIL",
       "severity": "alert",
       "state": "active",
-      "title": "Data failure: 3 input(s) block decisions"
+      "title": "Data failure: 2 input(s) block decisions"
     }
   ],
   "actions": [
