@@ -361,3 +361,10 @@ date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_
 2026-11-20,D,M0 Rotation,long,2-of-3,67.89,65.9,66.28,transition_ambiguous,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
 2026-11-20,PSA,M0 Rotation,long,2-of-3,332.69,322.62,325.42,transition_ambiguous,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
 2026-11-20,NEE,M0 Rotation,long,2-of-3,85.26,82.64,83.45,transition_ambiguous,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-25,O,M0 Rotation,long,3-of-3,60.52,59.06,60.25,credit_stress,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-25,XLU,M0 Rotation,long,3-of-3,43.79,42.59,43.61,credit_stress,False,market filter: SPY 716.7 below its 200-day 730.77 — no new swing entries
+2026-11-25,XLRE,M0 Rotation,long,3-of-3,44.16,42.8,43.86,credit_stress,False,market filter: SPY 716.7 below its 200-day 730.77 — no new swing entries
+2026-11-25,MCD,M0 Rotation,long,3-of-3,286.66,276.91,283.5,credit_stress,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-25,D,M0 Rotation,long,2-of-3,68.29,66.6,67.99,credit_stress,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-25,NEE,M0 Rotation,long,2-of-3,85.86,83.65,85.41,credit_stress,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-25,XLY,M0 Rotation,long,2-of-3,118.27,112.46,117.49,credit_stress,False,market filter: SPY 716.7 below its 200-day 730.77 — no new swing entries
