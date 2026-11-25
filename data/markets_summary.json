@@ -1,5 +1,5 @@
 {
-  "published_at": "2026-11-24T11:09:20+00:00",
+  "published_at": "2026-11-25T04:58:39+00:00",
   "notes": "auto-published on Markets Dashboard render",
   "regime": {
     "key": "credit_stress",
@@ -7,9 +7,9 @@
     "transition_reason": null,
     "drivers": [
       "Short real policy rate +0.14% sits INSIDE the \u00b10.25% transition band \u2014 within the noise of a single CPI print. The framework's primary gauge is not currently giving a directional reading, so no regime that depends on its sign can be confirmed.",
-      "HY OAS 3.76% \u2014 out of the calm zone (>= 3.5%)",
-      "Spreads widening +0.34pp over ~2 weeks (threshold +0.25pp)",
-      "Long real yield +0.42pp/3mo (rising \u2014 rates and credit both tightening)",
+      "HY OAS 3.63% \u2014 out of the calm zone (>= 3.5%)",
+      "Spreads widening +0.29pp over ~2 weeks (threshold +0.25pp)",
+      "Long real yield +0.39pp/3mo (rising \u2014 rates and credit both tightening)",
       "Short real rate +0.14%",
       "Not yet a liquidity crisis (needs HY > 5.0% AND +0.5pp/2wk)"
     ]
