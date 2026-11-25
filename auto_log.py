@@ -100,10 +100,38 @@ def _try(fn, label: str, errors: list):
 
 
 # ── Daily ────────────────────────────────────────────────────────────────────
+def log_date():
+    """The ET date a daily row is filed under. A late scheduled run that fired after midnight (the gate
+    passes the session it belongs to in LOG_SESSION_DATE, 2026-11-25) captures the PREVIOUS session's
+    close, so it must carry that session's date, not the next calendar day's."""
+    from datetime import date as _date
+    v = (os.environ.get("LOG_SESSION_DATE") or "").strip()
+    try:
+        d = _date.fromisoformat(v)
+        if d <= mt.et_date() and (mt.et_date() - d).days <= 4:
+            return d
+    except ValueError:
+        pass
+    return mt.et_date()
+
+
+def _minutes_since_session_close(et_day, status: dict):
+    """Minutes since the close of the session the row is filed under (a late run's row belongs to the
+    previous session; measuring against today's close would read like a pre-close capture)."""
+    from datetime import datetime as _dtm
+    if et_day == mt.et_date():
+        return status["minutes_since_close"]
+    try:
+        close_dt = _dtm.combine(et_day, mt.close_time(et_day), tzinfo=mt.ET)
+        return round((mt.now_et() - close_dt).total_seconds() / 60.0, 1)
+    except Exception:
+        return status.get("minutes_since_close")
+
+
 def run_daily(fred_key: str = "", force: bool = False) -> dict:
     """Execute Checklist v4 Part 1 and return the captured row."""
     status = mt.market_status()
-    et_day = mt.et_date()
+    et_day = log_date()
     errors: list[str] = []
 
     if not force and not mt.is_trading_day(et_day):
@@ -115,7 +143,7 @@ def run_daily(fred_key: str = "", force: bool = False) -> dict:
         "et_date": et_day.isoformat(),
         "run_utc": mt.now_utc().isoformat(timespec="seconds"),
         "run_et": mt.fmt_et(),
-        "minutes_since_close": status["minutes_since_close"],
+        "minutes_since_close": _minutes_since_session_close(et_day, status),
     }
 
     # Step 0 — coverage gate. Runs FIRST: every flow reading depends on it.
@@ -369,7 +397,8 @@ def _write_summary(row: dict, kind: str):
     now = mt.now_et()
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump({"et_date": d, "et_hour": now.hour,
-                  "run_et": mt.fmt_et(now)}, f)
+                  "run_et": mt.fmt_et(now),
+                  "generated_at": mt.now_utc().isoformat(timespec="seconds")}, f)
     print(f"[auto_log] wrote {meta_path}")
 
 

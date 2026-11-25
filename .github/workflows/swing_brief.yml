@@ -3,8 +3,10 @@ name: Swing Desk Brief
 # Runs AFTER the daily checklist log (6:30 PM ET) so both bridges have
 # published for the day. Same DST twin-cron pattern as scheduled_logs.yml:
 #   22:45 UTC = 6:45 PM EDT   23:45 UTC = 6:45 PM EST
-# The gate accepts any firing from 18:00 ET onward on a trading day and
-# stands down if a brief was already written from within the window.
+# The gate (v1.1, 2026-11-25) accepts any firing from 18:00 ET on a trading day, or
+# a late firing after midnight until 09:00 ET, for that session; it stands down
+# once that session's brief was written after its close. (Late GitHub firings at
+# 00:01-01:09 ET skipped every brief after 2026-11-20 under the old gate.)
 #
 # This job WRITES A BRIEF AND NOTHING ELSE. It never touches
 # data/swing_journal.csv -- decisions come only from the tab or chat.
@@ -26,6 +28,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: main              # the twin queued before the first one pushed must still see its brief
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'   # match Streamlit Cloud; 3.11 broke cross_asset.py (Sept 2026)
@@ -39,17 +43,21 @@ jobs:
           sys.path.insert(0, '.')
           import market_time as mt
           dispatch = "${{ github.event_name }}" == "workflow_dispatch"
-          now = mt.now_et(); d = now.date().isoformat()
-          meta = f"logs/swing/{d}_brief.meta.json"
-          def done():
-              try: return int(json.load(open(meta)).get("et_hour", -1)) >= 18
+          now = mt.now_et()
+          sess = mt.evening_session(now, 18)      # v1.1: a late run after midnight counts for the previous session
+          def done(s):
+              # done = written after the session's close, on healthy data, with that session's leader list
+              try:
+                  m = json.load(open(f"logs/swing/{s.isoformat()}_brief.meta.json"))
+                  b = json.load(open(f"logs/swing/{s.isoformat()}_brief.json"))
+                  return (mt.generated_after_close(m.get("generated_at"), s)
+                          and not (b.get("data_health") or {}).get("failed")
+                          and (b.get("leaders") or {}).get("session") == s.isoformat())
               except Exception: return False
           if dispatch:               proceed, why = True, "manual dispatch"
-          elif now.weekday() >= 5:   proceed, why = False, "weekend"
-          elif not mt.is_trading_day(now.date()): proceed, why = False, "holiday"
-          elif now.hour < 18:        proceed, why = False, f"before window ({now:%H:%M} ET)"
-          elif done():               proceed, why = False, "brief already written from within the window"
-          else:                      proceed, why = True, f"first trigger in window ({now:%H:%M} ET)"
+          elif sess is None:         proceed, why = False, f"outside the evening window ({now:%a %H:%M} ET)"
+          elif done(sess):           proceed, why = False, f"brief for {sess} already written after its close"
+          else:                      proceed, why = True, f"window for the {sess} session ({now:%a %H:%M} ET)"
           print(f"::notice::{'RUN' if proceed else 'SKIP'} — {why}")
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
               f.write(f"proceed={'true' if proceed else 'false'}\net={now:%Y-%m-%d %H:%M %Z}\n")
@@ -75,6 +83,7 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           [ -d logs/swing ] || { echo "no brief produced"; exit 0; }
+          git pull --ff-only origin main || true
           git add -A logs/swing/
           git diff --cached --quiet -- logs/swing/ && echo "nothing new" || {
             git commit -m "swing: brief ${{ steps.gate.outputs.et }}"

@@ -72,8 +72,14 @@ jobs:
           d = session.isoformat()
 
           def meta_ok(path):
+              # v2026-11-25: an input counts once it was written after the session's close (+30 min).
+              # A late run at 00:40 ET has et_hour 0 and is still a complete capture of the session.
               try:
-                  return int(json.load(open(path)).get("et_hour", -1)) >= 18
+                  m = json.load(open(path))
+                  g = m.get("generated_at") or m.get("run_utc")
+                  if g:
+                      return mt.generated_after_close(g, session)
+                  return int(m.get("et_hour", -1)) >= 18          # older sidecars without a timestamp
               except Exception:
                   return False
           # swing briefs are named by RUN date: accept the session date or later

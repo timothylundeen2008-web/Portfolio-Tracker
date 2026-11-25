@@ -1120,8 +1120,9 @@ if _SW:
 st.markdown("---")
 
 # ─── TABS ─────────────────────────────────────────────────────────────────────
-(tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8,tab9,tab_sug,tab_cand,tab_exp,
+(tab_dec,tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8,tab9,tab_sug,tab_cand,tab_exp,
  tab_swing, tab_13f, tab_logs) = st.tabs([
+    "📍 Decision",
     "🏠 Overview",
     "📈 Holding vs Benchmark",
     "🗂️ Category Performance",
@@ -1138,6 +1139,14 @@ st.markdown("---")
     "🧭 Investor 13F",
     "📋 Daily & Weekly Logs",
 ])
+
+# ─── DECISION PAGE (strategy plan item 3): what we hold, why, what would change it ───
+with tab_dec:
+    try:
+        import decision_page
+        decision_page.render(st)
+    except Exception as _e:
+        st.error(f"Decision page could not load ({type(_e).__name__}: {_e}). The other tabs are unaffected.")
 
 # ════════════════════════════════════════════════════════════
 # TAB 1 — OVERVIEW

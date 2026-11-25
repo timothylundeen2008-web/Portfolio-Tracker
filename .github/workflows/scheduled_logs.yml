@@ -52,6 +52,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: main              # a late twin queued before the first one pushed must still see its sidecar
+
+      - name: Sync with main
+        run: git pull --ff-only origin main || true
 
       - uses: actions/setup-python@v6
         with:
@@ -89,10 +94,14 @@ jobs:
           mode_in  = "${{ github.event.inputs.mode }}" or "daily"
           now = mt.now_et()
           hour, dow = now.hour, now.weekday()   # Mon=0 .. Sun=6
+          # v2026-11-25: GitHub fired the 6:30 PM crons after midnight ET on 11-23/24; the old weekday
+          # gate compared the calendar date and skipped ("before the daily window"). The session an
+          # evening run belongs to comes from market_time.evening_session (previous session until 9:00 ET).
+          sess = mt.evening_session(now, 18)
 
           daily_report = f"logs/summaries/{now.date().isoformat()}_daily.md"
 
-          def window_capture_done(date_str, kind, window_start_hour):
+          def window_capture_done(date_str, kind, window_start_hour, session=None):
               """
               True only when a report exists AND it was generated at or
               after the window's start hour.
@@ -121,6 +130,10 @@ jobs:
               try:
                   with open(meta_path) as f:
                       meta = _json.load(f)
+                  # v2026-11-25: a daily report written after its session's close counts,
+                  # even from a late run after midnight (et_hour 0)
+                  if session is not None and meta.get("generated_at"):
+                      return mt.generated_after_close(meta["generated_at"], session)
                   return int(meta.get("et_hour", -1)) >= window_start_hour
               except Exception:
                   return False
@@ -145,30 +158,22 @@ jobs:
                       proceed, mode, why = True, "weekly", (
                           f"first trigger in the weekly window "
                           f"({now:%H:%M} ET)")
-          elif dow < 5:  # weekday — daily window
-              if hour < 18:
+          elif sess is not None:  # weekday evening, or a late firing after midnight (v2026-11-25)
+              if window_capture_done(sess.isoformat(), "daily", 18, sess):
                   proceed, mode, why = False, "daily", (
-                      f"before the daily window (18:00 ET), now "
-                      f"{now:%H:%M} ET")
-              elif not mt.is_trading_day(now.date()):
-                  proceed, mode, why = False, "daily", (
-                      f"{now.date()} is a market holiday")
-              elif window_capture_done(now.date().isoformat(), "daily", 18):
-                  proceed, mode, why = False, "daily", (
-                      "today's report already exists FROM WITHIN THE "
-                      "WINDOW (18:00+ ET) — an earlier in-window trigger "
-                      "already ran")
+                      f"the {sess} report already exists from after the close")
               else:
                   proceed, mode, why = True, "daily", (
-                      f"first trigger in the daily window ({now:%H:%M} ET)")
+                      f"window for the {sess} session ({now:%a %H:%M} ET)")
           else:
-              proceed, mode, why = False, "daily", "weekend, non-trading"
-
+              proceed, mode, why = False, "daily", (
+                  f"outside the daily window ({now:%a %H:%M} ET)")
           print(f"::notice::{'RUN' if proceed else 'SKIP'} — {why}")
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
               f.write(f"proceed={'true' if proceed else 'false'}\n")
               f.write(f"mode={mode}\n")
               f.write(f"et={now:%Y-%m-%d %H:%M %Z}\n")
+              f.write(f"session={sess.isoformat() if (sess and mode == 'daily' and not dispatch) else ''}\n")
           PY
 
       # Installed only AFTER the gate decides to run: a skipped DST twin then
@@ -191,6 +196,8 @@ jobs:
           # scheduled cron run never sets this, so production behavior on
           # real weekends/holidays is unchanged.
           LOG_FORCE: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
+          # v2026-11-25: the session a late (after-midnight) scheduled run captures; empty otherwise
+          LOG_SESSION_DATE: ${{ steps.gate.outputs.session }}
         run: |
           python -c "import os; k=os.environ.get('FRED_API_KEY',''); print(f'FRED_API_KEY: {\"SET, \" + str(len(k)) + \" chars\" if k else \"EMPTY — not reaching this environment\"}')"
           echo "Eastern time: ${{ steps.gate.outputs.et }}"

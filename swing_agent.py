@@ -1,5 +1,5 @@
 """
-swing_agent.py  (v2 — 2026-11-12)
+swing_agent.py  (v2.1 — 2026-11-25: late-run brief dating; v2 — 2026-11-12)
 ─────────────────────────────────
 v2 (build #2; evidence in swing_backtest v1.2, risk_policy.md §5):
   * Only LIVE setups (M0 Rotation Reclaim) may be entered; every other
@@ -122,6 +122,30 @@ def _default_fetch(tickers: list[str], period: str = "2y") -> dict:
 SESSION_SETTLE_MIN = 30     # after this many minutes past the close, the session's bar is expected
 
 
+def brief_date(expected: Optional[date], now_et: Optional[datetime] = None, scheduled: Optional[bool] = None,
+               exists: Optional[bool] = None) -> date:
+    """The date a live brief is filed under. Normally today's ET date (the runner's clock is UTC;
+    8pm ET is already tomorrow there). A late scheduled run that fires after midnight but before
+    9:00 ET belongs to the PREVIOUS session (market_time.evening_session): GitHub started the
+    6:45 PM job at 00:01–01:09 ET on 2026-11-23/24, and the brief must carry that session's date,
+    not the next calendar day's. Only a SCHEDULED run, or a run when that session has no brief yet,
+    files under the previous session: a manual run at 08:00 must not overwrite a good brief (and its
+    cards_history rows and journal keys)."""
+    try:
+        import market_time as mt
+        n = now_et or mt.now_et()
+        if expected is not None and n.date() > expected and mt.evening_session(n, 18) == expected:
+            if scheduled is None:
+                scheduled = os.environ.get("GITHUB_EVENT_NAME", "") == "schedule"
+            if exists is None:
+                exists = (LOG_DIR / f"{expected.isoformat()}_brief.json").exists()
+            if scheduled or not exists:
+                return expected
+        return n.date()
+    except Exception:
+        return date.today()
+
+
 def expected_session(now_et: Optional[datetime] = None) -> Optional[date]:
     """
     The session whose bar a run at `now_et` must contain: today once the close has
@@ -215,11 +239,7 @@ def build_brief(fetch_ohlcv: Optional[Callable] = None, bridges: Optional[tuple]
     if expected is None and today is None:
         expected = expected_session()          # live run: the calendar says which session must be in the data
     if today is None:
-        try:
-            import market_time as mt
-            today = mt.et_date()          # the runner's clock is UTC; 8pm ET is already tomorrow there
-        except Exception:
-            today = date.today()
+        today = brief_date(expected)
     markets, rotation = bridges or _read_bridges()
     cfg = sj.load_config()
     journal = sj.load()
@@ -1044,6 +1064,20 @@ def selftest() -> dict:
             f.append("21:00 ET on a trading day must expect that day's bar")
         if expected_session(datetime(2026, 11, 12, 16, 10, tzinfo=_mt.ET)) != date(2026, 11, 11):
             f.append("10 minutes after the close, the previous session is what's expected")
+        _late = datetime(2026, 11, 25, 0, 40, tzinfo=_mt.ET)
+        if brief_date(expected_session(_late), _late, scheduled=True, exists=True) != date(2026, 11, 24):
+            f.append("a scheduled run at 00:40 ET must file the brief under the 11-24 session")
+        if brief_date(expected_session(_late), _late, scheduled=False, exists=False) != date(2026, 11, 24):
+            f.append("a manual run at 00:40 ET with no 11-24 brief must fill that session")
+        _m8 = datetime(2026, 11, 30, 8, 0, tzinfo=_mt.ET)
+        if brief_date(expected_session(_m8), _m8, scheduled=False, exists=True) != date(2026, 11, 30):
+            f.append("a manual run at 08:00 ET must not overwrite the previous session's brief")
+        _eve = datetime(2026, 11, 24, 18, 45, tzinfo=_mt.ET)
+        if brief_date(expected_session(_eve), _eve) != date(2026, 11, 24):
+            f.append("a run at 18:45 ET must file the brief under today")
+        _day = datetime(2026, 11, 25, 11, 0, tzinfo=_mt.ET)
+        if brief_date(expected_session(_day), _day) != date(2026, 11, 25):
+            f.append("a daytime (manual) run keeps today's date, so it never overwrites yesterday's brief")
         if expected_session(datetime(2026, 11, 14, 10, 0, tzinfo=_mt.ET)) != date(2026, 11, 13):
             f.append("a Saturday run expects Friday's bar")
     except ImportError:

@@ -44,19 +44,18 @@ jobs:
           sys.path.insert(0, '.')
           import market_time as mt
           dispatch = "${{ github.event_name }}" == "workflow_dispatch"
-          now = mt.now_et(); d = now.date().isoformat()
-          def done():
+          now = mt.now_et()
+          sess = mt.evening_session(now, 17)      # v1.1: a late run after midnight counts for the previous session
+          def done(s):
               # v1.0 could stamp today's date on a part-day bar; only v1.1+ counts as done
               try:
                   j = json.load(open("data/leaders/latest.json"))
-                  return j.get("session") == d and j.get("version") != "v1.0"
+                  return j.get("session") == s.isoformat() and j.get("version") != "v1.0"
               except Exception: return False
           if dispatch:               proceed, why = True, "manual dispatch"
-          elif now.weekday() >= 5:   proceed, why = False, "weekend"
-          elif not mt.is_trading_day(now.date()): proceed, why = False, "holiday"
-          elif now.hour < 17:        proceed, why = False, f"before window ({now:%H:%M} ET)"
-          elif done():               proceed, why = False, "today's list already written"
-          else:                      proceed, why = True, f"first trigger in window ({now:%H:%M} ET)"
+          elif sess is None:         proceed, why = False, f"outside the evening window ({now:%a %H:%M} ET)"
+          elif done(sess):           proceed, why = False, f"list for {sess} already written"
+          else:                      proceed, why = True, f"window for the {sess} session ({now:%a %H:%M} ET)"
           print(f"::notice::{'RUN' if proceed else 'SKIP'} — {why}")
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
               f.write(f"proceed={'true' if proceed else 'false'}\net={now:%Y-%m-%d %H:%M %Z}\n")

@@ -1,5 +1,5 @@
 """
-market_time.py  (v1 — August 2026)
+market_time.py  (v1.1 — 2026-11-25; v1 August 2026)
 ──────────────────────────────────
 Eastern-time display and trading-calendar helpers, shared by all three
 dashboards and the scheduled logger.
@@ -24,6 +24,17 @@ That last point matters more than it looks. A job running at 22:30 UTC in
 summer is 18:30 ET the SAME day, but at 01:30 UTC in winter it would be
 20:30 ET the PREVIOUS day. Keying a daily log by UTC date would silently
 mislabel every winter entry.
+
+EVENING JOBS AFTER MIDNIGHT (v1.1)
+──────────────────────────────────
+GitHub starts scheduled runs late — on 2026-11-23/24 the 6:45 PM ET swing brief
+and the 5:20 PM leader screen fired at 00:01–01:09 ET the next day. Their gates
+compared the CALENDAR date with an evening start hour, so every late run said
+"before window" and skipped: no swing brief after 2026-11-20 (DATA_FAIL #10).
+`evening_session(now, start_hour)` answers "which session is this evening job
+for?": today from `start_hour` on a trading day, or the PREVIOUS trading day when
+it fires after midnight and before CATCHUP_UNTIL (9:00 ET), long before the next
+open. Outside both, None.
 
 DST IS HANDLED BY zoneinfo, NOT BY ARITHMETIC
 ─────────────────────────────────────────────
@@ -178,9 +189,64 @@ def market_status() -> dict:
     }
 
 
+CATCHUP_UNTIL = time(9, 0)      # a late evening run may still count for the previous session until 9:00 ET
+
+
+def evening_session(dt: datetime | None = None, start_hour: int = 18) -> date | None:
+    """The trading session an evening job firing at `dt` belongs to, or None (outside the window)."""
+    d = to_et(dt) if dt else now_et()
+    if is_trading_day(d.date()) and d.hour >= start_hour:
+        return d.date()
+    if d.time() < CATCHUP_UNTIL:
+        prev = last_trading_day(d.date() - timedelta(days=1))
+        if (d.date() - prev).days <= 4:
+            return prev
+    return None
+
+
+def generated_after_close(generated_utc_iso: str | None, session: date, minutes: int = 30) -> bool:
+    """True when a file stamped `generated_utc_iso` (UTC ISO-8601) was written at least `minutes`
+    after `session`'s close (so it contains that session's settled bar)."""
+    if not generated_utc_iso:
+        return False
+    try:
+        g = datetime.fromisoformat(str(generated_utc_iso).replace("Z", "+00:00"))
+        if g.tzinfo is None:
+            g = g.replace(tzinfo=UTC)
+    except Exception:
+        return False
+    close_dt = datetime.combine(session, close_time(session), tzinfo=ET) + timedelta(minutes=minutes)
+    return g.astimezone(ET) >= close_dt
+
+
 def selftest() -> dict:
     """Verify DST handling and calendar logic on known dates."""
     failures = []
+
+    # v1.1 evening jobs: on time, late after midnight, weekend catch-up, daytime, holidays
+    def at(y, m, dd, hh, mm=0):
+        return datetime(y, m, dd, hh, mm, tzinfo=ET)
+    cases = [(at(2026, 11, 24, 18, 45), 18, date(2026, 11, 24)),     # on time
+             (at(2026, 11, 25, 0, 40), 18, date(2026, 11, 24)),      # the 11-24 run that fired at 00:40
+             (at(2026, 11, 25, 8, 59), 18, date(2026, 11, 24)),
+             (at(2026, 11, 25, 9, 0), 18, None),                     # too late: next day's open is near
+             (at(2026, 11, 25, 12, 0), 18, None),                    # daytime
+             (at(2026, 11, 25, 17, 30), 18, None),                   # before the window
+             (at(2026, 11, 25, 17, 30), 17, date(2026, 11, 25)),     # leader screen window starts at 17:00
+             (at(2026, 11, 21, 0, 30), 18, date(2026, 11, 20)),      # Friday's run landing on Saturday
+             (at(2026, 11, 21, 19, 0), 18, None),                    # Saturday evening: no session
+             (at(2026, 11, 26, 19, 0), 18, None),                    # Thanksgiving evening
+             (at(2026, 11, 27, 0, 30), 18, date(2026, 11, 25)),      # after Thanksgiving: Wednesday's session
+             (at(2026, 11, 30, 0, 30), 18, date(2026, 11, 27))]      # Monday 00:30: Friday (early close)
+    for dt_, h_, want in cases:
+        got = evening_session(dt_, h_)
+        if got != want:
+            failures.append(f"evening_session({dt_:%Y-%m-%d %H:%M}, {h_}) = {got}, want {want}")
+    if not generated_after_close("2026-11-24T21:31:00+00:00", date(2026, 11, 24)) or \
+            generated_after_close("2026-11-24T21:29:00+00:00", date(2026, 11, 24)) or \
+            not generated_after_close("2026-11-27T18:31:00Z", date(2026, 11, 27)) or \
+            generated_after_close(None, date(2026, 11, 24)) or generated_after_close("junk", date(2026, 11, 24)):
+        failures.append("generated_after_close: 30 minutes after the close (13:00 on early closes), UTC input")
 
     # DST transition weekends — offsets must differ.
     summer = datetime(2026, 7, 15, 12, 0, tzinfo=UTC).astimezone(ET)
