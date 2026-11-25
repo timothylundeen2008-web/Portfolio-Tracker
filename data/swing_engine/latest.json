@@ -2,7 +2,7 @@
  "version": "1.1",
  "mode": "cash",
  "paper_start": "2026-12-01",
- "latest_brief": "2026-11-23",
+ "latest_brief": "2026-11-24",
  "price_date": "2026-11-24",
  "s3": {
   "sleeves": {
@@ -29,7 +29,7 @@
   "nav": null
  },
  "target": {
-  "for_session": "2026-11-24",
+  "for_session": "2026-11-25",
   "state": "CASH (no swing rule has passed yet)",
   "switched": false,
   "weights": {
@@ -42,13 +42,13 @@
     "ticker": "SGOV",
     "side": "BUY",
     "shares": 99,
-    "est_price": 100.64,
-    "est_value": 9963.36
+    "est_price": 100.66,
+    "est_value": 9965.34
    }
   ],
   "missing": [],
-  "cash_left": 36.64,
-  "priced_at": "2026-11-23"
+  "cash_left": 34.66,
+  "priced_at": "2026-11-24"
  },
  "ledger": [],
  "pending": null,
