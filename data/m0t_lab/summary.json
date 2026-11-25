@@ -2,9 +2,9 @@
  "version": "1.0",
  "verdict": "FAIL",
  "fails": [
-  "book full CAGR 3.79% <= SPY 10.7%",
-  "book 2005-15 CAGR 3.81% <= SPY 7.34%",
-  "book 2016-26 CAGR 3.84% <= SPY 14.27%"
+  "book full CAGR 3.63% <= SPY 10.67%",
+  "book 2005-15 CAGR 3.32% <= SPY 7.34%",
+  "book 2016-26 CAGR 4.02% <= SPY 14.2%"
  ],
  "guard_reproduces_m0": true,
  "baseline_recorded_cagr": 2.94,
@@ -47,31 +47,31 @@
   },
   "book": {
    "full": {
-    "cagr_pct": 3.79,
-    "max_dd_pct": -11.92,
-    "vol_pct": 5.98,
-    "sharpe": 0.65,
-    "calmar": 0.32
+    "cagr_pct": 3.63,
+    "max_dd_pct": -12.3,
+    "vol_pct": 5.92,
+    "sharpe": 0.63,
+    "calmar": 0.3
    },
    "2005-15": {
-    "cagr_pct": 3.81,
-    "max_dd_pct": -11.04,
-    "vol_pct": 5.97,
-    "sharpe": 0.66,
-    "calmar": 0.35
+    "cagr_pct": 3.32,
+    "max_dd_pct": -12.3,
+    "vol_pct": 5.92,
+    "sharpe": 0.58,
+    "calmar": 0.27
    },
    "2016-26": {
-    "cagr_pct": 3.84,
-    "max_dd_pct": -9.64,
-    "vol_pct": 5.98,
-    "sharpe": 0.66,
-    "calmar": 0.4
+    "cagr_pct": 4.02,
+    "max_dd_pct": -9.49,
+    "vol_pct": 5.91,
+    "sharpe": 0.7,
+    "calmar": 0.42
    }
   },
-  "exposure_avg_pct": 36.5,
+  "exposure_avg_pct": 35.3,
   "months_le_-10pct": 0,
   "hwm_-20pct_breached": false,
-  "trades_taken": 382,
+  "trades_taken": 385,
   "exit_mix": {
    "closing-basis stop": {
     "n": 891,
@@ -91,7 +91,7 @@
    },
    "open at end": {
     "n": 3,
-    "mean_R": 0.923
+    "mean_R": 1.798
    }
   },
   "median_hold": 17.0
@@ -99,7 +99,7 @@
  "m0": {
   "trades": {
    "full": {
-    "n": 4449,
+    "n": 4450,
     "win_rate": 32.9,
     "avg_win_R": 1.06,
     "avg_loss_R": -0.59,
@@ -121,11 +121,11 @@
     "max_consec_losses": 12
    },
    "2016-26": {
-    "n": 2496,
+    "n": 2497,
     "win_rate": 32.4,
     "avg_win_R": 1.05,
     "avg_loss_R": -0.62,
-    "expectancy_R": 0.104,
+    "expectancy_R": 0.103,
     "profit_factor": 1.43,
     "worst_R": -3.12,
     "best_R": 12.81,
@@ -134,31 +134,31 @@
   },
   "book": {
    "full": {
-    "cagr_pct": 2.89,
-    "max_dd_pct": -11.59,
-    "vol_pct": 5.12,
-    "sharpe": 0.58,
-    "calmar": 0.25
+    "cagr_pct": 3.05,
+    "max_dd_pct": -9.67,
+    "vol_pct": 4.95,
+    "sharpe": 0.63,
+    "calmar": 0.32
    },
    "2005-15": {
-    "cagr_pct": 2.83,
-    "max_dd_pct": -8.63,
-    "vol_pct": 4.5,
-    "sharpe": 0.64,
-    "calmar": 0.33
+    "cagr_pct": 2.86,
+    "max_dd_pct": -7.76,
+    "vol_pct": 4.39,
+    "sharpe": 0.67,
+    "calmar": 0.37
    },
    "2016-26": {
-    "cagr_pct": 2.99,
-    "max_dd_pct": -8.48,
-    "vol_pct": 5.67,
-    "sharpe": 0.55,
+    "cagr_pct": 3.28,
+    "max_dd_pct": -9.33,
+    "vol_pct": 5.45,
+    "sharpe": 0.62,
     "calmar": 0.35
    }
   },
   "exposure_avg_pct": 34.3,
   "months_le_-10pct": 0,
   "hwm_-20pct_breached": false,
-  "trades_taken": 1227,
+  "trades_taken": 1156,
   "exit_mix": {
    "thesis: sector Weakening/Lagging": {
     "n": 3275,
@@ -169,8 +169,8 @@
     "mean_R": -0.198
    },
    "disaster stop": {
-    "n": 429,
-    "mean_R": 0.226
+    "n": 430,
+    "mean_R": 0.222
    },
    "trend: close below falling trail MA": {
     "n": 195,
@@ -182,7 +182,7 @@
    },
    "open at end": {
     "n": 2,
-    "mean_R": 0.614
+    "mean_R": 1.202
    }
   },
   "median_hold": 1.0
@@ -190,25 +190,25 @@
  "diag_no_rotation_only": {
   "book": {
    "full": {
-    "cagr_pct": 3.61,
-    "max_dd_pct": -10.88,
-    "vol_pct": 4.37,
-    "sharpe": 0.83,
-    "calmar": 0.33
+    "cagr_pct": 3.38,
+    "max_dd_pct": -10.43,
+    "vol_pct": 4.35,
+    "sharpe": 0.79,
+    "calmar": 0.32
    },
    "2005-15": {
-    "cagr_pct": 3.69,
-    "max_dd_pct": -9.35,
-    "vol_pct": 4.2,
-    "sharpe": 0.88,
-    "calmar": 0.39
+    "cagr_pct": 3.15,
+    "max_dd_pct": -9.34,
+    "vol_pct": 4.23,
+    "sharpe": 0.76,
+    "calmar": 0.34
    },
    "2016-26": {
-    "cagr_pct": 3.6,
-    "max_dd_pct": -6.55,
-    "vol_pct": 4.53,
-    "sharpe": 0.8,
-    "calmar": 0.55
+    "cagr_pct": 3.67,
+    "max_dd_pct": -6.54,
+    "vol_pct": 4.45,
+    "sharpe": 0.83,
+    "calmar": 0.56
    }
   },
   "trades": {
@@ -226,29 +226,29 @@
  "diag_no_ladder_only": {
   "book": {
    "full": {
-    "cagr_pct": 3.52,
-    "max_dd_pct": -13.74,
-    "vol_pct": 6.44,
+    "cagr_pct": 3.46,
+    "max_dd_pct": -14.86,
+    "vol_pct": 6.34,
     "sharpe": 0.57,
-    "calmar": 0.26
+    "calmar": 0.23
    },
    "2005-15": {
-    "cagr_pct": 2.85,
-    "max_dd_pct": -8.78,
-    "vol_pct": 5.54,
-    "sharpe": 0.53,
-    "calmar": 0.32
+    "cagr_pct": 2.87,
+    "max_dd_pct": -9.33,
+    "vol_pct": 5.57,
+    "sharpe": 0.54,
+    "calmar": 0.31
    },
    "2016-26": {
-    "cagr_pct": 4.24,
-    "max_dd_pct": -13.74,
-    "vol_pct": 7.22,
+    "cagr_pct": 4.08,
+    "max_dd_pct": -14.86,
+    "vol_pct": 7.03,
     "sharpe": 0.61,
-    "calmar": 0.31
+    "calmar": 0.27
    }
   },
   "trades": {
-   "n": 4449,
+   "n": 4450,
    "win_rate": 32.0,
    "avg_win_R": 1.2,
    "avg_loss_R": -0.6,
@@ -261,9 +261,9 @@
  },
  "spy": {
   "full": {
-   "cagr_pct": 10.7,
+   "cagr_pct": 10.67,
    "max_dd_pct": -55.19,
-   "vol_pct": 19.01,
+   "vol_pct": 19.0,
    "sharpe": 0.63,
    "calmar": 0.19
   },
@@ -275,7 +275,7 @@
    "calmar": 0.13
   },
   "2016-26": {
-   "cagr_pct": 14.27,
+   "cagr_pct": 14.2,
    "max_dd_pct": -33.72,
    "vol_pct": 17.81,
    "sharpe": 0.84,
@@ -283,5 +283,5 @@
   }
  },
  "trials": 97,
- "asof": "2026-11-23"
+ "asof": "2026-11-25"
 }
