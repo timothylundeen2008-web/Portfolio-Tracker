@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-25T13:29:34+00:00",
+  "generated_at": "2026-11-25T23:15:04+00:00",
   "date": "2026-11-25",
   "version": "alerts v1.1.1 (engine layer, 2026-11-13; radar row ignored 2026-11-21)",
   "selftest_ok": true,
@@ -15,18 +15,18 @@
       "key": "LT_DD_10",
       "severity": "alert",
       "state": "hold",
-      "title": "Model book -9.0% from peak \u2014 alert"
+      "title": "Model book -8.7% from peak \u2014 alert"
     },
     {
       "key": "DATA_FAIL",
       "severity": "alert",
       "state": "active",
-      "title": "Data failure: 2 input(s) block decisions"
+      "title": "Data failure: 3 input(s) block decisions"
     }
   ],
   "actions": [
     {
-      "action": "still open",
+      "action": "update",
       "key": "DATA_FAIL",
       "number": 10
     }
