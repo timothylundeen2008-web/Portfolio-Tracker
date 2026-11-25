@@ -1,6 +1,20 @@
 """
-swing_backtest.py  (v1.3 — 2026-11-13)
+swing_backtest.py  (v1.4 — 2026-11-25)
 ──────────────────────────────────────
+v1.4: order SELECTION without look-ahead (independent review 2026-11-25, B2/M1). v1.3 ranked orders
+      that went on to fill ahead of orders that did not (an unfilled order ranked last), ranked fills by
+      risk / FILL price, sized the 30% and cash caps on the fill, and let an unfilled order skip the
+      2-per-sector count. All of that needs the next open. SELECTION = "plan" (default): every order is
+      ranked, sized, capped and counted on its CARD (planned entry and stop) before the open, exactly as a
+      trader places them; a buy-stop that then does not trigger simply books nothing (its planned cash is
+      reserved for the rest of that day's orders). SELECTION = "legacy" reproduces v1.3 (all swing trials
+      97–99 and earlier ran on it). run_portfolio now also returns "placed" (every order placed, by
+      signal date) and "reduced" (streak mode at the end). Orders are sized against the money known
+      at last night's close less every earlier order's planned cost (filled or not); only the fill is
+      clipped to the cash actually there at the open. Optional `limits` gate (-10% month, -20% high). Also in "plan": intraday stops and stop
+      changes made on today's bar settle AFTER today's orders (v1.3 let them free a slot, cash and
+      the streak count before orders placed the night before), and the end-of-data mark on a
+      still-open position no longer counts as a win or loss in the streak.
 v1.3: idle-cash test (fix_status N57). The swing book averages ~60% cash,
       which earned nothing in v1.2. Same trades (M0 + SPY>200d filter, stop B,
       the live configuration); only what the idle cash holds changes:
@@ -94,7 +108,9 @@ import pandas as pd
 
 import swing_desk as sd
 
-VERSION = "1.3"
+VERSION = "1.4"
+INTRADAY_EXITS = ("stop", "disaster stop")   # exit reasons that fill during the session (not decided the night before)
+SELECTION = "plan"          # "plan" (v1.4, no look-ahead) | "legacy" (v1.3 selection, to reproduce old trials)
 
 # ── FROZEN parameters (changing any of these is a new trial; log it) ────────
 START = "2004-01-01"            # data start; first signals need ~320 bars
@@ -578,7 +594,8 @@ def series_stats(eq: pd.Series) -> dict:
 
 def run_portfolio(trades: list, signals_unfilled: list, data: dict, cal: pd.DatetimeIndex,
                   sector_of: dict, start_equity: float = START_EQUITY,
-                  heat_cap_pct: float = HEAT_CAP_PCT, sweep: Optional[dict] = None) -> dict:
+                  heat_cap_pct: float = HEAT_CAP_PCT, sweep: Optional[dict] = None,
+                  limits: Optional[tuple] = None) -> dict:
     """Daily walk. Orders are allocated to slots BEFORE their fill is known:
     an order that does not fill still used its slot that day (no look-ahead
     in selection). Exits at the open and intraday stops on held positions
@@ -586,7 +603,11 @@ def run_portfolio(trades: list, signals_unfilled: list, data: dict, cal: pd.Date
 
     sweep (v1.3, None = CASH0): {"mode", "open", "close", "rate", "ok"}, numpy
     arrays aligned to `cal`. rate = T-bill yield per day (fraction); ok = SPY
-    above its 200-day at that close. Day k uses rate[k-1] and ok[k-1] only."""
+    above its 200-day at that close. Day k uses rate[k-1] and ok[k-1] only.
+
+    limits (v1.4, None = off): (month_pct, hwm_pct), e.g. (-10, -20). No new orders on day k when the
+    account at the k-1 close is at or below month_pct for its month (base = the prior month's last
+    close), or once it has ever closed at or below hwm_pct from its high (sticky: stop and review)."""
     mode = (sweep or {}).get("mode", "CASH0")
     s_open = s_close = s_rate = s_ok = None
     if mode != "CASH0":
@@ -619,7 +640,8 @@ def run_portfolio(trades: list, signals_unfilled: list, data: dict, cal: pd.Date
     closed_r: list = []
     losses = wins = 0
     reduced = False
-    taken = []
+    taken, placed = [], []
+    peak_eq, month_base, halted = start_equity, start_equity, False
     for k, day in enumerate(cal):
         # 0. sweep at the open, decided on yesterday's close only
         carried = cash                                  # cash held overnight (prior close)
@@ -636,34 +658,74 @@ def run_portfolio(trades: list, signals_unfilled: list, data: dict, cal: pd.Date
                 cash += units * px_o * (1 - sw_cost); sweep_cost_paid += units * px_o * sw_cost
                 units, sweep_trades = 0.0, sweep_trades + 1
                 carried = cash
-        # 1. events on held positions (exits/trims at open, stops intraday)
-        for pid in list(pos):
+        # 1. events on held positions (exits/trims at open, stops intraday). In "plan" selection only
+        #    what was decided at last night's close (exits and trims at the open) settles before the
+        #    orders; intraday stops and today's stop changes settle after them (step 2c), because the
+        #    orders were placed before the open and cannot know them.
+        plan_mode = SELECTION == "plan"
+
+        def settle(pid, part):
+            nonlocal cash, losses, wins, reduced
             p = pos[pid]
+            tr_ = p["tr"]
             for t, kind, frac, px, bps in p["events"].get(k, []):
                 if kind == "entry":
+                    continue
+                # late = not known before the open: intraday stops, and the end-of-data valuation mark
+                late = (kind == "exit" and t == tr_.exit_t and tr_.exit_reason in INTRADAY_EXITS) or kind == "mark"
+                if (part == "open" and late) or (part == "late" and not late):
                     continue
                 sh = p["shares0"] * frac
                 cash += sh * px * (1 - bps / 1e4)
                 p["shares"] -= sh
-            for t, s in p["stopchg"].get(k, []):
-                p["stop"] = s
+            if part != "open":
+                for t, s in p["stopchg"].get(k, []):
+                    p["stop"] = s
             if p["shares"] <= 1e-9:
-                tr = p["tr"]
-                closed_r.append(tr.r_net)
-                if tr.r_net < -SCRATCH_R:
+                closed_r.append(tr_.r_net)
+                if plan_mode and tr_.still_open:
+                    del pos[pid]                   # end-of-data valuation mark, not a trade result:
+                    return                         # it must not move the streak count
+                if tr_.r_net < -SCRATCH_R:
                     losses, wins = losses + 1, 0
-                elif tr.r_net > SCRATCH_R:
+                elif tr_.r_net > SCRATCH_R:
                     wins, losses = wins + 1, 0
                 if losses >= STREAK_LOSSES:
                     reduced = True
                 if reduced and wins >= STREAK_RESET_WINS:
                     reduced = False
                 del pos[pid]
+
+        before = list(pos)
+        for pid in before:
+            settle(pid, "open" if plan_mode else "all")
         # 2. new orders, ranked like production (confluence, then tighter stop)
         orders = by_day_orders.get(k, [])
+        if limits is not None and k > 0:
+            mtd = (eq_curve[-1] / month_base - 1) * 100
+            if halted or mtd <= limits[0] + 1e-9:
+                orders = []                              # a swing limit blocks every new order today
+        budget = 0.0
+        if plan_mode:
+            # money known at last night's close: equity less positions still held after the open's exits
+            def _pc(p):
+                x = data[p["tr"].ticker]["close_cal"].iloc[k - 1] if k > 0 else np.nan
+                return float(x) if np.isfinite(x) else p["entry"]
+            budget = equity_prev - sum(p["shares"] * _pc(p) for p in pos.values())
+
+        def card(o):
+            """(planned entry, planned stop) known before the open; stop None if set only at the fill."""
+            obj = o[1]
+            if o[0] == "fill":
+                return obj.stop0 + obj.risk, obj.stop0
+            pe = obj.plan_entry if obj.plan_entry is not None else obj.level
+            return pe, obj.stop
 
         def rank(o):
             obj = o[1]
+            if plan_mode:
+                pe, ps = card(o)
+                return (-obj.conf, (pe - ps) / pe if ps is not None and pe > 0 else 1.0, obj.ticker)
             if o[0] == "fill":
                 return (-obj.conf, obj.risk / obj.entry)
             return (-obj.conf, 1.0)
@@ -674,6 +736,7 @@ def run_portfolio(trades: list, signals_unfilled: list, data: dict, cal: pd.Date
             sec_count[p["sector"]] = sec_count.get(p["sector"], 0) + 1
         held_tk = {p["tr"].ticker for p in pos.values()}
         slots = MAX_POSITIONS - len(pos)
+        entered_today = []
         for kind, obj in orders:
             if slots <= 0:
                 break
@@ -682,20 +745,52 @@ def run_portfolio(trades: list, signals_unfilled: list, data: dict, cal: pd.Date
             if tk in held_tk or sec_count.get(sec, 0) >= MAX_PER_SECTOR:
                 continue
             slots -= 1
-            if kind == "nofill":
-                continue
-            tr = obj
-            risk_pct = (REDUCED_RISK_PCT if reduced else BASE_RISK_PCT) * tr.size_mult
-            rps = tr.risk                                  # planned, as the order is sized
-            shares = math.floor(equity_prev * risk_pct / 100 / rps)
-            shares = min(shares, math.floor(equity_prev * MAX_POSITION_PCT / 100 / tr.entry))
-            bps = COST_BPS[tr.asset]
             liquid = cash
             if units > 0 and np.isfinite(s_open[k]):
                 liquid += units * s_open[k] * (1 - sw_cost)
-            shares = min(shares, math.floor(liquid / (tr.entry * (1 + bps / 1e4))))
-            if shares < 1 or (heat + shares * rps) > equity_prev * heat_cap_pct / 100 + 1e-6:
-                continue
+            pe, ps = card((kind, obj))
+            if plan_mode and ps is not None:
+                # size, cap and count the ORDER on its card, before the open
+                bps = COST_BPS[obj.asset] if kind == "fill" else COST_BPS[data[tk].get("asset", "etf")]
+                rps = pe - ps
+                if not (rps > 0):
+                    continue
+                risk_pct = (REDUCED_RISK_PCT if reduced else BASE_RISK_PCT) * obj.size_mult
+                shares = math.floor(equity_prev * risk_pct / 100 / rps)
+                shares = min(shares, math.floor(equity_prev * MAX_POSITION_PCT / 100 / pe))
+                shares = min(shares, math.floor(max(0.0, budget) / (pe * (1 + bps / 1e4))))
+                if shares < 1 or (heat + shares * rps) > equity_prev * heat_cap_pct / 100 + 1e-6:
+                    continue
+                heat += shares * rps
+                budget -= shares * pe * (1 + bps / 1e4)          # every placed order sets its cost aside
+                held_tk.add(tk)
+                sec_count[sec] = sec_count.get(sec, 0) + 1
+                sig_t = obj.signal_t if kind == "fill" else obj.t
+                placed.append((idx_maps[tk][sig_t], tk, kind, shares))
+                if kind == "nofill":
+                    continue
+                tr = obj
+                # a gap above the buy-stop can make the fill cost more than planned: buy what cash allows
+                shares = min(shares, math.floor(max(0.0, liquid) / (tr.entry * (1 + bps / 1e4))))
+                if shares < 1:
+                    continue
+            else:
+                if kind == "nofill":
+                    if plan_mode:
+                        placed.append((idx_maps[tk][obj.t], tk, kind, 0))
+                    continue
+                tr = obj
+                risk_pct = (REDUCED_RISK_PCT if reduced else BASE_RISK_PCT) * tr.size_mult
+                rps = tr.risk                                  # planned, as the order is sized
+                shares = math.floor(equity_prev * risk_pct / 100 / rps)
+                shares = min(shares, math.floor(equity_prev * MAX_POSITION_PCT / 100 / tr.entry))
+                bps = COST_BPS[tr.asset]
+                shares = min(shares, math.floor(liquid / (tr.entry * (1 + bps / 1e4))))
+                if shares < 1 or (heat + shares * rps) > equity_prev * heat_cap_pct / 100 + 1e-6:
+                    continue
+                if plan_mode:
+                    placed.append((idx_maps[tk][tr.signal_t], tk, kind, shares))
+            rps = tr.risk
             need = shares * tr.entry * (1 + bps / 1e4)
             if need > cash + 1e-9 and units > 0:      # fund the entry from the sweep, at the open
                 sell = min(units, (need - cash) / (s_open[k] * (1 - sw_cost)))
@@ -704,7 +799,8 @@ def run_portfolio(trades: list, signals_unfilled: list, data: dict, cal: pd.Date
                 carried = min(carried, cash)
             cash -= need
             carried = min(carried, cash)
-            heat += shares * rps
+            if not (plan_mode and ps is not None):
+                heat += shares * rps
             ev, sc = {}, {}
             for e in tr.events:
                 kk = cal_t(tk, e[0])
@@ -718,9 +814,14 @@ def run_portfolio(trades: list, signals_unfilled: list, data: dict, cal: pd.Date
             pos[pid] = {"tr": tr, "shares0": shares, "shares": shares, "entry": tr.entry,
                         "stop": tr.stop0, "sector": sec, "events": ev, "stopchg": sc}
             taken.append((tr, shares))
-            held_tk.add(tk)
-            sec_count[sec] = sec_count.get(sec, 0) + 1
-            # same-day events on the new position (stop on the entry bar)
+            if not (plan_mode and ps is not None):
+                held_tk.add(tk)
+                sec_count[sec] = sec_count.get(sec, 0) + 1
+            # same-day events on the new position (stop on the entry bar). In "plan" they settle after
+            # all of today's orders (step 2c): a later order cannot know about them.
+            if plan_mode and ps is not None:
+                entered_today.append(pid)
+                continue
             p = pos[pid]
             for t, kind2, frac, px, b2 in ev.get(k, []):
                 if kind2 == "entry":
@@ -728,7 +829,10 @@ def run_portfolio(trades: list, signals_unfilled: list, data: dict, cal: pd.Date
                 sh = shares * frac
                 cash += sh * px * (1 - b2 / 1e4)
                 p["shares"] -= sh
-            if p["shares"] <= 1e-9:
+            if p["shares"] <= 1e-9 and plan_mode and tr.still_open:
+                closed_r.append(tr.r_net)                 # entered on the last bar: a mark, not a result
+                del pos[pid]
+            elif p["shares"] <= 1e-9:
                 closed_r.append(tr.r_net)
                 if tr.r_net < -SCRATCH_R:
                     losses, wins = losses + 1, 0
@@ -737,6 +841,14 @@ def run_portfolio(trades: list, signals_unfilled: list, data: dict, cal: pd.Date
                 if losses >= STREAK_LOSSES:
                     reduced = True
                 del pos[pid]
+        # 2c. ("plan") intraday stops and stop changes on positions held before today's orders
+        if plan_mode:
+            for pid in before:
+                if pid in pos:
+                    settle(pid, "late")
+            for pid in entered_today:
+                if pid in pos:
+                    settle(pid, "all")
         # 2b. sweep idle cash carried from last night (not today's exit proceeds)
         if want_in and np.isfinite(s_open[k]):
             buy = min(cash, carried)
@@ -763,12 +875,19 @@ def run_portfolio(trades: list, signals_unfilled: list, data: dict, cal: pd.Date
         heat_curve.append(sum(p["shares"] * max(0.0, p["entry"] - p["stop"]) for p in pos.values()) / eq * 100
                           if eq > 0 else 0.0)
         equity_prev = eq
+        if limits is not None:
+            if k > 0 and day.to_period("M") != cal[k - 1].to_period("M"):
+                month_base = eq_curve[-2]
+            peak_eq = max(peak_eq, eq)
+            if (eq / peak_eq - 1) * 100 <= limits[1] + 1e-9:
+                halted = True
     eq_s = pd.Series(eq_curve, index=cal)
     monthly = eq_s.resample("ME").last().pct_change().dropna()
     dd = eq_s / eq_s.cummax() - 1
     return {"equity": eq_s, "exposure_avg_pct": round(float(np.mean(expo)) * 100, 1),
             "heat_max_pct": round(float(np.max(heat_curve)) if heat_curve else 0.0, 2),
-            "trades_taken": len(taken), "taken": taken,
+            "trades_taken": len(taken), "taken": taken, "placed": placed, "reduced": reduced,
+            "selection": SELECTION,
             "months_le_-10pct": int((monthly <= -0.10).sum()),
             "hwm_-20pct_breached": bool((dd <= -0.20).any()),
             "stats": series_stats(eq_s), "sweep_mode": mode, "sweep_value": pd.Series(sweep_val, index=cal),

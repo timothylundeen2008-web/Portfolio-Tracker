@@ -48,10 +48,12 @@ jobs:
             echo "No change."
           else
             git commit -m "m0t paper: $(date -u +%Y-%m-%dT%H:%MZ)"
+            pushed=0
             for i in 1 2 3; do
-              git pull --rebase --autostash origin main && git push && break
+              if git pull --rebase --autostash origin main && git push; then pushed=1; break; fi
               sleep 5
             done
+            if [ "$pushed" != 1 ]; then echo "::error::push failed after 3 attempts; results were NOT saved"; exit 1; fi
           fi
       - name: Publish to the run page
         run: |
