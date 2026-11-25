@@ -12,6 +12,9 @@ v1.1 (independent review, before any real run; recorded in the pre-registration)
   * the size file's block must be titled value-weighted.
 v1.1.1 (plumbing only; first real run aborted on a download timeout): each source is fetched with up to
   4 attempts, a 180 s read timeout and a growing pause, and a failure names the source.
+v1.1.2 (plumbing only): FRED's keyless CSV link timed out 4 of 4 times from Actions. DGS10 now comes
+  from the official FRED API with the repository secret FRED_API_KEY (as daily_brief.py does); the
+  key is never printed (every message is scrubbed). Without a key it falls back to the CSV link.
 
 LONG-TERM book only. Out-of-sample replay, 1963–1999, pre-registered in claude/oos_lab_2026-11-25.md
 (strategy_plan_2026-11-24.md item 2; Matt 2026-11-25: "retest XM as one fixed in advance candidate",
@@ -64,7 +67,7 @@ import hedge_lab as hl
 import offense_lab as ol
 import xm_lab as xm
 
-VERSION = "1.1.1"
+VERSION = "1.1.2"
 OUT_DIR, LOG_DIR = Path("data/oos_lab"), Path("logs/oos_lab")
 TRIALS_BEFORE, TRIALS_HERE = 43, 4
 EVAL_START, EVAL_END = "1963-01-02", "1999-12-31"
@@ -437,19 +440,48 @@ def http_get(url: str) -> bytes:
         return r.read()
 
 
-def fetch_source(get, key: str, tries: int = 4, pause: float = 10.0) -> bytes:
-    """One source with retries; the last error is re-raised naming the source."""
+FRED_API = "https://api.stlouisfed.org/fred/series/observations"
+
+
+def _scrub(text: str, secret: str) -> str:
+    return text.replace(secret, "***") if secret else text
+
+
+def fetch_source(get, key: str, tries: int = 4, pause: float = 10.0, url: Optional[str] = None,
+                 label: Optional[str] = None, secret: str = "") -> bytes:
+    """One source with retries; the last error is re-raised naming the source. `secret` is scrubbed
+    from every message (the FRED key travels in the URL)."""
     import time
+    url = url or URLS[key]
+    label = label or url
     last = None
     for i in range(tries):
         try:
-            return get(URLS[key])
+            return get(url)
         except Exception as e:                 # timeouts, resets, HTTP errors
             last = e
-            print(f"[oos_lab] {key}: attempt {i + 1} of {tries} failed ({type(e).__name__}: {e})")
+            print(_scrub(f"[oos_lab] {key}: attempt {i + 1} of {tries} failed ({type(e).__name__}: {e})", secret))
             if i < tries - 1 and pause:
                 time.sleep(pause * (i + 1))
-    raise RuntimeError(f"{key} ({URLS[key]}) failed {tries} times: {type(last).__name__}: {last}")
+    raise RuntimeError(_scrub(f"{key} ({label}) failed {tries} times: {type(last).__name__}: {last}", secret))
+
+
+def load_dgs10(get, pause: float, fred_key: str) -> pd.Series:
+    """DGS10 daily from the FRED API when a key is available, else the keyless CSV link."""
+    if fred_key:
+        url = f"{FRED_API}?series_id=DGS10&observation_start=1962-01-01&file_type=json&api_key={fred_key}"
+        raw = fetch_source(get, "dgs10", pause=pause, url=url, label=f"{FRED_API}?series_id=DGS10 (key hidden)",
+                           secret=fred_key)
+        try:
+            obs = json.loads(raw.decode("utf-8"))["observations"]
+        except Exception as e:
+            raise RuntimeError(_scrub(f"dgs10: FRED API reply not readable ({type(e).__name__}: {e})", fred_key))
+        return pd.Series(pd.to_numeric([o["value"] for o in obs], errors="coerce"),
+                         index=pd.to_datetime([o["date"] for o in obs])).dropna()
+    dg = pd.read_csv(io.BytesIO(fetch_source(get, "dgs10", pause=pause)))
+    dg.columns = [c.strip().upper() for c in dg.columns]
+    dcol = [c for c in dg.columns if "DATE" in c][0]
+    return pd.Series(pd.to_numeric(dg["DGS10"], errors="coerce").to_numpy(), index=pd.to_datetime(dg[dcol])).dropna()
 
 
 def unzip_text(blob: bytes) -> str:
@@ -458,23 +490,23 @@ def unzip_text(blob: bytes) -> str:
         return z.read(name).decode("latin-1")
 
 
-def load_all(get=http_get, pause: float = 10.0) -> tuple:
+def load_all(get=http_get, pause: float = 10.0, fred_key: str = "") -> tuple:
     ff3 = parse_french(unzip_text(fetch_source(get, "ff3", pause=pause)), ("Mkt-RF", "RF"))
     size = parse_french(unzip_text(fetch_source(get, "size", pause=pause)), ("Lo 30",), title="Value Weight")
-    dg = pd.read_csv(io.BytesIO(fetch_source(get, "dgs10", pause=pause)))
-    dg.columns = [c.strip().upper() for c in dg.columns]
-    dcol = [c for c in dg.columns if "DATE" in c][0]
-    dgs10 = pd.Series(pd.to_numeric(dg["DGS10"], errors="coerce").to_numpy(), index=pd.to_datetime(dg[dcol])).dropna()
+    dgs10 = load_dgs10(get, pause, fred_key)
     gd = pd.read_csv(io.BytesIO(fetch_source(get, "gold", pause=pause)))
     gd.columns = [c.strip().lower() for c in gd.columns]
     gold = pd.Series(pd.to_numeric(gd["price"], errors="coerce").to_numpy(), index=pd.to_datetime(gd["date"].astype(str).str[:7])).dropna()
     return ff3, size, dgs10, gold
 
 
-def main(get=http_get, yahoo_fetch=None, pause: float = 10.0) -> int:
+def main(get=http_get, yahoo_fetch=None, pause: float = 10.0, fred_key: Optional[str] = None) -> int:
+    import os
     stamp = date.today().isoformat()
+    fred_key = os.environ.get("FRED_API_KEY", "").strip() if fred_key is None else fred_key
+    print(f"[oos_lab] DGS10 source: {'FRED API (key set)' if fred_key else 'FRED CSV link (no FRED_API_KEY)'}")
     try:
-        ff3, size, dgs10, gold = load_all(get, pause)
+        ff3, size, dgs10, gold = load_all(get, pause, fred_key)
     except Exception as e:
         print(f"[oos_lab] DATA FAILURE: {type(e).__name__}: {e}; nothing written.")
         return 1
@@ -715,21 +747,21 @@ def selftest() -> dict:
         os.chdir(tmp)
         try:
             with contextlib.redirect_stdout(io.StringIO()):
-                rc_ok = main(get=lambda u: texts[u], yahoo_fetch=lambda t, start=None: {})
-                rc_bad = main(get=lambda u: (_ for _ in ()).throw(OSError("blocked")), pause=0)
+                rc_ok = main(get=lambda u: texts[u], yahoo_fetch=lambda t, start=None: {}, fred_key="")
+                rc_bad = main(get=lambda u: (_ for _ in ()).throw(OSError("blocked")), pause=0, fred_key="")
                 short = dict(texts); short[URLS["dgs10"]] = b"observation_date,DGS10\n1975-01-02,7.0\n"
                 os.rename("data", "data_ok")
-                rc_short = main(get=lambda u: short[u], yahoo_fetch=lambda t, start=None: {})
+                rc_short = main(get=lambda u: short[u], yahoo_fetch=lambda t, start=None: {}, fred_key="")
                 g2 = dict(texts)
                 g2[URLS["gold"]] = ("Date,Price\n" + "\n".join(f"{i.strftime('%Y-%m')},{v:.4f}" for i, v in gold.items()
                                                                if not ("1980-01" <= i.strftime('%Y-%m') <= "1980-10"))).encode()
-                rc_gold = main(get=lambda u: g2[u], yahoo_fetch=lambda t, start=None: {})
+                rc_gold = main(get=lambda u: g2[u], yahoo_fetch=lambda t, start=None: {}, fred_key="")
                 d2 = dict(texts)
                 d2[URLS["dgs10"]] = ("observation_date,DGS10\n" + "\n".join(f"{i.date()},{v:.2f}" for i, v in dgs10.items()
                                                                          if i < pd.Timestamp("1985-01-01"))).encode()
-                rc_d2 = main(get=lambda u: d2[u], yahoo_fetch=lambda t, start=None: {})
+                rc_d2 = main(get=lambda u: d2[u], yahoo_fetch=lambda t, start=None: {}, fred_key="")
                 f3 = dict(texts); f3[URLS["ff3"]] = _zip(_french_text(ff3[ff3.index < "1990-07-01"]))
-                rc_f3 = main(get=lambda u: f3[u], yahoo_fetch=lambda t, start=None: {})
+                rc_f3 = main(get=lambda u: f3[u], yahoo_fetch=lambda t, start=None: {}, fred_key="")
             # a source that times out twice then answers must still give a full run
             flaky = {"n": 0}
 
@@ -741,16 +773,44 @@ def selftest() -> dict:
             os.rename("data_ok", "data_keep")
             buf = io.StringIO()
             with contextlib.redirect_stdout(buf):
-                rc_flaky = main(get=get_flaky, yahoo_fetch=lambda t, start=None: {}, pause=0)
+                rc_flaky = main(get=get_flaky, yahoo_fetch=lambda t, start=None: {}, pause=0, fred_key="")
             if rc_flaky != 0 or not (tmp / "data" / "oos_lab" / "summary.json").exists() or "gold: attempt 2 of 4" not in buf.getvalue():
                 f.append("fetch_source: two timeouts then success must still run (and log the attempts)")
             import shutil
             shutil.rmtree(tmp / "data")
             os.rename("data_keep", "data_ok")
+            # FRED API path: JSON parsed ('.' = missing); the key never appears in any output
+            secret = "abc123SECRETkey"
+            api_json = json.dumps({"observations": [{"date": str(i.date()), "value": f"{v:.2f}"} for i, v in dgs10.items()]
+                                   + [{"date": "2000-01-03", "value": "."}]}).encode()
+
+            def get_api(u):
+                if u.startswith(FRED_API):
+                    if "api_key=" + secret not in u or "series_id=DGS10" not in u:
+                        raise ValueError("bad API url")
+                    return api_json
+                if u == URLS["dgs10"]:
+                    raise AssertionError("CSV link used although a key was given")
+                return texts[u]
+            os.rename("data_ok", "data_keep")
+            b3 = io.StringIO()
+            with contextlib.redirect_stdout(b3):
+                rc_api = main(get=get_api, yahoo_fetch=lambda t, start=None: {}, pause=0, fred_key=secret)
+            if rc_api != 0 or not (tmp / "data" / "oos_lab" / "summary.json").exists():
+                f.append(f"FRED API path: a clean run must write outputs ({b3.getvalue()[-300:]})")
+            shutil.rmtree(tmp / "data", ignore_errors=True)
+            os.rename("data_keep", "data_ok")
+            b4 = io.StringIO()
+            with contextlib.redirect_stdout(b4):
+                rc_api_dead = main(get=lambda u: (_ for _ in ()).throw(TimeoutError(f"timed out at {u}")) if u.startswith(FRED_API) else texts[u],
+                                   yahoo_fetch=lambda t, start=None: {}, pause=0, fred_key=secret)
+            outs = b3.getvalue() + b4.getvalue() + "".join(p_.read_text() for p_ in tmp.rglob("*") if p_.is_file() and p_.suffix in (".md", ".json", ".csv"))
+            if rc_api_dead != 1 or secret in outs or "key hidden" not in b4.getvalue():
+                f.append("FRED API: a failure must stop the run, name the source and never print the key")
             # a source that never answers stops the run, names the source, writes nothing
             buf2 = io.StringIO()
             with contextlib.redirect_stdout(buf2):
-                rc_dead = main(get=lambda u: (_ for _ in ()).throw(TimeoutError("timed out")) if u == URLS["size"] else texts[u], pause=0)
+                rc_dead = main(get=lambda u: (_ for _ in ()).throw(TimeoutError("timed out")) if u == URLS["size"] else texts[u], pause=0, fred_key="")
             if rc_dead != 1 or "size (" not in buf2.getvalue() or (tmp / "data" / "oos_lab").exists():
                 f.append("fetch_source: a dead source must stop the run and be named")
             if rc_ok != 0 or not (tmp / "data_ok" / "oos_lab" / "summary.json").exists():

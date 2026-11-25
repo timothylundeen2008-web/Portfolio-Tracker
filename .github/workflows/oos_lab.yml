@@ -32,6 +32,8 @@ jobs:
       - name: Selftest (offline)
         run: python oos_lab.py --selftest
       - name: Run the OOS lab
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         run: python oos_lab.py
       - name: Commit results
         run: |
