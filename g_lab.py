@@ -25,6 +25,12 @@ H checks for missing dates and the end date; strict JSON; report notes (no credi
 measured from the previous close, so L differs from offense_lab's tables by one day); new tests for the
 OUT cooldown and the weight lag.
 
+v1.0.2 (first real run stopped on a data check; nothing written): L's coverage rule now separates a
+sleeve that did not EXIST yet (PDBC's commodity chain starts 2006, gold 2000-08: known, labelled, carried
+by every O11 result alike, reported) from a HOLE in data that exists (> 3 sessions: abort). Every fund the
+books hold today must download (3 attempts); a missing one (e.g. DBMF, which would otherwise fall back
+silently to its proxy) aborts.
+
 Run:  python g_lab.py            (Actions; FRED_API_KEY secret)
       python g_lab.py --selftest (offline)
 """
@@ -45,7 +51,7 @@ import hedge_lab as hl
 import offense_lab as ol
 import oos_lab as oos
 
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 OUT_DIR, LOG_DIR = Path("data/g_lab"), Path("logs/g_lab")
 TRIALS_BEFORE, TRIALS_HERE = 47, 3
 BAND_DECISION, BAND_NEIGHBOURS = 3.0, (2.0, 4.0)
@@ -61,7 +67,8 @@ def h_book(state: str) -> dict:
     """Hold-out books: OUT (fast exit) holds Balanced, as O11 does (out = "BAL")."""
     return dict(H_BOOKS["DEF" if state == "DEF" else ("OFF" if state == "OFF" else "BAL")])
 BAR = {"h_cagr_gain": 0.25, "h_dd_tol": 2.0, "guard_cagr_tol": 0.25, "max_dd": -20.0, "stress_tol": 3.0}
-L_COVER_FROM = "2000-09-01"      # gold (GC=F) data starts 2000-08; offense_lab treats the earlier gap as known
+MAX_HOLE = 3                     # sessions: a longer run of missing returns in a sleeve that exists aborts L
+FETCH_TRIES = 3
 LEN_BUCKETS = [0, 20, 40, 80, 10 ** 6]
 LEN_LABELS = ["≤20", "21–40", "41–80", ">80"]
 
@@ -219,12 +226,59 @@ def run_L(data: dict, balanced: dict, bands: tuple) -> dict:
     for b in (0.0, BAND_DECISION, *BAND_NEIGHBOURS):
         st = states_g(data["levels"], data["rets"], b, credit=True)
         sim = hl.simulate(days, data["rets"], ol.weights_fn(st, cand, balanced), None, breaker=False, cost_bps=ol.COST_BPS)
-        short = sim.index[(sim["coverage"] < 1 - 1e-12) & (sim.index >= pd.Timestamp(L_COVER_FROM))]
-        if len(short):
-            raise oos.DataFailure(f"L: a held sleeve had no return on {len(short)} days (first {short[0].date()}) in G{b:g}")
         res[f"G{b:g}"] = {"nav": sim["nav"], "st": st}
     end = str(data["cal"][-1].date())
-    return {"res": res, "mkt": mk, "a": ol.EVAL_START, "b": end, "windows": ol.STRESS}
+    return {"res": res, "mkt": mk, "a": ol.EVAL_START, "b": end, "windows": ol.STRESS,
+            "not_yet": not_yet_existing(data["rets"], book_sleeves(balanced), days[0])}
+
+
+def book_sleeves(balanced: dict) -> dict:
+    """Every sleeve any 2000–26 O11 book can hold, with its largest weight."""
+    w: dict = {}
+    for book in (balanced, ol.DEFENSE, ol.OFFENSE_1X):
+        for k, v in book.items():
+            w[k] = max(w.get(k, 0.0), float(v))
+    return w
+
+
+def not_yet_existing(rets: pd.DataFrame, sleeves: dict, start) -> list:
+    """Sleeves whose whole proxy chain starts after `start` (they earn 0% until then, as in offense_lab)."""
+    out = []
+    for k, w in sleeves.items():
+        s = rets[k] if k in rets else pd.Series(dtype=float)
+        first = s.first_valid_index()
+        if first is None or first > pd.Timestamp(start) + pd.Timedelta(days=7):
+            out.append({"sleeve": k, "weight": w, "from": None if first is None else str(first.date())})
+    return out
+
+
+def check_L(data: dict, balanced: dict, closes: dict) -> list:
+    """Abort reasons for the 2000–26 window: a fund the books hold today did not download, or a sleeve that
+    already exists has a run of more than MAX_HOLE sessions with no return."""
+    bad = []
+    sleeves = book_sleeves(balanced)
+    chains = ol.CHAINS
+    natives = sorted({chains.get(k, [k])[0] for k in sleeves} - {"^IRX"})
+    miss = [t for t in natives if t not in closes]
+    if miss:
+        bad.append(f"2000–26 funds held today did not download: {', '.join(miss)} (a proxy would stand in silently)")
+    rets = data["rets"]
+    lo = pd.Timestamp(ol.EVAL_START) - pd.Timedelta(days=10)
+    for k in sleeves:
+        if k not in rets:
+            bad.append(f"2000–26 sleeve {k} has no return series")
+            continue
+        s = rets[k][rets.index >= lo]
+        first = s.first_valid_index()
+        if first is None:
+            bad.append(f"2000–26 sleeve {k} has no data at all")
+            continue
+        na = s[s.index >= first].isna()
+        if na.any():
+            run = na.groupby((~na).cumsum()).sum().max()
+            if run > MAX_HOLE:
+                bad.append(f"2000–26 sleeve {k} is missing {int(run)} sessions in a row after its data starts ({str(first.date())})")
+    return bad
 
 
 # ── bars ────────────────────────────────────────────────────────────────────
@@ -295,7 +349,8 @@ def analyse(H: dict, R: dict, L: dict) -> dict:
         verdict = "FAIL"
     else:
         verdict = "PASS (stable)" if stable else "PASS (not stable)"
-    out.update({"verdict": verdict, "fails": fails, "neighbours": nb, "stable": stable, "guards_exact": guards_exact})
+    out.update({"verdict": verdict, "fails": fails, "neighbours": nb, "stable": stable, "guards_exact": guards_exact,
+                "not_yet": L.get("not_yet", [])})
     return out
 
 
@@ -318,6 +373,9 @@ def render(a: dict, stamp: str) -> str:
          "- Notes: H and R have no credit series, so O11's 50-day exit there is unconfirmed (as in the OOS lab). "
          "Every window is measured from the previous close, so L's figures differ from offense_lab's tables by one day's return; "
          "G and O11 are measured the same way."]
+    if a.get("not_yet"):
+        L.append("- 2000–26 sleeves that did not exist yet (0% until then, identical for O11 and every G; labelled as in offense_lab): " +
+                 ", ".join(f"{x['sleeve']} {x['weight']:g}% from {x['from'] or 'never'}" for x in a["not_yet"]))
     names = {"H": f"H — hold-out {H_START[:4]}–{H_END[:4]} (decides)", "R": "R — 1963–99 (guard)", "L": "L — 2000–26 (guard, live bar)"}
     for x in ("H", "R", "L"):
         w = a["windows"][x]
@@ -367,6 +425,7 @@ def write_outputs(a: dict, H: dict, R: dict, L: dict, stamp: str, out_dir: Path 
     md = render(a, stamp)
     js = {"version": VERSION, "asof": stamp, "verdict": a["verdict"], "fails": a["fails"], "neighbours": a["neighbours"],
           "stable": a["stable"], "guards_exact": a["guards_exact"], "trials": TRIALS_BEFORE + TRIALS_HERE,
+          "not_yet_existing_2000_26": a.get("not_yet", []),
           "windows": {x: {"guard_gap": w["guard_gap"], "share": w["share"],
                           "judge": {k: {kk: vv for kk, vv in v.items() if kk != "years"} for k, v in w["judge"].items()},
                           "spells": {k: v.to_dict(orient="records") for k, v in w["spells"].items()}}
@@ -416,11 +475,23 @@ def main(get=oos.http_get, yahoo_fetch=None, balanced: Optional[dict] = None, pa
     d = oos.build(ff3, size, dgs10, gold)
     bad += oos.check_returns(d)
     tickers = sorted(set(hl.all_tickers()) | set(ol.EXTRA_TICKERS))
-    try:
-        closes = (yahoo_fetch or hl.yf_fetch)(tickers, start=ol.HISTORY_START)
-    except Exception as e:
-        bad.append(f"Yahoo fetch failed ({type(e).__name__})")
-        closes = {}
+    fetch = yahoo_fetch or hl.yf_fetch
+    closes: dict = {}
+    for attempt in range(FETCH_TRIES):
+        want = [t for t in tickers if t not in closes]
+        if not want:
+            break
+        try:
+            got = fetch(want, start=ol.HISTORY_START)
+            closes.update({k: v for k, v in got.items() if v is not None and len(v)})
+        except Exception as e:
+            print(f"[g_lab] Yahoo attempt {attempt + 1}: {type(e).__name__}: {e}")
+        left = [t for t in tickers if t not in closes]
+        if left and attempt < FETCH_TRIES - 1:
+            print(f"[g_lab] Yahoo attempt {attempt + 1}: {len(left)} tickers missing ({', '.join(left[:8])}); retrying")
+            if pause:
+                import time
+                time.sleep(pause * (attempt + 1))
     missing = [t for t in ("SPY", "QQQ", *ol.SECTORS9, "^IRX", *ol.CREDIT_PAIR) if t not in closes]
     if missing:
         bad.append(f"2000–26 signal inputs missing: {', '.join(missing)}")
@@ -431,10 +502,15 @@ def main(get=oos.http_get, yahoo_fetch=None, balanced: Optional[dict] = None, pa
         import regime_classifier as rc
         balanced = {k: float(v) for k, v in rc.target_weights(hl.REGIME, gate=False).items()}
     bands = (0.0, BAND_DECISION, *BAND_NEIGHBOURS)
+    ldata = ol.build_data(closes)
+    bad_l = check_L(ldata, balanced, closes)
+    if bad_l:
+        print("[g_lab] DATA FAILURE: " + "; ".join(bad_l) + "; nothing written.")
+        return 1
     try:
         H = run_H(ff3, bands)
         R = run_R(d, bands)
-        L = run_L(ol.build_data(closes), balanced, bands)
+        L = run_L(ldata, balanced, bands)
     except oos.DataFailure as e:
         print(f"[g_lab] DATA FAILURE: {e}; nothing written.")
         return 1
@@ -586,7 +662,12 @@ def selftest() -> dict:
              oos.URLS["dgs10"]: ("observation_date,DGS10\n" + "\n".join(f"{i.date()},{v:.2f}" for i, v in dgs10.items())).encode(),
              oos.URLS["gold"]: ("Date,Price\n" + "\n".join(f"{i.strftime('%Y-%m')},{v:.4f}" for i, v in gold.items())).encode()}
     syn = ol._synthetic()
-    bal = {"SPY": 50.0, "AGG": 30.0, "SGOV": 20.0}
+    syn["AGG"], syn["TLT"], syn["GLD"] = syn["VBMFX"], syn["VUSTX"], syn["GC=F"]
+    syn["SGOV"] = pd.Series(100 * np.exp(np.cumsum(np.full(len(syn["SPY"]), 0.0001))), index=syn["SPY"].index)
+    late = syn["DBC"].copy()
+    syn["PDBC"] = late[late.index >= "2006-02-06"]                    # a sleeve that did not exist before 2006
+    syn["DBC"] = late[late.index >= "2006-02-06"]
+    bal = {"SPY": 45.0, "AGG": 30.0, "SGOV": 20.0, "PDBC": 5.0}
     tmp = Path(tempfile.mkdtemp())
     cwd = os.getcwd()
     try:
@@ -606,6 +687,9 @@ def selftest() -> dict:
             h = js["windows"]["H"]["judge"]
             if h["G3"]["full"]["cagr_pct"] == h["O11"]["full"]["cagr_pct"]:
                 f.append("fixture: G3 should differ from O11 in H")
+            ny = {x["sleeve"]: x["from"] for x in js.get("not_yet_existing_2000_26", [])}
+            if ny.get("PDBC") != "2006-02-07" or "PDBC 5% from 2006-02-07" not in (tmp / "logs" / "g_lab" / "latest.md").read_text():
+                f.append(f"a sleeve that did not exist yet must be allowed and reported ({ny})")
         import shutil
         shutil.rmtree(tmp / "data", ignore_errors=True)
         with contextlib.redirect_stdout(io.StringIO()):
@@ -616,12 +700,21 @@ def selftest() -> dict:
             rc_n = main(get=lambda u: (_ for _ in ()).throw(TimeoutError("timed out")), balanced=bal, pause=0, fred_key="")
             rc_z = main(get=lambda u: texts[u], yahoo_fetch=lambda t, start=None: dict(syn), balanced={"SPY": 50.0, "ZZZ": 50.0},
                         pause=0, fred_key="")
+            no_dbmf = {k: v for k, v in syn.items() if k != "SGOV"}           # a held native fails to download
+            rc_dl = main(get=lambda u: texts[u], yahoo_fetch=lambda t, start=None: {k: v for k, v in no_dbmf.items() if k in t},
+                         balanced=bal, pause=0, fred_key="")
+            holey = dict(syn)
+            a_ = holey["VBMFX"]; holey["AGG"] = a_.drop(a_.index[2000:2006])     # 6 sessions missing in a sleeve that exists
+            holey["VBMFX"] = holey["AGG"]
+            rc_hole = main(get=lambda u: texts[u], yahoo_fetch=lambda t, start=None: {k: v for k, v in holey.items() if k in t},
+                           balanced=bal, pause=0, fred_key="")
             hole = dict(texts)
             hole[oos.URLS["ff3"]] = oos._zip(oos._french_text(ff3_long[(ff3_long.index < "1940-01-01") | (ff3_long.index > "1940-03-31")]))
             rc_g = main(get=lambda u: hole[u], yahoo_fetch=lambda t, start=None: dict(syn), balanced=bal, pause=0, fred_key="")
-        if rc_y != 1 or rc_h != 1 or rc_n != 1 or rc_z != 1 or rc_g != 1 or (tmp / "data" / "g_lab").exists():
-            f.append(f"main: missing Yahoo input / short French history / dead source / dead Balanced sleeve / missing dates "
-                     f"must stop with nothing written ({rc_y}, {rc_h}, {rc_n}, {rc_z}, {rc_g})")
+        if rc_y != 1 or rc_h != 1 or rc_n != 1 or rc_z != 1 or rc_g != 1 or rc_dl != 1 or rc_hole != 1 or (tmp / "data" / "g_lab").exists():
+            f.append(f"main: missing Yahoo input / short French history / dead source / dead Balanced sleeve / missing dates / "
+                     f"held fund not downloaded / hole in data must stop with nothing written "
+                     f"({rc_y}, {rc_h}, {rc_n}, {rc_z}, {rc_g}, {rc_dl}, {rc_hole})")
     except Exception as e:
         import traceback
         f.append(f"pipeline crashed: {type(e).__name__}: {e} {traceback.format_exc()[-600:]}")
