@@ -1,6 +1,8 @@
 """
-swing_backtest.py  (v1.4 — 2026-11-25)
+swing_backtest.py  (v1.4.1 — 2026-11-25)
 ──────────────────────────────────────
+v1.4.1: optional `rank_frac` on a trade or signal overrides the stop share in plan-mode ranking (cap_lab:
+a position held in a leveraged twin ranks as its underlying would). Nothing else sets it: no other path changes.
 v1.4: order SELECTION without look-ahead (independent review 2026-11-25, B2/M1). v1.3 ranked orders
       that went on to fill ahead of orders that did not (an unfilled order ranked last), ranked fills by
       risk / FILL price, sized the 30% and cash caps on the fill, and let an unfilled order skip the
@@ -108,7 +110,7 @@ import pandas as pd
 
 import swing_desk as sd
 
-VERSION = "1.4"
+VERSION = "1.4.1"
 INTRADAY_EXITS = ("stop", "disaster stop")   # exit reasons that fill during the session (not decided the night before)
 SELECTION = "plan"          # "plan" (v1.4, no look-ahead) | "legacy" (v1.3 selection, to reproduce old trials)
 
@@ -725,7 +727,10 @@ def run_portfolio(trades: list, signals_unfilled: list, data: dict, cal: pd.Date
             obj = o[1]
             if plan_mode:
                 pe, ps = card(o)
-                return (-obj.conf, (pe - ps) / pe if ps is not None and pe > 0 else 1.0, obj.ticker)
+                rf = getattr(obj, "rank_frac", None)
+                if rf is None:
+                    rf = (pe - ps) / pe if ps is not None and pe > 0 else 1.0
+                return (-obj.conf, rf, obj.ticker)
             if o[0] == "fill":
                 return (-obj.conf, obj.risk / obj.entry)
             return (-obj.conf, 1.0)
