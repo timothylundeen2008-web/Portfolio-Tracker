@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-26T04:23:50+00:00",
-  "date": "2026-11-25",
+  "generated_at": "2026-11-26T05:28:59+00:00",
+  "date": "2026-11-26",
   "version": "alerts v1.1.1 (engine layer, 2026-11-13; radar row ignored 2026-11-21)",
   "selftest_ok": true,
   "families_read": [
@@ -19,12 +19,6 @@
       "title": "Model book -8.7% from peak \u2014 alert"
     }
   ],
-  "actions": [
-    {
-      "action": "close",
-      "key": "DATA_FAIL",
-      "number": 10
-    }
-  ],
+  "actions": [],
   "error": null
 }
