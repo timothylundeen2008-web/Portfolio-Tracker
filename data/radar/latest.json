@@ -1,6 +1,6 @@
 {
- "asof": "2026-11-24",
- "scan": false,
+ "asof": "2026-11-25",
+ "scan": true,
  "pulse": [],
  "leaders": [
   "CIBR",
@@ -13,14 +13,36 @@
   "USO",
   "UUP",
   "XBI",
+  "XLB",
   "XLE",
   "XLF",
   "XLP",
   "XLV",
   "XRT"
  ],
- "flags": [],
+ "flags": [
+  {
+   "ticker": "RSP",
+   "kind": "new_leader"
+  },
+  {
+   "ticker": "USMV",
+   "kind": "new_leader"
+  },
+  {
+   "ticker": "XBI",
+   "kind": "new_leader"
+  },
+  {
+   "ticker": "XLB",
+   "kind": "new_leader"
+  },
+  {
+   "ticker": "XLF",
+   "kind": "new_leader"
+  }
+ ],
  "notes": [
-  "No data for 1 fund(s): FXY."
+  "No data for 1 fund(s): QQQ."
  ]
 }
