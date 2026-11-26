@@ -1,11 +1,9 @@
 {
   "date": "2026-11-25",
-  "generated_at": "2026-11-25T23:56:14+00:00",
+  "generated_at": "2026-11-26T04:22:26+00:00",
   "annotated": false,
   "refusals": [],
-  "data_gaps": [
-    "Leaders: leader list is for 2026-11-24, the brief is for 2026-11-25 \u2014 shown for reference, not scanned (the list is used only when it is for the same session as the brief)"
-  ],
+  "data_gaps": [],
   "regime": {
     "key": "credit_stress",
     "label": "Credit Stress \u2014 spreads widening",
@@ -24,7 +22,7 @@
     ],
     "fed_posture": null,
     "tripwires": [],
-    "bridge_age_hours": 19.0,
+    "bridge_age_hours": 23.4,
     "regime_read": null
   },
   "exposure": {
@@ -47,18 +45,18 @@
   },
   "leaders": {
     "available": true,
-    "used": false,
-    "session": "2026-11-24",
+    "used": true,
+    "session": "2026-11-25",
     "rows": [
       {
         "rank": 1,
         "ticker": "MRNA",
         "sector": "Health Care",
         "quadrant": "Leading",
-        "close": 227.38,
+        "close": 220.84,
         "rs": 100.0,
-        "from_high_pct": -15.5,
-        "tightness": 0.47,
+        "from_high_pct": -17.9,
+        "tightness": 0.42,
         "tight": false,
         "setup": null,
         "trigger": null,
@@ -66,215 +64,161 @@
         "earnings_48h": false,
         "note": "no base: last 20 sessions span 38% (over 15%)",
         "tested_universe": true,
-        "scanned": false
+        "scanned": true
       },
       {
         "rank": 2,
+        "ticker": "OKTA",
+        "sector": "",
+        "quadrant": null,
+        "close": 201.77,
+        "rs": 99.8,
+        "from_high_pct": -13.1,
+        "tightness": 0.68,
+        "tight": false,
+        "setup": null,
+        "trigger": null,
+        "earnings": "2026-12-01",
+        "earnings_48h": false,
+        "note": "no base: last 20 sessions span 32% (over 15%)",
+        "tested_universe": true,
+        "scanned": true
+      },
+      {
+        "rank": 3,
+        "ticker": "BDX",
+        "sector": "Health Care",
+        "quadrant": "Leading",
+        "close": 221.24,
+        "rs": 99.6,
+        "from_high_pct": 0.0,
+        "tightness": 0.24,
+        "tight": true,
+        "setup": null,
+        "trigger": null,
+        "earnings": "2027-02-09",
+        "earnings_48h": false,
+        "note": "closed 0.6% above its 20-day pivot 220.00 with no setup confirmed",
+        "tested_universe": true,
+        "scanned": true
+      },
+      {
+        "rank": 4,
         "ticker": "CRL",
         "sector": "Health Care",
         "quadrant": "Leading",
-        "close": 336.13,
+        "close": 332.08,
         "rs": 99.4,
-        "from_high_pct": -10.6,
-        "tightness": 0.42,
-        "tight": false,
+        "from_high_pct": -11.7,
+        "tightness": 0.34,
+        "tight": true,
         "setup": null,
         "trigger": null,
         "earnings": "2027-02-17",
         "earnings_48h": false,
         "note": "no base: last 20 sessions span 20% (over 15%)",
         "tested_universe": true,
-        "scanned": false
-      },
-      {
-        "rank": 3,
-        "ticker": "DLTR",
-        "sector": "Consumer Staples",
-        "quadrant": "Leading",
-        "close": 154.65,
-        "rs": 99.2,
-        "from_high_pct": 0.0,
-        "tightness": 0.48,
-        "tight": false,
-        "setup": "M2c Burst",
-        "trigger": 154.65,
-        "earnings": null,
-        "earnings_48h": false,
-        "note": "watch only \u2014 this setup is not proven on stocks",
-        "tested_universe": true,
-        "scanned": false
-      },
-      {
-        "rank": 4,
-        "ticker": "BIIB",
-        "sector": "Health Care",
-        "quadrant": "Leading",
-        "close": 269.11,
-        "rs": 99.0,
-        "from_high_pct": 0.0,
-        "tightness": 0.48,
-        "tight": false,
-        "setup": null,
-        "trigger": null,
-        "earnings": "2027-02-05",
-        "earnings_48h": false,
-        "note": "closed 4.6% above its 20-day pivot 256.71 with no setup confirmed",
-        "tested_universe": true,
-        "scanned": false
+        "scanned": true
       },
       {
         "rank": 5,
-        "ticker": "BDX",
-        "sector": "Health Care",
-        "quadrant": "Leading",
-        "close": 220.0,
-        "rs": 98.8,
-        "from_high_pct": 0.0,
-        "tightness": 0.28,
-        "tight": true,
-        "setup": null,
-        "trigger": null,
-        "earnings": "2027-02-09",
+        "ticker": "BBY",
+        "sector": "Consumer Discretionary",
+        "quadrant": "Improving",
+        "close": 102.58,
+        "rs": 99.0,
+        "from_high_pct": -3.5,
+        "tightness": 0.41,
+        "tight": false,
+        "setup": "Basing",
+        "trigger": 106.28,
+        "earnings": "2027-03-02",
         "earnings_48h": false,
-        "note": "closed 0.9% above its 20-day pivot 218.03 with no setup confirmed",
+        "note": "3.6% below its 20-day pivot; base 13% wide",
         "tested_universe": true,
-        "scanned": false
+        "scanned": true
       },
       {
         "rank": 6,
-        "ticker": "GILD",
-        "sector": "Health Care",
+        "ticker": "DLTR",
+        "sector": "Consumer Staples",
         "quadrant": "Leading",
-        "close": 178.29,
-        "rs": 98.6,
-        "from_high_pct": 0.0,
-        "tightness": 0.4,
+        "close": 152.21,
+        "rs": 98.8,
+        "from_high_pct": -1.6,
+        "tightness": 0.48,
         "tight": false,
         "setup": null,
         "trigger": null,
-        "earnings": "2027-02-09",
+        "earnings": "2027-03-15",
         "earnings_48h": false,
-        "note": "closed 2.1% above its 20-day pivot 174.48 with no setup confirmed",
+        "note": "no base: last 20 sessions span 22% (over 15%)",
         "tested_universe": true,
-        "scanned": false
+        "scanned": true
       },
       {
         "rank": 7,
+        "ticker": "BIIB",
+        "sector": "Health Care",
+        "quadrant": "Leading",
+        "close": 261.44,
+        "rs": 98.6,
+        "from_high_pct": -2.9,
+        "tightness": 0.48,
+        "tight": false,
+        "setup": "Near pivot",
+        "trigger": 269.11,
+        "earnings": "2027-02-05",
+        "earnings_48h": false,
+        "note": "2.9% below its 20-day pivot; base 10% wide",
+        "tested_universe": true,
+        "scanned": true
+      },
+      {
+        "rank": 8,
         "ticker": "VTRS",
         "sector": "Health Care",
         "quadrant": "Leading",
-        "close": 19.85,
+        "close": 19.83,
         "rs": 98.4,
-        "from_high_pct": -5.2,
-        "tightness": 0.39,
-        "tight": true,
+        "from_high_pct": -5.3,
+        "tightness": 0.41,
+        "tight": false,
         "setup": "Basing",
         "trigger": 20.93,
         "earnings": null,
         "earnings_48h": false,
-        "note": "5.4% below its 20-day pivot; base 13% wide",
+        "note": "5.6% below its 20-day pivot; base 13% wide",
         "tested_universe": true,
-        "scanned": false
-      },
-      {
-        "rank": 8,
-        "ticker": "SWK",
-        "sector": "Industrials",
-        "quadrant": "Lagging",
-        "close": 109.25,
-        "rs": 98.2,
-        "from_high_pct": -7.7,
-        "tightness": 0.31,
-        "tight": true,
-        "setup": null,
-        "trigger": null,
-        "earnings": "2027-02-03",
-        "earnings_48h": false,
-        "note": "no base: last 20 sessions span 19% (over 15%)",
-        "tested_universe": true,
-        "scanned": false
+        "scanned": true
       },
       {
         "rank": 9,
-        "ticker": "LH",
+        "ticker": "GILD",
         "sector": "Health Care",
         "quadrant": "Leading",
-        "close": 376.11,
-        "rs": 98.0,
-        "from_high_pct": 0.0,
-        "tightness": 0.22,
-        "tight": true,
-        "setup": null,
-        "trigger": null,
-        "earnings": "2027-02-23",
+        "close": 176.74,
+        "rs": 98.2,
+        "from_high_pct": -0.9,
+        "tightness": 0.4,
+        "tight": false,
+        "setup": "Near pivot",
+        "trigger": 178.29,
+        "earnings": "2027-02-09",
         "earnings_48h": false,
-        "note": "closed 1.1% above its 20-day pivot 371.84 with no setup confirmed",
+        "note": "0.9% below its 20-day pivot; base 12% wide",
         "tested_universe": true,
-        "scanned": false
+        "scanned": true
       },
       {
         "rank": 10,
-        "ticker": "BBY",
-        "sector": "Consumer Discretionary",
-        "quadrant": "Improving",
-        "close": 99.62,
-        "rs": 97.8,
-        "from_high_pct": -6.3,
-        "tightness": 0.44,
-        "tight": false,
-        "setup": "Basing",
-        "trigger": 106.28,
-        "earnings": null,
-        "earnings_48h": false,
-        "note": "6.7% below its 20-day pivot; base 13% wide",
-        "tested_universe": true,
-        "scanned": false
-      },
-      {
-        "rank": 11,
-        "ticker": "HAS",
-        "sector": "Consumer Discretionary",
-        "quadrant": "Improving",
-        "close": 112.24,
-        "rs": 97.7,
-        "from_high_pct": -9.0,
-        "tightness": 0.31,
-        "tight": true,
-        "setup": "Basing",
-        "trigger": 123.29,
-        "earnings": "2027-02-09",
-        "earnings_48h": false,
-        "note": "9.8% below its 20-day pivot; base 10% wide",
-        "tested_universe": true,
-        "scanned": false
-      },
-      {
-        "rank": 12,
-        "ticker": "TGT",
-        "sector": "Consumer Staples",
-        "quadrant": "Leading",
-        "close": 176.06,
-        "rs": 97.1,
-        "from_high_pct": 0.0,
-        "tightness": 0.63,
-        "tight": false,
-        "setup": null,
-        "trigger": null,
-        "earnings": null,
-        "earnings_48h": false,
-        "note": "closed 4.5% above its 20-day pivot 168.19 with no setup confirmed",
-        "tested_universe": true,
-        "scanned": false
-      },
-      {
-        "rank": 13,
         "ticker": "CAH",
         "sector": "Health Care",
         "quadrant": "Leading",
-        "close": 279.65,
-        "rs": 96.9,
-        "from_high_pct": -1.5,
-        "tightness": 0.22,
+        "close": 282.91,
+        "rs": 98.0,
+        "from_high_pct": -0.3,
+        "tightness": 0.23,
         "tight": true,
         "setup": null,
         "trigger": null,
@@ -282,34 +226,88 @@
         "earnings_48h": false,
         "note": "no base: last 20 sessions span 16% (over 15%)",
         "tested_universe": true,
-        "scanned": false
+        "scanned": true
       },
       {
-        "rank": 14,
+        "rank": 11,
+        "ticker": "SWK",
+        "sector": "Industrials",
+        "quadrant": "Lagging",
+        "close": 109.22,
+        "rs": 97.8,
+        "from_high_pct": -7.7,
+        "tightness": 0.33,
+        "tight": true,
+        "setup": null,
+        "trigger": null,
+        "earnings": "2027-02-03",
+        "earnings_48h": false,
+        "note": "no base: last 20 sessions span 18% (over 15%)",
+        "tested_universe": true,
+        "scanned": true
+      },
+      {
+        "rank": 12,
+        "ticker": "HAS",
+        "sector": "Consumer Discretionary",
+        "quadrant": "Improving",
+        "close": 110.58,
+        "rs": 97.7,
+        "from_high_pct": -10.3,
+        "tightness": 0.4,
+        "tight": true,
+        "setup": "Basing",
+        "trigger": 123.29,
+        "earnings": "2027-02-09",
+        "earnings_48h": false,
+        "note": "11.5% below its 20-day pivot; base 10% wide",
+        "tested_universe": true,
+        "scanned": true
+      },
+      {
+        "rank": 13,
         "ticker": "AIZ",
         "sector": "Financials",
         "quadrant": "Improving",
-        "close": 322.64,
-        "rs": 96.5,
-        "from_high_pct": -0.4,
-        "tightness": 0.2,
+        "close": 325.73,
+        "rs": 97.5,
+        "from_high_pct": 0.0,
+        "tightness": 0.21,
         "tight": true,
-        "setup": "Near pivot",
-        "trigger": 323.8,
+        "setup": null,
+        "trigger": null,
         "earnings": "2027-02-09",
         "earnings_48h": false,
-        "note": "0.4% below its 20-day pivot; base 14% wide",
+        "note": "closed 0.6% above its 20-day pivot 323.80 with no setup confirmed",
         "tested_universe": true,
-        "scanned": false
+        "scanned": true
+      },
+      {
+        "rank": 14,
+        "ticker": "EG",
+        "sector": "Financials",
+        "quadrant": "Improving",
+        "close": 433.64,
+        "rs": 97.1,
+        "from_high_pct": 0.0,
+        "tightness": 0.3,
+        "tight": true,
+        "setup": null,
+        "trigger": null,
+        "earnings": "2027-02-03",
+        "earnings_48h": false,
+        "note": "closed 0.1% above its 20-day pivot 433.00 with no setup confirmed",
+        "tested_universe": true,
+        "scanned": true
       },
       {
         "rank": 15,
         "ticker": "CPAY",
         "sector": "Financials",
         "quadrant": "Improving",
-        "close": 447.91,
-        "rs": 96.1,
-        "from_high_pct": -3.1,
+        "close": 454.33,
+        "rs": 96.9,
+        "from_high_pct": -1.7,
         "tightness": 0.4,
         "tight": true,
         "setup": null,
@@ -318,195 +316,218 @@
         "earnings_48h": false,
         "note": "no base: last 20 sessions span 17% (over 15%)",
         "tested_universe": true,
-        "scanned": false
+        "scanned": true
       },
       {
         "rank": 16,
-        "ticker": "ABBV",
-        "sector": "Health Care",
-        "quadrant": "Leading",
-        "close": 300.28,
-        "rs": 95.8,
-        "from_high_pct": 0.0,
-        "tightness": 0.46,
-        "tight": false,
-        "setup": null,
-        "trigger": null,
-        "earnings": "2027-02-03",
-        "earnings_48h": false,
-        "note": "closed 1.7% above its 20-day pivot 295.03 with no setup confirmed",
-        "tested_universe": true,
-        "scanned": false
-      },
-      {
-        "rank": 17,
-        "ticker": "LLY",
-        "sector": "Health Care",
-        "quadrant": "Leading",
-        "close": 1407.59,
-        "rs": 95.8,
-        "from_high_pct": -2.5,
-        "tightness": 0.39,
-        "tight": true,
-        "setup": "Near pivot",
-        "trigger": 1443.5,
-        "earnings": "2027-02-03",
-        "earnings_48h": false,
-        "note": "2.6% below its 20-day pivot; base 13% wide",
-        "tested_universe": true,
-        "scanned": false
-      },
-      {
-        "rank": 18,
-        "ticker": "AMGN",
-        "sector": "Health Care",
-        "quadrant": "Leading",
-        "close": 473.94,
-        "rs": 95.5,
-        "from_high_pct": -0.4,
-        "tightness": 0.38,
-        "tight": true,
-        "setup": "Near pivot",
-        "trigger": 475.73,
-        "earnings": "2027-02-02",
-        "earnings_48h": false,
-        "note": "0.4% below its 20-day pivot; base 9% wide",
-        "tested_universe": true,
-        "scanned": false
-      },
-      {
-        "rank": 19,
-        "ticker": "EG",
-        "sector": "Financials",
-        "quadrant": "Improving",
-        "close": 427.86,
-        "rs": 94.9,
-        "from_high_pct": -1.2,
-        "tightness": 0.3,
-        "tight": true,
-        "setup": "Near pivot",
-        "trigger": 433.0,
-        "earnings": "2027-02-03",
-        "earnings_48h": false,
-        "note": "1.2% below its 20-day pivot; base 12% wide",
-        "tested_universe": true,
-        "scanned": false
-      },
-      {
-        "rank": 20,
-        "ticker": "DGX",
-        "sector": "Health Care",
-        "quadrant": "Leading",
-        "close": 265.61,
-        "rs": 94.7,
-        "from_high_pct": 0.0,
-        "tightness": 0.34,
-        "tight": true,
-        "setup": null,
-        "trigger": null,
-        "earnings": "2027-02-09",
-        "earnings_48h": false,
-        "note": "closed 0.9% above its 20-day pivot 263.12 with no setup confirmed",
-        "tested_universe": true,
-        "scanned": false
-      },
-      {
-        "rank": 21,
         "ticker": "MAS",
         "sector": "Industrials",
         "quadrant": "Lagging",
-        "close": 85.1,
-        "rs": 94.4,
-        "from_high_pct": -1.6,
-        "tightness": 0.19,
+        "close": 86.93,
+        "rs": 96.7,
+        "from_high_pct": 0.0,
+        "tightness": 0.25,
         "tight": true,
         "setup": null,
         "trigger": null,
         "earnings": "2027-02-09",
         "earnings_48h": false,
-        "note": "no base: last 20 sessions span 15% (over 15%)",
+        "note": "closed 0.5% above its 20-day pivot 86.49 with no setup confirmed",
         "tested_universe": true,
-        "scanned": false
+        "scanned": true
       },
       {
-        "rank": 22,
-        "ticker": "WST",
-        "sector": "Health Care",
-        "quadrant": "Leading",
-        "close": 388.75,
-        "rs": 94.1,
-        "from_high_pct": -7.0,
-        "tightness": 0.42,
-        "tight": false,
-        "setup": "Basing",
-        "trigger": 417.8,
-        "earnings": "2027-02-18",
-        "earnings_48h": false,
-        "note": "7.5% below its 20-day pivot; base 7% wide",
-        "tested_universe": true,
-        "scanned": false
-      },
-      {
-        "rank": 23,
-        "ticker": "A",
-        "sector": "Health Care",
-        "quadrant": "Leading",
-        "close": 183.52,
-        "rs": 93.9,
+        "rank": 17,
+        "ticker": "CDW",
+        "sector": "Information Technology",
+        "quadrant": "Weakening",
+        "close": 174.97,
+        "rs": 96.2,
         "from_high_pct": 0.0,
-        "tightness": 0.5,
-        "tight": false,
+        "tightness": 0.36,
+        "tight": true,
         "setup": null,
         "trigger": null,
-        "earnings": null,
+        "earnings": "2027-02-03",
         "earnings_48h": false,
-        "note": "closed 1.1% above its 20-day pivot 181.48 with no setup confirmed",
+        "note": "closed 1.5% above its 20-day pivot 172.36 with no setup confirmed",
         "tested_universe": true,
-        "scanned": false
+        "scanned": true
       },
       {
-        "rank": 24,
+        "rank": 18,
         "ticker": "TRV",
         "sector": "Financials",
         "quadrant": "Improving",
-        "close": 400.87,
-        "rs": 93.7,
-        "from_high_pct": -2.0,
-        "tightness": 0.35,
+        "close": 406.86,
+        "rs": 96.2,
+        "from_high_pct": -0.6,
+        "tightness": 0.37,
         "tight": true,
         "setup": "Near pivot",
         "trigger": 409.25,
         "earnings": "2027-01-20",
         "earnings_48h": false,
-        "note": "2.1% below its 20-day pivot; base 5% wide",
+        "note": "0.6% below its 20-day pivot; base 5% wide",
         "tested_universe": true,
-        "scanned": false
+        "scanned": true
       },
       {
-        "rank": 25,
+        "rank": 19,
+        "ticker": "LH",
+        "sector": "Health Care",
+        "quadrant": "Leading",
+        "close": 368.95,
+        "rs": 95.9,
+        "from_high_pct": -1.9,
+        "tightness": 0.22,
+        "tight": true,
+        "setup": "Near pivot",
+        "trigger": 376.11,
+        "earnings": "2027-02-23",
+        "earnings_48h": false,
+        "note": "1.9% below its 20-day pivot; base 6% wide",
+        "tested_universe": true,
+        "scanned": true
+      },
+      {
+        "rank": 20,
+        "ticker": "ABBV",
+        "sector": "Health Care",
+        "quadrant": "Leading",
+        "close": 294.48,
+        "rs": 95.7,
+        "from_high_pct": -1.9,
+        "tightness": 0.49,
+        "tight": false,
+        "setup": "Near pivot",
+        "trigger": 300.28,
+        "earnings": "2027-02-03",
+        "earnings_48h": false,
+        "note": "2.0% below its 20-day pivot; base 6% wide",
+        "tested_universe": true,
+        "scanned": true
+      },
+      {
+        "rank": 21,
+        "ticker": "VLTO",
+        "sector": "Industrials",
+        "quadrant": "Lagging",
+        "close": 120.19,
+        "rs": 95.3,
+        "from_high_pct": -0.1,
+        "tightness": 0.19,
+        "tight": true,
+        "setup": null,
+        "trigger": null,
+        "earnings": "2027-02-02",
+        "earnings_48h": false,
+        "note": "no base: last 20 sessions span 17% (over 15%)",
+        "tested_universe": true,
+        "scanned": true
+      },
+      {
+        "rank": 22,
+        "ticker": "AMGN",
+        "sector": "Health Care",
+        "quadrant": "Leading",
+        "close": 469.24,
+        "rs": 95.1,
+        "from_high_pct": -1.4,
+        "tightness": 0.4,
+        "tight": false,
+        "setup": "Near pivot",
+        "trigger": 475.73,
+        "earnings": "2027-02-02",
+        "earnings_48h": false,
+        "note": "1.4% below its 20-day pivot; base 9% wide",
+        "tested_universe": true,
+        "scanned": true
+      },
+      {
+        "rank": 23,
         "ticker": "ADP",
         "sector": "Industrials",
         "quadrant": "Lagging",
-        "close": 310.79,
-        "rs": 93.5,
-        "from_high_pct": -0.8,
-        "tightness": 0.29,
+        "close": 316.72,
+        "rs": 94.9,
+        "from_high_pct": 0.0,
+        "tightness": 0.33,
         "tight": true,
-        "setup": "Near pivot",
-        "trigger": 313.43,
+        "setup": null,
+        "trigger": null,
         "earnings": "2027-01-27",
         "earnings_48h": false,
-        "note": "0.8% below its 20-day pivot; base 10% wide",
+        "note": "closed 1.0% above its 20-day pivot 313.43 with no setup confirmed",
         "tested_universe": true,
-        "scanned": false
+        "scanned": true
+      },
+      {
+        "rank": 24,
+        "ticker": "TGT",
+        "sector": "Consumer Staples",
+        "quadrant": "Leading",
+        "close": 172.22,
+        "rs": 94.7,
+        "from_high_pct": -2.2,
+        "tightness": 0.63,
+        "tight": false,
+        "setup": null,
+        "trigger": null,
+        "earnings": null,
+        "earnings_48h": false,
+        "note": "no base: last 20 sessions span 19% (over 15%)",
+        "tested_universe": true,
+        "scanned": true
+      },
+      {
+        "rank": 25,
+        "ticker": "DRI",
+        "sector": "Consumer Discretionary",
+        "quadrant": "Improving",
+        "close": 241.16,
+        "rs": 94.5,
+        "from_high_pct": 0.0,
+        "tightness": 0.34,
+        "tight": true,
+        "setup": null,
+        "trigger": null,
+        "earnings": "2026-12-18",
+        "earnings_48h": false,
+        "note": "closed 0.4% above its 20-day pivot 240.20 with no setup confirmed",
+        "tested_universe": true,
+        "scanned": true
       }
     ],
-    "added": [],
-    "note": "leader list is for 2026-11-24, the brief is for 2026-11-25 \u2014 shown for reference, not scanned (the list is used only when it is for the same session as the brief)",
+    "added": [
+      "MRNA",
+      "OKTA",
+      "BDX",
+      "CRL",
+      "BBY",
+      "DLTR",
+      "BIIB",
+      "VTRS",
+      "GILD",
+      "CAH",
+      "SWK",
+      "HAS",
+      "AIZ",
+      "EG",
+      "CPAY",
+      "MAS",
+      "CDW",
+      "TRV",
+      "LH",
+      "VLTO",
+      "ADP",
+      "DRI"
+    ],
+    "note": null,
     "funnel": {
       "universe_n": 518,
       "priced_n": 517,
-      "trend_n": 93,
+      "trend_n": 97,
       "leaders_n": 67,
       "ndx_extra_n": 15
     }
@@ -538,7 +559,7 @@
     "short": [
       {
         "ticker": "XLK",
-        "quadrant": "Weakening",
+        "quadrant": "Lagging",
         "direction": "Topping"
       },
       {
@@ -551,40 +572,40 @@
       {
         "ticker": "XLF",
         "quadrant": "Improving",
-        "accumulation": -13.66,
-        "why": "price rotating in, money not (accumulation -13.66)"
+        "accumulation": -6.94,
+        "why": "price rotating in, money not (accumulation -6.94)"
       },
       {
         "ticker": "XLC",
         "quadrant": "Improving",
-        "accumulation": -29.9,
-        "why": "price rotating in, money not (accumulation -29.9)"
+        "accumulation": -24.09,
+        "why": "price rotating in, money not (accumulation -24.09)"
       },
       {
         "ticker": "XLP",
         "quadrant": "Leading",
-        "accumulation": -5.3,
-        "why": "price rotating in, money not (accumulation -5.3)"
+        "accumulation": -6.0,
+        "why": "price rotating in, money not (accumulation -6)"
       },
       {
         "ticker": "XLV",
         "quadrant": "Leading",
-        "accumulation": -9.27,
-        "why": "price rotating in, money not (accumulation -9.27)"
+        "accumulation": -11.64,
+        "why": "price rotating in, money not (accumulation -11.64)"
       }
     ],
     "short_watch": [
       {
         "ticker": "XLI",
         "quadrant": "Lagging",
-        "accumulation": 1.0,
-        "why": "price rotating out, money not leaving (accumulation 1)"
+        "accumulation": 6.27,
+        "why": "price rotating out, money not leaving (accumulation 6.27)"
       },
       {
         "ticker": "XLB",
         "quadrant": "Weakening",
-        "accumulation": 39.14,
-        "why": "price rotating out, money not leaving (accumulation 39.14)"
+        "accumulation": 40.27,
+        "why": "price rotating out, money not leaving (accumulation 40.27)"
       }
     ],
     "watchlist": [],
@@ -592,7 +613,9 @@
       "AAPL",
       "ABBV",
       "ABT",
+      "ADP",
       "AEP",
+      "AIZ",
       "AMAT",
       "AMD",
       "AMGN",
@@ -603,34 +626,46 @@
       "AXP",
       "BA",
       "BAC",
+      "BBY",
+      "BDX",
+      "BIIB",
       "BKNG",
       "BRK-B",
+      "CAH",
       "CAT",
       "CBRE",
       "CCI",
+      "CDW",
       "CEG",
       "CL",
       "CMCSA",
       "CMG",
       "COP",
       "COST",
+      "CPAY",
+      "CRL",
       "CSCO",
       "CVX",
       "D",
       "DE",
       "DIS",
       "DLR",
+      "DLTR",
       "DOW",
+      "DRI",
       "DUK",
       "ECL",
+      "EG",
       "EOG",
       "EQIX",
       "ETN",
       "EXC",
       "FCX",
       "GE",
+      "GILD",
       "GOOGL",
       "GS",
+      "HAS",
       "HD",
       "HON",
       "ISRG",
@@ -638,18 +673,21 @@
       "JPM",
       "KMI",
       "KO",
+      "LH",
       "LIN",
       "LLY",
       "LMT",
       "LOW",
       "LRCX",
       "MA",
+      "MAS",
       "MCD",
       "MDLZ",
       "META",
       "MO",
       "MPC",
       "MRK",
+      "MRNA",
       "MS",
       "MSFT",
       "MU",
@@ -661,6 +699,7 @@
       "NVDA",
       "O",
       "OKE",
+      "OKTA",
       "PCG",
       "PEP",
       "PFE",
@@ -679,18 +718,22 @@
       "SPG",
       "SPGI",
       "SRE",
+      "SWK",
       "T",
       "TGT",
       "TJX",
       "TMO",
       "TMUS",
+      "TRV",
       "TSLA",
       "TTWO",
       "UNH",
       "UNP",
       "UPS",
       "V",
+      "VLTO",
       "VMC",
+      "VTRS",
       "VZ",
       "WELL",
       "WFC",
@@ -712,7 +755,7 @@
     ]
   },
   "data_health": {
-    "requested": 121,
+    "requested": 143,
     "missing": [],
     "stale": [],
     "nan_last_cleaned": [],
@@ -764,28 +807,8 @@
     "points": 53
   },
   "events": {
-    "blackout": [
-      {
-        "event": "PCE",
-        "date": "2026-11-25",
-        "days_away": 0,
-        "affects": "Rates-sensitive sleeves",
-        "blackout": true
-      },
-      {
-        "event": "GDP",
-        "date": "2026-11-25",
-        "days_away": 0,
-        "affects": "Growth sleeves and the growth axis of the regime read",
-        "blackout": true
-      }
-    ],
-    "earnings_48h": {
-      "DE": {
-        "date": "2026-11-25",
-        "days_away": 0
-      }
-    },
+    "blackout": [],
+    "earnings_48h": {},
     "caveat": "earnings dates are yfinance estimates \u2014 confirm on the IR page before entering"
   },
   "cards": [
@@ -828,7 +851,7 @@
       "invalidated_when": "close below 59.06 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
       "why": "reclaim of 20-wk SMA 59.17 (close +1.8% vs SMA, flat); vol 1.36x vs tier 1.5x; CMF +0.14; ATR stop 1.5x = 59.06 (2.4%)",
       "adr_pct": 1.64,
-      "event_risk": "PCE in 0d; GDP in 0d",
+      "event_risk": "clear",
       "live": true,
       "evidence": "PASS: +0.127R/trade, PF 1.63 / 1.51 (2005-15 / 2016-26); 3-of-3 trades +0.21R",
       "is_etf": false,
@@ -889,9 +912,9 @@
       "trail_stats": null,
       "instrument": "stock/ETF (no options, no margin \u2014 risk_policy \u00a76)",
       "invalidated_when": "close below 42.59 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-      "why": "reclaim of 20-wk SMA 42.85 (close +1.8% vs SMA, flat); vol 0.83x vs tier 1.5x; CMF +0.07; ATR stop 2.0x = 42.59 (2.7%)",
+      "why": "reclaim of 20-wk SMA 42.85 (close +1.8% vs SMA, flat); vol 0.83x vs tier 1.5x; CMF +0.06; ATR stop 2.0x = 42.59 (2.7%)",
       "adr_pct": 1.36,
-      "event_risk": "PCE in 0d; GDP in 0d",
+      "event_risk": "clear",
       "live": true,
       "evidence": "PASS: +0.127R/trade, PF 1.63 / 1.51 (2005-15 / 2016-26); 3-of-3 trades +0.21R",
       "is_etf": true,
@@ -904,7 +927,7 @@
         "closing_stop_rule": "if a session CLOSES at or below 42.59, sell at the next open",
         "disaster_stop": 41.99,
         "disaster_order": "SELL STOP (market), GTC \u2014 placed right after the fill",
-        "atr14": 0.5975
+        "atr14": 0.5979
       },
       "disaster_stop": 41.99,
       "entry_permitted": false,
@@ -952,9 +975,9 @@
       "trail_stats": null,
       "instrument": "stock/ETF (no options, no margin \u2014 risk_policy \u00a76)",
       "invalidated_when": "close below 42.80 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-      "why": "reclaim of 20-wk SMA 43.44 (close +1.0% vs SMA, flat); vol 1.04x vs tier 1.5x; CMF +0.07; ATR stop 2.0x = 42.80 (3.1%)",
+      "why": "reclaim of 20-wk SMA 43.44 (close +1.0% vs SMA, flat); vol 1.06x vs tier 1.5x; CMF +0.07; ATR stop 2.0x = 42.80 (3.1%)",
       "adr_pct": 1.54,
-      "event_risk": "PCE in 0d; GDP in 0d",
+      "event_risk": "clear",
       "live": true,
       "evidence": "PASS: +0.127R/trade, PF 1.63 / 1.51 (2005-15 / 2016-26); 3-of-3 trades +0.21R",
       "is_etf": true,
@@ -1015,9 +1038,9 @@
       "trail_stats": null,
       "instrument": "stock/ETF (no options, no margin \u2014 risk_policy \u00a76)",
       "invalidated_when": "close below 276.91 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-      "why": "reclaim of 20-wk SMA 259.48 (close +9.3% vs SMA, rising); vol 1.01x vs tier 1.5x; CMF +0.14; ATR stop 1.5x = 276.91 (3.4%)",
+      "why": "reclaim of 20-wk SMA 259.48 (close +9.3% vs SMA, rising); vol 1.03x vs tier 1.5x; CMF +0.14; ATR stop 1.5x = 276.91 (3.4%)",
       "adr_pct": 2.28,
-      "event_risk": "PCE in 0d; GDP in 0d",
+      "event_risk": "clear",
       "live": true,
       "evidence": "PASS: +0.127R/trade, PF 1.63 / 1.51 (2005-15 / 2016-26); 3-of-3 trades +0.21R",
       "is_etf": false,
@@ -1030,7 +1053,7 @@
         "closing_stop_rule": "if a session CLOSES at or below 276.91, sell at the next open",
         "disaster_stop": 270.41,
         "disaster_order": "SELL STOP (market), GTC \u2014 placed right after the fill",
-        "atr14": 6.4989
+        "atr14": 6.4986
       },
       "disaster_stop": 270.41,
       "entry_permitted": false,
@@ -1082,7 +1105,7 @@
       "invalidated_when": "close below 66.60 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
       "why": "reclaim of 20-wk SMA 66.02 (close +3.0% vs SMA, flat); vol 0.74x vs tier 1.5x; CMF +0.04; ATR stop 1.5x = 66.60 (2.5%)",
       "adr_pct": 1.72,
-      "event_risk": "PCE in 0d; GDP in 0d",
+      "event_risk": "clear",
       "live": true,
       "evidence": "PASS: +0.127R/trade, PF 1.63 / 1.51 (2005-15 / 2016-26); 3-of-3 trades +0.21R",
       "is_etf": false,
@@ -1093,11 +1116,11 @@
         "shares": 29,
         "closing_stop": 66.6,
         "closing_stop_rule": "if a session CLOSES at or below 66.60, sell at the next open",
-        "disaster_stop": 65.48,
+        "disaster_stop": 65.47,
         "disaster_order": "SELL STOP (market), GTC \u2014 placed right after the fill",
-        "atr14": 1.1243
+        "atr14": 1.125
       },
-      "disaster_stop": 65.48,
+      "disaster_stop": 65.47,
       "entry_permitted": false,
       "entry_block_reason": "stock card \u2014 paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)",
       "why_note": null,
@@ -1125,44 +1148,44 @@
           "volume"
         ]
       },
-      "entry": 85.86,
-      "stop": 83.65,
+      "entry": 85.87,
+      "stop": 83.66,
       "stop_pct": 2.57,
       "risk_per_share": 2.21,
       "risk_pct": 0.5,
       "shares": 22,
-      "notional": 1888.92,
+      "notional": 1889.14,
       "notional_pct": 18.9,
       "heat_after": 0.49,
       "blocked_by_heat": false,
       "targets": {
-        "2R": 90.28,
-        "4R": 94.7,
-        "8R": 103.54
+        "2R": 90.29,
+        "4R": 94.71,
+        "8R": 103.55
       },
       "trail": "100 SMA (20-week)",
       "trail_why": "Rotation swing: the thesis IS the 20-week reclaim, so a close back below a falling 20-week SMA ends it; the exit engine tightens below a rising one.",
       "trail_stats": null,
       "instrument": "stock/ETF (no options, no margin \u2014 risk_policy \u00a76)",
-      "invalidated_when": "close below 83.65 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-      "why": "reclaim of 20-wk SMA 83.21 (close +2.6% vs SMA, flat); vol 0.67x vs tier 1.5x; CMF +0.03; ATR stop 1.5x = 83.65 (2.6%)",
+      "invalidated_when": "close below 83.66 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
+      "why": "reclaim of 20-wk SMA 83.21 (close +2.6% vs SMA, flat); vol 0.67x vs tier 1.5x; CMF +0.03; ATR stop 1.5x = 83.66 (2.6%)",
       "adr_pct": 1.79,
-      "event_risk": "PCE in 0d; GDP in 0d",
+      "event_risk": "clear",
       "live": true,
       "evidence": "PASS: +0.127R/trade, PF 1.63 / 1.51 (2005-15 / 2016-26); 3-of-3 trades +0.21R",
       "is_etf": false,
       "ticket": {
         "entry_order": "BUY STOP LIMIT, GTC (cancel if not filled next session)",
-        "trigger": 85.86,
-        "limit": 86.23,
+        "trigger": 85.87,
+        "limit": 86.24,
         "shares": 22,
-        "closing_stop": 83.65,
-        "closing_stop_rule": "if a session CLOSES at or below 83.65, sell at the next open",
-        "disaster_stop": 82.17,
+        "closing_stop": 83.66,
+        "closing_stop_rule": "if a session CLOSES at or below 83.66, sell at the next open",
+        "disaster_stop": 82.18,
         "disaster_order": "SELL STOP (market), GTC \u2014 placed right after the fill",
-        "atr14": 1.4754
+        "atr14": 1.4757
       },
-      "disaster_stop": 82.17,
+      "disaster_stop": 82.18,
       "entry_permitted": false,
       "entry_block_reason": "stock card \u2014 paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)",
       "why_note": null,
@@ -1210,9 +1233,9 @@
       "trail_stats": null,
       "instrument": "stock/ETF (no options, no margin \u2014 risk_policy \u00a76)",
       "invalidated_when": "close below 112.46 (structural), OR regime flips hostile, OR sector rotates to Weakening/Lagging",
-      "why": "reclaim of 20-wk SMA 114.91 (close +2.2% vs SMA, rising); vol 0.84x vs tier 1.5x; CMF -0.07; ATR stop 2.0x = 112.46 (4.9%)",
+      "why": "reclaim of 20-wk SMA 114.91 (close +2.2% vs SMA, rising); vol 0.85x vs tier 1.5x; CMF -0.07; ATR stop 2.0x = 112.46 (4.9%)",
       "adr_pct": 2.22,
-      "event_risk": "PCE in 0d; GDP in 0d",
+      "event_risk": "clear",
       "live": true,
       "evidence": "PASS: +0.127R/trade, PF 1.63 / 1.51 (2005-15 / 2016-26); 3-of-3 trades +0.21R",
       "is_etf": true,
@@ -1250,7 +1273,7 @@
       "side": "long",
       "confluence": "2-of-3",
       "ground": "long_watch",
-      "reason": "M0 Rotation long (2-of-3) demoted \u2014 flow does not confirm the ground: XLV Leading \u2014 price rotating in, money not (accumulation -9.27); watch until accumulation turns positive"
+      "reason": "M0 Rotation long (2-of-3) demoted \u2014 flow does not confirm the ground: XLV Leading \u2014 price rotating in, money not (accumulation -11.64); watch until accumulation turns positive"
     },
     {
       "ticker": "APD",
@@ -1264,7 +1287,7 @@
       "side": "long",
       "confluence": "3-of-3",
       "ground": "short_watch",
-      "reason": "M0 Rotation long (3-of-3) demoted \u2014 long card from a short hunting ground (XLB Weakening, accumulation 39.14) \u2014 the setup fights the sector rotation; watch only"
+      "reason": "M0 Rotation long (3-of-3) demoted \u2014 long card from a short hunting ground (XLB Weakening, accumulation 40.27) \u2014 the setup fights the sector rotation; watch only"
     },
     {
       "ticker": "CMCSA",
@@ -1278,7 +1301,7 @@
       "side": "long",
       "confluence": "3-of-3",
       "ground": "long_watch",
-      "reason": "M0 Rotation long (3-of-3) demoted \u2014 flow does not confirm the ground: XLC Improving \u2014 price rotating in, money not (accumulation -29.9); watch until accumulation turns positive"
+      "reason": "M0 Rotation long (3-of-3) demoted \u2014 flow does not confirm the ground: XLC Improving \u2014 price rotating in, money not (accumulation -24.09); watch until accumulation turns positive"
     },
     {
       "ticker": "EOG",
@@ -1303,7 +1326,7 @@
       "side": "long",
       "confluence": "2-of-3",
       "ground": "short_watch",
-      "reason": "M0 Rotation long (2-of-3) demoted \u2014 long card from a short hunting ground (XLI Lagging, accumulation 1) \u2014 the setup fights the sector rotation; watch only"
+      "reason": "M0 Rotation long (2-of-3) demoted \u2014 long card from a short hunting ground (XLI Lagging, accumulation 6.27) \u2014 the setup fights the sector rotation; watch only"
     },
     {
       "ticker": "ISRG",
@@ -1317,7 +1340,7 @@
       "side": "long",
       "confluence": "2-of-3",
       "ground": "long_watch",
-      "reason": "M0 Rotation long (2-of-3) demoted \u2014 flow does not confirm the ground: XLV Leading \u2014 price rotating in, money not (accumulation -9.27); watch until accumulation turns positive"
+      "reason": "M0 Rotation long (2-of-3) demoted \u2014 flow does not confirm the ground: XLV Leading \u2014 price rotating in, money not (accumulation -11.64); watch until accumulation turns positive"
     },
     {
       "ticker": "KMI",
@@ -1333,7 +1356,7 @@
     {
       "ticker": "MSFT",
       "sector": "XLK",
-      "sector_quadrant": "Weakening",
+      "sector_quadrant": "Lagging",
       "from_watchlist": false,
       "close": 489.93,
       "leader_rank": null,
@@ -1353,7 +1376,7 @@
       "side": "long",
       "confluence": "2-of-3",
       "ground": "long_watch",
-      "reason": "M0 Rotation long (2-of-3) demoted \u2014 flow does not confirm the ground: XLP Leading \u2014 price rotating in, money not (accumulation -5.3); watch until accumulation turns positive"
+      "reason": "M0 Rotation long (2-of-3) demoted \u2014 flow does not confirm the ground: XLP Leading \u2014 price rotating in, money not (accumulation -6); watch until accumulation turns positive"
     },
     {
       "ticker": "SHW",
@@ -1367,7 +1390,7 @@
       "side": "long",
       "confluence": "3-of-3",
       "ground": "short_watch",
-      "reason": "M0 Rotation long (3-of-3) demoted \u2014 long card from a short hunting ground (XLB Weakening, accumulation 39.14) \u2014 the setup fights the sector rotation; watch only"
+      "reason": "M0 Rotation long (3-of-3) demoted \u2014 long card from a short hunting ground (XLB Weakening, accumulation 40.27) \u2014 the setup fights the sector rotation; watch only"
     },
     {
       "ticker": "UNP",
@@ -1392,7 +1415,7 @@
       "side": "long",
       "confluence": "2-of-3",
       "ground": "long_watch",
-      "reason": "M0 Rotation long (2-of-3) demoted \u2014 flow does not confirm the ground: XLC Improving \u2014 price rotating in, money not (accumulation -29.9); watch until accumulation turns positive"
+      "reason": "M0 Rotation long (2-of-3) demoted \u2014 flow does not confirm the ground: XLC Improving \u2014 price rotating in, money not (accumulation -24.09); watch until accumulation turns positive"
     },
     {
       "ticker": "XLB",
@@ -1406,7 +1429,7 @@
       "side": "long",
       "confluence": "2-of-3",
       "ground": "short_watch",
-      "reason": "M0 Rotation long (2-of-3) demoted \u2014 long card from a short hunting ground (XLB Weakening, accumulation 39.14) \u2014 the setup fights the sector rotation; watch only"
+      "reason": "M0 Rotation long (2-of-3) demoted \u2014 long card from a short hunting ground (XLB Weakening, accumulation 40.27) \u2014 the setup fights the sector rotation; watch only"
     },
     {
       "ticker": "XLF",
@@ -1420,14 +1443,14 @@
       "side": "long",
       "confluence": "2-of-3",
       "ground": "long_watch",
-      "reason": "M0 Rotation long (2-of-3) demoted \u2014 flow does not confirm the ground: XLF Improving \u2014 price rotating in, money not (accumulation -13.66); watch until accumulation turns positive"
+      "reason": "M0 Rotation long (2-of-3) demoted \u2014 flow does not confirm the ground: XLF Improving \u2014 price rotating in, money not (accumulation -6.94); watch until accumulation turns positive"
     }
   ],
   "avoid": [
     {
       "ticker": "AAPL",
       "sector": "XLK",
-      "sector_quadrant": "Weakening",
+      "sector_quadrant": "Lagging",
       "from_watchlist": false,
       "close": 355.58,
       "leader_rank": null,
@@ -1441,10 +1464,21 @@
       "sector_quadrant": "Leading",
       "from_watchlist": false,
       "close": 294.48,
-      "leader_rank": null,
+      "leader_rank": 20,
       "tested_universe": true,
       "setup": null,
       "reason": "Not a setup. M2 universe filter: ADR 2.57% < 3.5% | M0: 10% above the 20-wk SMA -- already extended, not an entry | vcp: pullbacks not contracting"
+    },
+    {
+      "ticker": "ADP",
+      "sector": "XLI",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 316.72,
+      "leader_rank": 23,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.12% < 3.5% | M0: 15% above the 20-wk SMA -- already extended, not an entry | vcp: pullbacks not contracting"
     },
     {
       "ticker": "AEP",
@@ -1458,9 +1492,20 @@
       "reason": "Not a setup. M2 universe filter: ADR 2.05% < 3.5%; price not above 20 & 50 SMA | M0: 20-wk SMA not rising | Trend Template fails: 2 150 MA > 200 MA, 4 50 MA > 150 & 200, 5 >=25% above 52w low"
     },
     {
+      "ticker": "AIZ",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 325.73,
+      "leader_rank": 13,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.05% < 3.5% | M0: 14% above the 20-wk SMA -- already extended, not an entry | vcp: pullbacks not contracting"
+    },
+    {
       "ticker": "AMAT",
       "sector": "XLK",
-      "sector_quadrant": "Weakening",
+      "sector_quadrant": "Lagging",
       "from_watchlist": false,
       "close": 311.18,
       "leader_rank": null,
@@ -1471,7 +1516,7 @@
     {
       "ticker": "AMD",
       "sector": "XLK",
-      "sector_quadrant": "Weakening",
+      "sector_quadrant": "Lagging",
       "from_watchlist": false,
       "close": 406.03,
       "leader_rank": null,
@@ -1485,7 +1530,7 @@
       "sector_quadrant": "Leading",
       "from_watchlist": false,
       "close": 469.24,
-      "leader_rank": null,
+      "leader_rank": 22,
       "tested_universe": true,
       "setup": null,
       "reason": "Not a setup. M2 universe filter: ADR 2.68% < 3.5% | M0: 13% above the 20-wk SMA -- already extended, not an entry | vcp: pullbacks not contracting"
@@ -1515,7 +1560,7 @@
     {
       "ticker": "AVGO",
       "sector": "XLK",
-      "sector_quadrant": "Weakening",
+      "sector_quadrant": "Lagging",
       "from_watchlist": false,
       "close": 300.86,
       "leader_rank": null,
@@ -1557,6 +1602,39 @@
       "reason": "Not a setup. M2 universe filter: ADR 2.41% < 3.5%; price not above 20 & 50 SMA | M0: close 48.54 below 20-wk SMA 56.88; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 3 200 MA rising 1mo+, 4 50 MA > 150 & 200"
     },
     {
+      "ticker": "BBY",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 102.58,
+      "leader_rank": 5,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. breakout: prior move 17% < 30 | vcp: pullbacks not contracting | ep: gap -0.0% < 10.0% | burst: no tight range + break on volume"
+    },
+    {
+      "ticker": "BDX",
+      "sector": "XLV",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 221.24,
+      "leader_rank": 3,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.33% < 3.5% | M0: 20% above the 20-wk SMA -- already extended, not an entry | vcp: pullbacks not contracting"
+    },
+    {
+      "ticker": "BIIB",
+      "sector": "XLV",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 261.44,
+      "leader_rank": 7,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 3.20% < 3.5% | M0: 16% above the 20-wk SMA -- already extended, not an entry | vcp: pullbacks not contracting"
+    },
+    {
       "ticker": "BKNG",
       "sector": "XLY",
       "sector_quadrant": "Improving",
@@ -1577,6 +1655,17 @@
       "tested_universe": true,
       "setup": null,
       "reason": "Not a setup. M2 universe filter: ADR 1.79% < 3.5% | M0: 11% above the 20-wk SMA -- already extended, not an entry | Trend Template fails: 5 >=25% above 52w low"
+    },
+    {
+      "ticker": "CAH",
+      "sector": "XLV",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 282.91,
+      "leader_rank": 10,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.51% < 3.5% | M0: 17% above the 20-wk SMA -- already extended, not an entry | vcp: pullbacks not contracting"
     },
     {
       "ticker": "CAT",
@@ -1610,6 +1699,17 @@
       "tested_universe": true,
       "setup": null,
       "reason": "Not a setup. M2 universe filter: ADR 2.86% < 3.5%; price not above 20 & 50 SMA | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 2 150 MA > 200 MA, 4 50 MA > 150 & 200, 7 RS rank >= 70"
+    },
+    {
+      "ticker": "CDW",
+      "sector": "XLK",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 174.97,
+      "leader_rank": 17,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. breakout: prior move 11% < 30 | vcp: volume not drying up | ep: gap -1.7% < 10.0% | burst: no tight range + break on volume"
     },
     {
       "ticker": "CEG",
@@ -1667,9 +1767,31 @@
       "reason": "Not a setup. M2 universe filter: ADR 1.68% < 3.5% | M0: 16% above the 20-wk SMA -- already extended, not an entry | Trend Template fails: 2 150 MA > 200 MA, 4 50 MA > 150 & 200"
     },
     {
+      "ticker": "CPAY",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 454.33,
+      "leader_rank": 15,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.98% < 3.5% | M0: 12% above the 20-wk SMA -- already extended, not an entry | vcp: pullbacks not contracting"
+    },
+    {
+      "ticker": "CRL",
+      "sector": "XLV",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 332.08,
+      "leader_rank": 4,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: price not above 20 & 50 SMA | M0: 14% above the 20-wk SMA -- already extended, not an entry | vcp: pullbacks not contracting"
+    },
+    {
       "ticker": "CSCO",
       "sector": "XLK",
-      "sector_quadrant": "Weakening",
+      "sector_quadrant": "Lagging",
       "from_watchlist": false,
       "close": 94.2,
       "leader_rank": null,
@@ -1722,6 +1844,17 @@
       "reason": "Not a setup. M2 universe filter: price not above 20 & 50 SMA | M0: close 166.43 below 20-wk SMA 181.81; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 4 50 MA > 150 & 200, 5 >=25% above 52w low"
     },
     {
+      "ticker": "DLTR",
+      "sector": "XLP",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 152.21,
+      "leader_rank": 6,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. breakout: prior move 0% < 30 | vcp: volume not drying up | ep: gap 0.4% < 10.0% | burst: no tight range + break on volume"
+    },
+    {
       "ticker": "DOW",
       "sector": "XLB",
       "sector_quadrant": "Weakening",
@@ -1731,6 +1864,17 @@
       "tested_universe": true,
       "setup": null,
       "reason": "Not a setup. M2 universe filter: price not above 20 & 50 SMA | M0: close 29.66 below 20-wk SMA 30.15 | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 4 50 MA > 150 & 200"
+    },
+    {
+      "ticker": "DRI",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 241.16,
+      "leader_rank": 25,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.75% < 3.5% | M0: 14% above the 20-wk SMA -- already extended, not an entry | vcp: pullbacks not contracting"
     },
     {
       "ticker": "DUK",
@@ -1753,6 +1897,17 @@
       "tested_universe": true,
       "setup": null,
       "reason": "Not a setup. M2 universe filter: ADR 2.40% < 3.5% | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 2 150 MA > 200 MA, 4 50 MA > 150 & 200"
+    },
+    {
+      "ticker": "EG",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 433.64,
+      "leader_rank": 14,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.31% < 3.5% | M0: 13% above the 20-wk SMA -- already extended, not an entry | vcp: pullbacks not contracting"
     },
     {
       "ticker": "EQIX",
@@ -1810,6 +1965,17 @@
       "reason": "Not a setup. M2 universe filter: ADR 3.37% < 3.5%; price not above 20 & 50 SMA | M0: close 316.98 below 20-wk SMA 331.80; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 4 50 MA > 150 & 200, 5 >=25% above 52w low"
     },
     {
+      "ticker": "GILD",
+      "sector": "XLV",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 176.74,
+      "leader_rank": 9,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.93% < 3.5% | M0: 19% above the 20-wk SMA -- already extended, not an entry | vcp: pullbacks not contracting"
+    },
+    {
       "ticker": "GOOGL",
       "sector": "XLC",
       "sector_quadrant": "Improving",
@@ -1830,6 +1996,17 @@
       "tested_universe": true,
       "setup": null,
       "reason": "Not a setup. M2 universe filter: ADR 3.29% < 3.5%; price not above 20 & 50 SMA | M0: close 801.03 below 20-wk SMA 965.62; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 3 200 MA rising 1mo+, 4 50 MA > 150 & 200"
+    },
+    {
+      "ticker": "HAS",
+      "sector": "XLY",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 110.58,
+      "leader_rank": 12,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.56% < 3.5%; price not above 20 & 50 SMA | M0: 14% above the 20-wk SMA -- already extended, not an entry | vcp: pullbacks not contracting"
     },
     {
       "ticker": "HD",
@@ -1874,6 +2051,17 @@
       "tested_universe": true,
       "setup": null,
       "reason": "Not a setup. M2 universe filter: ADR 1.74% < 3.5% | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | vcp: pullbacks not contracting"
+    },
+    {
+      "ticker": "LH",
+      "sector": "XLV",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 368.95,
+      "leader_rank": 19,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.39% < 3.5% | M0: 14% above the 20-wk SMA -- already extended, not an entry | vcp: pullbacks not contracting"
     },
     {
       "ticker": "LIN",
@@ -1922,7 +2110,7 @@
     {
       "ticker": "LRCX",
       "sector": "XLK",
-      "sector_quadrant": "Weakening",
+      "sector_quadrant": "Lagging",
       "from_watchlist": false,
       "close": 185.01,
       "leader_rank": null,
@@ -1940,6 +2128,17 @@
       "tested_universe": true,
       "setup": null,
       "reason": "Not a setup. M2 universe filter: ADR 2.42% < 3.5% | M0: 12% above the 20-wk SMA -- already extended, not an entry | vcp: pullbacks not contracting"
+    },
+    {
+      "ticker": "MAS",
+      "sector": "XLI",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 86.93,
+      "leader_rank": 16,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 3.02% < 3.5% | M0: 16% above the 20-wk SMA -- already extended, not an entry | vcp: pullbacks not contracting"
     },
     {
       "ticker": "MDLZ",
@@ -1997,6 +2196,17 @@
       "reason": "Not a setup. M2 universe filter: ADR 3.05% < 3.5%; price not above 20 & 50 SMA | M0: close 140.29 below 20-wk SMA 140.60 | Trend Template fails: 1 price > 50/150/200 MA, 7 RS rank >= 70, 8 price > 50 MA"
     },
     {
+      "ticker": "MRNA",
+      "sector": "XLV",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 220.84,
+      "leader_rank": 1,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: price not above 20 & 50 SMA | M0: 44% above the 20-wk SMA -- already extended, not an entry | vcp: pullbacks not contracting"
+    },
+    {
       "ticker": "MS",
       "sector": "XLF",
       "sector_quadrant": "Improving",
@@ -2005,12 +2215,12 @@
       "leader_rank": null,
       "tested_universe": true,
       "setup": null,
-      "reason": "Not a setup. M2 universe filter: ADR 3.11% < 3.5%; price not above 20 & 50 SMA | M0: close 167.55 below 20-wk SMA 199.74; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 4 50 MA > 150 & 200, 5 >=25% above 52w low"
+      "reason": "Not a setup. M2 universe filter: ADR 3.12% < 3.5%; price not above 20 & 50 SMA | M0: close 167.55 below 20-wk SMA 199.74; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 4 50 MA > 150 & 200, 5 >=25% above 52w low"
     },
     {
       "ticker": "MU",
       "sector": "XLK",
-      "sector_quadrant": "Weakening",
+      "sector_quadrant": "Lagging",
       "from_watchlist": false,
       "close": 601.25,
       "leader_rank": null,
@@ -2027,7 +2237,7 @@
       "leader_rank": null,
       "tested_universe": true,
       "setup": null,
-      "reason": "Not a setup. M2 universe filter: price not above 20 & 50 SMA | M0: close 101.44 below 20-wk SMA 112.77 | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+"
+      "reason": "Not a setup. M2 universe filter: price not above 20 & 50 SMA | M0: close 101.44 below 20-wk SMA 112.48 | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+"
     },
     {
       "ticker": "NFLX",
@@ -2065,7 +2275,7 @@
     {
       "ticker": "NVDA",
       "sector": "XLK",
-      "sector_quadrant": "Weakening",
+      "sector_quadrant": "Lagging",
       "from_watchlist": false,
       "close": 149.3,
       "leader_rank": null,
@@ -2083,6 +2293,17 @@
       "tested_universe": true,
       "setup": null,
       "reason": "Not a setup. M2 universe filter: ADR 2.68% < 3.5%; price not above 20 & 50 SMA | M0: close 86.45 below 20-wk SMA 90.40 | Trend Template fails: 1 price > 50/150/200 MA, 7 RS rank >= 70, 8 price > 50 MA"
+    },
+    {
+      "ticker": "OKTA",
+      "sector": null,
+      "sector_quadrant": null,
+      "from_watchlist": false,
+      "close": 201.77,
+      "leader_rank": 2,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. breakout: range 32% > 15 (not tight) | vcp: pullbacks not contracting | ep: gap -4.5% < 10.0% | burst: no tight range + break on volume"
     },
     {
       "ticker": "PCG",
@@ -2104,7 +2325,7 @@
       "leader_rank": null,
       "tested_universe": true,
       "setup": null,
-      "reason": "Not a setup. M2 universe filter: ADR 2.45% < 3.5%; price not above 20 & 50 SMA | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70"
+      "reason": "Not a setup. M2 universe filter: ADR 2.46% < 3.5%; price not above 20 & 50 SMA | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 1 price > 50/150/200 MA, 5 >=25% above 52w low, 7 RS rank >= 70"
     },
     {
       "ticker": "PG",
@@ -2131,7 +2352,7 @@
     {
       "ticker": "PLTR",
       "sector": "XLK",
-      "sector_quadrant": "Weakening",
+      "sector_quadrant": "Lagging",
       "from_watchlist": false,
       "close": 163.59,
       "leader_rank": null,
@@ -2192,7 +2413,7 @@
       "leader_rank": null,
       "tested_universe": true,
       "setup": null,
-      "reason": "Not a setup. M2 universe filter: ADR 2.60% < 3.5%; price not above 20 & 50 SMA | M0: close 196.19 below 20-wk SMA 199.33 | Trend Template fails: 2 150 MA > 200 MA, 4 50 MA > 150 & 200, 5 >=25% above 52w low"
+      "reason": "Not a setup. M2 universe filter: ADR 2.61% < 3.5%; price not above 20 & 50 SMA | M0: close 196.19 below 20-wk SMA 199.33 | Trend Template fails: 2 150 MA > 200 MA, 4 50 MA > 150 & 200, 5 >=25% above 52w low"
     },
     {
       "ticker": "SBUX",
@@ -2203,7 +2424,7 @@
       "leader_rank": null,
       "tested_universe": true,
       "setup": null,
-      "reason": "Not a setup. M2 universe filter: ADR 2.99% < 3.5% | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 4 50 MA > 150 & 200, 7 RS rank >= 70"
+      "reason": "Not a setup. M2 universe filter: ADR 3.00% < 3.5% | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | Trend Template fails: 4 50 MA > 150 & 200, 7 RS rank >= 70"
     },
     {
       "ticker": "SLB",
@@ -2261,6 +2482,17 @@
       "reason": "Not a setup. M2 universe filter: ADR 1.95% < 3.5%; price not above 20 & 50 SMA | M0: close 79.09 below 20-wk SMA 83.61; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+"
     },
     {
+      "ticker": "SWK",
+      "sector": "XLI",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 109.22,
+      "leader_rank": 11,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: price not above 20 & 50 SMA | M0: 13% above the 20-wk SMA -- already extended, not an entry | vcp: pullbacks not contracting"
+    },
+    {
       "ticker": "T",
       "sector": "XLC",
       "sector_quadrant": "Improving",
@@ -2277,7 +2509,7 @@
       "sector_quadrant": "Leading",
       "from_watchlist": false,
       "close": 172.22,
-      "leader_rank": null,
+      "leader_rank": 24,
       "tested_universe": true,
       "setup": null,
       "reason": "Not a setup. M2 universe filter: ADR 3.45% < 3.5% | M0: 13% above the 20-wk SMA -- already extended, not an entry | vcp: pullbacks not contracting"
@@ -2313,7 +2545,18 @@
       "leader_rank": null,
       "tested_universe": true,
       "setup": null,
-      "reason": "Not a setup. M2 universe filter: ADR 3.29% < 3.5% | M0: close 166.25 below 20-wk SMA 171.19; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+"
+      "reason": "Not a setup. M2 universe filter: ADR 3.28% < 3.5% | M0: close 166.25 below 20-wk SMA 170.00; 20-wk SMA not rising | Trend Template fails: 1 price > 50/150/200 MA, 2 150 MA > 200 MA, 3 200 MA rising 1mo+"
+    },
+    {
+      "ticker": "TRV",
+      "sector": "XLF",
+      "sector_quadrant": "Improving",
+      "from_watchlist": false,
+      "close": 406.86,
+      "leader_rank": 18,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.06% < 3.5% | M0: above the 20-wk SMA but no reclaim in 20 bars and no swing-high break from a base -- already extended, not an entry | vcp: pullbacks not contracting"
     },
     {
       "ticker": "TSLA",
@@ -2335,7 +2578,7 @@
       "leader_rank": null,
       "tested_universe": true,
       "setup": null,
-      "reason": "Not a setup. Trend Template fails: 3 200 MA rising 1mo+, 4 50 MA > 150 & 200, 5 >=25% above 52w low | breakout: prior move -11% < 30 | ep: gap -0.4% < 10.0% | burst: no tight range + break on volume"
+      "reason": "Not a setup. Trend Template fails: 3 200 MA rising 1mo+, 4 50 MA > 150 & 200, 5 >=25% above 52w low | breakout: prior move -11% < 30 | ep: gap -0.7% < 10.0% | burst: no tight range + break on volume"
     },
     {
       "ticker": "UNH",
@@ -2371,6 +2614,17 @@
       "reason": "Not a setup. M2 universe filter: ADR 2.25% < 3.5% | M0: 11% above the 20-wk SMA -- already extended, not an entry | vcp: pullbacks not contracting"
     },
     {
+      "ticker": "VLTO",
+      "sector": "XLI",
+      "sector_quadrant": "Lagging",
+      "from_watchlist": false,
+      "close": 120.19,
+      "leader_rank": 21,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.47% < 3.5% | M0: 19% above the 20-wk SMA -- already extended, not an entry | vcp: pullbacks not contracting"
+    },
+    {
       "ticker": "VMC",
       "sector": "XLB",
       "sector_quadrant": "Weakening",
@@ -2380,6 +2634,17 @@
       "tested_universe": true,
       "setup": null,
       "reason": "Not a setup. M2 universe filter: ADR 3.38% < 3.5% | M0: 20-wk SMA not rising | Trend Template fails: 2 150 MA > 200 MA, 3 200 MA rising 1mo+, 4 50 MA > 150 & 200"
+    },
+    {
+      "ticker": "VTRS",
+      "sector": "XLV",
+      "sector_quadrant": "Leading",
+      "from_watchlist": false,
+      "close": 19.83,
+      "leader_rank": 8,
+      "tested_universe": true,
+      "setup": null,
+      "reason": "Not a setup. M2 universe filter: ADR 2.86% < 3.5% | M0: 13% above the 20-wk SMA -- already extended, not an entry | vcp: volume not drying up"
     },
     {
       "ticker": "WELL",
@@ -2472,7 +2737,7 @@
     {
       "ticker": "XLK",
       "sector": "XLK",
-      "sector_quadrant": "Weakening",
+      "sector_quadrant": "Lagging",
       "from_watchlist": false,
       "close": 155.79,
       "leader_rank": null,
