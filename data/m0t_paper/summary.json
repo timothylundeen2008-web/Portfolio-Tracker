@@ -19,7 +19,7 @@
   {
    "ticker": "XLU",
    "signal_date": "2026-11-25",
-   "buy_stop": 43.78,
+   "buy_stop": 43.79,
    "stop": 42.59,
    "conf": 3,
    "size_mult": 1.0,
