@@ -1,65 +1,65 @@
-# Swing leaders — session 2026-11-24
+# Swing leaders — session 2026-11-25
 
-**Market filter CLOSED:** SPY 718.78 vs its 200-day 730.62. No new swing entries; this is a watchlist only.
+**Market filter CLOSED:** SPY 716.70 vs its 200-day 730.77. No new swing entries; this is a watchlist only.
 Regime `credit_stress`. Swing book only; nothing here touches the long-term book.
 
-**Funnel:** 518 in the index → 517 priced → 512 liquid and ranked → 93 in a confirmed uptrend → **67 leaders** (strength 80+); top 25 shown.
+**Funnel:** 518 in the index → 517 priced → 512 liquid and ranked → 97 in a confirmed uptrend → **67 leaders** (strength 80+); top 25 shown.
 
 | # | Stock | Sector (rotation) | Close | Strength | 3m / 6m / 12m % | From high | Tight | Pick | Trigger | Stop | Earnings |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | **MRNA** | Health Care (Leading) | 227.38 | 100 | +52 / +378 / +859 | -15.5% | 0.47 | — | — | — | 2027-02-12 (79d) |
-| 2 | **CRL** | Health Care (Leading) | 336.13 | 99 | +14 / +104 / +100 | -10.6% | 0.42 | — | — | — | 2027-02-17 (84d) |
-| 3 | **DLTR** | Consumer Staples (Leading) | 154.65 | 99 | +17 / +61 / +52 | +0.0% | 0.48 | M2c Burst (watch) | 154.65 | 147.83 (4.4%) | — |
-| 4 | **BIIB** | Health Care (Leading) | 269.11 | 99 | +22 / +37 / +54 | +0.0% | 0.48 | — | — | — | 2027-02-05 (72d) |
-| 5 | **BDX** | Health Care (Leading) | 220.00 | 99 | +16 / +51 / +49 | +0.0% | 0.28 ✓ | — | — | — | 2027-02-09 (76d) |
-| 6 | **GILD** | Health Care (Leading) | 178.29 | 99 | +21 / +35 / +44 | +0.0% | 0.40 | — | — | — | 2027-02-09 (76d) |
-| 7 | **VTRS** | Health Care (Leading) | 19.85 | 98 | +18 / +24 / +98 | -5.2% | 0.39 ✓ | Basing (watch) | 20.93 | — | — |
-| 8 | **SWK** | Industrials (Lagging) | 109.25 | 98 | +10 / +40 / +72 | -7.7% | 0.31 ✓ | — | — | — | 2027-02-03 (70d) |
-| 9 | **LH** | Health Care (Leading) | 376.11 | 98 | +12 / +47 / +43 | +0.0% | 0.22 ✓ | — | — | — | 2027-02-23 (90d) |
-| 10 | **BBY** | Consumer Discretionary (Improving) | 99.62 | 98 | +15 / +58 / +37 | -6.3% | 0.44 | Basing (watch) | 106.28 | — | — |
-| 11 | **HAS** | Consumer Discretionary (Improving) | 112.24 | 98 | +17 / +30 / +46 | -9.0% | 0.31 ✓ | Basing (watch) | 123.29 | — | 2027-02-09 (76d) |
-| 12 | **TGT** | Consumer Staples (Leading) | 176.06 | 97 | +8 / +39 / +108 | +0.0% | 0.63 | — | — | — | — |
-| 13 | **CAH** | Health Care (Leading) | 279.65 | 97 | +18 / +41 / +35 | -1.5% | 0.22 ✓ | — | — | — | 2027-02-04 (71d) |
-| 14 | **AIZ** | Financials (Improving) | 322.64 | 96 | +12 / +29 / +44 | -0.4% | 0.20 ✓ | Near pivot (watch) | 323.80 | — | 2027-02-09 (76d) |
-| 15 | **CPAY** | Financials (Improving) | 447.91 | 96 | +10 / +27 / +55 | -3.1% | 0.40 ✓ | — | — | — | 2027-02-03 (70d) |
-| 16 | **ABBV** | Health Care (Leading) | 300.28 | 96 | +15 / +41 / +31 | +0.0% | 0.46 | — | — | — | 2027-02-03 (70d) |
-| 17 | **LLY** | Health Care (Leading) | 1407.59 | 96 | +18 / +30 / +34 | -2.5% | 0.39 ✓ | Near pivot (watch) | 1443.50 | — | 2027-02-03 (70d) |
-| 18 | **AMGN** | Health Care (Leading) | 473.94 | 96 | +8 / +43 / +44 | -0.4% | 0.38 ✓ | Near pivot (watch) | 475.73 | — | 2027-02-02 (69d) |
-| 19 | **EG** | Financials (Improving) | 427.86 | 95 | +13 / +26 / +40 | -1.2% | 0.30 ✓ | Near pivot (watch) | 433.00 | — | 2027-02-03 (70d) |
-| 20 | **DGX** | Health Care (Leading) | 265.61 | 95 | +9 / +38 / +41 | +0.0% | 0.34 ✓ | — | — | — | 2027-02-09 (76d) |
-| 21 | **MAS** | Industrials (Lagging) | 85.10 | 94 | +16 / +23 / +39 | -1.6% | 0.19 ✓ | — | — | — | 2027-02-09 (76d) |
-| 22 | **WST** | Health Care (Leading) | 388.75 | 94 | +11 / +24 / +44 | -7.0% | 0.42 | Basing (watch) | 417.80 | — | 2027-02-18 (85d) |
-| 23 | **A** | Health Care (Leading) | 183.52 | 94 | +18 / +59 / +22 | +0.0% | 0.50 | — | — | — | — |
-| 24 | **TRV** | Financials (Improving) | 400.87 | 94 | +8 / +35 / +40 | -2.0% | 0.35 ✓ | Near pivot (watch) | 409.25 | — | 2027-01-20 (56d) |
-| 25 | **ADP** | Industrials (Lagging) | 310.79 | 94 | +11 / +45 / +26 | -0.8% | 0.29 ✓ | Near pivot (watch) | 313.43 | — | 2027-01-27 (63d) |
+| 1 | **MRNA** | Health Care (Leading) | 220.84 | 100 | +55 / +364 / +814 | -17.9% | 0.42 | — | — | — | 2027-02-12 (78d) |
+| 2 | **OKTA** | — | 201.77 | 100 | +17 / +113 / +155 | -13.1% | 0.68 | — | — | — | 2026-12-01 (5d) |
+| 3 | **BDX** | Health Care (Leading) | 221.24 | 100 | +18 / +51 / +51 | +0.0% | 0.24 ✓ | — | — | — | 2027-02-09 (75d) |
+| 4 | **CRL** | Health Care (Leading) | 332.08 | 99 | +12 / +83 / +95 | -11.7% | 0.34 ✓ | — | — | — | 2027-02-17 (83d) |
+| 5 | **BBY** | Consumer Discretionary (Improving) | 102.58 | 99 | +24 / +40 / +43 | -3.5% | 0.41 | Basing (watch) | 106.28 | — | 2027-03-02 (96d) |
+| 6 | **DLTR** | Consumer Staples (Leading) | 152.21 | 99 | +20 / +35 / +52 | -1.6% | 0.48 | — | — | — | 2027-03-15 (109d) |
+| 7 | **BIIB** | Health Care (Leading) | 261.44 | 99 | +18 / +33 / +48 | -2.9% | 0.48 | Near pivot (watch) | 269.11 | — | 2027-02-05 (71d) |
+| 8 | **VTRS** | Health Care (Leading) | 19.83 | 98 | +18 / +25 / +93 | -5.3% | 0.41 | Basing (watch) | 20.93 | — | — |
+| 9 | **GILD** | Health Care (Leading) | 176.74 | 98 | +19 / +31 / +45 | -0.9% | 0.40 | Near pivot (watch) | 178.29 | — | 2027-02-09 (75d) |
+| 10 | **CAH** | Health Care (Leading) | 282.91 | 98 | +21 / +42 / +35 | -0.3% | 0.23 ✓ | — | — | — | 2027-02-04 (70d) |
+| 11 | **SWK** | Industrials (Lagging) | 109.22 | 98 | +11 / +40 / +70 | -7.7% | 0.33 ✓ | — | — | — | 2027-02-03 (69d) |
+| 12 | **HAS** | Consumer Discretionary (Improving) | 110.58 | 98 | +18 / +31 / +43 | -10.3% | 0.40 ✓ | Basing (watch) | 123.29 | — | 2027-02-09 (75d) |
+| 13 | **AIZ** | Financials (Improving) | 325.73 | 98 | +14 / +32 / +46 | +0.0% | 0.21 ✓ | — | — | — | 2027-02-09 (75d) |
+| 14 | **EG** | Financials (Improving) | 433.64 | 97 | +15 / +32 / +42 | +0.0% | 0.30 ✓ | — | — | — | 2027-02-03 (69d) |
+| 15 | **CPAY** | Financials (Improving) | 454.33 | 97 | +12 / +29 / +58 | -1.7% | 0.40 ✓ | — | — | — | 2027-02-03 (69d) |
+| 16 | **MAS** | Industrials (Lagging) | 86.93 | 97 | +20 / +24 / +43 | +0.0% | 0.25 ✓ | — | — | — | 2027-02-09 (75d) |
+| 17 | **CDW** | Information Technology (Weakening) | 174.97 | 96 | +18 / +52 / +26 | +0.0% | 0.36 ✓ | — | — | — | 2027-02-03 (69d) |
+| 18 | **TRV** | Financials (Improving) | 406.86 | 96 | +10 / +39 / +42 | -0.6% | 0.37 ✓ | Near pivot (watch) | 409.25 | — | 2027-01-20 (55d) |
+| 19 | **LH** | Health Care (Leading) | 368.95 | 96 | +10 / +41 / +41 | -1.9% | 0.22 ✓ | Near pivot (watch) | 376.11 | — | 2027-02-23 (89d) |
+| 20 | **ABBV** | Health Care (Leading) | 294.48 | 96 | +15 / +36 / +32 | -1.9% | 0.49 | Near pivot (watch) | 300.28 | — | 2027-02-03 (69d) |
+| 21 | **VLTO** | Industrials (Lagging) | 120.19 | 95 | +22 / +44 / +23 | -0.1% | 0.19 ✓ | — | — | — | 2027-02-02 (68d) |
+| 22 | **AMGN** | Health Care (Leading) | 469.24 | 95 | +8 / +41 / +44 | -1.4% | 0.40 | Near pivot (watch) | 475.73 | — | 2027-02-02 (68d) |
+| 23 | **ADP** | Industrials (Lagging) | 316.72 | 95 | +12 / +46 / +30 | +0.0% | 0.33 ✓ | — | — | — | 2027-01-27 (62d) |
+| 24 | **TGT** | Consumer Staples (Leading) | 172.22 | 95 | +4 / +36 / +111 | -2.2% | 0.63 | — | — | — | — |
+| 25 | **DRI** | Consumer Discretionary (Improving) | 241.16 | 94 | +15 / +20 / +44 | +0.0% | 0.34 ✓ | — | — | — | 2026-12-18 (22d) |
 
 **Why each pick reads as it does**
 
 - **MRNA**: no base: last 20 sessions span 38% (over 15%)
+- **OKTA**: no base: last 20 sessions span 32% (over 15%)
+- **BDX**: closed 0.6% above its 20-day pivot 220.00 with no setup confirmed
 - **CRL**: no base: last 20 sessions span 20% (over 15%)
-- **DLTR**: watch only — this setup is not proven on stocks
-- **BIIB**: closed 4.6% above its 20-day pivot 256.71 with no setup confirmed
-- **BDX**: closed 0.9% above its 20-day pivot 218.03 with no setup confirmed
-- **GILD**: closed 2.1% above its 20-day pivot 174.48 with no setup confirmed
-- **VTRS**: 5.4% below its 20-day pivot; base 13% wide
-- **SWK**: no base: last 20 sessions span 19% (over 15%)
-- **LH**: closed 1.1% above its 20-day pivot 371.84 with no setup confirmed
-- **BBY**: 6.7% below its 20-day pivot; base 13% wide
-- **HAS**: 9.8% below its 20-day pivot; base 10% wide
-- **TGT**: closed 4.5% above its 20-day pivot 168.19 with no setup confirmed
+- **BBY**: 3.6% below its 20-day pivot; base 13% wide
+- **DLTR**: no base: last 20 sessions span 22% (over 15%)
+- **BIIB**: 2.9% below its 20-day pivot; base 10% wide
+- **VTRS**: 5.6% below its 20-day pivot; base 13% wide
+- **GILD**: 0.9% below its 20-day pivot; base 12% wide
 - **CAH**: no base: last 20 sessions span 16% (over 15%)
-- **AIZ**: 0.4% below its 20-day pivot; base 14% wide
+- **SWK**: no base: last 20 sessions span 18% (over 15%)
+- **HAS**: 11.5% below its 20-day pivot; base 10% wide
+- **AIZ**: closed 0.6% above its 20-day pivot 323.80 with no setup confirmed
+- **EG**: closed 0.1% above its 20-day pivot 433.00 with no setup confirmed
 - **CPAY**: no base: last 20 sessions span 17% (over 15%)
-- **ABBV**: closed 1.7% above its 20-day pivot 295.03 with no setup confirmed
-- **LLY**: 2.6% below its 20-day pivot; base 13% wide
-- **AMGN**: 0.4% below its 20-day pivot; base 9% wide
-- **EG**: 1.2% below its 20-day pivot; base 12% wide
-- **DGX**: closed 0.9% above its 20-day pivot 263.12 with no setup confirmed
-- **MAS**: no base: last 20 sessions span 15% (over 15%)
-- **WST**: 7.5% below its 20-day pivot; base 7% wide
-- **A**: closed 1.1% above its 20-day pivot 181.48 with no setup confirmed
-- **TRV**: 2.1% below its 20-day pivot; base 5% wide
-- **ADP**: 0.8% below its 20-day pivot; base 10% wide
+- **MAS**: closed 0.5% above its 20-day pivot 86.49 with no setup confirmed
+- **CDW**: closed 1.5% above its 20-day pivot 172.36 with no setup confirmed
+- **TRV**: 0.6% below its 20-day pivot; base 5% wide
+- **LH**: 1.9% below its 20-day pivot; base 6% wide
+- **ABBV**: 2.0% below its 20-day pivot; base 6% wide
+- **VLTO**: no base: last 20 sessions span 17% (over 15%)
+- **AMGN**: 1.4% below its 20-day pivot; base 9% wide
+- **ADP**: closed 1.0% above its 20-day pivot 313.43 with no setup confirmed
+- **TGT**: no base: last 20 sessions span 19% (over 15%)
+- **DRI**: closed 0.4% above its 20-day pivot 240.20 with no setup confirmed
 
 **How to read this**
 - **LIVE** means the stock shows the one setup the swing rules already trade (M0). The order ticket still comes from the nightly swing brief, not from this list. None today.
@@ -71,7 +71,7 @@ Regime `credit_stress`. Swing book only; nothing here touches the long-term book
 **Data**
 - Universe: State Street SPY daily holdings (503 names); sectors: public S&P 500 list, refreshed (503 names); Nasdaq-100: Wikipedia, read today (101 names), 15 not in the S&P 500.
 - 15 Nasdaq-100 stocks outside the S&P 500 were ranked alongside it.
-- Sector known for 25 of 25 shown; next earnings date known for 20 (— means Yahoo has not published one).
+- Sector known for 24 of 25 shown; next earnings date known for 23 (— means Yahoo has not published one).
 - 1 not priced for this session (stale: SNDK); 4 with under a year of history.
 
 *leader_screen.py v1.4. This filter has not been backtested; each night's list is logged to `data/leaders/history.csv` so its forward results can be scored.*
