@@ -54,5 +54,5 @@
  "pending": null,
  "events": [],
  "gaps": [],
- "stale_brief": false
+ "stale_brief": true
 }

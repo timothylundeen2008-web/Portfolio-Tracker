@@ -2,6 +2,8 @@
 
 *swing_engine.py 1.1. The $10,000 swing account holds SGOV until a swing strategy passes a pre-registered test (limits: 1-2% risk per trade, -10% month stand-down, -20% high-water stop). Paper from 2026-12-01; live target 2027-01-04. Research, not personalized advice.*
 
+⚠ The latest daily brief is older than the last session — tickets below may be stale.
+
 **Target for 2026-11-27** — engine CASH (no swing rule has passed yet): SGOV 100
 
 **Preview (paper starts 2026-12-01): a $10,000 account would buy, at the 2026-11-25 close:**
