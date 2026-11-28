@@ -1,5 +1,5 @@
 {
- "asof": "2026-11-25",
+ "asof": "2026-11-27",
  "scan": true,
  "pulse": [],
  "leaders": [
@@ -20,29 +20,6 @@
   "XLV",
   "XRT"
  ],
- "flags": [
-  {
-   "ticker": "RSP",
-   "kind": "new_leader"
-  },
-  {
-   "ticker": "USMV",
-   "kind": "new_leader"
-  },
-  {
-   "ticker": "XBI",
-   "kind": "new_leader"
-  },
-  {
-   "ticker": "XLB",
-   "kind": "new_leader"
-  },
-  {
-   "ticker": "XLF",
-   "kind": "new_leader"
-  }
- ],
- "notes": [
-  "No data for 1 fund(s): QQQ."
- ]
+ "flags": [],
+ "notes": []
 }
