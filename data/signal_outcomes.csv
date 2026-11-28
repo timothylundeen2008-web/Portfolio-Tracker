@@ -175,3 +175,10 @@ signal_id,date,signal_type,subject,direction,price_at_signal,benchmark_at_signal
 2026-11-25_flow_divergence_XLF,2026-11-25,flow_divergence,XLF,long,,,"ACCUMULATION (price down, money in) · flow 0.9% AUM",,rotation
 2026-11-25_flow_divergence_XLK,2026-11-25,flow_divergence,XLK,long,,,"ACCUMULATION (price down, money in) · flow 2.25% AUM",,rotation
 2026-11-25_flow_divergence_XLY,2026-11-25,flow_divergence,XLY,short,,,"DISTRIBUTION (price up, money out) · flow -1.64% AUM",,rotation
+2026-11-27_flow_divergence_EEM,2026-11-27,flow_divergence,EEM,long,,,"ACCUMULATION (price down, money in) · flow 0.09% AUM",,rotation
+2026-11-27_flow_divergence_IWM,2026-11-27,flow_divergence,IWM,long,,,"ACCUMULATION (price down, money in) · flow 4.28% AUM",,rotation
+2026-11-27_flow_divergence_PPH,2026-11-27,flow_divergence,PPH,short,,,"DISTRIBUTION (price up, money out) · flow -22.24% AUM",,rotation
+2026-11-27_flow_divergence_SPY,2026-11-27,flow_divergence,SPY,long,,,"ACCUMULATION (price down, money in) · flow 0.89% AUM",,rotation
+2026-11-27_flow_divergence_XTN,2026-11-27,flow_divergence,XTN,short,,,"DISTRIBUTION (price up, money out) · flow -0.82% AUM",,rotation
+2026-11-27_regime_weekly_PORT,2026-11-27,regime_weekly,PORT,long,,,regime=credit_stress,"{""weights"": {""SGOV"": 60.0, ""GLD"": 20.0, ""TLT"": 20.0}, ""bench_weights"": {""VGT"": 20, ""SMH"": 4, ""QQQ"": 4, ""GLD"": 12, ""SLV"": 5, ""RING"": 5, ""XLE"": 5, ""PDBC"": 3, ""SCHD"": 13, ""XLV"": 4, ""XLU"": 3, ""SGOV"": 5, ""USFR"": 3, ""TLT"": 10, ""KMLM"": 4}, ""bench"": ""BASE""}",daily_log
+2026-11-27_stealth_flag_XLRE,2026-11-27,stealth_flag,XLRE,long,,,Strong Stealth · Improving · accum 54.68,,rotation

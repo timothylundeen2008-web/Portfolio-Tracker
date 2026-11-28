@@ -74,3 +74,4 @@ date,regime,nav,peak,drawdown_pct,breaker,release_count,warn,source,weights,engi
 2026-11-23,credit_stress,93.2454,101.9895,-8.57,ENGINE,0,True,live,"{""SGOV"": 60.0, ""GLD"": 20.0, ""TLT"": 20.0}",DEF
 2026-11-24,credit_stress,92.7869,101.9895,-9.02,ENGINE,0,True,live,"{""SGOV"": 60.0, ""GLD"": 20.0, ""TLT"": 20.0}",DEF
 2026-11-25,credit_stress,93.0828,101.9895,-8.73,ENGINE,0,True,live,"{""SGOV"": 60.0, ""GLD"": 20.0, ""TLT"": 20.0}",DEF
+2026-11-27,credit_stress,93.275,101.9895,-8.54,ENGINE,0,True,live,"{""SGOV"": 60.0, ""GLD"": 20.0, ""TLT"": 20.0}",DEF
