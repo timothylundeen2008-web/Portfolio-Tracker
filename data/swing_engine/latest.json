@@ -2,8 +2,8 @@
  "version": "1.1",
  "mode": "cash",
  "paper_start": "2026-12-01",
- "latest_brief": "2026-11-25",
- "price_date": "2026-11-25",
+ "latest_brief": "2026-11-27",
+ "price_date": "2026-11-27",
  "s3": {
   "sleeves": {
    "SPY": {
@@ -12,8 +12,8 @@
     "entry": null,
     "size_pct": null,
     "open_ret_pct": null,
-    "vs_200d_pct": -1.93,
-    "vs_50d_pct": -5.43
+    "vs_200d_pct": -0.36,
+    "vs_50d_pct": -3.81
    },
    "QQQ": {
     "on_today": false,
@@ -21,15 +21,15 @@
     "entry": null,
     "size_pct": null,
     "open_ret_pct": null,
-    "vs_200d_pct": -7.12,
-    "vs_50d_pct": -10.34
+    "vs_200d_pct": -4.65,
+    "vs_50d_pct": -7.75
    }
   },
   "trades_since_start": [],
   "nav": null
  },
  "target": {
-  "for_session": "2026-11-27",
+  "for_session": "2026-11-30",
   "state": "CASH (no swing rule has passed yet)",
   "switched": false,
   "weights": {
@@ -42,17 +42,17 @@
     "ticker": "SGOV",
     "side": "BUY",
     "shares": 99,
-    "est_price": 100.68,
-    "est_value": 9967.32
+    "est_price": 100.71,
+    "est_value": 9970.29
    }
   ],
   "missing": [],
-  "cash_left": 32.68,
-  "priced_at": "2026-11-25"
+  "cash_left": 29.71,
+  "priced_at": "2026-11-27"
  },
  "ledger": [],
  "pending": null,
  "events": [],
  "gaps": [],
- "stale_brief": true
+ "stale_brief": false
 }
