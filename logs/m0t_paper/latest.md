@@ -1,4 +1,4 @@
-# M0-T paper record — 2026-11-25 (PREVIEW: starts 2026-12-01)
+# M0-T paper record — 2026-11-27 (PREVIEW: starts 2026-12-01)
 
 Paper only, no money. The swing account itself stays in SGOV. Research, not personalized advice.
 
@@ -13,8 +13,8 @@ Paper only, no money. The swing account itself stays in SGOV. Research, not pers
 | XLU | no order | 3-of-3 | SPY below its 200-day: no new entries |
 | XLRE | no order | 3-of-3 | SPY below its 200-day: no new entries |
 | XLF | no order | 2-of-3 | SPY below its 200-day: no new entries |
-| XLY | no order | 2-of-3 | SPY below its 200-day: no new entries |
 | XRT | no order | 2-of-3 | SPY below its 200-day: no new entries |
+| XLY | no order | 2-of-3 | SPY below its 200-day: no new entries |
 | IBB | no order | 2-of-3 | SPY below its 200-day: no new entries |
 
 *m0t_paper.py 1.2*
