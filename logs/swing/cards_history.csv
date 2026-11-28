@@ -368,3 +368,10 @@ date,ticker,setup,side,confluence,entry,stop,close,regime,entry_permitted,block_
 2026-11-25,D,M0 Rotation,long,2-of-3,68.29,66.6,67.99,credit_stress,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
 2026-11-25,NEE,M0 Rotation,long,2-of-3,85.87,83.66,85.41,credit_stress,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
 2026-11-25,XLY,M0 Rotation,long,2-of-3,118.27,112.46,117.49,credit_stress,False,market filter: SPY 716.7 below its 200-day 730.77 — no new swing entries
+2026-11-27,O,M0 Rotation,long,3-of-3,60.68,59.29,60.51,credit_stress,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-27,XLU,M0 Rotation,long,3-of-3,43.78,42.66,43.73,credit_stress,False,market filter: SPY 728.32 below its 200-day 730.98 — no new swing entries
+2026-11-27,XLRE,M0 Rotation,long,3-of-3,44.17,42.87,44.14,credit_stress,False,market filter: SPY 728.32 below its 200-day 730.98 — no new swing entries
+2026-11-27,MCD,M0 Rotation,long,3-of-3,283.48,274.47,282.62,credit_stress,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-27,XLF,M0 Rotation,long,2-of-3,57.34,55.33,57.16,credit_stress,False,market filter: SPY 728.32 below its 200-day 730.98 — no new swing entries
+2026-11-27,CBRE,M0 Rotation,long,2-of-3,140.43,134.58,139.8,credit_stress,False,stock card — paper only: the M0 pass is proven on ETFs; stock results carry survivorship bias (config live_stock_cards=false)
+2026-11-27,XLY,M0 Rotation,long,2-of-3,120.05,114.21,119.97,credit_stress,False,market filter: SPY 728.32 below its 200-day 730.98 — no new swing entries
