@@ -1,102 +1,102 @@
 ticker,sector,fetched
-ADBE,Technology,2026-11-26
-AMD,Technology,2026-11-26
-ABNB,Consumer Discretionary,2026-11-26
-ALNY,Health Care,2026-11-26
-GOOGL,Technology,2026-11-26
-GOOG,Technology,2026-11-26
-AMZN,Consumer Discretionary,2026-11-26
-AEP,Utilities,2026-11-26
-AMGN,Health Care,2026-11-26
-ADI,Technology,2026-11-26
-AAPL,Technology,2026-11-26
-AMAT,Technology,2026-11-26
-APP,Technology,2026-11-26
-ARM,Technology,2026-11-26
-ASML,Technology,2026-11-26
-ALAB,Technology,2026-11-26
-ADSK,Technology,2026-11-26
-ADP,Industrials,2026-11-26
-AXON,Industrials,2026-11-26
-BKR,Energy,2026-11-26
-BKNG,Consumer Discretionary,2026-11-26
-AVGO,Technology,2026-11-26
-CDNS,Technology,2026-11-26
-CTAS,Industrials,2026-11-26
-CSCO,Telecommunications,2026-11-26
-CCEP,Consumer Staples,2026-11-26
-CMCSA,Telecommunications,2026-11-26
-CEG,Utilities,2026-11-26
-CPRT,Consumer Discretionary,2026-11-26
-CRWV,Technology,2026-11-26
-COST,Consumer Discretionary,2026-11-26
-CRWD,Technology,2026-11-26
-CSX,Industrials,2026-11-26
-DDOG,Technology,2026-11-26
-DXCM,Health Care,2026-11-26
-FANG,Energy,2026-11-26
-DASH,Technology,2026-11-26
-EXC,Utilities,2026-11-26
-FAST,Industrials,2026-11-26
-FER,Industrials,2026-11-26
-FTNT,Technology,2026-11-26
-GEHC,Health Care,2026-11-26
-GILD,Health Care,2026-11-26
-HONA,Industrials,2026-11-26
-HON,Industrials,2026-11-26
-IDXX,Health Care,2026-11-26
-INTC,Technology,2026-11-26
-INTU,Technology,2026-11-26
-ISRG,Health Care,2026-11-26
-KDP,Consumer Staples,2026-11-26
-KLAC,Technology,2026-11-26
-LRCX,Technology,2026-11-26
-LIN,Basic Materials,2026-11-26
-LITE,Technology,2026-11-26
-MAR,Consumer Discretionary,2026-11-26
-MRVL,Technology,2026-11-26
-MELI,Consumer Discretionary,2026-11-26
-META,Technology,2026-11-26
-MCHP,Technology,2026-11-26
-MU,Technology,2026-11-26
-MSFT,Technology,2026-11-26
-MSTR,Technology,2026-11-26
-MRNA,Health Care,2026-11-26
-MDLZ,Consumer Staples,2026-11-26
-MPWR,Technology,2026-11-26
-MNST,Consumer Staples,2026-11-26
-NBIS,Technology,2026-11-26
-NFLX,Consumer Discretionary,2026-11-26
-NVDA,Technology,2026-11-26
-NXPI,Technology,2026-11-26
-ORLY,Consumer Discretionary,2026-11-26
-ODFL,Industrials,2026-11-26
-PCAR,Consumer Discretionary,2026-11-26
-PLTR,Technology,2026-11-26
-PANW,Technology,2026-11-26
-PAYX,Industrials,2026-11-26
-PYPL,Industrials,2026-11-26
-PDD,Technology,2026-11-26
-PEP,Consumer Staples,2026-11-26
-QCOM,Technology,2026-11-26
-REGN,Health Care,2026-11-26
-RKLB,Industrials,2026-11-26
-ROP,Technology,2026-11-26
-ROST,Consumer Discretionary,2026-11-26
-SNDK,Technology,2026-11-26
-STX,Technology,2026-11-26
-SHOP,Technology,2026-11-26
-SPCX,Telecommunications,2026-11-26
-SBUX,Consumer Discretionary,2026-11-26
-SNPS,Technology,2026-11-26
-TMUS,Telecommunications,2026-11-26
-TTWO,Consumer Discretionary,2026-11-26
-TER,Technology,2026-11-26
-TSLA,Consumer Discretionary,2026-11-26
-TXN,Technology,2026-11-26
-TRI,Technology,2026-11-26
-VRTX,Health Care,2026-11-26
-WMT,Consumer Discretionary,2026-11-26
-WDC,Technology,2026-11-26
-WDAY,Technology,2026-11-26
-XEL,Utilities,2026-11-26
+ADBE,Technology,2026-11-28
+AMD,Technology,2026-11-28
+ABNB,Consumer Discretionary,2026-11-28
+ALNY,Health Care,2026-11-28
+GOOGL,Technology,2026-11-28
+GOOG,Technology,2026-11-28
+AMZN,Consumer Discretionary,2026-11-28
+AEP,Utilities,2026-11-28
+AMGN,Health Care,2026-11-28
+ADI,Technology,2026-11-28
+AAPL,Technology,2026-11-28
+AMAT,Technology,2026-11-28
+APP,Technology,2026-11-28
+ARM,Technology,2026-11-28
+ASML,Technology,2026-11-28
+ALAB,Technology,2026-11-28
+ADSK,Technology,2026-11-28
+ADP,Industrials,2026-11-28
+AXON,Industrials,2026-11-28
+BKR,Energy,2026-11-28
+BKNG,Consumer Discretionary,2026-11-28
+AVGO,Technology,2026-11-28
+CDNS,Technology,2026-11-28
+CTAS,Industrials,2026-11-28
+CSCO,Telecommunications,2026-11-28
+CCEP,Consumer Staples,2026-11-28
+CMCSA,Telecommunications,2026-11-28
+CEG,Utilities,2026-11-28
+CPRT,Consumer Discretionary,2026-11-28
+CRWV,Technology,2026-11-28
+COST,Consumer Discretionary,2026-11-28
+CRWD,Technology,2026-11-28
+CSX,Industrials,2026-11-28
+DDOG,Technology,2026-11-28
+DXCM,Health Care,2026-11-28
+FANG,Energy,2026-11-28
+DASH,Technology,2026-11-28
+EXC,Utilities,2026-11-28
+FAST,Industrials,2026-11-28
+FER,Industrials,2026-11-28
+FTNT,Technology,2026-11-28
+GEHC,Health Care,2026-11-28
+GILD,Health Care,2026-11-28
+HONA,Industrials,2026-11-28
+HON,Industrials,2026-11-28
+IDXX,Health Care,2026-11-28
+INTC,Technology,2026-11-28
+INTU,Technology,2026-11-28
+ISRG,Health Care,2026-11-28
+KDP,Consumer Staples,2026-11-28
+KLAC,Technology,2026-11-28
+LRCX,Technology,2026-11-28
+LIN,Basic Materials,2026-11-28
+LITE,Technology,2026-11-28
+MAR,Consumer Discretionary,2026-11-28
+MRVL,Technology,2026-11-28
+MELI,Consumer Discretionary,2026-11-28
+META,Technology,2026-11-28
+MCHP,Technology,2026-11-28
+MU,Technology,2026-11-28
+MSFT,Technology,2026-11-28
+MSTR,Technology,2026-11-28
+MRNA,Health Care,2026-11-28
+MDLZ,Consumer Staples,2026-11-28
+MPWR,Technology,2026-11-28
+MNST,Consumer Staples,2026-11-28
+NBIS,Technology,2026-11-28
+NFLX,Consumer Discretionary,2026-11-28
+NVDA,Technology,2026-11-28
+NXPI,Technology,2026-11-28
+ORLY,Consumer Discretionary,2026-11-28
+ODFL,Industrials,2026-11-28
+PCAR,Consumer Discretionary,2026-11-28
+PLTR,Technology,2026-11-28
+PANW,Technology,2026-11-28
+PAYX,Industrials,2026-11-28
+PYPL,Industrials,2026-11-28
+PDD,Technology,2026-11-28
+PEP,Consumer Staples,2026-11-28
+QCOM,Technology,2026-11-28
+REGN,Health Care,2026-11-28
+RKLB,Industrials,2026-11-28
+ROP,Technology,2026-11-28
+ROST,Consumer Discretionary,2026-11-28
+SNDK,Technology,2026-11-28
+STX,Technology,2026-11-28
+SHOP,Technology,2026-11-28
+SPCX,Telecommunications,2026-11-28
+SBUX,Consumer Discretionary,2026-11-28
+SNPS,Technology,2026-11-28
+TMUS,Telecommunications,2026-11-28
+TTWO,Consumer Discretionary,2026-11-28
+TER,Technology,2026-11-28
+TSLA,Consumer Discretionary,2026-11-28
+TXN,Technology,2026-11-28
+TRI,Technology,2026-11-28
+VRTX,Health Care,2026-11-28
+WMT,Consumer Discretionary,2026-11-28
+WDC,Technology,2026-11-28
+WDAY,Technology,2026-11-28
+XEL,Utilities,2026-11-28
