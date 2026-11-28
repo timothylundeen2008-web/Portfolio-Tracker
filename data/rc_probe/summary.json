@@ -1,0 +1,376 @@
+{
+ "version": "1.0.1",
+ "fred": {
+  "DFF": {
+   "what": "fed funds (short real rate)",
+   "ok": true,
+   "first": "1954-07-01",
+   "last": "2026-11-26",
+   "n": 26447
+  },
+  "CPIAUCNS": {
+   "what": "CPI NSA (YoY)",
+   "ok": true,
+   "first": "1913-01-01",
+   "last": "2026-10-01",
+   "n": 1365
+  },
+  "CPIAUCSL": {
+   "what": "CPI SA (3m, 1m)",
+   "ok": true,
+   "first": "1947-01-01",
+   "last": "2026-10-01",
+   "n": 957
+  },
+  "DFII10": {
+   "what": "10y real yield",
+   "ok": true,
+   "first": "2003-01-02",
+   "last": "2026-11-25",
+   "n": 5979
+  },
+  "T10YIE": {
+   "what": "10y breakeven",
+   "ok": true,
+   "first": "2003-01-02",
+   "last": "2026-11-27",
+   "n": 5980
+  },
+  "DGS10": {
+   "what": "10y nominal",
+   "ok": true,
+   "first": "1962-01-02",
+   "last": "2026-11-25",
+   "n": 16210
+  },
+  "DGS2": {
+   "what": "2y nominal",
+   "ok": true,
+   "first": "1976-06-01",
+   "last": "2026-11-25",
+   "n": 12618
+  },
+  "DTWEXBGS": {
+   "what": "broad dollar (current)",
+   "ok": true,
+   "first": "2006-01-02",
+   "last": "2026-11-20",
+   "n": 5236
+  },
+  "DTWEXB": {
+   "what": "broad dollar (old, discontinued)",
+   "ok": true,
+   "first": "1995-01-04",
+   "last": "2019-12-31",
+   "n": 6328
+  },
+  "BAMLH0A0HYM2": {
+   "what": "HY OAS",
+   "ok": true,
+   "first": "2023-11-28",
+   "last": "2026-11-26",
+   "n": 786
+  },
+  "BAMLC0A0CM": {
+   "what": "IG OAS",
+   "ok": true,
+   "first": "2023-11-28",
+   "last": "2026-11-26",
+   "n": 785
+  },
+  "BAA10Y": {
+   "what": "Moody's BAA \u2212 10y (proxy)",
+   "ok": true,
+   "first": "1986-01-02",
+   "last": "2026-11-24",
+   "n": 10224
+  },
+  "AAA10Y": {
+   "what": "Moody's AAA \u2212 10y (proxy)",
+   "ok": true,
+   "first": "1983-01-03",
+   "last": "2026-11-24",
+   "n": 10971
+  },
+  "PAYEMS": {
+   "what": "payrolls (growth)",
+   "ok": true,
+   "first": "1939-01-01",
+   "last": "2026-10-01",
+   "n": 1054
+  },
+  "ICSA": {
+   "what": "initial claims (growth)",
+   "ok": true,
+   "first": "1967-01-07",
+   "last": "2026-11-21",
+   "n": 3125
+  },
+  "RSAFS": {
+   "what": "retail sales (growth)",
+   "ok": true,
+   "first": "1992-01-01",
+   "last": "2026-10-01",
+   "n": 418
+  },
+  "UMCSENT": {
+   "what": "sentiment (growth)",
+   "ok": true,
+   "first": "1952-11-01",
+   "last": "2026-10-01",
+   "n": 678
+  }
+ },
+ "snapshots": {
+  "BAMLH0A0HYM2": {
+   "2026-03-31": {
+    "ok": true,
+    "first": "2023-11-28",
+    "last": "2026-03-31",
+    "n": 613,
+    "on_2008_12_15": null,
+    "min_2007": null,
+    "full_history": false
+   },
+   "2025-12-31": {
+    "ok": true,
+    "first": "2023-11-28",
+    "last": "2025-12-31",
+    "n": 548,
+    "on_2008_12_15": null,
+    "min_2007": null,
+    "full_history": false
+   }
+  },
+  "BAMLC0A0CM": {
+   "2026-03-31": {
+    "ok": true,
+    "first": "2023-11-28",
+    "last": "2026-03-31",
+    "n": 612
+   },
+   "2025-12-31": {
+    "ok": true,
+    "first": "2023-11-28",
+    "last": "2025-12-31",
+    "n": 547
+   }
+  }
+ },
+ "vintages": {
+  "PAYEMS": {
+   "ok": true,
+   "first_vintage": "1955-05-06",
+   "n_vintages": 861,
+   "count_reported": 861
+  },
+  "ICSA": {
+   "ok": true,
+   "first_vintage": "2009-05-28",
+   "n_vintages": 908,
+   "count_reported": 908
+  },
+  "RSAFS": {
+   "ok": true,
+   "first_vintage": "2001-06-13",
+   "n_vintages": 327,
+   "count_reported": 327
+  },
+  "UMCSENT": {
+   "ok": true,
+   "first_vintage": "1998-07-31",
+   "n_vintages": 339,
+   "count_reported": 339
+  },
+  "CPIAUCSL": {
+   "ok": true,
+   "first_vintage": "1972-07-21",
+   "n_vintages": 671,
+   "count_reported": 671
+  }
+ },
+ "cape": {
+  "yale_shiller_xls": {
+   "ok": true,
+   "bytes": 1628672,
+   "note": "Excel file fetched; parsing left to the replay build"
+  },
+  "datahub_sp500_csv": {
+   "ok": true,
+   "bytes": 123851,
+   "columns": [
+    "Date",
+    "SP500",
+    "Dividend",
+    "Earnings",
+    "Consumer Price Index",
+    "Long Interest Rate",
+    "Real Price",
+    "Real Dividend",
+    "Real Earnings",
+    "PE10"
+   ],
+   "cape": {
+    "ok": true,
+    "first": "1871-01-01",
+    "last": "2026-09-01",
+    "n": 1869
+   },
+   "last_value": 0.0
+  }
+ },
+ "prices": {
+  "VGT": {
+   "ok": true,
+   "first": "2004-01-30",
+   "last": "2026-11-27",
+   "n": 5744
+  },
+  "SMH": {
+   "ok": true,
+   "first": "2000-06-05",
+   "last": "2026-11-27",
+   "n": 6661
+  },
+  "QQQ": {
+   "ok": true,
+   "first": "1999-03-10",
+   "last": "2026-11-27",
+   "n": 6974
+  },
+  "GLD": {
+   "ok": true,
+   "first": "2004-11-18",
+   "last": "2026-11-27",
+   "n": 5541
+  },
+  "SLV": {
+   "ok": true,
+   "first": "2006-04-28",
+   "last": "2026-11-27",
+   "n": 5179
+  },
+  "RING": {
+   "ok": true,
+   "first": "2012-02-02",
+   "last": "2026-11-27",
+   "n": 3727
+  },
+  "XLE": {
+   "ok": true,
+   "first": "1998-12-22",
+   "last": "2026-11-27",
+   "n": 7026
+  },
+  "PDBC": {
+   "ok": true,
+   "first": "2014-11-07",
+   "last": "2026-11-27",
+   "n": 3031
+  },
+  "SCHD": {
+   "ok": true,
+   "first": "2011-10-20",
+   "last": "2026-11-27",
+   "n": 3798
+  },
+  "XLV": {
+   "ok": true,
+   "first": "1998-12-22",
+   "last": "2026-11-27",
+   "n": 7026
+  },
+  "XLU": {
+   "ok": true,
+   "first": "1998-12-22",
+   "last": "2026-11-27",
+   "n": 7026
+  },
+  "SGOV": {
+   "ok": true,
+   "first": "2020-06-01",
+   "last": "2026-11-27",
+   "n": 1633
+  },
+  "USFR": {
+   "ok": true,
+   "first": "2014-02-04",
+   "last": "2026-11-27",
+   "n": 3224
+  },
+  "TLT": {
+   "ok": true,
+   "first": "2002-07-30",
+   "last": "2026-11-27",
+   "n": 6123
+  },
+  "KMLM": {
+   "ok": true,
+   "first": "2020-12-02",
+   "last": "2026-11-27",
+   "n": 1504
+  },
+  "DBMF": {
+   "ok": true,
+   "first": "2019-05-08",
+   "last": "2026-11-27",
+   "n": 1901
+  },
+  "SCHP": {
+   "ok": true,
+   "first": "2010-08-05",
+   "last": "2026-11-27",
+   "n": 4104
+  },
+  "SPY": {
+   "ok": true,
+   "first": "1993-01-29",
+   "last": "2026-11-27",
+   "n": 8516
+  },
+  "XLY": {
+   "ok": true,
+   "first": "1998-12-22",
+   "last": "2026-11-27",
+   "n": 7026
+  },
+  "XLI": {
+   "ok": true,
+   "first": "1998-12-22",
+   "last": "2026-11-27",
+   "n": 7026
+  },
+  "XLF": {
+   "ok": true,
+   "first": "1998-12-22",
+   "last": "2026-11-27",
+   "n": 7026
+  },
+  "XLP": {
+   "ok": true,
+   "first": "1998-12-22",
+   "last": "2026-11-27",
+   "n": 7026
+  },
+  "BIL": {
+   "ok": true,
+   "first": "2007-05-30",
+   "last": "2026-11-27",
+   "n": 4907
+  },
+  "SHV": {
+   "ok": true,
+   "first": "2007-01-11",
+   "last": "2026-11-27",
+   "n": 5002
+  }
+ },
+ "verdict": [
+  "HY OAS full history NOT available (current series 2023-11-28 \u2192 2026-11-26; snapshots failed or truncated): the replay needs a proxy or a file, and every credit threshold would have to be restated \u2014 weaker evidence.",
+  "Earliest possible replay start is set by DFII10 (2003-01-02) plus the 63-session momentum and the 200-day gates, i.e. about one year later.",
+  "Growth series with ALFRED vintages from 2005 or earlier: PAYEMS, RSAFS, UMCSENT \u2014 a point-in-time growth composite is possible.",
+  "CAPE sources usable: yale_shiller_xls, datahub_sp500_csv.",
+  "Sleeves that start after 2006 (need a stand-in or start later): SLV 2006-04-28, SHV 2007-01-11, BIL 2007-05-30, SCHP 2010-08-05, SCHD 2011-10-20, RING 2012-02-02, USFR 2014-02-04, PDBC 2014-11-07, DBMF 2019-05-08, SGOV 2020-06-01, KMLM 2020-12-02"
+ ],
+ "failures": []
+}
