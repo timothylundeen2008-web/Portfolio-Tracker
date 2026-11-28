@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-28T04:15:20+00:00",
+  "generated_at": "2026-11-28T04:57:59+00:00",
   "date": "2026-11-27",
   "version": "alerts v1.1.1 (engine layer, 2026-11-13; radar row ignored 2026-11-21)",
   "selftest_ok": true,
@@ -27,7 +27,7 @@
   ],
   "actions": [
     {
-      "action": "open",
+      "action": "still open",
       "key": "DATA_FAIL",
       "number": 13
     }
